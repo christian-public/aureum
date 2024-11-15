@@ -57,6 +57,7 @@ pub fn expand_test_paths(
     files
 }
 
+#[allow(dead_code)]
 enum LocateFileError {
     InvalidPattern(glob::PatternError),
     InvalidEntry(glob::GlobError),
