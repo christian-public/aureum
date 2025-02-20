@@ -120,8 +120,8 @@ program_arguments = [
 ]
 expected_stdout = ""
 expected_stderr = """
-error: Invalid value 'UNKNOWN' for '--output-format <OUTPUT_FORMAT>': Invalid output format
+error: invalid value 'UNKNOWN' for '--output-format <OUTPUT_FORMAT>': Invalid output format
 
-For more information try '--help'
+For more information, try '--help'.
 """
 expected_exit_code = 2

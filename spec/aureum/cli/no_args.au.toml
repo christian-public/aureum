@@ -3,11 +3,11 @@ program_arguments = []
 
 expected_stdout = ""
 expected_stderr = """
-error: The following required arguments were not provided:
+error: the following required arguments were not provided:
   <PATHS>...
 
 Usage: aureum <PATHS>...
 
-For more information try '--help'
+For more information, try '--help'.
 """
 expected_exit_code = 2
