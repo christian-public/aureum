@@ -331,16 +331,15 @@ fn read_from_config_value<T>(
 where
     T: FromStr,
 {
-    if let Some(config_value) = config_value {
-        match config_value.read(data) {
+    match config_value {
+        Some(config_value) => match config_value.read(data) {
             Ok(value) => Some(value),
             Err(err) => {
                 validation_errors.insert(err);
                 None
             }
-        }
-    } else {
-        None
+        },
+        _ => None,
     }
 }
 
