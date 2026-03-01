@@ -1,7 +1,7 @@
 use crate::test_result::{TestResult, ValueComparison};
 use crate::utils::string;
-use serde_yaml::{Number, Value};
 use std::collections::BTreeMap;
+use yaml_serde::{Number, Value};
 
 pub fn print_version() {
     println!("TAP version 14")
@@ -75,7 +75,7 @@ fn format_test_result(test_result: &TestResult) -> String {
         diagnostics.insert("exit-code", show_i32_diff(expected, got));
     }
 
-    serde_yaml::to_string(&diagnostics)
+    yaml_serde::to_string(&diagnostics)
         .unwrap_or_else(|_| String::from("Failed to convert to YAML\n"))
 }
 
