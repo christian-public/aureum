@@ -77,9 +77,12 @@ pub fn run(test_case: &TestCase) -> Result<TestResult, RunError> {
         .code()
         .map_or(Err(RunError::MissingExitCode), Ok)?;
 
+    let expected_stdout = test_case.expected_stdout.as_deref().map(normalize_newlines);
+    let expected_stderr = test_case.expected_stderr.as_deref().map(normalize_newlines);
+
     Ok(TestResult {
-        stdout: compare_result(&test_case.expected_stdout, stdout),
-        stderr: compare_result(&test_case.expected_stderr, stderr),
+        stdout: compare_result(&expected_stdout, normalize_newlines(&stdout)),
+        stderr: compare_result(&expected_stderr, normalize_newlines(&stderr)),
         exit_code: compare_result(&test_case.expected_exit_code, exit_code),
     })
 }
@@ -106,4 +109,13 @@ where
     let mut buf: Vec<u8> = vec![];
     pipe.read_to_end(&mut buf).map_err(RunError::IOError)?;
     String::from_utf8(buf).map_or(Err(RunError::FailedToDecodeUtf8), Ok)
+}
+
+/// Normalize line endings to line feed (LF)
+///
+/// Windows uses carriage return line feed (CRLF) as line endings, thus
+/// test cases may contain CRLF line endings. Additionally, the output of
+/// the program under test may contain CRLF line endings.
+fn normalize_newlines(content: &str) -> String {
+    content.replace("\r\n", "\n")
 }
