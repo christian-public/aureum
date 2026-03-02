@@ -81,21 +81,18 @@ pub fn run(test_case: &TestCase) -> Result<TestResult, RunError> {
     let expected_stderr = test_case.expected_stderr.as_deref().map(normalize_newlines);
 
     Ok(TestResult {
-        stdout: compare_result(&expected_stdout, normalize_newlines(&stdout)),
-        stderr: compare_result(&expected_stderr, normalize_newlines(&stderr)),
-        exit_code: compare_result(&test_case.expected_exit_code, exit_code),
+        stdout: compare_result(expected_stdout, normalize_newlines(&stdout)),
+        stderr: compare_result(expected_stderr, normalize_newlines(&stderr)),
+        exit_code: compare_result(test_case.expected_exit_code, exit_code),
     })
 }
 
-fn compare_result<T: PartialEq + Clone>(expected: &Option<T>, got: T) -> ValueComparison<T> {
+fn compare_result<T: PartialEq>(expected: Option<T>, got: T) -> ValueComparison<T> {
     if let Some(expected) = expected {
-        if expected == &got {
+        if expected == got {
             ValueComparison::Matches(got)
         } else {
-            ValueComparison::Diff {
-                expected: expected.clone(),
-                got,
-            }
+            ValueComparison::Diff { expected, got }
         }
     } else {
         ValueComparison::NotChecked
