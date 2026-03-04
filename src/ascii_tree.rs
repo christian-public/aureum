@@ -16,10 +16,10 @@ pub enum Tree {
 #[inline]
 /// writes a tree in an ascii tree to the writer
 pub fn write_tree(f: &mut dyn Write, tree: &Tree) -> fmt::Result {
-    write_tree_element(f, tree, &vec![])
+    write_tree_element(f, tree, &[])
 }
 
-fn write_tree_element(f: &mut dyn Write, tree: &Tree, level: &Vec<usize>) -> fmt::Result {
+fn write_tree_element(f: &mut dyn Write, tree: &Tree, level: &[usize]) -> fmt::Result {
     use Tree::*;
     const EMPTY: &str = "   ";
     const EDGE: &str = "└─ ";
@@ -52,7 +52,7 @@ fn write_tree_element(f: &mut dyn Write, tree: &Tree, level: &Vec<usize>) -> fmt
             let mut d = children.len();
             writeln!(f, "{}", title)?;
             for s in children {
-                let mut lnext = level.clone();
+                let mut lnext = level.to_owned();
                 lnext.push(d);
                 d -= 1;
                 write_tree_element(f, s, &lnext)?;

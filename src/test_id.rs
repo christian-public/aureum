@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct TestId {
     id_path: Vec<String>,
@@ -39,13 +41,13 @@ impl TestId {
     }
 
     pub fn to_prefixed_string(&self) -> String {
-        format!(":{}", self.to_string())
+        format!(":{}", self)
     }
 }
 
-impl ToString for TestId {
-    fn to_string(&self) -> String {
-        self.id_path.join(".")
+impl Display for TestId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.id_path.join("."))
     }
 }
 

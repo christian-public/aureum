@@ -26,7 +26,7 @@ impl TestCase {
         if self.id.is_root() {
             file_path
         } else {
-            format!("{}:{}", file_path, self.id.to_string())
+            format!("{}:{}", file_path, self.id)
         }
     }
 }
@@ -73,9 +73,7 @@ pub fn run(test_case: &TestCase) -> Result<TestResult, RunError> {
     )?;
 
     let exit_status = child.wait().map_err(RunError::IOError)?;
-    let exit_code = exit_status
-        .code()
-        .map_or(Err(RunError::MissingExitCode), Ok)?;
+    let exit_code = exit_status.code().ok_or(RunError::MissingExitCode)?;
 
     let expected_stdout = test_case.expected_stdout.as_deref().map(normalize_newlines);
     let expected_stderr = test_case.expected_stderr.as_deref().map(normalize_newlines);
