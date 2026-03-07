@@ -1,7 +1,7 @@
-use crate::ascii_tree;
-pub use crate::ascii_tree::Tree::{self, Leaf, Node};
 use crate::test_result::{TestResult, ValueComparison};
 use crate::utils::string;
+use crate::vendor::ascii_tree;
+pub use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
 use colored::Colorize;
 use std::fmt::Error;
 
