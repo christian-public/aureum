@@ -1,8 +1,7 @@
 pub mod file;
 pub mod report;
 
-use aureum::test_id::TestId;
-use aureum::utils::file as file_utils;
+use aureum::TestId;
 use clap::Parser;
 use file::TestPath;
 use std::path::Path;
@@ -45,7 +44,7 @@ impl FromStr for TestPath {
     type Err = &'static str;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if let (path, Some(suffix)) = file_utils::split_file_name(Path::new(s)) {
+        if let (path, Some(suffix)) = aureum::split_file_name(Path::new(s)) {
             if path.is_file() {
                 Ok(Self::SpecificFile {
                     source_file: path,

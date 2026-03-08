@@ -1,10 +1,8 @@
-use aureum::formats::tree;
-use aureum::formats::tree::Tree::{self, Leaf, Node};
-use aureum::toml_config::{
+use aureum::Tree::{self, Leaf, Node};
+use aureum::{
     ParsedTomlConfig, ProgramPath, Requirement, TestCaseValidationError, TomlConfigData,
     TomlConfigError,
 };
-use aureum::utils::file;
 use colored::Colorize;
 use relative_path::RelativePathBuf;
 use std::collections::BTreeSet;
@@ -58,7 +56,7 @@ pub fn print_config_details(
                         resolved_path,
                     } => {
                         let path = if hide_absolute_paths {
-                            file::display_path(resolved_path)
+                            aureum::display_path(resolved_path)
                         } else {
                             resolved_path.display().to_string()
                         };
@@ -120,7 +118,8 @@ pub fn print_toml_config_error(source_file: RelativePathBuf, error: TomlConfigEr
 }
 
 fn print_tree(tree: Tree) {
-    let content = tree::draw_tree(&tree).unwrap_or_else(|_| String::from("Failed to draw tree\n"));
+    let content =
+        aureum::draw_tree(&tree).unwrap_or_else(|_| String::from("Failed to draw tree\n"));
 
     eprint!("{}", content); // Already contains newline
     eprintln!()

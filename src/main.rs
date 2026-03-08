@@ -1,6 +1,6 @@
 mod cli;
 
-use aureum::test_runner::{ReportConfig, ReportFormat};
+use aureum::{ReportConfig, ReportFormat};
 use cli::file;
 use cli::report;
 use cli::{Args, OutputFormat};
@@ -33,7 +33,7 @@ fn main() {
     let mut any_failed_configs = false;
 
     for source_file in source_files {
-        match aureum::toml_config::parse_toml_config(&source_file) {
+        match aureum::parse_toml_config(&source_file) {
             Ok(config) => {
                 let any_issues = report::any_issues_in_toml_config(&config);
                 if any_issues || args.verbose {
@@ -63,11 +63,8 @@ fn main() {
         format: get_report_format(&args),
     };
 
-    let run_results = aureum::test_runner::run_test_cases(
-        &report_config,
-        &all_test_cases,
-        args.run_tests_in_parallel,
-    );
+    let run_results =
+        aureum::run_test_cases(&report_config, &all_test_cases, args.run_tests_in_parallel);
 
     if any_failed_configs {
         eprintln!("Some config files contain errors (See above)");

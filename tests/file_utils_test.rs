@@ -1,4 +1,3 @@
-use aureum::utils::file;
 use std::path::{Path, PathBuf};
 
 // SECTION: find_executable_path
@@ -40,7 +39,7 @@ fn test_program_exists_at_absolute_path() {
 }
 
 fn assert_executable_exists(binary_name: &str) {
-    let executable_path = file::find_executable_path(binary_name, "tests/file_utils").unwrap();
+    let executable_path = aureum::find_executable_path(binary_name, "tests/file_utils").unwrap();
 
     assert!(executable_path.is_absolute());
 }
@@ -79,7 +78,7 @@ fn test_split_file_name_with_colon_and_absolute_path() {
 }
 
 fn assert_split_file_name(input_path: &str, expected_path: &str, expected_suffix: Option<&str>) {
-    let (output_path, suffix) = file::split_file_name(Path::new(input_path));
+    let (output_path, suffix) = aureum::split_file_name(Path::new(input_path));
     assert_eq!(output_path, PathBuf::from(expected_path));
     assert_eq!(suffix, expected_suffix.map(|x| x.to_owned()));
 }
@@ -93,7 +92,7 @@ fn test_display_path_with_absolute_path() {
     } else {
         "/example"
     };
-    let displayed_path = file::display_path(path);
+    let displayed_path = aureum::display_path(path);
 
     assert_eq!(displayed_path, "<absolute path to 'example'>");
 }
@@ -101,14 +100,14 @@ fn test_display_path_with_absolute_path() {
 #[test]
 fn test_display_path_with_root_dir() {
     let path = if cfg!(windows) { r"C:\" } else { "/" };
-    let displayed_path = file::display_path(path);
+    let displayed_path = aureum::display_path(path);
 
     assert_eq!(displayed_path, "<root directory>");
 }
 
 #[test]
 fn test_display_path_with_file_name() {
-    let displayed_path = file::display_path("example");
+    let displayed_path = aureum::display_path("example");
 
     assert_eq!(displayed_path, "example");
 }
@@ -120,7 +119,7 @@ fn test_display_path_with_relative_path() {
     } else {
         "sub_dir/example"
     };
-    let displayed_path = file::display_path(path);
+    let displayed_path = aureum::display_path(path);
 
     assert_eq!(displayed_path, "sub_dir/example");
 }

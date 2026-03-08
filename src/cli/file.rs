@@ -1,5 +1,4 @@
-use aureum::test_id::TestId;
-use aureum::test_id_container::TestIdContainer;
+use aureum::{TestId, TestIdContainer};
 use glob;
 use relative_path::RelativePathBuf;
 use std::collections::BTreeMap;

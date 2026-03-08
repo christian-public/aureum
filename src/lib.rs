@@ -1,17 +1,31 @@
-pub mod formats {
+mod formats {
     pub mod tap;
     pub mod tree;
 }
-pub mod utils {
+mod utils {
     pub mod file;
     pub mod string;
 }
 mod vendor {
     pub mod ascii_tree;
 }
-pub mod test_case;
-pub mod test_id;
-pub mod test_id_container;
-pub mod test_result;
-pub mod test_runner;
-pub mod toml_config;
+mod test_case;
+mod test_id;
+mod test_id_container;
+mod test_result;
+mod test_runner;
+mod toml_config;
+
+pub use formats::tree::Tree::{self, Leaf, Node};
+pub use test_id::TestId;
+pub use test_id_container::TestIdContainer;
+pub use test_runner::{ReportConfig, ReportFormat};
+pub use toml_config::{
+    ParsedTomlConfig, ProgramPath, Requirement, TestCaseValidationError, TomlConfigData,
+    TomlConfigError,
+};
+
+pub use formats::tree::draw_tree;
+pub use test_runner::run_test_cases;
+pub use toml_config::parse_toml_config;
+pub use utils::file::{display_path, find_executable_path, split_file_name};
