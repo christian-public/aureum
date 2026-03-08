@@ -7,7 +7,6 @@ use std::path::{Path, PathBuf};
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub enum TestPath {
-    Pipe,
     Glob(String),
     SpecificFile {
         source_file: PathBuf,
@@ -23,7 +22,6 @@ pub fn expand_test_paths(
 
     for test_path in test_paths {
         match test_path {
-            TestPath::Pipe => {} // Skip
             TestPath::Glob(path) => {
                 // TODO: Handle error case
                 if let Ok(found_test_files) = locate_test_files(path.as_str()) {

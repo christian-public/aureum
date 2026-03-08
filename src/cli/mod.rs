@@ -45,9 +45,7 @@ impl FromStr for TestPath {
     type Err = &'static str;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if s == "-" {
-            Ok(Self::Pipe)
-        } else if let (path, Some(suffix)) = file_utils::split_file_name(Path::new(s)) {
+        if let (path, Some(suffix)) = file_utils::split_file_name(Path::new(s)) {
             if path.is_file() {
                 Ok(Self::SpecificFile {
                     source_file: path,
