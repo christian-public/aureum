@@ -1,25 +1,27 @@
-# Aureum - Golden test runner for executables
+# Aureum
 
-**🚧 Work in progress 🚧**
+[![CI](https://github.com/christian-public/aureum/actions/workflows/ci.yml/badge.svg)](https://github.com/christian-public/aureum/actions/workflows/ci.yml)
 
-Inspired by [Idris 2's golden test runner](https://github.com/idris-lang/Idris2/tree/main/tests).
+`aureum` is a golden test runner for executables.
 
 Key functionality:
-- Language-agnostic: Configure tests using [TOML](http://toml.io) files
-- A configuration file may contain multiple tests
-- Each test can provide the expected value for `stdout`, `stderr` and `exit code` (See [format](#aureum-configuration-format) below)
-- Tests are allowed to reference environment variables and external files
-- Supports two output formats: `summary` and [`tap`](http://testanything.org)
-- Tries to provide helpful error messages
-- `aureum` is tested by `aureum` (See [`spec/`](spec/))
-- Runs on Linux, macOS and Windows
+- Language-agnostic: Configure tests using [TOML](https://toml.io) files.
+- A configuration file may contain multiple tests.
+- Each test can provide the expected value for `stdout`, `stderr` and `exit code`. See [format](#aureum-configuration-format) below.
+- Tests are allowed to reference environment variables and external files.
+- Supports two output formats: `summary` and [`tap`](https://testanything.org).
+- Tries to provide helpful error messages.
+- `aureum` is tested by `aureum`. See [`spec`](spec) directory.
+- Runs on Linux, macOS and Windows.
 
 This tool is best suited to test executables that are stateless, i.e. running an executable with a given input always produces the same output.
+
+Inspired by [Idris 2's golden test runner](https://github.com/idris-lang/Idris2/tree/main/tests).
 
 
 ## Installation
 
-1. `git clone http://github.com/chrrasmussen/aureum`
+1. `git clone https://github.com/christian-public/aureum`
 2. `cd aureum`
 3. `cargo build` (or `cargo build --release` to build a release version)
 
@@ -49,10 +51,10 @@ Options:
       --hide-absolute-paths            Replace absolute paths with a platform-independent placeholder
       --run-tests-in-parallel          Run tests in parallel
       --verbose                        Print extra information about config files
-  -h, --help                           Print help information
+  -h, --help                           Print help
 ```
 
-When running `aureum`, you may specify one or more files/directories/[glob patterns](https://en.wikipedia.org/wiki/Glob_(programming)). When specifying a directory, `aureum` will search for files with the file extension `.au.toml`. This file extension was chosen to allow unrelated `.toml` files to be located in the same directory structure as the Aureum-specific config files.
+When running `aureum`, you may specify one or more files/directories/[glob patterns](https://en.wikipedia.org/wiki/Glob_(programming)). When specifying a directory, `aureum` will search for files with the file extension `.au.toml`. This file extension was chosen to allow other `.toml` files to be located in the same directory structure as the Aureum-specific config files.
 
 
 ## Example
