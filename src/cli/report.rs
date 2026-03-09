@@ -44,31 +44,27 @@ pub fn print_config_details(
 
         if verbose {
             // Program to run
-            {
-                let program_path = &test_details.program_path;
-                let program_to_run = match program_path {
-                    ProgramPath::NotSpecified => String::from("❌ Not specified"),
-                    ProgramPath::MissingProgram { requested_path: _ } => {
-                        String::from("❌ Not found")
-                    }
-                    ProgramPath::ResolvedPath {
-                        requested_path: _,
-                        resolved_path,
-                    } => {
-                        let path = if hide_absolute_paths {
-                            aureum::display_path(resolved_path)
-                        } else {
-                            resolved_path.display().to_string()
-                        };
-                        format!("✅ {}", path)
-                    }
-                };
+            let program_path = &test_details.program_path;
+            let program_to_run = match program_path {
+                ProgramPath::NotSpecified => String::from("❌ Not specified"),
+                ProgramPath::MissingProgram { requested_path: _ } => String::from("❌ Not found"),
+                ProgramPath::ResolvedPath {
+                    requested_path: _,
+                    resolved_path,
+                } => {
+                    let path = if hide_absolute_paths {
+                        aureum::display_path(resolved_path)
+                    } else {
+                        resolved_path.display().to_string()
+                    };
+                    format!("✅ {}", path)
+                }
+            };
 
-                let nodes = vec![str_to_tree(&program_to_run)];
+            let nodes = vec![str_to_tree(&program_to_run)];
 
-                let heading = String::from("Program to run");
-                categories.push(Node(heading, nodes));
-            }
+            let heading = String::from("Program to run");
+            categories.push(Node(heading, nodes));
 
             // Requirements
             let requirements = requirements_map(&test_details.requirements, &config.data);
