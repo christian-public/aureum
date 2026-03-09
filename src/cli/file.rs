@@ -44,7 +44,11 @@ pub fn expand_test_paths(
                         .and_modify(|test_ids: &mut TestIdCoverageSet| {
                             test_ids.add(test_id.clone());
                         })
-                        .or_insert_with(TestIdCoverageSet::empty);
+                        .or_insert_with(|| {
+                            let mut test_ids = TestIdCoverageSet::empty();
+                            test_ids.add(test_id.clone());
+                            test_ids
+                        });
                 } else {
                     // TODO: Handle if path is not relative
                 }
