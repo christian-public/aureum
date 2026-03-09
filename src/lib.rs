@@ -11,14 +11,14 @@ mod vendor {
 }
 mod test_case;
 mod test_id;
-mod test_id_container;
+mod test_id_coverage_set;
 mod test_result;
 mod test_runner;
 mod toml_config;
 
 pub use formats::tree::Tree::{self, Leaf, Node};
 pub use test_id::TestId;
-pub use test_id_container::TestIdContainer;
+pub use test_id_coverage_set::TestIdCoverageSet;
 pub use test_runner::{ReportConfig, ReportFormat};
 pub use toml_config::{
     ParsedTomlConfig, ProgramPath, Requirement, TestCaseValidationError, TomlConfigData,

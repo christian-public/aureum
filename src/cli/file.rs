@@ -1,4 +1,4 @@
-use aureum::{TestId, TestIdContainer};
+use aureum::{TestId, TestIdCoverageSet};
 use glob;
 use relative_path::RelativePathBuf;
 use std::collections::BTreeMap;
@@ -17,7 +17,7 @@ pub enum TestPath {
 pub fn expand_test_paths(
     test_paths: &[TestPath],
     current_dir: &Path,
-) -> BTreeMap<RelativePathBuf, TestIdContainer> {
+) -> BTreeMap<RelativePathBuf, TestIdCoverageSet> {
     let mut files = BTreeMap::new();
 
     for test_path in test_paths {
@@ -27,7 +27,7 @@ pub fn expand_test_paths(
                 if let Ok(found_test_files) = locate_test_files(path.as_str()) {
                     for found_test_file in found_test_files {
                         if let Some(path) = get_relative_path(&found_test_file, current_dir) {
-                            files.insert(path, TestIdContainer::full());
+                            files.insert(path, TestIdCoverageSet::full());
                         } else {
                             // TODO: Handle if path is not relative
                         }
@@ -41,10 +41,10 @@ pub fn expand_test_paths(
                 if let Some(path) = get_relative_path(source_file, current_dir) {
                     files
                         .entry(path)
-                        .and_modify(|test_ids: &mut TestIdContainer| {
+                        .and_modify(|test_ids: &mut TestIdCoverageSet| {
                             test_ids.add(test_id.clone());
                         })
-                        .or_insert_with(TestIdContainer::empty);
+                        .or_insert_with(TestIdCoverageSet::empty);
                 } else {
                     // TODO: Handle if path is not relative
                 }

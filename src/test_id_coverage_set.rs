@@ -1,17 +1,17 @@
 use crate::test_id::TestId;
 
 #[cfg_attr(debug_assertions, derive(Debug))]
-pub struct TestIdContainer {
+pub struct TestIdCoverageSet {
     ids: Vec<TestId>,
 }
 
-impl TestIdContainer {
-    pub fn empty() -> TestIdContainer {
-        TestIdContainer { ids: vec![] }
+impl TestIdCoverageSet {
+    pub fn empty() -> TestIdCoverageSet {
+        TestIdCoverageSet { ids: vec![] }
     }
 
-    pub fn full() -> TestIdContainer {
-        TestIdContainer {
+    pub fn full() -> TestIdCoverageSet {
+        TestIdCoverageSet {
             ids: vec![TestId::root()],
         }
     }
@@ -58,7 +58,7 @@ mod tests {
         let sub3 = TestId::from("sub3");
         let root = TestId::root();
 
-        let mut test_ids = TestIdContainer::empty();
+        let mut test_ids = TestIdCoverageSet::empty();
 
         assert_eq!(test_ids.len(), 0);
         assert_eq!(test_ids.add(sub1), true);
@@ -74,7 +74,7 @@ mod tests {
         let root = TestId::root();
         let sub = TestId::from("sub");
 
-        let mut test_ids = TestIdContainer::empty();
+        let mut test_ids = TestIdCoverageSet::empty();
 
         assert_eq!(test_ids.len(), 0);
         assert_eq!(test_ids.add(root), true);
