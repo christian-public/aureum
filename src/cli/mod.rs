@@ -13,6 +13,7 @@ pub fn parse() -> Args {
 
 /// Golden test runner for executables
 #[derive(Parser)]
+#[cfg_attr(debug_assertions, derive(Debug))]
 #[clap(bin_name = "aureum")]
 pub struct Args {
     /// Paths to config files
@@ -60,6 +61,7 @@ impl FromStr for TestPath {
 }
 
 #[derive(Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub enum OutputFormat {
     Summary,
     Tap,

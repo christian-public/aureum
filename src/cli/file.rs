@@ -5,6 +5,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub enum TestPath {
     Glob(String),
     SpecificFile {
@@ -55,6 +56,7 @@ pub fn expand_test_paths(
 }
 
 #[allow(dead_code)]
+#[cfg_attr(debug_assertions, derive(Debug))]
 enum LocateFileError {
     InvalidPattern(glob::PatternError),
     InvalidEntry(glob::GlobError),

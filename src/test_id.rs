@@ -1,6 +1,7 @@
 use std::fmt::Display;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct TestId {
     id_path: Vec<String>,
 }

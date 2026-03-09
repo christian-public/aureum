@@ -1,5 +1,6 @@
 use crate::test_id::TestId;
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct TestIdContainer {
     ids: Vec<TestId>,
 }

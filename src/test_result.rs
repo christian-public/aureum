@@ -1,3 +1,4 @@
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct TestResult {
     pub stdout: ValueComparison<String>,
     pub stderr: ValueComparison<String>,
@@ -10,6 +11,7 @@ impl TestResult {
     }
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub enum ValueComparison<T> {
     NotChecked,
     Matches(T),

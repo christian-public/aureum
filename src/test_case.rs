@@ -7,6 +7,7 @@ use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
 #[derive(Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct TestCase {
     pub source_file: RelativePathBuf,
     pub id: TestId,
@@ -31,6 +32,7 @@ impl TestCase {
     }
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub enum RunError {
     FailedToDecodeUtf8,
     MissingExitCode,

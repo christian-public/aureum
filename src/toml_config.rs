@@ -12,17 +12,20 @@ use std::str::FromStr;
 
 // READ CONFIG FILE
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct ParsedTomlConfig {
     pub data: TomlConfigData,
     pub tests: BTreeMap<TestId, TestDetails>,
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct TestDetails {
     pub requirements: BTreeSet<Requirement>,
     pub program_path: ProgramPath,
     pub test_case: Result<TestCase, BTreeSet<TestCaseValidationError>>,
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub enum ProgramPath {
     NotSpecified,
     MissingProgram {
@@ -48,6 +51,7 @@ impl ProgramPath {
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub enum TestCaseValidationError {
     MissingExternalFile(String),
     MissingEnvVar(String),
@@ -57,6 +61,7 @@ pub enum TestCaseValidationError {
     ExpectationRequired,
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub enum TomlConfigError {
     FailedToReadFile(io::Error),
     FailedToParseTomlConfig(toml::de::Error),
@@ -95,6 +100,7 @@ pub fn parse_toml_config(source_file: &RelativePath) -> Result<ParsedTomlConfig,
 // TOML STRUCTURE
 
 #[derive(Deserialize, Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
 struct TomlConfig {
     description: Option<ConfigValue<String>>,
     program: Option<ConfigValue<String>>,
@@ -107,6 +113,7 @@ struct TomlConfig {
 }
 
 #[derive(Deserialize, Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
 #[serde(untagged)]
 enum ConfigValue<T> {
     Literal(T),
@@ -118,6 +125,7 @@ enum ConfigValue<T> {
 // REQUIREMENTS
 
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Requirement {
     ExternalFile(String),
     EnvVar(String),
@@ -162,6 +170,7 @@ fn get_requirement<T>(config_value: &ConfigValue<T>) -> Option<Requirement> {
 
 // READ CONTENT
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct TomlConfigData {
     files: BTreeMap<String, Option<String>>,
     env: BTreeMap<String, Option<String>>,

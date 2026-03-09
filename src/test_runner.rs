@@ -4,16 +4,19 @@ use crate::test_case::{self, RunError, TestCase};
 use crate::test_result::TestResult;
 use rayon::prelude::*;
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct ReportConfig {
     pub number_of_tests: usize,
     pub format: ReportFormat,
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub enum ReportFormat {
     Summary { show_all_tests: bool },
     Tap,
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct RunResult {
     pub test_case: TestCase,
     pub result: Result<TestResult, RunError>,
