@@ -1,3 +1,15 @@
+//! The `TestId` type is used to reference a specific test in a test file.
+//!
+//! Each level of a `TestId` is separated by a `.` (dot).
+//! The root node can be referenced using `TestId::root()`.
+//!
+//! # Examples
+//!
+//! ```
+//! use aureum::TestId;
+//! let example = TestId::from("level1.level2");
+//! assert_eq!(format!("{}", example), "level1.level2");
+//! ```
 use std::fmt::Display;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone)]
