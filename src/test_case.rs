@@ -85,7 +85,7 @@ pub fn run(test_case: &TestCase) -> Result<TestResult, RunError> {
     })
 }
 
-fn compare_result<T: PartialEq>(expected: Option<T>, got: T) -> ValueComparison<T> {
+fn compare_result<T: Eq>(expected: Option<T>, got: T) -> ValueComparison<T> {
     if let Some(expected) = expected {
         if expected == got {
             ValueComparison::Matches(got)
