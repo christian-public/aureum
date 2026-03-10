@@ -17,5 +17,5 @@ rayon = "1.11.0"
 relative-path = "2.0.1"
 serde = { version = "1.0.228", features = ["derive"] }
 yaml_serde = "0.10.3"
-toml = "1.0.3"
-which = "8.0.0"
+toml = "1.0.6"
+which = "8.0.2"
