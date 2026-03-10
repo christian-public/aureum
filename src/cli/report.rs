@@ -94,7 +94,7 @@ pub fn print_config_details(
     } else {
         tests
             .into_iter()
-            .map(|(test_id, children)| Node(test_id.to_prefixed_string(), children))
+            .map(|(test_id, children)| Node(format!(":{}", test_id), children))
             .collect()
     };
 
