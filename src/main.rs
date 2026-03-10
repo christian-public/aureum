@@ -1,9 +1,14 @@
-mod cli;
+mod cli {
+    pub mod args;
+    pub mod file;
+    pub mod report;
+    mod test_path;
+}
 
 use aureum::{ReportConfig, ReportFormat};
+use cli::args::{self, Args, OutputFormat};
 use cli::file;
 use cli::report;
-use cli::{Args, OutputFormat};
 use std::env;
 use std::process::exit;
 
@@ -11,7 +16,7 @@ const TEST_FAILURE_EXIT_CODE: i32 = 1;
 const INVALID_USER_INPUT_EXIT_CODE: i32 = 2;
 
 fn main() {
-    let args = cli::parse();
+    let args = args::parse();
 
     let current_dir = env::current_dir().expect("Current directory must be available");
 

@@ -1,18 +1,9 @@
-use aureum::{TestId, TestIdCoverageSet};
+use crate::cli::test_path::TestPath;
+use aureum::TestIdCoverageSet;
 use glob;
 use relative_path::RelativePathBuf;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
-
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone)]
-#[cfg_attr(debug_assertions, derive(Debug))]
-pub enum TestPath {
-    Glob(String),
-    SpecificFile {
-        source_file: PathBuf,
-        test_id: TestId,
-    },
-}
 
 pub fn expand_test_paths(
     test_paths: &[TestPath],

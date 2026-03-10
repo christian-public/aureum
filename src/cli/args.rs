@@ -1,10 +1,5 @@
-pub mod file;
-pub mod report;
-
-use aureum::TestId;
+use crate::cli::test_path::TestPath;
 use clap::Parser;
-use file::TestPath;
-use std::path::Path;
 use std::str::FromStr;
 
 pub fn parse() -> Args {
@@ -39,25 +34,6 @@ pub struct Args {
     /// Print extra information about config files
     #[arg(long)]
     pub verbose: bool,
-}
-
-impl FromStr for TestPath {
-    type Err = &'static str;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if let (path, Some(suffix)) = aureum::split_file_name(Path::new(s)) {
-            if path.is_file() {
-                Ok(Self::SpecificFile {
-                    source_file: path,
-                    test_id: TestId::from(suffix.as_str()),
-                })
-            } else {
-                Err("Invalid path to config file")
-            }
-        } else {
-            Ok(Self::Glob(s.to_owned()))
-        }
-    }
 }
 
 #[derive(Clone)]
