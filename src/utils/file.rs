@@ -8,7 +8,7 @@ where
 {
     path.as_ref()
         .parent()
-        .unwrap_or_else(|| RelativePath::new("."))
+        .unwrap_or(RelativePath::new("."))
         .to_relative_path_buf()
 }
 

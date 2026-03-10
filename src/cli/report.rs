@@ -114,8 +114,7 @@ pub fn print_toml_config_error(source_file: RelativePathBuf, error: TomlConfigEr
 }
 
 fn print_tree(tree: Tree) {
-    let content =
-        aureum::draw_tree(&tree).unwrap_or_else(|_| String::from("Failed to draw tree\n"));
+    let content = aureum::draw_tree(&tree).unwrap_or(String::from("Failed to draw tree\n"));
 
     eprint!("{}", content); // Already contains newline
     eprintln!()

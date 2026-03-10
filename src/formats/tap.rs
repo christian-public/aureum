@@ -75,8 +75,7 @@ fn format_test_result(test_result: &TestResult) -> String {
         diagnostics.insert("exit-code", show_i32_diff(expected, got));
     }
 
-    yaml_serde::to_string(&diagnostics)
-        .unwrap_or_else(|_| String::from("Failed to convert to YAML\n"))
+    yaml_serde::to_string(&diagnostics).unwrap_or(String::from("Failed to convert to YAML\n"))
 }
 
 fn show_string_diff(expected: &String, got: &String) -> BTreeMap<&'static str, Value> {
