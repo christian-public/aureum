@@ -226,7 +226,7 @@ fn read_from_env(var_name: &String) -> Result<String, env::VarError> {
 fn build_test_details(
     toml_config: TomlConfig,
     source_file: RelativePathBuf,
-    id: TestId,
+    test_id: TestId,
     data: &TomlConfigData,
 ) -> TestDetails {
     let current_dir = file::parent_dir(&source_file);
@@ -297,7 +297,7 @@ fn build_test_details(
 
         Ok(TestCase {
             source_file,
-            id,
+            test_id,
             description,
             program,
             arguments,

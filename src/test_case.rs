@@ -10,7 +10,7 @@ use std::process::{Command, Stdio};
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct TestCase {
     pub source_file: RelativePathBuf,
-    pub id: TestId,
+    pub test_id: TestId,
     pub description: Option<String>,
     pub program: PathBuf, // Expects an absolute path
     pub arguments: Vec<String>,
@@ -24,10 +24,10 @@ impl TestCase {
     pub fn id(&self) -> String {
         let file_path = self.source_file.to_string();
 
-        if self.id.is_root() {
+        if self.test_id.is_root() {
             file_path
         } else {
-            format!("{}:{}", file_path, self.id)
+            format!("{}:{}", file_path, self.test_id)
         }
     }
 }
