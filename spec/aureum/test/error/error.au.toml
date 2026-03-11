@@ -1,10 +1,9 @@
 program = { env = "AUREUM_TEST_EXEC" }
-expected_stdout = ""
-expected_exit_code = 1
 
 
 [tests.missing_config]
 program_arguments = ["test", "aureum_test_this_file_does_not_exist"]
+expected_stdout = ""
 expected_stderr = """
 error: No config files found for the given paths
 """
@@ -13,6 +12,7 @@ expected_exit_code = 2
 
 [tests.missing_config_with_test_id]
 program_arguments = ["test", "aureum_test_this_file_does_not_exist:sub1"]
+expected_stdout = ""
 expected_stderr = """
 error: invalid value 'aureum_test_this_file_does_not_exist:sub1' for '<PATHS>...': Invalid path to config file
 
@@ -35,6 +35,7 @@ expected_stderr = """
 
 Some config files contain errors (See above)
 """
+expected_exit_code = 1
 
 
 [tests.empty_config]
@@ -53,6 +54,7 @@ expected_stderr = """
 
 Some config files contain errors (See above)
 """
+expected_exit_code = 1
 
 
 [tests.no_program_specified]
@@ -70,6 +72,7 @@ expected_stderr = """
 
 Some config files contain errors (See above)
 """
+expected_exit_code = 1
 
 
 [tests.unknown_test_program]
@@ -87,6 +90,7 @@ expected_stderr = """
 
 Some config files contain errors (See above)
 """
+expected_exit_code = 1
 
 
 [tests.no_expectations]
@@ -104,6 +108,7 @@ expected_stderr = """
 
 Some config files contain errors (See above)
 """
+expected_exit_code = 1
 
 
 [tests.missing_env_var]
@@ -121,6 +126,7 @@ expected_stderr = """
 
 Some config files contain errors (See above)
 """
+expected_exit_code = 1
 
 
 [tests.missing_external_file]
@@ -138,3 +144,4 @@ expected_stderr = """
 
 Some config files contain errors (See above)
 """
+expected_exit_code = 1
