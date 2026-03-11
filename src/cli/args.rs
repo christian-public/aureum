@@ -9,6 +9,8 @@ pub fn parse() -> Args {
 /// Golden test runner for executables
 #[derive(Parser)]
 #[cfg_attr(debug_assertions, derive(Debug))]
+// Set `bin_name` to force identical usage message on all platforms.
+// On Windows, the default is to display `<bin_name>.exe`.
 #[clap(bin_name = "aureum")]
 pub struct Args {
     /// Paths to config files
