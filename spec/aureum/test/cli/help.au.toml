@@ -17,3 +17,5 @@ Options:
       --verbose                        Print extra information about config files
   -h, --help                           Print help
 """
+expected_stderr = ""
+expected_exit_code = 0
