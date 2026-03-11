@@ -1,9 +1,9 @@
 use crate::cli::test_path::TestPath;
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use std::str::FromStr;
 
-pub fn parse() -> Args {
-    Args::parse()
+pub fn parse() -> Cli {
+    Cli::parse()
 }
 
 /// Golden test runner for executables
@@ -12,7 +12,21 @@ pub fn parse() -> Args {
 // Set `bin_name` to force identical usage message on all platforms.
 // On Windows, the default is to display `<bin_name>.exe`.
 #[clap(bin_name = "aureum")]
-pub struct Args {
+pub struct Cli {
+    #[command(subcommand)]
+    pub command: Command,
+}
+
+#[derive(Subcommand)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub enum Command {
+    /// Run tests
+    Test(TestArgs),
+}
+
+#[derive(Parser)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub struct TestArgs {
     /// Paths to config files
     #[arg(required = true)]
     pub paths: Vec<TestPath>,

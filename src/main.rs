@@ -6,7 +6,7 @@ mod cli {
 }
 
 use aureum::{ReportConfig, ReportFormat};
-use cli::args::{self, Args, OutputFormat};
+use cli::args::{self, Cli, Command, OutputFormat, TestArgs};
 use cli::file;
 use cli::report;
 use std::env;
@@ -16,8 +16,15 @@ const TEST_FAILURE_EXIT_CODE: i32 = 1;
 const INVALID_USER_INPUT_EXIT_CODE: i32 = 2;
 
 fn main() {
-    let args = args::parse();
+    let cli: Cli = args::parse();
+    match cli.command {
+        Command::Test(args) => {
+            run_tests(args);
+        }
+    }
+}
 
+fn run_tests(args: TestArgs) {
     let current_dir = env::current_dir().expect("Current directory must be available");
 
     let source_files = file::expand_test_paths(&args.paths, &current_dir)
@@ -82,7 +89,7 @@ fn main() {
     }
 }
 
-fn get_report_format(args: &Args) -> ReportFormat {
+fn get_report_format(args: &TestArgs) -> ReportFormat {
     match args.output_format {
         OutputFormat::Summary => ReportFormat::Summary {
             show_all_tests: args.show_all_tests,

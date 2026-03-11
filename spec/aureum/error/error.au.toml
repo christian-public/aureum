@@ -4,7 +4,7 @@ expected_exit_code = 1
 
 
 [tests.missing_config]
-program_arguments = ["aureum_test_this_file_does_not_exist"]
+program_arguments = ["test", "aureum_test_this_file_does_not_exist"]
 expected_stderr = """
 error: No config files found for the given paths
 """
@@ -12,7 +12,7 @@ expected_exit_code = 2
 
 
 [tests.missing_config_with_test_id]
-program_arguments = ["aureum_test_this_file_does_not_exist:sub1"]
+program_arguments = ["test", "aureum_test_this_file_does_not_exist:sub1"]
 expected_stderr = """
 error: invalid value 'aureum_test_this_file_does_not_exist:sub1' for '<PATHS>...': Invalid path to config file
 
@@ -22,7 +22,7 @@ expected_exit_code = 2
 
 
 [tests.invalid_config]
-program_arguments = ["helpers/invalid_config.toml"]
+program_arguments = ["test", "helpers/invalid_config.toml"]
 expected_stdout = """
 🚀 Running 0 tests:
 
@@ -38,7 +38,7 @@ Some config files contain errors (See above)
 
 
 [tests.empty_config]
-program_arguments = ["helpers/empty_config.toml"]
+program_arguments = ["test", "helpers/empty_config.toml"]
 expected_stdout = """
 🚀 Running 0 tests:
 
@@ -56,7 +56,7 @@ Some config files contain errors (See above)
 
 
 [tests.no_program_specified]
-program_arguments = ["helpers/no_test_program.toml"]
+program_arguments = ["test", "helpers/no_test_program.toml"]
 expected_stdout = """
 🚀 Running 0 tests:
 
@@ -73,7 +73,7 @@ Some config files contain errors (See above)
 
 
 [tests.unknown_test_program]
-program_arguments = ["helpers/unknown_test_program.toml"]
+program_arguments = ["test", "helpers/unknown_test_program.toml"]
 expected_stdout = """
 🚀 Running 0 tests:
 
@@ -90,7 +90,7 @@ Some config files contain errors (See above)
 
 
 [tests.no_expectations]
-program_arguments = ["helpers/no_expectations.toml"]
+program_arguments = ["test", "helpers/no_expectations.toml"]
 expected_stdout = """
 🚀 Running 0 tests:
 
@@ -107,7 +107,7 @@ Some config files contain errors (See above)
 
 
 [tests.missing_env_var]
-program_arguments = ["helpers/missing_env_var.toml"]
+program_arguments = ["test", "helpers/missing_env_var.toml"]
 expected_stdout = """
 🚀 Running 0 tests:
 
@@ -124,7 +124,7 @@ Some config files contain errors (See above)
 
 
 [tests.missing_external_file]
-program_arguments = ["helpers/missing_external_file.toml"]
+program_arguments = ["test", "helpers/missing_external_file.toml"]
 expected_stdout = """
 🚀 Running 0 tests:
 

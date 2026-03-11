@@ -1,5 +1,5 @@
 program = { env = "AUREUM_TEST_EXEC" }
-program_arguments = ["--show-all-tests", "helpers/missing_program.toml"]
+program_arguments = ["test", "--show-all-tests", "helpers/missing_program.toml"]
 
 expected_stdout = """
 🚀 Running 0 tests:

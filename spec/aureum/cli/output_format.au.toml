@@ -3,6 +3,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 [tests.summary_passing]
 program_arguments = [
+  "test",
   "--show-all-tests",
   "--output-format",
   "summary",
@@ -22,6 +23,7 @@ expected_exit_code = 0
 
 [tests.summary_failing]
 program_arguments = [
+  "test",
   "--show-all-tests",
   "--output-format",
   "summary",
@@ -73,6 +75,7 @@ expected_exit_code = 1
 
 [tests.tap_passing]
 program_arguments = [
+  "test",
   "--output-format",
   "tap",
   "basic_helpers/passing_test.toml",
@@ -88,6 +91,7 @@ expected_exit_code = 0
 
 [tests.tap_failing]
 program_arguments = [
+  "test",
   "--output-format",
   "tap",
   "basic_helpers/failing_test.toml",
@@ -114,6 +118,7 @@ expected_exit_code = 1
 
 [tests.unknown]
 program_arguments = [
+  "test",
   "--output-format",
   "UNKNOWN",
   "basic_helpers/passing_test.toml",

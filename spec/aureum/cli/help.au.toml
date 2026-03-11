@@ -1,10 +1,10 @@
 program = { env = "AUREUM_TEST_EXEC" }
-program_arguments = ["--help"]
+program_arguments = ["test", "--help"]
 
 expected_stdout = """
-Golden test runner for executables
+Run tests
 
-Usage: aureum [OPTIONS] <PATHS>...
+Usage: aureum test [OPTIONS] <PATHS>...
 
 Arguments:
   <PATHS>...  Paths to config files

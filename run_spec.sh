@@ -20,4 +20,5 @@ export AUREUM_TEST_EXEC="$PROGRAM_PATH"
 export AUREUM_TEST_HELLO_WORLD="Hello world" # Required by `basic/read_env_var.au.toml`
 
 # Run the tests
-"$PROGRAM_PATH" "${@:-spec}"
+default_command=(test spec)
+"$PROGRAM_PATH" "${@:-${default_command[@]}}"

@@ -3,6 +3,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 [tests.verbose_mode]
 program_arguments = [
+   "test",
    "--verbose",
    "--hide-absolute-paths",
    "verbose_helpers/*.toml",
@@ -58,7 +59,7 @@ expected_exit_code = 1
 
 
 [tests.default]
-program_arguments = ["verbose_helpers/*.toml"]
+program_arguments = ["test", "verbose_helpers/*.toml"]
 expected_stdout = """
 🚀 Running 3 tests:
 ...

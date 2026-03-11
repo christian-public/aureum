@@ -3,6 +3,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 [tests.show_all_tests]
 program_arguments = [
+   "test",
    "--show-all-tests",
    "basic_helpers/passing_test.toml",
    "basic_helpers/failing_test.toml",
@@ -54,6 +55,7 @@ expected_exit_code = 1
 
 [tests.default]
 program_arguments = [
+   "test",
    "basic_helpers/passing_test.toml",
    "basic_helpers/failing_test.toml",
 ]
