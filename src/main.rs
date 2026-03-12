@@ -149,9 +149,7 @@ fn run_tests(args: TestArgs) {
 
 fn get_report_format(args: &TestArgs) -> ReportFormat {
     match args.output_format {
-        OutputFormat::Summary => ReportFormat::Summary {
-            show_all_tests: args.show_all_tests,
-        },
+        OutputFormat::Summary => ReportFormat::Summary,
         OutputFormat::Tap => ReportFormat::Tap,
     }
 }

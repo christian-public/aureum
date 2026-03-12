@@ -47,7 +47,6 @@ Arguments:
 
 Options:
       --output-format <OUTPUT_FORMAT>  Options: summary, tap [default: summary]
-      --show-all-tests                 Show all tests in summary, regardless of test status
       --hide-absolute-paths            Replace absolute paths with a platform-independent placeholder
       --run-tests-in-parallel          Run tests in parallel
       --verbose                        Print extra information about config files

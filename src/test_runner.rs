@@ -12,7 +12,7 @@ pub struct ReportConfig {
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum ReportFormat {
-    Summary { show_all_tests: bool },
+    Summary,
     Tap,
 }
 
@@ -74,7 +74,7 @@ pub fn run_test_cases(
 
 fn report_start(report_config: &ReportConfig) {
     match report_config.format {
-        ReportFormat::Summary { show_all_tests: _ } => {
+        ReportFormat::Summary => {
             summary_print_start(report_config.number_of_tests);
         }
         ReportFormat::Tap => {
@@ -90,7 +90,7 @@ fn report_test_case(
     result: &Result<TestResult, RunError>,
 ) {
     match report_config.format {
-        ReportFormat::Summary { show_all_tests: _ } => {
+        ReportFormat::Summary => {
             summary_print_test_case(result);
         }
         ReportFormat::Tap => {
@@ -102,8 +102,8 @@ fn report_test_case(
 
 fn report_summary(report_config: &ReportConfig, run_results: &[RunResult]) {
     match report_config.format {
-        ReportFormat::Summary { show_all_tests } => {
-            summary_print_summary(report_config.number_of_tests, show_all_tests, run_results);
+        ReportFormat::Summary => {
+            summary_print_summary(report_config.number_of_tests, run_results);
         }
         ReportFormat::Tap => {
             tap_print_summary();
@@ -132,14 +132,14 @@ fn summary_print_test_case(result: &Result<TestResult, RunError>) {
     }
 }
 
-fn summary_print_summary(number_of_tests: usize, show_all_tests: bool, run_results: &[RunResult]) {
+fn summary_print_summary(number_of_tests: usize, run_results: &[RunResult]) {
     println!(); // Add newline to dots
 
     let mut is_any_test_cases_printed = false;
 
     for run_result in run_results {
         let test_failed = !run_result.is_success();
-        if show_all_tests || test_failed {
+        if test_failed {
             if !is_any_test_cases_printed {
                 println!();
                 is_any_test_cases_printed = true;

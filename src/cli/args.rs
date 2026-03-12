@@ -53,10 +53,6 @@ pub struct TestArgs {
     #[arg(long, default_value = "summary")]
     pub output_format: OutputFormat,
 
-    /// Show all tests in summary, regardless of test status
-    #[arg(long)]
-    pub show_all_tests: bool,
-
     /// Replace absolute paths with a platform-independent placeholder
     #[arg(long)]
     pub hide_absolute_paths: bool,
