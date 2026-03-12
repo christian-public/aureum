@@ -1,0 +1,13 @@
+program = { env = "AUREUM_TEST_EXEC" }
+program_arguments = ["list"]
+
+expected_stdout = ""
+expected_stderr = """
+error: the following required arguments were not provided:
+  <PATHS>...
+
+Usage: aureum list <PATHS>...
+
+For more information, try '--help'.
+"""
+expected_exit_code = 2

@@ -6,7 +6,7 @@ mod cli {
 }
 
 use aureum::{ReportConfig, ReportFormat};
-use cli::args::{self, Cli, Command, OutputFormat, TestArgs};
+use cli::args::{self, Cli, Command, ListArgs, OutputFormat, TestArgs};
 use cli::file;
 use cli::report;
 use std::env;
@@ -18,9 +18,67 @@ const INVALID_USER_INPUT_EXIT_CODE: i32 = 2;
 fn main() {
     let cli: Cli = args::parse();
     match cli.command {
+        Command::List(args) => {
+            list_tests(args);
+        }
         Command::Test(args) => {
             run_tests(args);
         }
+    }
+}
+
+fn list_tests(args: ListArgs) {
+    let current_dir = env::current_dir().expect("Current directory must be available");
+
+    let source_files = file::expand_test_paths(&args.paths, &current_dir)
+        .keys()
+        .cloned()
+        .collect::<Vec<_>>();
+
+    if source_files.is_empty() {
+        report::print_no_config_files();
+        exit(INVALID_USER_INPUT_EXIT_CODE);
+    }
+
+    if args.verbose {
+        report::print_files_found(&source_files);
+    }
+
+    let mut all_test_cases = vec![];
+    let mut any_failed_configs = false;
+
+    for source_file in source_files {
+        match aureum::parse_toml_config(&source_file) {
+            Ok(config) => {
+                let any_issues = report::any_issues_in_toml_config(&config);
+                if any_issues || args.verbose {
+                    report::print_config_details(
+                        source_file,
+                        &config,
+                        args.verbose,
+                        args.hide_absolute_paths,
+                    );
+
+                    if any_issues {
+                        any_failed_configs = true;
+                    }
+                }
+
+                all_test_cases.extend(config.tests.into_values().filter_map(|x| x.test_case.ok()));
+            }
+            Err(error) => {
+                report::print_toml_config_error(source_file, error);
+                any_failed_configs = true;
+            }
+        }
+    }
+
+    for test_case in all_test_cases {
+        println!("{}", test_case.id())
+    }
+
+    if any_failed_configs {
+        eprintln!("Some config files contain errors (See above)");
     }
 }
 
