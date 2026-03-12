@@ -31,16 +31,16 @@ The `aureum` executable is now available in the `target/debug` directory.
 ## Basic usage
 
 ```bash
-aureum [OPTIONS] <PATHS>...
+aureum test [OPTIONS] <PATHS>...
 ```
 
 Detailed usage is shown below:
 
 ```bash
-$ aureum --help
-Golden test runner for executables
+$ aureum test --help
+Run tests
 
-Usage: aureum [OPTIONS] <PATHS>...
+Usage: aureum test [OPTIONS] <PATHS>...
 
 Arguments:
   <PATHS>...  Paths to config files
@@ -54,7 +54,7 @@ Options:
   -h, --help                           Print help
 ```
 
-When running `aureum`, you may specify one or more files/directories/[glob patterns](https://en.wikipedia.org/wiki/Glob_(programming)). When specifying a directory, `aureum` will search for files with the file extension `.au.toml`. This file extension was chosen to allow other `.toml` files to be located in the same directory structure as the Aureum-specific config files.
+When running `aureum test`, you may specify one or more files/directories/[glob patterns](https://en.wikipedia.org/wiki/Glob_(programming)). When specifying a directory, `aureum` will search for files with the file extension `.au.toml`. This file extension was chosen to allow other `.toml` files to be located in the same directory structure as the Aureum-specific config files.
 
 
 ## Example
@@ -68,7 +68,7 @@ program_arguments = ["-n", "Hello world"]
 expected_stdout = "Hello world"
 ```
 
-Running the command `aureum hello.au.toml` will output the following:
+Running the command `aureum test hello.au.toml` will output the following:
 
 ```
 🚀 Running 1 tests:
@@ -121,7 +121,7 @@ program_arguments = ["-n", "Test 2"]
 expected_stdout = "Test 2"
 ```
 
-Running the command `aureum multiple_tests.au.toml` will output the following:
+Running the command `aureum test multiple_tests.au.toml` will output the following:
 
 ```
 🚀 Running 2 tests:
