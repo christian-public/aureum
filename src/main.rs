@@ -10,26 +10,27 @@ use cli::args::{self, Cli, Command, ListArgs, OutputFormat, TestArgs};
 use cli::file;
 use cli::report;
 use std::env;
+use std::path::PathBuf;
 use std::process::exit;
 
 const TEST_FAILURE_EXIT_CODE: i32 = 1;
 const INVALID_USER_INPUT_EXIT_CODE: i32 = 2;
 
 fn main() {
+    let current_dir = env::current_dir().expect("Current directory must be available");
+
     let cli: Cli = args::parse();
     match cli.command {
         Command::List(args) => {
-            list_tests(args);
+            list_tests(current_dir, args);
         }
         Command::Test(args) => {
-            run_tests(args);
+            run_tests(current_dir, args);
         }
     }
 }
 
-fn list_tests(args: ListArgs) {
-    let current_dir = env::current_dir().expect("Current directory must be available");
-
+fn list_tests(current_dir: PathBuf, args: ListArgs) {
     let source_files = file::expand_test_paths(&args.paths, &current_dir)
         .keys()
         .cloned()
@@ -82,9 +83,7 @@ fn list_tests(args: ListArgs) {
     }
 }
 
-fn run_tests(args: TestArgs) {
-    let current_dir = env::current_dir().expect("Current directory must be available");
-
+fn run_tests(current_dir: PathBuf, args: TestArgs) {
     let source_files = file::expand_test_paths(&args.paths, &current_dir)
         .keys()
         .cloned()
