@@ -117,7 +117,6 @@ struct TomlConfig {
 #[serde(untagged)]
 enum ConfigValue<T> {
     Literal(T),
-    WrappedLiteral { value: T },
     ReadFromFile { file: String },
     FetchFromEnv { env: String },
 }
@@ -160,7 +159,6 @@ fn add_requirement<T>(requirements: &mut BTreeSet<Requirement>, value: &Option<C
 fn get_requirement<T>(config_value: &ConfigValue<T>) -> Option<Requirement> {
     match config_value {
         ConfigValue::Literal(_) => None,
-        ConfigValue::WrappedLiteral { value: _ } => None,
         ConfigValue::ReadFromFile { file: filename } => {
             Some(Requirement::ExternalFile(filename.clone()))
         }
@@ -396,7 +394,6 @@ where
     fn read(self, data: &TomlConfigData) -> Result<T, TestCaseValidationError> {
         match self {
             Self::Literal(value) => Ok(value),
-            Self::WrappedLiteral { value } => Ok(value),
             Self::ReadFromFile { file: file_path } => {
                 if let Some(str) = data.get_file(&file_path) {
                     let value = str
