@@ -1,8 +1,11 @@
 use crate::formats::tree::{Leaf, Node};
 use crate::formats::{tap, tree};
-use crate::test_case::{self, RunError, TestCase};
-use crate::test_result::TestResult;
+use crate::test_case::TestCase;
+use crate::test_result::{TestResult, ValueComparison};
+use crate::utils::file;
 use rayon::prelude::*;
+use std::io::{self, Read, Write};
+use std::process::{Command, Stdio};
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct ReportConfig {
@@ -39,7 +42,7 @@ pub fn run_test_cases(
     run_in_parallel: bool,
 ) -> Vec<RunResult> {
     let run = |(i, test_case)| -> Vec<RunResult> {
-        let result = test_case::run(test_case);
+        let result = run(test_case);
 
         report_test_case(report_config, i, test_case, &result);
 
@@ -68,6 +71,91 @@ pub fn run_test_cases(
     report_summary(report_config, &run_results);
 
     run_results
+}
+
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub enum RunError {
+    FailedToDecodeUtf8,
+    MissingExitCode,
+    IOError(io::Error),
+}
+
+pub fn run(test_case: &TestCase) -> Result<TestResult, RunError> {
+    let current_dir = file::parent_dir(&test_case.source_file).to_logical_path(".");
+
+    let mut cmd = Command::new(&test_case.program);
+    cmd.current_dir(current_dir);
+    cmd.args(&test_case.arguments);
+    cmd.stdin(Stdio::piped());
+    cmd.stdout(Stdio::piped());
+    cmd.stderr(Stdio::piped());
+
+    let mut child = cmd.spawn().map_err(RunError::IOError)?;
+
+    if let Some(stdin_string) = &test_case.stdin {
+        let mut stdin = child
+            .stdin
+            .take()
+            .expect("Stdin should be configured to pipe");
+        stdin
+            .write_all(stdin_string.as_bytes())
+            .map_err(RunError::IOError)?;
+    }
+
+    let stdout = read_pipe_to_string(
+        &mut child
+            .stdout
+            .take()
+            .expect("Stdout should be configured to pipe"),
+    )?;
+    let stderr = read_pipe_to_string(
+        &mut child
+            .stderr
+            .take()
+            .expect("Stderr should be configured to pipe"),
+    )?;
+
+    let exit_status = child.wait().map_err(RunError::IOError)?;
+    let exit_code = exit_status.code().ok_or(RunError::MissingExitCode)?;
+
+    let expected_stdout = test_case.expected_stdout.as_deref().map(normalize_newlines);
+    let expected_stderr = test_case.expected_stderr.as_deref().map(normalize_newlines);
+
+    Ok(TestResult {
+        stdout: compare_result(expected_stdout, normalize_newlines(&stdout)),
+        stderr: compare_result(expected_stderr, normalize_newlines(&stderr)),
+        exit_code: compare_result(test_case.expected_exit_code, exit_code),
+    })
+}
+
+fn compare_result<T: Eq>(expected: Option<T>, got: T) -> ValueComparison<T> {
+    if let Some(expected) = expected {
+        if expected == got {
+            ValueComparison::Matches(got)
+        } else {
+            ValueComparison::Diff { expected, got }
+        }
+    } else {
+        ValueComparison::NotChecked
+    }
+}
+
+fn read_pipe_to_string<T>(pipe: &mut T) -> Result<String, RunError>
+where
+    T: Read,
+{
+    let mut buf: Vec<u8> = vec![];
+    pipe.read_to_end(&mut buf).map_err(RunError::IOError)?;
+    String::from_utf8(buf).map_or(Err(RunError::FailedToDecodeUtf8), Ok)
+}
+
+/// Normalize line endings to line feed (LF)
+///
+/// Windows uses carriage return line feed (CRLF) as line endings, thus
+/// test cases may contain CRLF line endings. Additionally, the output of
+/// the program under test may contain CRLF line endings.
+fn normalize_newlines(content: &str) -> String {
+    content.replace("\r\n", "\n")
 }
 
 // REPORTING
