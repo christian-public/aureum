@@ -2,6 +2,9 @@ mod formats {
     pub mod tap;
     pub mod tree;
 }
+mod toml {
+    pub mod config;
+}
 mod utils {
     pub mod file;
     pub mod string;

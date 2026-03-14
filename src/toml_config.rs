@@ -1,8 +1,8 @@
 use crate::test_case::TestCase;
 use crate::test_id::TestId;
+use crate::toml::config::{self, ConfigValue, TomlConfig};
 use crate::utils::file;
 use relative_path::{RelativePath, RelativePathBuf};
-use serde::Deserialize;
 use std::collections::{BTreeMap, BTreeSet};
 use std::env;
 use std::fs;
@@ -64,7 +64,7 @@ pub enum TestCaseValidationError {
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum TomlConfigError {
     FailedToReadFile(io::Error),
-    FailedToParseTomlConfig(toml::de::Error),
+    FailedToParseTomlConfig(config::TomlConfigError),
 }
 
 pub fn parse_toml_config(source_file: &RelativePath) -> Result<ParsedTomlConfig, TomlConfigError> {
@@ -72,7 +72,7 @@ pub fn parse_toml_config(source_file: &RelativePath) -> Result<ParsedTomlConfig,
 
     let toml_content =
         fs::read_to_string(source_path).map_err(TomlConfigError::FailedToReadFile)?;
-    let toml_config = toml::from_str::<TomlConfig>(&toml_content)
+    let toml_config = config::parse_toml_config(&toml_content)
         .map_err(TomlConfigError::FailedToParseTomlConfig)?;
 
     let toml_configs = split_toml_config(toml_config);
@@ -95,30 +95,6 @@ pub fn parse_toml_config(source_file: &RelativePath) -> Result<ParsedTomlConfig,
     }
 
     Ok(ParsedTomlConfig { data, tests })
-}
-
-// TOML STRUCTURE
-
-#[derive(Deserialize, Clone)]
-#[cfg_attr(debug_assertions, derive(Debug))]
-struct TomlConfig {
-    description: Option<ConfigValue<String>>,
-    program: Option<ConfigValue<String>>,
-    program_arguments: Option<Vec<ConfigValue<String>>>,
-    stdin: Option<ConfigValue<String>>,
-    expected_stdout: Option<ConfigValue<String>>,
-    expected_stderr: Option<ConfigValue<String>>,
-    expected_exit_code: Option<ConfigValue<i32>>,
-    tests: Option<BTreeMap<String, TomlConfig>>,
-}
-
-#[derive(Deserialize, Clone)]
-#[cfg_attr(debug_assertions, derive(Debug))]
-#[serde(untagged)]
-enum ConfigValue<T> {
-    Literal(T),
-    ReadFromFile { file: String },
-    FetchFromEnv { env: String },
 }
 
 // REQUIREMENTS
