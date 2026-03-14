@@ -1,4 +1,4 @@
-use crate::cli::test_path::TestPath;
+use crate::test_path::TestPath;
 use clap::{Parser, Subcommand};
 use std::str::FromStr;
 

@@ -1,6 +1,5 @@
-use crate::cli::test_path::TestPath;
+use crate::test_path::TestPath;
 use aureum::TestIdCoverageSet;
-use glob;
 use relative_path::RelativePathBuf;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};

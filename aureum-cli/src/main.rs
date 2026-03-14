@@ -1,14 +1,10 @@
-mod cli {
-    pub mod args;
-    pub mod file;
-    pub mod report;
-    mod test_path;
-}
+mod args;
+mod file;
+mod report;
+mod test_path;
 
+use crate::args::{Cli, Command, ListArgs, OutputFormat, TestArgs};
 use aureum::{ReportConfig, ReportFormat};
-use cli::args::{self, Cli, Command, ListArgs, OutputFormat, TestArgs};
-use cli::file;
-use cli::report;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
