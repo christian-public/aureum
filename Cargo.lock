@@ -56,18 +56,27 @@ dependencies = [
 name = "aureum"
 version = "0.1.0"
 dependencies = [
- "clap",
  "colored",
  "diff",
- "glob",
  "indoc",
  "itertools",
- "pathdiff",
  "rayon",
  "relative-path",
  "toml",
  "which",
  "yaml_serde",
+]
+
+[[package]]
+name = "aureum-cli"
+version = "0.1.0"
+dependencies = [
+ "aureum",
+ "clap",
+ "colored",
+ "glob",
+ "pathdiff",
+ "relative-path",
 ]
 
 [[package]]
