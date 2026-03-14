@@ -8,7 +8,6 @@ edition = "2024"
 [dependencies]
 colored = "3.1.1"
 diff = "0.1.13"
-itertools = "0.14.0"
 rayon = "1.11.0"
 relative-path = "2.0.1"
 yaml_serde = "0.10.3"

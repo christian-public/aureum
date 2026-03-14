@@ -59,13 +59,13 @@ pub fn run_test_cases(
             .par_iter()
             .enumerate()
             .map(run)
-            .reduce(Vec::new, |x, y| itertools::concat([x, y]))
+            .reduce(Vec::new, |x, y| x.into_iter().chain(y).collect())
     } else {
         test_cases
             .iter()
             .enumerate()
             .map(run)
-            .fold(vec![], |x, y| itertools::concat([x, y]))
+            .fold(vec![], |x, y| x.into_iter().chain(y).collect())
     };
 
     report_summary(report_config, &run_results);
