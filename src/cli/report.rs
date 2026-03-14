@@ -105,8 +105,8 @@ pub fn print_config_details(
 
 pub fn print_toml_config_error(source_file: RelativePathBuf, error: TomlConfigError) {
     let msg = match error {
-        TomlConfigError::FailedToReadFile(_) => "Failed to read file",
-        TomlConfigError::FailedToParseTomlConfig(_) => "Failed to parse config file",
+        TomlConfigError::InvalidTomlSyntax(_) => "Failed to parse config file",
+        TomlConfigError::ParseErrors(_) => "Failed to parse config file",
     };
     let tree = Node(config_heading(source_file), vec![str_to_tree(msg)]);
 

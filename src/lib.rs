@@ -23,9 +23,9 @@ pub use formats::tree::Tree::{self, Leaf, Node};
 pub use test_id::TestId;
 pub use test_id_coverage_set::TestIdCoverageSet;
 pub use test_runner::{ReportConfig, ReportFormat};
+pub use toml::config::{TomlConfig, TomlConfigError};
 pub use toml_config::{
     ParsedTomlConfig, ProgramPath, Requirement, TestCaseValidationError, TomlConfigData,
-    TomlConfigError,
 };
 
 pub use formats::tree::draw_tree;

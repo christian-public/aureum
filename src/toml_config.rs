@@ -1,6 +1,6 @@
 use crate::test_case::TestCase;
 use crate::test_id::TestId;
-use crate::toml::config::{self, ConfigValue, TomlConfig};
+use crate::toml::config::{self, ConfigValue, TomlConfig, TomlConfigError};
 use crate::utils::file;
 use relative_path::{RelativePath, RelativePathBuf};
 use std::collections::{BTreeMap, BTreeSet};
@@ -61,19 +61,11 @@ pub enum TestCaseValidationError {
     ExpectationRequired,
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
-pub enum TomlConfigError {
-    FailedToReadFile(io::Error),
-    FailedToParseTomlConfig(config::TomlConfigError),
-}
-
-pub fn parse_toml_config(source_file: &RelativePath) -> Result<ParsedTomlConfig, TomlConfigError> {
-    let source_path = source_file.to_logical_path(".");
-
-    let toml_content =
-        fs::read_to_string(source_path).map_err(TomlConfigError::FailedToReadFile)?;
-    let toml_config = config::parse_toml_config(&toml_content)
-        .map_err(TomlConfigError::FailedToParseTomlConfig)?;
+pub fn parse_toml_config(
+    source_file: &RelativePath,
+    source: &str,
+) -> Result<ParsedTomlConfig, TomlConfigError> {
+    let toml_config = config::parse_toml_config(source)?;
 
     let toml_configs = split_toml_config(toml_config);
 

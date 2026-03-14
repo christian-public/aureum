@@ -10,6 +10,7 @@ use cli::args::{self, Cli, Command, ListArgs, OutputFormat, TestArgs};
 use cli::file;
 use cli::report;
 use std::env;
+use std::fs;
 use std::path::PathBuf;
 use std::process::exit;
 
@@ -49,7 +50,14 @@ fn list_tests(current_dir: PathBuf, args: ListArgs) {
     let mut any_failed_configs = false;
 
     for source_file in source_files {
-        match aureum::parse_toml_config(&source_file) {
+        let source_path = source_file.to_logical_path(".");
+
+        let Ok(source) = fs::read_to_string(source_path) else {
+            any_failed_configs = true; // TODO: Should save the error and display it
+            continue;
+        };
+
+        match aureum::parse_toml_config(&source_file, &source) {
             Ok(config) => {
                 let any_issues = report::any_issues_in_toml_config(&config);
                 if any_issues || args.verbose {
@@ -102,7 +110,14 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
     let mut any_failed_configs = false;
 
     for source_file in source_files {
-        match aureum::parse_toml_config(&source_file) {
+        let source_path = source_file.to_logical_path(".");
+
+        let Ok(source) = fs::read_to_string(source_path) else {
+            any_failed_configs = true; // TODO: Should save the error and display it
+            continue;
+        };
+
+        match aureum::parse_toml_config(&source_file, &source) {
             Ok(config) => {
                 let any_issues = report::any_issues_in_toml_config(&config);
                 if any_issues || args.verbose {
