@@ -8,7 +8,7 @@ use aureum::{ReportConfig, ReportFormat};
 use std::env;
 use std::fs;
 use std::path::PathBuf;
-use std::process::exit;
+use std::process;
 
 const TEST_FAILURE_EXIT_CODE: i32 = 1;
 const INVALID_USER_INPUT_EXIT_CODE: i32 = 2;
@@ -35,7 +35,7 @@ fn list_tests(current_dir: PathBuf, args: ListArgs) {
 
     if source_files.is_empty() {
         report::print_no_config_files();
-        exit(INVALID_USER_INPUT_EXIT_CODE);
+        process::exit(INVALID_USER_INPUT_EXIT_CODE);
     }
 
     if args.verbose {
@@ -95,7 +95,7 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
 
     if source_files.is_empty() {
         report::print_no_config_files();
-        exit(INVALID_USER_INPUT_EXIT_CODE);
+        process::exit(INVALID_USER_INPUT_EXIT_CODE);
     }
 
     if args.verbose {
@@ -153,7 +153,7 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
     let all_tests_passed = run_results.iter().all(|t| t.is_success());
 
     if any_failed_configs || !all_tests_passed {
-        exit(TEST_FAILURE_EXIT_CODE)
+        process::exit(TEST_FAILURE_EXIT_CODE)
     }
 }
 
