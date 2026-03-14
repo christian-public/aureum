@@ -4,10 +4,11 @@ mod report;
 mod test_path;
 
 use crate::args::{Cli, Command, ListArgs, OutputFormat, TestArgs};
-use aureum::{ReportConfig, ReportFormat};
+use aureum::{ReportConfig, ReportFormat, RequirementData, Requirements};
 use std::env;
 use std::fs;
-use std::path::PathBuf;
+use std::io;
+use std::path::{Path, PathBuf};
 use std::process;
 
 const TEST_FAILURE_EXIT_CODE: i32 = 1;
@@ -47,19 +48,27 @@ fn list_tests(current_dir: PathBuf, args: ListArgs) {
 
     for source_file in source_files {
         let source_path = source_file.to_logical_path(".");
+        let source_dir = aureum::parent_dir(&source_file).to_logical_path(".");
 
         let Ok(source) = fs::read_to_string(source_path) else {
             any_failed_configs = true; // TODO: Should save the error and display it
             continue;
         };
 
-        match aureum::parse_toml_config(&source_file, &source) {
+        match aureum::parse_toml_config(&source) {
             Ok(config) => {
-                let any_issues = report::any_issues_in_toml_config(&config);
+                let requirements = aureum::get_requirements(&config.clone());
+                let requirement_data = retrieve_requirement_data(&source_dir, requirements);
+
+                let parsed_toml_config =
+                    aureum::build_test_cases(&source_file, &requirement_data, config);
+
+                let any_issues = parsed_toml_config.values().any(|x| x.test_cases.is_err());
                 if any_issues || args.verbose {
                     report::print_config_details(
                         source_file,
-                        &config,
+                        &parsed_toml_config,
+                        &requirement_data,
                         args.verbose,
                         args.hide_absolute_paths,
                     );
@@ -69,7 +78,11 @@ fn list_tests(current_dir: PathBuf, args: ListArgs) {
                     }
                 }
 
-                all_test_cases.extend(config.tests.into_values().filter_map(|x| x.test_case.ok()));
+                all_test_cases.extend(
+                    parsed_toml_config
+                        .into_values()
+                        .filter_map(|x| x.test_cases.ok()),
+                );
             }
             Err(error) => {
                 report::print_toml_config_error(source_file, error);
@@ -107,19 +120,27 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
 
     for source_file in source_files {
         let source_path = source_file.to_logical_path(".");
+        let source_dir = aureum::parent_dir(&source_file).to_logical_path(".");
 
         let Ok(source) = fs::read_to_string(source_path) else {
             any_failed_configs = true; // TODO: Should save the error and display it
             continue;
         };
 
-        match aureum::parse_toml_config(&source_file, &source) {
+        match aureum::parse_toml_config(&source) {
             Ok(config) => {
-                let any_issues = report::any_issues_in_toml_config(&config);
+                let requirements = aureum::get_requirements(&config.clone());
+                let requirement_data = retrieve_requirement_data(&source_dir, requirements);
+
+                let parsed_toml_config =
+                    aureum::build_test_cases(&source_file, &requirement_data, config);
+
+                let any_issues = parsed_toml_config.values().any(|x| x.test_cases.is_err());
                 if any_issues || args.verbose {
                     report::print_config_details(
                         source_file,
-                        &config,
+                        &parsed_toml_config,
+                        &requirement_data,
                         args.verbose,
                         args.hide_absolute_paths,
                     );
@@ -129,7 +150,11 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
                     }
                 }
 
-                all_test_cases.extend(config.tests.into_values().filter_map(|x| x.test_case.ok()));
+                all_test_cases.extend(
+                    parsed_toml_config
+                        .into_values()
+                        .filter_map(|x| x.test_cases.ok()),
+                );
             }
             Err(error) => {
                 report::print_toml_config_error(source_file, error);
@@ -162,4 +187,31 @@ fn get_report_format(args: &TestArgs) -> ReportFormat {
         OutputFormat::Summary => ReportFormat::Summary,
         OutputFormat::Tap => ReportFormat::Tap,
     }
+}
+
+fn retrieve_requirement_data(current_dir: &Path, requirements: Requirements) -> RequirementData {
+    let mut requirement_data = RequirementData::default();
+
+    for file in requirements.files {
+        let Some(value) = read_external_file(current_dir, &file).ok() else {
+            continue;
+        };
+
+        requirement_data.files.insert(file, value);
+    }
+
+    for env_var in requirements.env_vars {
+        let Some(value) = env::var(&env_var).ok() else {
+            continue;
+        };
+
+        requirement_data.env_vars.insert(env_var, value);
+    }
+
+    requirement_data
+}
+
+fn read_external_file(current_dir: &Path, file_path: &String) -> io::Result<String> {
+    let path = current_dir.join(file_path);
+    fs::read_to_string(path)
 }

@@ -1,21 +1,17 @@
 use aureum::Tree::{self, Leaf, Node};
 use aureum::{
-    ParsedTomlConfig, ProgramPath, Requirement, TestCaseValidationError, TomlConfigData,
+    ParsedTomlConfig, ProgramPath, RequirementData, Requirements, TestCaseValidationError, TestId,
     TomlConfigError,
 };
 use colored::Colorize;
 use relative_path::RelativePathBuf;
-use std::collections::BTreeSet;
+use std::collections::BTreeMap;
 
 pub fn print_no_config_files() {
     eprintln!(
         "{} No config files found for the given paths",
         "error:".red().bold(),
     );
-}
-
-pub fn any_issues_in_toml_config(config: &ParsedTomlConfig) -> bool {
-    config.tests.values().any(|x| x.test_case.is_err())
 }
 
 pub fn print_files_found(source_files: &[RelativePathBuf]) {
@@ -33,19 +29,19 @@ pub fn print_files_found(source_files: &[RelativePathBuf]) {
 
 pub fn print_config_details(
     source_file: RelativePathBuf,
-    config: &ParsedTomlConfig,
+    parsed_toml_configs: &BTreeMap<TestId, ParsedTomlConfig>,
+    requirement_data: &RequirementData,
     verbose: bool,
     hide_absolute_paths: bool,
 ) {
-    let mut tests = Vec::new();
+    let mut tests = vec![];
 
-    for (test_id, test_details) in &config.tests {
+    for (test_id, parsed_toml_config) in parsed_toml_configs {
         let mut categories = vec![];
 
         if verbose {
             // Program to run
-            let program_path = &test_details.program_path;
-            let program_to_run = match program_path {
+            let program_to_run = match &parsed_toml_config.program_path {
                 ProgramPath::NotSpecified => String::from("❌ Not specified"),
                 ProgramPath::MissingProgram { requested_path: _ } => String::from("❌ Not found"),
                 ProgramPath::ResolvedPath {
@@ -67,7 +63,7 @@ pub fn print_config_details(
             categories.push(Node(heading, nodes));
 
             // Requirements
-            let requirements = requirements_map(&test_details.requirements, &config.data);
+            let requirements = requirements_map(&parsed_toml_config.requirements, requirement_data);
             if !requirements.is_empty() {
                 let heading = String::from("Requirements");
                 categories.push(Node(heading, requirements));
@@ -76,7 +72,7 @@ pub fn print_config_details(
 
         // Validation errors
         let heading = String::from("Validation errors");
-        if let Err(validation_errors) = &test_details.test_case {
+        if let Err(validation_errors) = &parsed_toml_config.test_cases {
             let nodes = validation_errors
                 .iter()
                 .map(|err| str_to_tree(&show_validation_error(err)))
@@ -124,41 +120,33 @@ fn config_heading(source_file: RelativePathBuf) -> String {
     format!("📋 {}", source_file)
 }
 
-fn requirements_map(requirements: &BTreeSet<Requirement>, data: &TomlConfigData) -> Vec<Tree> {
-    let mut files = vec![];
-    let mut env_vars = vec![];
-
-    for requirement in requirements {
-        match requirement {
-            Requirement::ExternalFile(path) => {
-                let has_value = data.get_file(path).is_some();
-                files.push((path, has_value));
-            }
-            Requirement::EnvVar(var_name) => {
-                let has_value = data.get_env_var(var_name).is_some();
-                env_vars.push((var_name, has_value));
-            }
-        }
-    }
-
+fn requirements_map(requirements: &Requirements, data: &RequirementData) -> Vec<Tree> {
     let mut categories = vec![];
 
-    if !files.is_empty() {
+    if !requirements.files.is_empty() {
         categories.push(Node(
             String::from("Files"),
-            files
-                .into_iter()
-                .map(|(x, y)| str_to_tree(&format!("{} {}", show_presence(y), x)))
+            requirements
+                .files
+                .iter()
+                .map(|file| {
+                    let is_present = data.get_file(file).is_some();
+                    str_to_tree(&format!("{} {}", show_presence(is_present), file))
+                })
                 .collect(),
         ));
     }
 
-    if !env_vars.is_empty() {
+    if !requirements.env_vars.is_empty() {
         categories.push(Node(
             String::from("Environment"),
-            env_vars
-                .into_iter()
-                .map(|(x, y)| str_to_tree(&format!("{} {}", show_presence(y), x)))
+            requirements
+                .env_vars
+                .iter()
+                .map(|env_var| {
+                    let is_present = data.get_env_var(env_var).is_some();
+                    str_to_tree(&format!("{} {}", show_presence(is_present), env_var))
+                })
                 .collect(),
         ));
     }
