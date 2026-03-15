@@ -10,7 +10,7 @@
 //! let example = TestId::from("level1.level2");
 //! assert_eq!(format!("{}", example), "level1.level2");
 //! ```
-use std::fmt::Display;
+use std::fmt;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -54,8 +54,8 @@ impl TestId {
     }
 }
 
-impl Display for TestId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for TestId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.id_path.join("."))
     }
 }

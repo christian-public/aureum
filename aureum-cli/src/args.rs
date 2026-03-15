@@ -1,6 +1,6 @@
 use crate::test_path::TestPath;
 use clap::{Parser, Subcommand};
-use std::str::FromStr;
+use std::str;
 
 pub fn parse() -> Cli {
     Cli::parse()
@@ -73,7 +73,7 @@ pub enum OutputFormat {
     Tap,
 }
 
-impl FromStr for OutputFormat {
+impl str::FromStr for OutputFormat {
     type Err = &'static str;
 
     fn from_str(format: &str) -> Result<Self, Self::Err> {

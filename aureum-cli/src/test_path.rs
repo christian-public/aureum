@@ -1,6 +1,6 @@
 use aureum::TestId;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
+use std::str;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -12,7 +12,7 @@ pub enum TestPath {
     },
 }
 
-impl FromStr for TestPath {
+impl str::FromStr for TestPath {
     type Err = &'static str;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
