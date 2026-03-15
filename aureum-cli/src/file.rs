@@ -4,6 +4,9 @@ use relative_path::RelativePathBuf;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
+/// Files to look for when searching in directories
+static DIRECTORY_SEARCH_PATTERN: &str = "**/*.au.toml";
+
 pub fn expand_test_paths(
     test_paths: &[TestPath],
     current_dir: &Path,
@@ -65,10 +68,11 @@ fn locate_test_files(path: &str) -> Result<Vec<PathBuf>, LocateFileError> {
         if e.is_file() {
             output.push(e);
         } else if e.is_dir() {
-            // Look for `.au.toml` files in directory (recursively)
-            if let Some(search_path) = e.join("**/*.au.toml").to_str() {
+            if let Some(search_path) = e.join(DIRECTORY_SEARCH_PATTERN).to_str() {
                 let found_test_files = locate_test_files(search_path)?;
                 output.extend(found_test_files);
+            } else {
+                // TODO: Handle this case?
             }
         }
     }
