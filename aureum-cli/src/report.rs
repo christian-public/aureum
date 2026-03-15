@@ -1,7 +1,7 @@
 use aureum::Tree::{self, Leaf, Node};
 use aureum::{
-    ParsedTomlConfig, ProgramPath, RequirementData, Requirements, TestCaseValidationError, TestId,
-    TomlConfigError,
+    ParsedTomlConfig, ProgramPath, RequirementData, Requirements, TestId, TomlConfigError,
+    ValidationError,
 };
 use colored::Colorize;
 use relative_path::RelativePathBuf;
@@ -154,20 +154,20 @@ fn requirements_map(requirements: &Requirements, requirement_data: &RequirementD
     categories
 }
 
-fn show_validation_error(validation_error: &TestCaseValidationError) -> String {
+fn show_validation_error(validation_error: &ValidationError) -> String {
     let msg = match validation_error {
-        TestCaseValidationError::MissingExternalFile(file_path) => {
+        ValidationError::MissingExternalFile(file_path) => {
             format!("Missing external file '{}'", file_path)
         }
-        TestCaseValidationError::MissingEnvVar(var_name) => {
+        ValidationError::MissingEnvVar(var_name) => {
             format!("Missing environment variable '{}'", var_name)
         }
-        TestCaseValidationError::FailedToParseString => String::from("Failed to parse string"),
-        TestCaseValidationError::ProgramRequired => String::from("The field 'program' is required"),
-        TestCaseValidationError::ProgramNotFound(program) => {
+        ValidationError::FailedToParseString => String::from("Failed to parse string"),
+        ValidationError::ProgramRequired => String::from("The field 'program' is required"),
+        ValidationError::ProgramNotFound(program) => {
             format!("The program '{}' was not found", program)
         }
-        TestCaseValidationError::ExpectationRequired => {
+        ValidationError::ExpectationRequired => {
             String::from("At least one expectation is required")
         }
     };

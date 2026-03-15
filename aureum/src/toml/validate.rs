@@ -51,7 +51,7 @@ impl ProgramPath {
 
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(debug_assertions, derive(Debug))]
-pub enum TestCaseValidationError {
+pub enum ValidationError {
     MissingExternalFile(String),
     MissingEnvVar(String),
     FailedToParseString,
@@ -64,7 +64,7 @@ pub enum TestCaseValidationError {
 pub struct ParsedTomlConfig {
     pub requirements: Requirements,
     pub program_path: ProgramPath,
-    pub test_cases: Result<TestCase, BTreeSet<TestCaseValidationError>>,
+    pub test_cases: Result<TestCase, BTreeSet<ValidationError>>,
 }
 
 pub fn build_test_cases(
@@ -103,12 +103,10 @@ fn build_test_case(
     );
     match &program_path {
         ProgramPath::NotSpecified => {
-            validation_errors.insert(TestCaseValidationError::ProgramRequired);
+            validation_errors.insert(ValidationError::ProgramRequired);
         }
         ProgramPath::MissingProgram { requested_path } => {
-            validation_errors.insert(TestCaseValidationError::ProgramNotFound(
-                requested_path.clone(),
-            ));
+            validation_errors.insert(ValidationError::ProgramNotFound(requested_path.clone()));
         }
         ProgramPath::ResolvedPath {
             requested_path: _,
@@ -122,7 +120,7 @@ fn build_test_case(
         && config.expected_stderr.is_none()
         && config.expected_exit_code.is_none()
     {
-        validation_errors.insert(TestCaseValidationError::ExpectationRequired);
+        validation_errors.insert(ValidationError::ExpectationRequired);
     }
 
     // Read fields
@@ -202,7 +200,7 @@ fn get_program_path(requested_path: String, in_dir: &Path) -> ProgramPath {
 }
 
 fn collect_error<T>(
-    errors: &mut BTreeSet<TestCaseValidationError>,
+    errors: &mut BTreeSet<ValidationError>,
     config_value: Option<ConfigValue<T>>,
     requirement_data: &RequirementData,
 ) -> Option<T>
@@ -224,7 +222,7 @@ where
 fn read_from_config_value<T>(
     config_value: ConfigValue<T>,
     requirement_data: &RequirementData,
-) -> Result<T, TestCaseValidationError>
+) -> Result<T, ValidationError>
 where
     T: FromStr,
 {
@@ -234,20 +232,20 @@ where
             if let Some(str) = requirement_data.get_file(&file_path) {
                 let value = str
                     .parse()
-                    .map_err(|_err| TestCaseValidationError::FailedToParseString)?;
+                    .map_err(|_err| ValidationError::FailedToParseString)?;
                 Ok(value)
             } else {
-                Err(TestCaseValidationError::MissingExternalFile(file_path))
+                Err(ValidationError::MissingExternalFile(file_path))
             }
         }
         ConfigValue::FetchFromEnv { env: var_name } => {
             if let Some(str) = requirement_data.get_env_var(&var_name) {
                 let value = str
                     .parse()
-                    .map_err(|_err| TestCaseValidationError::FailedToParseString)?;
+                    .map_err(|_err| ValidationError::FailedToParseString)?;
                 Ok(value)
             } else {
-                Err(TestCaseValidationError::MissingEnvVar(var_name))
+                Err(ValidationError::MissingEnvVar(var_name))
             }
         }
     }

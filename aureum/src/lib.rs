@@ -27,7 +27,7 @@ pub use test_id_coverage_set::TestIdCoverageSet;
 pub use test_runner::{ReportConfig, ReportFormat};
 pub use toml::config::{TomlConfig, TomlConfigError};
 pub use toml::requirement::Requirements;
-pub use toml::validate::{ParsedTomlConfig, ProgramPath, RequirementData, TestCaseValidationError};
+pub use toml::validate::{ParsedTomlConfig, ProgramPath, RequirementData, ValidationError};
 
 pub use formats::tree::draw_tree;
 pub use test_runner::run_test_cases;
