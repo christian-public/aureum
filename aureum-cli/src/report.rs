@@ -120,7 +120,7 @@ fn config_heading(source_file: RelativePathBuf) -> String {
     format!("📋 {}", source_file)
 }
 
-fn requirements_map(requirements: &Requirements, data: &RequirementData) -> Vec<Tree> {
+fn requirements_map(requirements: &Requirements, requirement_data: &RequirementData) -> Vec<Tree> {
     let mut categories = vec![];
 
     if !requirements.files.is_empty() {
@@ -130,7 +130,7 @@ fn requirements_map(requirements: &Requirements, data: &RequirementData) -> Vec<
                 .files
                 .iter()
                 .map(|file| {
-                    let is_present = data.get_file(file).is_some();
+                    let is_present = requirement_data.get_file(file).is_some();
                     str_to_tree(&format!("{} {}", show_presence(is_present), file))
                 })
                 .collect(),
@@ -144,7 +144,7 @@ fn requirements_map(requirements: &Requirements, data: &RequirementData) -> Vec<
                 .env_vars
                 .iter()
                 .map(|env_var| {
-                    let is_present = data.get_env_var(env_var).is_some();
+                    let is_present = requirement_data.get_env_var(env_var).is_some();
                     str_to_tree(&format!("{} {}", show_presence(is_present), env_var))
                 })
                 .collect(),

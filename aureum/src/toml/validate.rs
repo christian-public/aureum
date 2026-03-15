@@ -96,7 +96,7 @@ fn build_test_case(
     let requirements = get_requirements(&config);
 
     // Program path
-    let program = read_from_config_value(&mut validation_errors, config.program, requirement_data);
+    let program = collect_error(&mut validation_errors, config.program, requirement_data);
     let program_path = get_program_path(
         program.unwrap_or_default(),
         &current_dir.to_logical_path("."),
@@ -127,12 +127,11 @@ fn build_test_case(
 
     // Read fields
 
-    let description =
-        read_from_config_value(&mut validation_errors, config.description, requirement_data);
+    let description = collect_error(&mut validation_errors, config.description, requirement_data);
 
     let mut arguments = vec![];
-    for arg in config.program_arguments.unwrap_or_default() {
-        match arg.read(requirement_data) {
+    for config_value in config.program_arguments.unwrap_or_default() {
+        match read_from_config_value(config_value, requirement_data) {
             Ok(arg) => {
                 arguments.push(arg);
             }
@@ -142,19 +141,19 @@ fn build_test_case(
         }
     }
 
-    let stdin = read_from_config_value(&mut validation_errors, config.stdin, requirement_data);
+    let stdin = collect_error(&mut validation_errors, config.stdin, requirement_data);
 
-    let expected_stdout = read_from_config_value(
+    let expected_stdout = collect_error(
         &mut validation_errors,
         config.expected_stdout,
         requirement_data,
     );
-    let expected_stderr = read_from_config_value(
+    let expected_stderr = collect_error(
         &mut validation_errors,
         config.expected_stderr,
         requirement_data,
     );
-    let expected_exit_code = read_from_config_value(
+    let expected_exit_code = collect_error(
         &mut validation_errors,
         config.expected_exit_code,
         requirement_data,
@@ -202,19 +201,19 @@ fn get_program_path(requested_path: String, in_dir: &Path) -> ProgramPath {
     }
 }
 
-fn read_from_config_value<T>(
-    validation_errors: &mut BTreeSet<TestCaseValidationError>,
+fn collect_error<T>(
+    errors: &mut BTreeSet<TestCaseValidationError>,
     config_value: Option<ConfigValue<T>>,
-    data: &RequirementData,
+    requirement_data: &RequirementData,
 ) -> Option<T>
 where
     T: FromStr,
 {
     match config_value {
-        Some(config_value) => match config_value.read(data) {
+        Some(config_value) => match read_from_config_value(config_value, requirement_data) {
             Ok(value) => Some(value),
             Err(err) => {
-                validation_errors.insert(err);
+                errors.insert(err);
                 None
             }
         },
@@ -222,32 +221,33 @@ where
     }
 }
 
-impl<T> ConfigValue<T>
+fn read_from_config_value<T>(
+    config_value: ConfigValue<T>,
+    requirement_data: &RequirementData,
+) -> Result<T, TestCaseValidationError>
 where
     T: FromStr,
 {
-    fn read(self, data: &RequirementData) -> Result<T, TestCaseValidationError> {
-        match self {
-            Self::Literal(value) => Ok(value),
-            Self::ReadFromFile { file: file_path } => {
-                if let Some(str) = data.get_file(&file_path) {
-                    let value = str
-                        .parse()
-                        .map_err(|_err| TestCaseValidationError::FailedToParseString)?;
-                    Ok(value)
-                } else {
-                    Err(TestCaseValidationError::MissingExternalFile(file_path))
-                }
+    match config_value {
+        ConfigValue::Literal(value) => Ok(value),
+        ConfigValue::ReadFromFile { file: file_path } => {
+            if let Some(str) = requirement_data.get_file(&file_path) {
+                let value = str
+                    .parse()
+                    .map_err(|_err| TestCaseValidationError::FailedToParseString)?;
+                Ok(value)
+            } else {
+                Err(TestCaseValidationError::MissingExternalFile(file_path))
             }
-            Self::FetchFromEnv { env: var_name } => {
-                if let Some(str) = data.get_env_var(&var_name) {
-                    let value = str
-                        .parse()
-                        .map_err(|_err| TestCaseValidationError::FailedToParseString)?;
-                    Ok(value)
-                } else {
-                    Err(TestCaseValidationError::MissingEnvVar(var_name))
-                }
+        }
+        ConfigValue::FetchFromEnv { env: var_name } => {
+            if let Some(str) = requirement_data.get_env_var(&var_name) {
+                let value = str
+                    .parse()
+                    .map_err(|_err| TestCaseValidationError::FailedToParseString)?;
+                Ok(value)
+            } else {
+                Err(TestCaseValidationError::MissingEnvVar(var_name))
             }
         }
     }
