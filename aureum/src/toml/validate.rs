@@ -90,23 +90,23 @@ fn build_test_case(
     config: TomlConfig,
 ) -> ParsedTomlConfig {
     let current_dir = file::parent_dir(source_file);
-    let mut validation_errors = BTreeSet::new();
+    let mut errors = BTreeSet::new();
 
     // Requirements
     let requirements = get_requirements(&config);
 
     // Program path
-    let program = collect_error(&mut validation_errors, config.program, requirement_data);
+    let program = collect_error(&mut errors, config.program, requirement_data);
     let program_path = get_program_path(
         program.unwrap_or_default(),
         &current_dir.to_logical_path("."),
     );
     match &program_path {
         ProgramPath::NotSpecified => {
-            validation_errors.insert(ValidationError::ProgramRequired);
+            errors.insert(ValidationError::ProgramRequired);
         }
         ProgramPath::MissingProgram { requested_path } => {
-            validation_errors.insert(ValidationError::ProgramNotFound(requested_path.clone()));
+            errors.insert(ValidationError::ProgramNotFound(requested_path.clone()));
         }
         ProgramPath::ResolvedPath {
             requested_path: _,
@@ -120,12 +120,12 @@ fn build_test_case(
         && config.expected_stderr.is_none()
         && config.expected_exit_code.is_none()
     {
-        validation_errors.insert(ValidationError::ExpectationRequired);
+        errors.insert(ValidationError::ExpectationRequired);
     }
 
     // Read fields
 
-    let description = collect_error(&mut validation_errors, config.description, requirement_data);
+    let description = collect_error(&mut errors, config.description, requirement_data);
 
     let mut arguments = vec![];
     for config_value in config.program_arguments.unwrap_or_default() {
@@ -134,30 +134,19 @@ fn build_test_case(
                 arguments.push(arg);
             }
             Err(err) => {
-                validation_errors.insert(err);
+                errors.insert(err);
             }
         }
     }
 
-    let stdin = collect_error(&mut validation_errors, config.stdin, requirement_data);
+    let stdin = collect_error(&mut errors, config.stdin, requirement_data);
 
-    let expected_stdout = collect_error(
-        &mut validation_errors,
-        config.expected_stdout,
-        requirement_data,
-    );
-    let expected_stderr = collect_error(
-        &mut validation_errors,
-        config.expected_stderr,
-        requirement_data,
-    );
-    let expected_exit_code = collect_error(
-        &mut validation_errors,
-        config.expected_exit_code,
-        requirement_data,
-    );
+    let expected_stdout = collect_error(&mut errors, config.expected_stdout, requirement_data);
+    let expected_stderr = collect_error(&mut errors, config.expected_stderr, requirement_data);
+    let expected_exit_code =
+        collect_error(&mut errors, config.expected_exit_code, requirement_data);
 
-    let test_cases = if validation_errors.is_empty() {
+    let test_cases = if errors.is_empty() {
         let program = program_path
             .get_resolved_path()
             .expect("Validation errors should not be empty if program path is not resolved");
@@ -174,7 +163,7 @@ fn build_test_case(
             expected_exit_code,
         })
     } else {
-        Err(validation_errors)
+        Err(errors)
     };
 
     ParsedTomlConfig {
