@@ -2,9 +2,9 @@ use crate::formats::tree::{Leaf, Node};
 use crate::formats::{tap, tree};
 use crate::test_case::TestCase;
 use crate::test_result::{TestResult, ValueComparison};
-use crate::utils::file;
 use rayon::prelude::*;
 use std::io::{self, Read, Write};
+use std::path::Path;
 use std::process::{Command, Stdio};
 
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -40,9 +40,10 @@ pub fn run_test_cases(
     report_config: &ReportConfig,
     test_cases: &[TestCase],
     run_in_parallel: bool,
+    current_dir: &Path,
 ) -> Vec<RunResult> {
     let run = |(i, test_case)| -> Vec<RunResult> {
-        let result = run(test_case);
+        let result = run(test_case, current_dir);
 
         report_test_case(report_config, i, test_case, &result);
 
@@ -80,11 +81,11 @@ pub enum RunError {
     IOError(io::Error),
 }
 
-pub fn run(test_case: &TestCase) -> Result<TestResult, RunError> {
-    let current_dir = file::parent_dir(&test_case.source_file).to_logical_path(".");
+pub fn run(test_case: &TestCase, current_dir: &Path) -> Result<TestResult, RunError> {
+    let run_test_in_config_dir = &test_case.path_to_containing_dir.to_path(current_dir);
 
     let mut cmd = Command::new(&test_case.program);
-    cmd.current_dir(current_dir);
+    cmd.current_dir(run_test_in_config_dir);
     cmd.args(&test_case.arguments);
     cmd.stdin(Stdio::piped());
     cmd.stdout(Stdio::piped());

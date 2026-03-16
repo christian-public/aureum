@@ -62,10 +62,17 @@ fn list_tests(current_dir: PathBuf, args: ListArgs) {
     let mut any_failed_configs = false;
 
     for source_file in source_files {
-        let source_path = source_file.to_logical_path(".");
-        let source_dir = aureum::parent_dir(&source_file).to_logical_path(".");
+        let Some(file_name) = source_file.file_name() else {
+            // TODO: Show error
+            continue;
+        };
 
-        let Ok(source) = fs::read_to_string(source_path) else {
+        let Some(path_to_containing_dir) = source_file.parent() else {
+            // TODO: Show error
+            continue;
+        };
+
+        let Ok(source) = fs::read_to_string(source_file.to_path(&current_dir)) else {
             any_failed_configs = true; // TODO: Should save the error and display it
             continue;
         };
@@ -73,10 +80,17 @@ fn list_tests(current_dir: PathBuf, args: ListArgs) {
         match aureum::parse_toml_config(&source) {
             Ok(config) => {
                 let requirements = aureum::get_requirements(&config.clone());
-                let requirement_data = retrieve_requirement_data(&source_dir, requirements);
+                let requirement_data = retrieve_requirement_data(
+                    &path_to_containing_dir.to_path(&current_dir),
+                    requirements,
+                );
 
-                let parsed_toml_config =
-                    aureum::build_test_cases(&source_file, &requirement_data, config);
+                let parsed_toml_config = aureum::build_test_cases(
+                    path_to_containing_dir,
+                    file_name,
+                    config,
+                    &requirement_data,
+                );
 
                 let any_issues = parsed_toml_config.values().any(|x| x.test_cases.is_err());
                 if any_issues || args.verbose {
@@ -147,10 +161,17 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
     let mut any_failed_configs = false;
 
     for source_file in source_files {
-        let source_path = source_file.to_logical_path(".");
-        let source_dir = aureum::parent_dir(&source_file).to_logical_path(".");
+        let Some(file_name) = source_file.file_name() else {
+            // TODO: Show error
+            continue;
+        };
 
-        let Ok(source) = fs::read_to_string(source_path) else {
+        let Some(path_to_containing_dir) = source_file.parent() else {
+            // TODO: Show error
+            continue;
+        };
+
+        let Ok(source) = fs::read_to_string(source_file.to_path(&current_dir)) else {
             any_failed_configs = true; // TODO: Should save the error and display it
             continue;
         };
@@ -158,10 +179,17 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
         match aureum::parse_toml_config(&source) {
             Ok(config) => {
                 let requirements = aureum::get_requirements(&config.clone());
-                let requirement_data = retrieve_requirement_data(&source_dir, requirements);
+                let requirement_data = retrieve_requirement_data(
+                    &path_to_containing_dir.to_path(&current_dir),
+                    requirements,
+                );
 
-                let parsed_toml_config =
-                    aureum::build_test_cases(&source_file, &requirement_data, config);
+                let parsed_toml_config = aureum::build_test_cases(
+                    path_to_containing_dir,
+                    file_name,
+                    config,
+                    &requirement_data,
+                );
 
                 let any_issues = parsed_toml_config.values().any(|x| x.test_cases.is_err());
                 if any_issues || args.verbose {
@@ -196,8 +224,12 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
         format: get_report_format(&args.output_format),
     };
 
-    let run_results =
-        aureum::run_test_cases(&report_config, &all_test_cases, args.run_tests_in_parallel);
+    let run_results = aureum::run_test_cases(
+        &report_config,
+        &all_test_cases,
+        args.run_tests_in_parallel,
+        &current_dir,
+    );
 
     if any_failed_configs {
         eprintln!("Some config files contain errors (See above)");

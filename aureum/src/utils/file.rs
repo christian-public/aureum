@@ -1,17 +1,5 @@
-use relative_path::{RelativePath, RelativePathBuf};
 use std::fs;
 use std::path::{Path, PathBuf};
-
-/// Get parent directory of path
-pub fn parent_dir<P>(path: P) -> RelativePathBuf
-where
-    P: AsRef<RelativePath>,
-{
-    path.as_ref()
-        .parent()
-        .unwrap_or(RelativePath::new("."))
-        .to_relative_path_buf()
-}
 
 /// Find absolute path to executable
 ///

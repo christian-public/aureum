@@ -5,7 +5,8 @@ use std::path::PathBuf;
 #[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct TestCase {
-    pub source_file: RelativePathBuf,
+    pub path_to_containing_dir: RelativePathBuf,
+    pub file_name: String,
     pub test_id: TestId,
     pub description: Option<String>,
     pub program: PathBuf, // Expects an absolute path
@@ -18,12 +19,16 @@ pub struct TestCase {
 
 impl TestCase {
     pub fn id(&self) -> String {
-        let file_path = self.source_file.to_string();
+        let path = self.path_to_config_file();
 
         if self.test_id.is_root() {
-            file_path
+            path.to_string()
         } else {
-            format!("{}:{}", file_path, self.test_id)
+            format!("{}:{}", path, self.test_id)
         }
+    }
+
+    pub fn path_to_config_file(&self) -> RelativePathBuf {
+        self.path_to_containing_dir.join(&self.file_name)
     }
 }

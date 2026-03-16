@@ -2,7 +2,7 @@ use crate::test_case::TestCase;
 use crate::toml::config::ConfigValue;
 use crate::utils::file;
 use crate::{Requirements, TestId, TomlConfig, get_requirements};
-use relative_path::RelativePathBuf;
+use relative_path::{RelativePath, RelativePathBuf};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -68,28 +68,35 @@ pub struct ParsedTomlConfig {
 }
 
 pub fn build_test_cases(
-    source_file: &RelativePathBuf,
-    requirement_data: &RequirementData,
+    path_to_containing_dir: &RelativePath,
+    file_name: &str,
     config: TomlConfig,
+    requirement_data: &RequirementData,
 ) -> BTreeMap<TestId, ParsedTomlConfig> {
     split_toml_config(config)
         .into_iter()
-        .map(|(test_id, test_config)| {
+        .map(|(test_id, c)| {
             (
                 test_id.clone(),
-                build_test_case(source_file, requirement_data, test_id, test_config.clone()),
+                build_test_case(
+                    path_to_containing_dir.to_relative_path_buf(),
+                    file_name.to_owned(),
+                    test_id,
+                    c.clone(),
+                    requirement_data,
+                ),
             )
         })
         .collect()
 }
 
 fn build_test_case(
-    source_file: &RelativePathBuf,
-    requirement_data: &RequirementData,
+    path_to_containing_dir: RelativePathBuf,
+    file_name: String,
     test_id: TestId,
     config: TomlConfig,
+    requirement_data: &RequirementData,
 ) -> ParsedTomlConfig {
-    let current_dir = file::parent_dir(source_file);
     let mut errors = BTreeSet::new();
 
     // Requirements
@@ -99,7 +106,7 @@ fn build_test_case(
     let program = collect_error(&mut errors, config.program, requirement_data);
     let program_path = get_program_path(
         program.unwrap_or_default(),
-        &current_dir.to_logical_path("."),
+        &path_to_containing_dir.to_path("."), // TODO: Improve this
     );
     match &program_path {
         ProgramPath::NotSpecified => {
@@ -152,7 +159,8 @@ fn build_test_case(
             .expect("Validation errors should not be empty if program path is not resolved");
 
         Ok(TestCase {
-            source_file: source_file.clone(),
+            path_to_containing_dir,
+            file_name,
             test_id,
             description,
             program,
