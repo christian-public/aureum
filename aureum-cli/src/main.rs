@@ -12,6 +12,7 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::process;
+use utils::file;
 
 const TEST_FAILURE_EXIT_CODE: i32 = 1;
 const INVALID_USER_INPUT_EXIT_CODE: i32 = 2;
@@ -90,6 +91,7 @@ fn list_tests(current_dir: PathBuf, args: ListArgs) {
                     file_name,
                     config,
                     &requirement_data,
+                    &|name, dir| file::find_executable_path(name, dir).ok(),
                 );
 
                 let any_issues = parsed_toml_config.values().any(|x| x.test_cases.is_err());
@@ -189,6 +191,7 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
                     file_name,
                     config,
                     &requirement_data,
+                    &|name, dir| file::find_executable_path(name, dir).ok(),
                 );
 
                 let any_issues = parsed_toml_config.values().any(|x| x.test_cases.is_err());

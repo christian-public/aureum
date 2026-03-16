@@ -1,6 +1,5 @@
 use crate::test_case::TestCase;
 use crate::toml::config::ConfigValue;
-use crate::utils::file;
 use crate::{Requirements, TestId, TomlConfig, get_requirements};
 use relative_path::{RelativePath, RelativePathBuf};
 use std::collections::{BTreeMap, BTreeSet};
@@ -72,6 +71,7 @@ pub fn build_test_cases(
     file_name: &str,
     config: TomlConfig,
     requirement_data: &RequirementData,
+    find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> BTreeMap<TestId, ParsedTomlConfig> {
     split_toml_config(config)
         .into_iter()
@@ -84,6 +84,7 @@ pub fn build_test_cases(
                     test_id,
                     c.clone(),
                     requirement_data,
+                    find_executable_path,
                 ),
             )
         })
@@ -96,6 +97,7 @@ fn build_test_case(
     test_id: TestId,
     config: TomlConfig,
     requirement_data: &RequirementData,
+    find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> ParsedTomlConfig {
     let mut errors = BTreeSet::new();
 
@@ -107,6 +109,7 @@ fn build_test_case(
     let program_path = get_program_path(
         program.unwrap_or_default(),
         &path_to_containing_dir.to_path("."), // TODO: Improve this
+        find_executable_path,
     );
     match &program_path {
         ProgramPath::NotSpecified => {
@@ -181,12 +184,16 @@ fn build_test_case(
     }
 }
 
-fn get_program_path(requested_path: String, in_dir: &Path) -> ProgramPath {
+fn get_program_path(
+    requested_path: String,
+    in_dir: &Path,
+    find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
+) -> ProgramPath {
     if requested_path.is_empty() {
         return ProgramPath::NotSpecified;
     }
 
-    if let Ok(resolved_path) = file::find_executable_path(&requested_path, in_dir) {
+    if let Some(resolved_path) = find_executable_path(&requested_path, in_dir) {
         ProgramPath::ResolvedPath {
             requested_path,
             resolved_path,

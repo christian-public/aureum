@@ -8,7 +8,6 @@ mod toml {
     pub mod validate;
 }
 mod utils {
-    pub mod file;
     pub mod string;
 }
 mod vendor {
@@ -34,4 +33,3 @@ pub use test_runner::run_test_cases;
 pub use toml::config::parse_toml_config;
 pub use toml::requirement::get_requirements;
 pub use toml::validate::build_test_cases;
-pub use utils::file::find_executable_path;

@@ -62,7 +62,6 @@ dependencies = [
  "rayon",
  "relative-path",
  "toml",
- "which",
  "yaml_serde",
 ]
 
@@ -77,6 +76,7 @@ dependencies = [
  "os_str_bytes",
  "pathdiff",
  "relative-path",
+ "which",
 ]
 
 [[package]]
