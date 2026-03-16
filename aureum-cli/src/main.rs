@@ -1,3 +1,6 @@
+mod utils {
+    pub mod file;
+}
 mod args;
 mod config_file;
 mod report;

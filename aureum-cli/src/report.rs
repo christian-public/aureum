@@ -1,3 +1,4 @@
+use crate::utils::file::display_path;
 use aureum::Tree::{self, Leaf, Node};
 use aureum::{
     ParsedTomlConfig, ProgramPath, RequirementData, Requirements, TestId, TomlConfigError,
@@ -58,7 +59,7 @@ pub fn print_config_details(
                     resolved_path,
                 } => {
                     let path = if hide_absolute_paths {
-                        aureum::display_path(resolved_path)
+                        display_path(resolved_path)
                     } else {
                         resolved_path.display().to_string()
                     };
