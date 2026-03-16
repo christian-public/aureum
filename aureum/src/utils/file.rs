@@ -35,24 +35,6 @@ where
     which::which(binary_name)
 }
 
-/// Split file name on colon
-///
-/// This is especially important on Windows that uses colon to separate
-/// disk name from the rest of the path.
-pub fn split_file_name(p: &Path) -> (PathBuf, Option<String>) {
-    if let Some(file_name) = p.file_name() {
-        let mut new_path = PathBuf::from(p);
-
-        if let Some((prefix, suffix)) = file_name.to_string_lossy().split_once(':') {
-            new_path.set_file_name(prefix);
-
-            return (new_path, Some(suffix.to_owned()));
-        }
-    }
-
-    (p.to_path_buf(), None)
-}
-
 /// Get a platform-independent version of a file path
 pub fn display_path<P>(path: P) -> String
 where
