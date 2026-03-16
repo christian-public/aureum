@@ -165,7 +165,7 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
 
     let report_config = ReportConfig {
         number_of_tests: all_test_cases.len(),
-        format: get_report_format(&args),
+        format: get_report_format(&args.output_format),
     };
 
     let run_results =
@@ -182,8 +182,8 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
     }
 }
 
-fn get_report_format(args: &TestArgs) -> ReportFormat {
-    match args.output_format {
+fn get_report_format(output_format: &OutputFormat) -> ReportFormat {
+    match output_format {
         OutputFormat::Summary => ReportFormat::Summary,
         OutputFormat::Tap => ReportFormat::Tap,
     }
