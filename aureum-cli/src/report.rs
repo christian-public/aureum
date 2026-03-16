@@ -148,7 +148,7 @@ fn requirements_map(requirements: &Requirements, requirement_data: &RequirementD
 
     if !requirements.env_vars.is_empty() {
         categories.push(Node(
-            String::from("Environment"),
+            String::from("Environment variables"),
             requirements
                 .env_vars
                 .iter()

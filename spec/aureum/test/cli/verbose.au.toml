@@ -24,13 +24,13 @@ expected_stderr = """
 │  ├─ Program to run
 │  │  └─ ✅ <absolute path to 'echo'>
 │  └─ Requirements
-│     └─ Environment
+│     └─ Environment variables
 │        └─ ✅ AUREUM_TEST_HELLO_WORLD
 ├─ :env_var_missing
 │  ├─ Program to run
 │  │  └─ ✅ <absolute path to 'echo'>
 │  ├─ Requirements
-│  │  └─ Environment
+│  │  └─ Environment variables
 │  │     └─ ❌ AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST
 │  └─ Validation errors
 │     └─ ❌ Missing environment variable 'AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST'
