@@ -1,5 +1,5 @@
-use crate::test_path::TestPath;
 use clap::{Parser, Subcommand};
+use std::path::PathBuf;
 use std::str;
 
 pub fn parse() -> Cli {
@@ -31,7 +31,7 @@ pub enum Command {
 pub struct ListArgs {
     /// Paths to config files
     #[arg(required = true)]
-    pub paths: Vec<TestPath>,
+    pub paths: Vec<PathBuf>,
 
     /// Replace absolute paths with a platform-independent placeholder
     #[arg(long)]
@@ -47,7 +47,7 @@ pub struct ListArgs {
 pub struct TestArgs {
     /// Paths to config files
     #[arg(required = true)]
-    pub paths: Vec<TestPath>,
+    pub paths: Vec<PathBuf>,
 
     /// Options: summary, tap
     #[arg(long, default_value = "summary")]

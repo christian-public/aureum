@@ -14,9 +14,10 @@ expected_exit_code = 2
 program_arguments = ["test", "aureum_test_this_file_does_not_exist:sub1"]
 expected_stdout = ""
 expected_stderr = """
-error: invalid value 'aureum_test_this_file_does_not_exist:sub1' for '<PATHS>...': Invalid path to config file
+warning: Got invalid paths:
+aureum_test_this_file_does_not_exist:sub1 - Invalid path to config file
 
-For more information, try '--help'.
+error: No config files found for the given paths
 """
 expected_exit_code = 2
 

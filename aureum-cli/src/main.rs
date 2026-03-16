@@ -1,7 +1,6 @@
 mod args;
-mod file;
+mod config_file;
 mod report;
-mod test_path;
 
 use crate::args::{Cli, Command, ListArgs, OutputFormat, TestArgs};
 use aureum::{ReportConfig, ReportFormat, RequirementData, Requirements};
@@ -29,10 +28,23 @@ fn main() {
 }
 
 fn list_tests(current_dir: PathBuf, args: ListArgs) {
-    let source_files = file::expand_test_paths(&args.paths, &current_dir)
+    let find_config_files_result = config_file::find_config_files(args.paths, &current_dir);
+
+    let source_files = find_config_files_result
+        .found_config_files
         .keys()
         .cloned()
         .collect::<Vec<_>>();
+
+    if !find_config_files_result.errors.is_empty() {
+        let paths = find_config_files_result
+            .errors
+            .into_iter()
+            .map(|(path, _err)| path)
+            .collect::<Vec<_>>();
+
+        report::print_invalid_paths(paths);
+    }
 
     if source_files.is_empty() {
         report::print_no_config_files();
@@ -101,10 +113,23 @@ fn list_tests(current_dir: PathBuf, args: ListArgs) {
 }
 
 fn run_tests(current_dir: PathBuf, args: TestArgs) {
-    let source_files = file::expand_test_paths(&args.paths, &current_dir)
+    let find_config_files_result = config_file::find_config_files(args.paths, &current_dir);
+
+    let source_files = find_config_files_result
+        .found_config_files
         .keys()
         .cloned()
         .collect::<Vec<_>>();
+
+    if !find_config_files_result.errors.is_empty() {
+        let paths = find_config_files_result
+            .errors
+            .into_iter()
+            .map(|(path, _err)| path)
+            .collect::<Vec<_>>();
+
+        report::print_invalid_paths(paths);
+    }
 
     if source_files.is_empty() {
         report::print_no_config_files();
