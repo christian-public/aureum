@@ -33,29 +33,29 @@ F
 ├─ Standard output
 │  ├─ Expected
 │  │  ╭
-│  │  │ STDOUT
-│  │  ╰ (No newline at end)
+│  │  │ 1 │ STDOUT
+│  │  ╰
 │  ├─ Got
 │  │  ╭
-│  │  │ Hello world
-│  │  ╰ (No newline at end)
+│  │  │ 1 │ Hello world
+│  │  ╰
 │  └─ Diff
 │     ╭
-│     │ -STDOUT
-│     │ +Hello world
+│     │ 1   │ -STDOUT
+│     │   1 │ +Hello world
 │     ╰
 ├─ Standard error
 │  ├─ Expected
 │  │  ╭
-│  │  │ STDERR
-│  │  ╰ (No newline at end)
+│  │  │ 1 │ STDERR
+│  │  ╰
 │  ├─ Got
 │  │  ╭
-│  │  │ 
-│  │  ╰ (No newline at end)
+│  │  │ 1 │
+│  │  ╰
 │  └─ Diff
 │     ╭
-│     │ -STDERR
+│     │ 1   │ -STDERR
 │     ╰
 └─ Exit code
    ├─ Expected
@@ -107,6 +107,42 @@ not ok 1 - basic_helpers/failing_test.toml
     expected: STDOUT
     got: Hello world
   ...
+"""
+expected_stderr = ""
+expected_exit_code = 1
+
+
+[tests.summary_failing_with_newline]
+program_arguments = [
+  "test",
+  "--output-format",
+  "summary",
+  "basic_helpers/failing_test_newline.toml",
+]
+expected_stdout = """
+🚀 Running 1 tests:
+F
+
+❌ basic_helpers/failing_test_newline.toml
+└─ Standard output
+   ├─ Expected
+   │  ╭
+   │  │ 1 │ Hello world
+   │  │ 2 │
+   │  ╰
+   ├─ Got
+   │  ╭
+   │  │ 1 │ Hello
+   │  │ 2 │
+   │  ╰
+   └─ Diff
+      ╭
+      │ 1   │ -Hello world
+      │   1 │ +Hello
+      │ 2 2 │
+      ╰
+
+Test result: FAIL (0 passed, 1 failed)
 """
 expected_stderr = ""
 expected_exit_code = 1
