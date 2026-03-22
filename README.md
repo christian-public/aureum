@@ -5,6 +5,7 @@
 `aureum` is a golden test runner for executables.
 
 Key functionality:
+
 - Language-agnostic: Configure tests using [TOML](https://toml.io) files.
 - A configuration file may contain multiple tests.
 - Each test can provide the expected value for `stdout`, `stderr` and `exit code`. See [format](#aureum-configuration-format) below.
@@ -18,7 +19,6 @@ This tool is best suited to test executables that are stateless, i.e. running an
 
 Inspired by [Idris 2's golden test runner](https://github.com/idris-lang/Idris2/tree/main/tests).
 
-
 ## Installation
 
 1. `git clone https://github.com/christian-public/aureum`
@@ -26,7 +26,6 @@ Inspired by [Idris 2's golden test runner](https://github.com/idris-lang/Idris2/
 3. `cargo build` (or `cargo build --release` to build a release version)
 
 The `aureum` executable is now available in the `target/debug` directory.
-
 
 ## Basic usage
 
@@ -53,8 +52,7 @@ Options:
   -h, --help                           Print help
 ```
 
-When running `aureum test`, you may specify one or more files/directories/[glob patterns](https://en.wikipedia.org/wiki/Glob_(programming)). When specifying a directory, `aureum` will search for files with the file extension `.au.toml`. This file extension was chosen to allow other `.toml` files to be located in the same directory structure as the Aureum-specific config files.
-
+When running `aureum test`, you may specify one or more files/directories/[glob patterns](<https://en.wikipedia.org/wiki/Glob_(programming)>). When specifying a directory, `aureum` will search for files with the file extension `.au.toml`. This file extension was chosen to allow other `.toml` files to be located in the same directory structure as the Aureum-specific config files.
 
 ## Example
 
@@ -76,7 +74,6 @@ Running the command `aureum test hello.au.toml` will output the following:
 Test result: OK (1 passed, 0 failed)
 ```
 
-
 ## Aureum configuration format
 
 The following fields are supported in an Aureum config file:
@@ -94,11 +91,11 @@ expected_exit_code = 0  # Integer
 ```
 
 In addition to the literal values mentioned above, the following special forms are available:
+
 - `{ env = "MY_ENV_VAR" }` — Read the value from the environment variable named `MY_ENV_VAR`.
 - `{ file = "my_test.stdout" }` — Read the external file `my_test.stdout` from the same directory as the config file.
 
 Recommended file extension: `.au.toml`
-
 
 ### Multiple tests per file
 
@@ -106,7 +103,7 @@ An Aureum config file may contain multiple tests. To specify a sub-test you can 
 
 Note that fields specified at the level above the sub-test will get inherited by the sub-tests. Because of this, only the leaf nodes are considered a test. The following example configures two tests, where both tests run the program `/bin/echo`:
 
-Filename: ``multiple_tests.au.toml``
+Filename: `multiple_tests.au.toml`
 
 ```toml
 program = "echo"
@@ -129,7 +126,6 @@ Running the command `aureum test multiple_tests.au.toml` will output the followi
 Test result: OK (2 passed, 0 failed)
 ```
 
-
 ## Alternative tools
 
 - [trycmd](https://github.com/assert-rs/trycmd) [Rust]
@@ -137,7 +133,6 @@ Test result: OK (2 passed, 0 failed)
 - [Smoke](https://github.com/SamirTalwar/smoke) [Haskell]
 - [goldplate](https://github.com/fugue/goldplate) [Haskell]
 - [REPLica](https://github.com/ReplicaTest/REPLica) [Idris]
-
 
 ## License
 
