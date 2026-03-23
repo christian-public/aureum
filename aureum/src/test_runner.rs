@@ -1,7 +1,7 @@
-use crate::formats::tree::{Leaf, Node};
 use crate::formats::{tap, tree};
 use crate::test_case::TestCase;
 use crate::test_result::{TestResult, ValueComparison};
+use crate::vendor::ascii_tree::Tree::{Leaf, Node};
 use rayon::prelude::*;
 use std::io::{self, Read, Write};
 use std::path::Path;

@@ -19,7 +19,6 @@ mod test_id_coverage_set;
 mod test_result;
 mod test_runner;
 
-pub use formats::tree::Tree::{self, Leaf, Node};
 pub use test_case::TestCase;
 pub use test_id::TestId;
 pub use test_id_coverage_set::TestIdCoverageSet;
@@ -27,6 +26,7 @@ pub use test_runner::{ReportConfig, ReportFormat};
 pub use toml::config::{TomlConfig, TomlConfigError};
 pub use toml::requirement::Requirements;
 pub use toml::validate::{ParsedTomlConfig, ProgramPath, RequirementData, ValidationError};
+pub use vendor::ascii_tree::Tree::{self, Leaf, Node};
 
 pub use formats::tree::draw_tree;
 pub use test_runner::run_test_cases;
