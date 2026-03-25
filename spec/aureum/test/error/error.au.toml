@@ -14,8 +14,8 @@ expected_exit_code = 2
 program_arguments = ["test", "aureum_test_this_file_does_not_exist:sub1"]
 expected_stdout = ""
 expected_stderr = """
-warning: Got invalid paths:
-aureum_test_this_file_does_not_exist:sub1 - Invalid path to config file
+warning: Invalid paths to config files:
+- aureum_test_this_file_does_not_exist:sub1
 
 error: No config files found for the given paths
 """

@@ -10,9 +10,12 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 pub fn print_invalid_paths(paths: Vec<PathBuf>) {
-    eprintln!("{} Got invalid paths:", "warning:".yellow().bold(),);
+    eprintln!(
+        "{} Invalid paths to config files:",
+        "warning:".yellow().bold(),
+    );
     for path in paths {
-        eprintln!("{} - Invalid path to config file", path.display());
+        eprintln!("- {}", path.display());
     }
     eprintln!();
 }
