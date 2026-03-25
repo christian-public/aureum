@@ -3,7 +3,6 @@ mod utils {
 }
 mod args;
 mod config_file;
-mod report;
 
 use crate::args::{Cli, Command, ListArgs, OutputFormat, TestArgs};
 use aureum::report_test_case;
@@ -48,16 +47,16 @@ fn list_tests(current_dir: PathBuf, args: ListArgs) {
             .map(|(path, _err)| path)
             .collect::<Vec<_>>();
 
-        report::print_invalid_paths(paths);
+        aureum::print_invalid_paths(paths);
     }
 
     if source_files.is_empty() {
-        report::print_no_config_files();
+        aureum::print_no_config_files();
         process::exit(INVALID_USER_INPUT_EXIT_CODE);
     }
 
     if args.verbose {
-        report::print_files_found(&source_files);
+        aureum::print_files_found(&source_files);
     }
 
     let mut all_test_cases = vec![];
@@ -97,7 +96,7 @@ fn list_tests(current_dir: PathBuf, args: ListArgs) {
 
                 let any_issues = parsed_toml_config.values().any(|x| x.test_cases.is_err());
                 if any_issues || args.verbose {
-                    report::print_config_details(
+                    aureum::print_config_details(
                         source_file,
                         &parsed_toml_config,
                         &requirement_data,
@@ -117,7 +116,7 @@ fn list_tests(current_dir: PathBuf, args: ListArgs) {
                 );
             }
             Err(error) => {
-                report::print_toml_config_error(source_file, error);
+                aureum::print_toml_config_error(source_file, error);
                 any_failed_configs = true;
             }
         }
@@ -148,16 +147,16 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
             .map(|(path, _err)| path)
             .collect::<Vec<_>>();
 
-        report::print_invalid_paths(paths);
+        aureum::print_invalid_paths(paths);
     }
 
     if source_files.is_empty() {
-        report::print_no_config_files();
+        aureum::print_no_config_files();
         process::exit(INVALID_USER_INPUT_EXIT_CODE);
     }
 
     if args.verbose {
-        report::print_files_found(&source_files);
+        aureum::print_files_found(&source_files);
     }
 
     let mut all_test_cases = vec![];
@@ -197,7 +196,7 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
 
                 let any_issues = parsed_toml_config.values().any(|x| x.test_cases.is_err());
                 if any_issues || args.verbose {
-                    report::print_config_details(
+                    aureum::print_config_details(
                         source_file,
                         &parsed_toml_config,
                         &requirement_data,
@@ -217,7 +216,7 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
                 );
             }
             Err(error) => {
-                report::print_toml_config_error(source_file, error);
+                aureum::print_toml_config_error(source_file, error);
                 any_failed_configs = true;
             }
         }

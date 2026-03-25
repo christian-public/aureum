@@ -31,7 +31,10 @@ pub use toml::validate::{ParsedTomlConfig, ProgramPath, RequirementData, Validat
 pub use vendor::ascii_tree::Tree::{self, Leaf, Node};
 
 pub use formats::tree::draw_tree;
-pub use report::{report_start, report_summary, report_test_case};
+pub use report::{
+    print_config_details, print_files_found, print_invalid_paths, print_no_config_files,
+    print_toml_config_error, report_start, report_summary, report_test_case,
+};
 pub use test_runner::run_test_cases;
 pub use toml::config::parse_toml_config;
 pub use toml::requirement::get_requirements;
