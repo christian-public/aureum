@@ -6,6 +6,7 @@ mod config_file;
 mod report;
 
 use crate::args::{Cli, Command, ListArgs, OutputFormat, TestArgs};
+use aureum::report_test_case;
 use aureum::{ReportConfig, ReportFormat, RequirementData, Requirements};
 use std::env;
 use std::fs;
@@ -227,12 +228,17 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
         format: get_report_format(&args.output_format),
     };
 
+    aureum::report_start(&report_config);
+
     let run_results = aureum::run_test_cases(
         &report_config,
         &all_test_cases,
         args.run_tests_in_parallel,
         &current_dir,
+        &report_test_case,
     );
+
+    aureum::report_summary(&report_config, &run_results);
 
     if any_failed_configs {
         eprintln!("Some config files contain errors (See above)");
