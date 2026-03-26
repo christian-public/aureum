@@ -27,7 +27,7 @@ pub struct ReportConfig {
     pub format: ReportFormat,
 }
 
-pub fn report_start(report_config: &ReportConfig) {
+pub fn print_start_test_cases(report_config: &ReportConfig) {
     match report_config.format {
         ReportFormat::Summary => {
             summary_print_start(report_config.number_of_tests);
@@ -38,7 +38,7 @@ pub fn report_start(report_config: &ReportConfig) {
     }
 }
 
-pub fn report_test_case(
+pub fn print_test_case(
     report_config: &ReportConfig,
     index: usize,
     test_case: &TestCase,
@@ -55,7 +55,7 @@ pub fn report_test_case(
     }
 }
 
-pub fn report_summary(report_config: &ReportConfig, run_results: &[RunResult]) {
+pub fn print_summary(report_config: &ReportConfig, run_results: &[RunResult]) {
     match report_config.format {
         ReportFormat::Summary => {
             summary_print_summary(report_config.number_of_tests, run_results);
