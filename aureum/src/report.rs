@@ -1,13 +1,14 @@
-use crate::Tree::{self, Leaf, Node};
 use crate::formats::tap;
 use crate::formats::tree;
+use crate::test_case::TestCase;
+use crate::test_id::TestId;
 use crate::test_result::TestResult;
 use crate::test_runner::{RunError, RunResult};
-use crate::utils::file;
-use crate::{
-    ParsedTomlConfig, ProgramPath, RequirementData, Requirements, TestCase, TestId,
-    TomlConfigError, ValidationError,
+use crate::toml::{
+    ParsedTomlConfig, ProgramPath, RequirementData, Requirements, TomlConfigError, ValidationError,
 };
+use crate::utils::file;
+use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
 use colored::Colorize;
 use relative_path::RelativePathBuf;
 use std::collections::BTreeMap;

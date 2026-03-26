@@ -6,6 +6,10 @@ mod toml {
     pub mod config;
     pub mod requirement;
     pub mod validate;
+
+    pub use config::{TomlConfig, TomlConfigError};
+    pub use requirement::Requirements;
+    pub use validate::{ParsedTomlConfig, ProgramPath, RequirementData, ValidationError};
 }
 mod utils {
     pub mod file;
@@ -25,12 +29,10 @@ pub use report::{ReportConfig, ReportFormat};
 pub use test_case::TestCase;
 pub use test_id::TestId;
 pub use test_id_coverage_set::TestIdCoverageSet;
-pub use toml::config::{TomlConfig, TomlConfigError};
-pub use toml::requirement::Requirements;
-pub use toml::validate::{ParsedTomlConfig, ProgramPath, RequirementData, ValidationError};
-pub use vendor::ascii_tree::Tree::{self, Leaf, Node};
+pub use toml::Requirements;
+pub use toml::{ParsedTomlConfig, ProgramPath, RequirementData, ValidationError};
+pub use toml::{TomlConfig, TomlConfigError};
 
-pub use formats::tree::draw_tree;
 pub use report::{
     print_config_details, print_files_found, print_invalid_paths, print_no_config_files,
     print_start_test_cases, print_summary, print_test_case, print_toml_config_error,
