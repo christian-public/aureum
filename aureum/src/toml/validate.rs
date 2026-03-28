@@ -57,6 +57,7 @@ pub enum ValidationError {
     ProgramRequired,
     ProgramNotFound(String),
     ExpectationRequired,
+    InvalidExitCode,
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -156,6 +157,14 @@ fn build_test_case(
     let expected_exit_code =
         collect_error(&mut errors, config.expected_exit_code, requirement_data);
 
+    let validated_expected_exit_code = expected_exit_code.and_then(|v| {
+        u8::try_from(v)
+            .map_err(|_| {
+                errors.insert(ValidationError::InvalidExitCode);
+            })
+            .ok()
+    });
+
     let test_cases = if errors.is_empty() {
         let program = program_path
             .get_resolved_path()
@@ -171,7 +180,7 @@ fn build_test_case(
             stdin,
             expected_stdout,
             expected_stderr,
-            expected_exit_code,
+            expected_exit_code: validated_expected_exit_code,
         })
     } else {
         Err(errors)

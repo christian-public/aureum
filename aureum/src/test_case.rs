@@ -14,7 +14,7 @@ pub struct TestCase {
     pub stdin: Option<String>,
     pub expected_stdout: Option<String>,
     pub expected_stderr: Option<String>,
-    pub expected_exit_code: Option<i32>,
+    pub expected_exit_code: Option<u8>,
 }
 
 impl TestCase {

@@ -112,6 +112,24 @@ Some config files contain errors (See above)
 expected_exit_code = 1
 
 
+[tests.invalid_exit_code]
+program_arguments = ["test", "helpers/invalid_exit_code.toml"]
+expected_stdout = """
+🚀 Running 0 tests:
+
+
+Test result: OK (0 passed, 0 failed)
+"""
+expected_stderr = """
+📋 helpers/invalid_exit_code.toml
+└─ Validation errors
+   └─ ❌ Exit code must be a value between 0 and 255
+
+Some config files contain errors (See above)
+"""
+expected_exit_code = 1
+
+
 [tests.missing_env_var]
 program_arguments = ["test", "helpers/missing_env_var.toml"]
 expected_stdout = """

@@ -109,7 +109,7 @@ pub fn run(test_case: &TestCase, current_dir: &Path) -> Result<TestResult, RunEr
     Ok(TestResult {
         stdout: compare_result(expected_stdout, normalize_newlines(&stdout)),
         stderr: compare_result(expected_stderr, normalize_newlines(&stderr)),
-        exit_code: compare_result(test_case.expected_exit_code, exit_code),
+        exit_code: compare_result(test_case.expected_exit_code.map(|v| v as i32), exit_code),
     })
 }
 

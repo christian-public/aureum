@@ -9,7 +9,7 @@ pub struct TomlConfig {
     pub stdin: Option<ConfigValue<String>>,
     pub expected_stdout: Option<ConfigValue<String>>,
     pub expected_stderr: Option<ConfigValue<String>>,
-    pub expected_exit_code: Option<ConfigValue<i32>>,
+    pub expected_exit_code: Option<ConfigValue<i64>>,
     pub tests: Option<BTreeMap<String, TomlConfig>>,
 }
 
@@ -232,7 +232,7 @@ fn get_string_from_table(
 fn get_integer_from_table(
     table: &toml::Table,
     key: &str,
-) -> Result<Option<ConfigValue<i32>>, ParseError> {
+) -> Result<Option<ConfigValue<i64>>, ParseError> {
     let Some(value) = table.get(key) else {
         return Ok(None);
     };
@@ -256,9 +256,9 @@ fn parse_string_value(value: &toml::Value) -> Result<ConfigValue<String>, ParseE
     }
 }
 
-fn parse_integer_value(value: &toml::Value) -> Result<ConfigValue<i32>, ParseError> {
+fn parse_integer_value(value: &toml::Value) -> Result<ConfigValue<i64>, ParseError> {
     match value {
-        toml::Value::Integer(i) => Ok(ConfigValue::Literal((*i).try_into().unwrap())), // TODO: Avoid unwrap
+        toml::Value::Integer(i) => Ok(ConfigValue::Literal(*i)),
         toml::Value::Table(t) => parse_special_form(t),
         _ => Err(ParseError::InvalidType {
             expected: ConfigValueType::Integer,
