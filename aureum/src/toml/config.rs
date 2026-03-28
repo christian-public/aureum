@@ -42,7 +42,7 @@ pub enum ParseError {
         got: ConfigValueType,
     },
     InvalidSpecialForm {
-        unexpected_fields: Vec<String>,
+        unexpected_keys: Vec<String>,
     },
 }
 
@@ -276,7 +276,7 @@ fn parse_special_form<T>(table: &toml::Table) -> Result<ConfigValue<T>, ParseErr
     }
 
     Err(ParseError::InvalidSpecialForm {
-        unexpected_fields: table.keys().cloned().collect::<Vec<_>>(),
+        unexpected_keys: table.keys().cloned().collect::<Vec<_>>(),
     })
 }
 
@@ -441,7 +441,7 @@ test = "abc""#
         let table = r#"unknown_key = false"#.parse::<Table>().unwrap();
         let result = parse_special_form::<String>(&table);
         assert!(
-            matches!(result, Err(ParseError::InvalidSpecialForm { unexpected_fields }) if unexpected_fields == vec!["unknown_key"])
+            matches!(result, Err(ParseError::InvalidSpecialForm { unexpected_keys }) if unexpected_keys == vec!["unknown_key"])
         );
     }
 }
