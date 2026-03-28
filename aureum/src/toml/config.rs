@@ -41,7 +41,12 @@ pub enum ParseError {
         expected: ConfigValueType,
         got: ConfigValueType,
     },
+    AmbiguousSpecialForm {
+        conflicting_keys: Vec<String>,
+        unexpected_keys: Vec<String>,
+    },
     InvalidSpecialForm {
+        error: Option<Box<ParseError>>,
         unexpected_keys: Vec<String>,
     },
 }
@@ -262,21 +267,65 @@ fn parse_integer_value(value: &toml::Value) -> Result<ConfigValue<i32>, ParseErr
     }
 }
 
+static ALL_EXCLUSIVE_KEYS: [&str; 2] = ["file", "env"];
+
 fn parse_special_form<T>(table: &toml::Table) -> Result<ConfigValue<T>, ParseError> {
-    if let Some(file) = table.get("file").and_then(|v| v.as_str()) {
-        return Ok(ConfigValue::ReadFromFile {
-            file: file.to_owned(),
+    let exclusive_keys_in_table_count = ALL_EXCLUSIVE_KEYS
+        .iter()
+        .copied()
+        .filter(|&key| table.contains_key(key))
+        .count();
+    if exclusive_keys_in_table_count >= 2 {
+        let (conflicting_keys, unexpected_keys) = table
+            .keys()
+            .cloned()
+            .partition(|key| ALL_EXCLUSIVE_KEYS.contains(&key.as_str()));
+
+        return Err(ParseError::AmbiguousSpecialForm {
+            conflicting_keys,
+            unexpected_keys,
         });
     }
 
-    if let Some(env) = table.get("env").and_then(|v| v.as_str()) {
-        return Ok(ConfigValue::FetchFromEnv {
-            env: env.to_owned(),
-        });
+    let mut inner_error = None;
+
+    let unexpected_keys = table
+        .keys()
+        .filter(|&key| !ALL_EXCLUSIVE_KEYS.contains(&key.as_str()))
+        .cloned()
+        .collect::<Vec<_>>();
+
+    if let Some(value) = table.get("file") {
+        match value {
+            toml::Value::String(s) => {
+                return Ok(ConfigValue::ReadFromFile { file: s.to_owned() });
+            }
+            _ => {
+                inner_error = Some(Box::new(ParseError::InvalidType {
+                    expected: ConfigValueType::String,
+                    got: type_from_value(value),
+                }));
+            }
+        };
+    }
+
+    if let Some(value) = table.get("env") {
+        match value {
+            toml::Value::String(s) => {
+                return Ok(ConfigValue::FetchFromEnv { env: s.to_owned() });
+            }
+            _ => {
+                inner_error = Some(Box::new(ParseError::InvalidType {
+                    expected: ConfigValueType::String,
+                    got: type_from_value(value),
+                }));
+            }
+        };
     }
 
     Err(ParseError::InvalidSpecialForm {
-        unexpected_keys: table.keys().cloned().collect::<Vec<_>>(),
+        error: inner_error,
+        unexpected_keys,
     })
 }
 
@@ -328,9 +377,8 @@ fn collect_errors<T>(
 
 #[cfg(test)]
 mod tests {
-    use toml::{Table, Value};
-
     use super::*;
+    use toml::{Table, Value};
 
     // TEST: parse_toml_config()
 
@@ -437,11 +485,48 @@ test = "abc""#
     }
 
     #[test]
-    fn test_parse_special_form_expect_invalid() {
+    fn test_parse_special_form_expect_ambiguous_special_form() {
+        let table = r#"file = "file"
+                env = "env"
+                other_key = false"#
+            .parse::<Table>()
+            .unwrap();
+        let result = parse_special_form::<String>(&table);
+        assert!(
+            matches!(result, Err(ParseError::AmbiguousSpecialForm { conflicting_keys, unexpected_keys }) if conflicting_keys == vec!["env", "file"] && unexpected_keys == vec!["other_key"])
+        );
+    }
+
+    #[test]
+    fn test_parse_special_form_expect_invalid_type_for_file() {
+        let table = r#"file = false
+                other_key = false"#
+            .parse::<Table>()
+            .unwrap();
+        let result = parse_special_form::<String>(&table);
+        assert!(
+            matches!(result, Err(ParseError::InvalidSpecialForm { error, unexpected_keys }) if error.is_some() && unexpected_keys == vec!["other_key"])
+        );
+    }
+
+    #[test]
+    fn test_parse_special_form_expect_invalid_type_for_env() {
+        let table = r#"env = false
+                other_key = false"#
+            .parse::<Table>()
+            .unwrap();
+        let result = parse_special_form::<String>(&table);
+        assert!(
+            matches!(result, Err(ParseError::InvalidSpecialForm { error, unexpected_keys }) if error.is_some() && unexpected_keys == vec!["other_key"])
+        );
+    }
+
+    #[test]
+    fn test_parse_special_form_expect_unexpected_key() {
         let table = r#"unknown_key = false"#.parse::<Table>().unwrap();
         let result = parse_special_form::<String>(&table);
         assert!(
-            matches!(result, Err(ParseError::InvalidSpecialForm { unexpected_keys }) if unexpected_keys == vec!["unknown_key"])
+            matches!(result, Err(ParseError::InvalidSpecialForm { error, unexpected_keys }) if error.is_none() && unexpected_keys == vec!["unknown_key"])
         );
     }
 }
