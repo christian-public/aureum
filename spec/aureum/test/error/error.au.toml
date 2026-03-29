@@ -123,7 +123,7 @@ Test result: OK (0 passed, 0 failed)
 expected_stderr = """
 📋 helpers/invalid_exit_code.toml
 └─ Validation errors
-   └─ ❌ Exit code must be a value between 0 and 255
+   └─ ❌ Exit code must be a value between -2147483648 to 2147483647 (On POSIX/Unix/Linux: Between 0 and 255)
 
 Some config files contain errors (See above)
 """

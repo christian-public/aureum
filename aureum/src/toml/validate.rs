@@ -158,7 +158,7 @@ fn build_test_case(
         collect_error(&mut errors, config.expected_exit_code, requirement_data);
 
     let validated_expected_exit_code = expected_exit_code.and_then(|v| {
-        u8::try_from(v)
+        i32::try_from(v)
             .map_err(|_| {
                 errors.insert(ValidationError::InvalidExitCode);
             })

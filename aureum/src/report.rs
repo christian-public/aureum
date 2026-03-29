@@ -362,9 +362,9 @@ fn show_validation_error(validation_error: &ValidationError) -> String {
         ValidationError::ExpectationRequired => {
             String::from("At least one expectation is required")
         }
-        ValidationError::InvalidExitCode => {
-            String::from("Exit code must be a value between 0 and 255")
-        }
+        ValidationError::InvalidExitCode => String::from(
+            "Exit code must be a value between -2147483648 to 2147483647 (On POSIX/Unix/Linux: Between 0 and 255)",
+        ),
     };
 
     format!("❌ {}", msg)
