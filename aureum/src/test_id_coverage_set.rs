@@ -24,12 +24,20 @@ impl TestIdCoverageSet {
         self.test_ids.len()
     }
 
+    pub fn contains(&self, test_id: &TestId) -> bool {
+        for existing_test_id in &self.test_ids {
+            if existing_test_id.contains(test_id) {
+                return true;
+            }
+        }
+
+        false
+    }
+
     pub fn add(&mut self, test_id: TestId) -> bool {
         // Halt if the new element is already contained
-        for existing_test_id in &self.test_ids {
-            if existing_test_id.contains(&test_id) {
-                return false;
-            }
+        if self.contains(&test_id) {
+            return false;
         }
 
         // Remove any elements that are contained by the new element
@@ -47,6 +55,31 @@ impl TestIdCoverageSet {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_contains() {
+        let root = TestId::root();
+        let root_level1 = TestId::from("level1");
+        let root_level1_level2 = TestId::from("level1.level2");
+
+        let mut coverage_set = TestIdCoverageSet::empty();
+
+        assert_eq!(coverage_set.contains(&root), false);
+        assert_eq!(coverage_set.contains(&root_level1), false);
+        assert_eq!(coverage_set.contains(&root_level1_level2), false);
+
+        assert_eq!(coverage_set.add(root_level1_level2.clone()), true);
+
+        assert_eq!(coverage_set.contains(&root), false);
+        assert_eq!(coverage_set.contains(&root_level1), false);
+        assert_eq!(coverage_set.contains(&root_level1_level2), true);
+
+        assert_eq!(coverage_set.add(root.clone()), true);
+
+        assert_eq!(coverage_set.contains(&root), true);
+        assert_eq!(coverage_set.contains(&root_level1), true);
+        assert_eq!(coverage_set.contains(&root_level1_level2), true);
+    }
 
     #[test]
     fn test_add_root_late_collapses_test_ids() {
