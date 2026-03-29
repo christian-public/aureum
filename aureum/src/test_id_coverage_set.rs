@@ -2,46 +2,43 @@ use crate::test_id::TestId;
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct TestIdCoverageSet {
-    ids: Vec<TestId>,
+    test_ids: Vec<TestId>,
 }
 
 impl TestIdCoverageSet {
     pub fn empty() -> TestIdCoverageSet {
-        TestIdCoverageSet { ids: vec![] }
+        TestIdCoverageSet { test_ids: vec![] }
     }
 
     pub fn full() -> TestIdCoverageSet {
         TestIdCoverageSet {
-            ids: vec![TestId::root()],
+            test_ids: vec![TestId::root()],
         }
     }
 
-    pub fn ids(self) -> Vec<TestId> {
-        self.ids
-    }
-
     pub fn is_empty(&self) -> bool {
-        self.ids.is_empty()
+        self.test_ids.is_empty()
     }
 
     pub fn len(&self) -> usize {
-        self.ids.len()
+        self.test_ids.len()
     }
 
-    pub fn add(&mut self, new_id: TestId) -> bool {
+    pub fn add(&mut self, test_id: TestId) -> bool {
         // Halt if the new element is already contained
-        for existing_id in &self.ids {
-            if existing_id.contains(&new_id) {
+        for existing_test_id in &self.test_ids {
+            if existing_test_id.contains(&test_id) {
                 return false;
             }
         }
 
         // Remove any elements that are contained by the new element
-        self.ids.retain(|existing_id| !new_id.contains(existing_id));
+        self.test_ids
+            .retain(|existing_test_id| !test_id.contains(existing_test_id));
 
         // Add new element and sort list
-        self.ids.push(new_id);
-        self.ids.sort();
+        self.test_ids.push(test_id);
+        self.test_ids.sort();
 
         true
     }
@@ -52,33 +49,33 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_adding_different_paths() {
-        let sub1 = TestId::from("sub1");
-        let sub2 = TestId::from("sub2");
-        let sub3 = TestId::from("sub3");
+    fn test_add_root_late_collapses_test_ids() {
         let root = TestId::root();
+        let root_level1a = TestId::from("level1a");
+        let root_level1b = TestId::from("level1b");
+        let root_level1c = TestId::from("level1c");
 
-        let mut test_ids = TestIdCoverageSet::empty();
+        let mut coverage_set = TestIdCoverageSet::empty();
 
-        assert_eq!(test_ids.len(), 0);
-        assert_eq!(test_ids.add(sub1), true);
-        assert_eq!(test_ids.add(sub2), true);
-        assert_eq!(test_ids.add(sub3), true);
-        assert_eq!(test_ids.len(), 3);
-        assert_eq!(test_ids.add(root), true);
-        assert_eq!(test_ids.len(), 1);
+        assert_eq!(coverage_set.len(), 0);
+        assert_eq!(coverage_set.add(root_level1a), true);
+        assert_eq!(coverage_set.add(root_level1b), true);
+        assert_eq!(coverage_set.add(root_level1c), true);
+        assert_eq!(coverage_set.len(), 3);
+        assert_eq!(coverage_set.add(root), true);
+        assert_eq!(coverage_set.len(), 1);
     }
 
     #[test]
-    fn test_root_blocks_new_elements() {
+    fn test_add_root_early_blocks_test_ids() {
         let root = TestId::root();
-        let sub = TestId::from("sub");
+        let root_level1 = TestId::from("level1");
 
-        let mut test_ids = TestIdCoverageSet::empty();
+        let mut coverage_set = TestIdCoverageSet::empty();
 
-        assert_eq!(test_ids.len(), 0);
-        assert_eq!(test_ids.add(root), true);
-        assert_eq!(test_ids.add(sub), false);
-        assert_eq!(test_ids.len(), 1);
+        assert_eq!(coverage_set.len(), 0);
+        assert_eq!(coverage_set.add(root), true);
+        assert_eq!(coverage_set.add(root_level1), false);
+        assert_eq!(coverage_set.len(), 1);
     }
 }
