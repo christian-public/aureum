@@ -20,10 +20,28 @@ pub struct Cli {
 #[derive(Subcommand)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Command {
+    /// Validate config files
+    Validate(ValidateArgs),
     /// List tests
     List(ListArgs),
     /// Run tests
     Test(TestArgs),
+}
+
+#[derive(Parser)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub struct ValidateArgs {
+    /// Paths to config files
+    #[arg(required = true)]
+    pub paths: Vec<PathBuf>,
+
+    /// Replace absolute paths with a platform-independent placeholder
+    #[arg(long)]
+    pub hide_absolute_paths: bool,
+
+    /// Print extra information about config files
+    #[arg(long)]
+    pub verbose: bool,
 }
 
 #[derive(Parser)]
