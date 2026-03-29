@@ -1,0 +1,11 @@
+program = { env = "AUREUM_TEST_EXEC" }
+program_arguments = ["test", "helpers/two_levels.toml:test1"]
+
+expected_stdout = """
+🚀 Running 1 tests:
+.
+
+Test result: OK (1 passed, 0 failed)
+"""
+expected_stderr = ""
+expected_exit_code = 0

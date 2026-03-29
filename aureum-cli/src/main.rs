@@ -42,12 +42,6 @@ fn main() {
 fn validate_config_files(current_dir: PathBuf, args: ValidateArgs) {
     let find_config_files_result = config_file::find_config_files(args.paths, &current_dir);
 
-    let config_files = find_config_files_result
-        .found_config_files
-        .keys()
-        .cloned()
-        .collect::<Vec<_>>();
-
     if !find_config_files_result.errors.is_empty() {
         let paths = find_config_files_result
             .errors
@@ -58,18 +52,24 @@ fn validate_config_files(current_dir: PathBuf, args: ValidateArgs) {
         aureum::print_invalid_paths(paths);
     }
 
-    if config_files.is_empty() {
+    if find_config_files_result.found_config_files.is_empty() {
         aureum::print_no_config_files();
         process::exit(INVALID_USER_INPUT_EXIT_CODE);
     }
 
     if args.common.verbose {
+        let config_files = find_config_files_result
+            .found_config_files
+            .keys()
+            .cloned()
+            .collect::<Vec<_>>();
+
         aureum::print_files_found(&config_files);
     }
 
     let mut any_failed_configs = false;
 
-    for config_file in config_files {
+    for (config_file, _test_id_coverage_set) in find_config_files_result.found_config_files {
         let Some(file_name) = config_file.file_name() else {
             // TODO: Show error
             continue;
@@ -133,12 +133,6 @@ fn validate_config_files(current_dir: PathBuf, args: ValidateArgs) {
 fn list_tests(current_dir: PathBuf, args: ListArgs) {
     let find_config_files_result = config_file::find_config_files(args.paths, &current_dir);
 
-    let config_files = find_config_files_result
-        .found_config_files
-        .keys()
-        .cloned()
-        .collect::<Vec<_>>();
-
     if !find_config_files_result.errors.is_empty() {
         let paths = find_config_files_result
             .errors
@@ -149,19 +143,25 @@ fn list_tests(current_dir: PathBuf, args: ListArgs) {
         aureum::print_invalid_paths(paths);
     }
 
-    if config_files.is_empty() {
+    if find_config_files_result.found_config_files.is_empty() {
         aureum::print_no_config_files();
         process::exit(INVALID_USER_INPUT_EXIT_CODE);
     }
 
     if args.common.verbose {
+        let config_files = find_config_files_result
+            .found_config_files
+            .keys()
+            .cloned()
+            .collect::<Vec<_>>();
+
         aureum::print_files_found(&config_files);
     }
 
     let mut all_test_cases = vec![];
     let mut any_failed_configs = false;
 
-    for config_file in config_files {
+    for (config_file, test_id_coverage_set) in find_config_files_result.found_config_files {
         let Some(file_name) = config_file.file_name() else {
             // TODO: Show error
             continue;
@@ -211,7 +211,8 @@ fn list_tests(current_dir: PathBuf, args: ListArgs) {
                 all_test_cases.extend(
                     parsed_toml_config
                         .into_values()
-                        .filter_map(|x| x.test_cases.ok()),
+                        .filter_map(|x| x.test_cases.ok())
+                        .filter(|x| test_id_coverage_set.contains(&x.test_id)),
                 );
             }
             Err(error) => {
@@ -233,12 +234,6 @@ fn list_tests(current_dir: PathBuf, args: ListArgs) {
 fn run_tests(current_dir: PathBuf, args: TestArgs) {
     let find_config_files_result = config_file::find_config_files(args.paths, &current_dir);
 
-    let config_files = find_config_files_result
-        .found_config_files
-        .keys()
-        .cloned()
-        .collect::<Vec<_>>();
-
     if !find_config_files_result.errors.is_empty() {
         let paths = find_config_files_result
             .errors
@@ -249,19 +244,25 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
         aureum::print_invalid_paths(paths);
     }
 
-    if config_files.is_empty() {
+    if find_config_files_result.found_config_files.is_empty() {
         aureum::print_no_config_files();
         process::exit(INVALID_USER_INPUT_EXIT_CODE);
     }
 
     if args.common.verbose {
+        let config_files = find_config_files_result
+            .found_config_files
+            .keys()
+            .cloned()
+            .collect::<Vec<_>>();
+
         aureum::print_files_found(&config_files);
     }
 
     let mut all_test_cases = vec![];
     let mut any_failed_configs = false;
 
-    for config_file in config_files {
+    for (config_file, test_id_coverage_set) in find_config_files_result.found_config_files {
         let Some(file_name) = config_file.file_name() else {
             // TODO: Show error
             continue;
@@ -311,7 +312,8 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
                 all_test_cases.extend(
                     parsed_toml_config
                         .into_values()
-                        .filter_map(|x| x.test_cases.ok()),
+                        .filter_map(|x| x.test_cases.ok())
+                        .filter(|x| test_id_coverage_set.contains(&x.test_id)),
                 );
             }
             Err(error) => {
