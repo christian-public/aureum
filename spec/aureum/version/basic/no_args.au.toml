@@ -1,0 +1,8 @@
+program = { env = "AUREUM_TEST_EXEC" }
+program_arguments = ["version"]
+
+expected_stdout = """
+aureum 0.1.0
+"""
+expected_stderr = ""
+expected_exit_code = 0

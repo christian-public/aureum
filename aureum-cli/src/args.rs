@@ -6,12 +6,14 @@ pub fn parse() -> Cli {
     Cli::parse()
 }
 
+pub static CLI_BINARY_NAME: &str = "aureum";
+
 /// Golden test runner for executables
 #[derive(Parser)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 // Set `bin_name` to force identical usage message on all platforms.
 // On Windows, the default is to display `<bin_name>.exe`.
-#[clap(bin_name = "aureum")]
+#[clap(bin_name = CLI_BINARY_NAME)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Command,
@@ -26,6 +28,8 @@ pub enum Command {
     List(ListArgs),
     /// Run tests
     Test(TestArgs),
+    /// Print version information
+    Version,
 }
 
 #[derive(Args)]

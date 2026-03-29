@@ -1,0 +1,13 @@
+program = { env = "AUREUM_TEST_EXEC" }
+program_arguments = ["version", "--help"]
+
+expected_stdout = """
+Print version information
+
+Usage: aureum version
+
+Options:
+  -h, --help  Print help
+"""
+expected_stderr = ""
+expected_exit_code = 0

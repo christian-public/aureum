@@ -4,7 +4,7 @@ mod utils {
 mod args;
 mod config_file;
 
-use crate::args::{Command, ListArgs, OutputFormat, TestArgs, ValidateArgs};
+use crate::args::{CLI_BINARY_NAME, Command, ListArgs, OutputFormat, TestArgs, ValidateArgs};
 use aureum::print_test_case;
 use aureum::{ReportConfig, ReportFormat, RequirementData, Requirements};
 use std::env;
@@ -31,8 +31,13 @@ fn main() {
         Command::Test(args) => {
             run_tests(current_dir, args);
         }
+        Command::Version => {
+            print_version();
+        }
     }
 }
+
+// COMMANDS
 
 fn validate_config_files(current_dir: PathBuf, args: ValidateArgs) {
     let find_config_files_result = config_file::find_config_files(args.paths, &current_dir);
@@ -343,6 +348,12 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
         process::exit(TEST_FAILURE_EXIT_CODE)
     }
 }
+
+fn print_version() {
+    println!("{} {}", CLI_BINARY_NAME, env!("CARGO_PKG_VERSION"));
+}
+
+// HELPERS
 
 fn get_report_format(output_format: &OutputFormat) -> ReportFormat {
     match output_format {
