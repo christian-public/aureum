@@ -4,7 +4,7 @@ mod utils {
 mod args;
 mod config_file;
 
-use crate::args::{Cli, Command, ListArgs, OutputFormat, TestArgs, ValidateArgs};
+use crate::args::{Command, ListArgs, OutputFormat, TestArgs, ValidateArgs};
 use aureum::print_test_case;
 use aureum::{ReportConfig, ReportFormat, RequirementData, Requirements};
 use std::env;
@@ -20,7 +20,7 @@ const INVALID_USER_INPUT_EXIT_CODE: i32 = 2;
 fn main() {
     let current_dir = env::current_dir().expect("Current directory must be available");
 
-    let cli: Cli = args::parse();
+    let cli = args::parse();
     match cli.command {
         Command::Validate(args) => {
             validate_config_files(current_dir, args);
@@ -58,7 +58,7 @@ fn validate_config_files(current_dir: PathBuf, args: ValidateArgs) {
         process::exit(INVALID_USER_INPUT_EXIT_CODE);
     }
 
-    if args.verbose {
+    if args.common.verbose {
         aureum::print_files_found(&source_files);
     }
 
@@ -97,13 +97,13 @@ fn validate_config_files(current_dir: PathBuf, args: ValidateArgs) {
                 );
 
                 let any_issues = parsed_toml_config.values().any(|x| x.test_cases.is_err());
-                if any_issues || args.verbose {
+                if any_issues || args.common.verbose {
                     aureum::print_config_details(
                         source_file,
                         &parsed_toml_config,
                         &requirement_data,
-                        args.verbose,
-                        args.hide_absolute_paths,
+                        args.common.verbose,
+                        args.common.hide_absolute_paths,
                     );
 
                     if any_issues {
@@ -149,7 +149,7 @@ fn list_tests(current_dir: PathBuf, args: ListArgs) {
         process::exit(INVALID_USER_INPUT_EXIT_CODE);
     }
 
-    if args.verbose {
+    if args.common.verbose {
         aureum::print_files_found(&source_files);
     }
 
@@ -189,13 +189,13 @@ fn list_tests(current_dir: PathBuf, args: ListArgs) {
                 );
 
                 let any_issues = parsed_toml_config.values().any(|x| x.test_cases.is_err());
-                if any_issues || args.verbose {
+                if any_issues || args.common.verbose {
                     aureum::print_config_details(
                         source_file,
                         &parsed_toml_config,
                         &requirement_data,
-                        args.verbose,
-                        args.hide_absolute_paths,
+                        args.common.verbose,
+                        args.common.hide_absolute_paths,
                     );
 
                     if any_issues {
@@ -249,7 +249,7 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
         process::exit(INVALID_USER_INPUT_EXIT_CODE);
     }
 
-    if args.verbose {
+    if args.common.verbose {
         aureum::print_files_found(&source_files);
     }
 
@@ -289,13 +289,13 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
                 );
 
                 let any_issues = parsed_toml_config.values().any(|x| x.test_cases.is_err());
-                if any_issues || args.verbose {
+                if any_issues || args.common.verbose {
                     aureum::print_config_details(
                         source_file,
                         &parsed_toml_config,
                         &requirement_data,
-                        args.verbose,
-                        args.hide_absolute_paths,
+                        args.common.verbose,
+                        args.common.hide_absolute_paths,
                     );
 
                     if any_issues {
