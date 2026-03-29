@@ -10,9 +10,8 @@ Arguments:
   <PATHS>...  Paths to config files
 
 Options:
-      --hide-absolute-paths  Replace absolute paths with a platform-independent placeholder
-      --verbose              Print extra information about config files
-  -h, --help                 Print help
+      --verbose  Print extra information about config files
+  -h, --help     Print help
 """
 expected_stderr = ""
 expected_exit_code = 0

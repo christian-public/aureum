@@ -36,7 +36,7 @@ pub struct ValidateArgs {
     pub paths: Vec<PathBuf>,
 
     /// Replace absolute paths with a platform-independent placeholder
-    #[arg(long)]
+    #[arg(long, hide = true)]
     pub hide_absolute_paths: bool,
 
     /// Print extra information about config files
@@ -52,7 +52,7 @@ pub struct ListArgs {
     pub paths: Vec<PathBuf>,
 
     /// Replace absolute paths with a platform-independent placeholder
-    #[arg(long)]
+    #[arg(long, hide = true)]
     pub hide_absolute_paths: bool,
 
     /// Print extra information about config files
@@ -72,7 +72,7 @@ pub struct TestArgs {
     pub output_format: OutputFormat,
 
     /// Replace absolute paths with a platform-independent placeholder
-    #[arg(long)]
+    #[arg(long, hide = true)]
     pub hide_absolute_paths: bool,
 
     /// Run tests in parallel
