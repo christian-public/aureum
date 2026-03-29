@@ -1,0 +1,16 @@
+program = { env = "AUREUM_TEST_EXEC" }
+program_arguments = ["list", "helpers/missing_program.toml"]
+
+expected_stdout = ""
+expected_stderr = """
+📋 helpers/missing_program.toml
+├─ :test1
+│  └─ Validation errors
+│     └─ ❌ The field 'program' is required
+└─ :test2
+   └─ Validation errors
+      └─ ❌ The field 'program' is required
+
+Some config files contain errors (See above)
+"""
+expected_exit_code = 1
