@@ -6,7 +6,7 @@ program_arguments = [
    "test",
    "--verbose",
    "--hide-absolute-paths",
-   "verbose_helpers/*.toml",
+   "helpers/*.toml",
 ]
 expected_stdout = """
 🚀 Running 3 tests:
@@ -16,10 +16,10 @@ Test result: OK (3 passed, 0 failed)
 """
 expected_stderr = """
 🔍 Found 2 config files
-├─ verbose_helpers/many_requirements.toml
-└─ verbose_helpers/no_requirements.toml
+├─ helpers/many_requirements.toml
+└─ helpers/no_requirements.toml
 
-📋 verbose_helpers/many_requirements.toml
+📋 helpers/many_requirements.toml
 ├─ :env_var_exists
 │  ├─ Program to run
 │  │  └─ ✅ <absolute path to 'echo'>
@@ -49,7 +49,7 @@ expected_stderr = """
    └─ Validation errors
       └─ ❌ Missing external file 'aureum_test_this_file_does_not_exist'
 
-📋 verbose_helpers/no_requirements.toml
+📋 helpers/no_requirements.toml
 └─ Program to run
    └─ ✅ <absolute path to 'echo'>
 
@@ -59,7 +59,7 @@ expected_exit_code = 1
 
 
 [tests.default]
-program_arguments = ["test", "verbose_helpers/*.toml"]
+program_arguments = ["test", "helpers/*.toml"]
 expected_stdout = """
 🚀 Running 3 tests:
 ...
@@ -67,7 +67,7 @@ expected_stdout = """
 Test result: OK (3 passed, 0 failed)
 """
 expected_stderr = """
-📋 verbose_helpers/many_requirements.toml
+📋 helpers/many_requirements.toml
 ├─ :env_var_exists
 ├─ :env_var_missing
 │  └─ Validation errors

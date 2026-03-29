@@ -1,5 +1,5 @@
 program = { env = "AUREUM_TEST_EXEC" }
-program_arguments = ["validate", "basic_helpers/passing_test.toml"]
+program_arguments = ["validate", "helpers/passing_test.toml"]
 
 expected_stdout = """
 All config files are valid

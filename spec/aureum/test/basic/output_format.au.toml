@@ -6,7 +6,7 @@ program_arguments = [
   "test",
   "--output-format",
   "summary",
-  "basic_helpers/passing_test.toml",
+  "helpers/passing_test.toml",
 ]
 expected_stdout = """
 🚀 Running 1 tests:
@@ -23,13 +23,13 @@ program_arguments = [
   "test",
   "--output-format",
   "summary",
-  "basic_helpers/failing_test.toml",
+  "helpers/failing_test.toml",
 ]
 expected_stdout = """
 🚀 Running 1 tests:
 F
 
-❌ basic_helpers/failing_test.toml
+❌ helpers/failing_test.toml
 ├─ Standard output
 │  ├─ Expected
 │  │  ╭
@@ -74,12 +74,12 @@ program_arguments = [
   "test",
   "--output-format",
   "tap",
-  "basic_helpers/passing_test.toml",
+  "helpers/passing_test.toml",
 ]
 expected_stdout = """
 TAP version 14
 1..1
-ok     1 - basic_helpers/passing_test.toml
+ok     1 - helpers/passing_test.toml
 """
 expected_stderr = ""
 expected_exit_code = 0
@@ -90,12 +90,12 @@ program_arguments = [
   "test",
   "--output-format",
   "tap",
-  "basic_helpers/failing_test.toml",
+  "helpers/failing_test.toml",
 ]
 expected_stdout = """
 TAP version 14
 1..1
-not ok 1 - basic_helpers/failing_test.toml
+not ok 1 - helpers/failing_test.toml
   ---
   exit-code:
     expected: 42
@@ -117,13 +117,13 @@ program_arguments = [
   "test",
   "--output-format",
   "summary",
-  "basic_helpers/failing_test_newline.toml",
+  "helpers/failing_test_newline.toml",
 ]
 expected_stdout = """
 🚀 Running 1 tests:
 F
 
-❌ basic_helpers/failing_test_newline.toml
+❌ helpers/failing_test_newline.toml
 └─ Standard output
    ├─ Expected
    │  ╭
@@ -153,7 +153,7 @@ program_arguments = [
   "test",
   "--output-format",
   "UNKNOWN",
-  "basic_helpers/passing_test.toml",
+  "helpers/passing_test.toml",
 ]
 expected_stdout = ""
 expected_stderr = """
