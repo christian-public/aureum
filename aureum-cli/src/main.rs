@@ -125,6 +125,7 @@ fn validate_config_files(current_dir: PathBuf, args: ValidateArgs) {
 
     if any_failed_configs {
         eprintln!("Some config files contain errors (See above)");
+        process::exit(TEST_FAILURE_EXIT_CODE)
     } else {
         println!("All config files are valid")
     }
@@ -228,6 +229,7 @@ fn list_tests(current_dir: PathBuf, args: ListArgs) {
 
     if any_failed_configs {
         eprintln!("Some config files contain errors (See above)");
+        process::exit(TEST_FAILURE_EXIT_CODE)
     }
 }
 
