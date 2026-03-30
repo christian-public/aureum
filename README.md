@@ -46,7 +46,7 @@ Arguments:
 
 Options:
       --output-format <OUTPUT_FORMAT>  Options: summary, tap [default: summary]
-      --run-tests-in-parallel          Run tests in parallel
+      --parallel                       Run tests in parallel
       --verbose                        Print extra information about config files
   -h, --help                           Print help
 ```

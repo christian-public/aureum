@@ -335,7 +335,7 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
     let run_results = aureum::run_test_cases(
         &report_config,
         &all_test_cases,
-        args.run_tests_in_parallel,
+        args.parallel,
         &current_dir,
         &print_test_case,
     );

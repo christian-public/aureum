@@ -67,7 +67,7 @@ pub struct TestArgs {
 
     /// Run tests in parallel
     #[arg(long)]
-    pub run_tests_in_parallel: bool,
+    pub parallel: bool,
 
     #[command(flatten)]
     pub common: CommonArgs,
