@@ -63,7 +63,7 @@ pub struct TestArgs {
 
     /// Options: summary, tap
     #[arg(long, default_value = "summary")]
-    pub output_format: OutputFormat,
+    pub output_format: TestOutputFormat,
 
     /// Run tests in parallel
     #[arg(long)]
@@ -87,12 +87,12 @@ pub struct CommonArgs {
 
 #[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
-pub enum OutputFormat {
+pub enum TestOutputFormat {
     Summary,
     Tap,
 }
 
-impl str::FromStr for OutputFormat {
+impl str::FromStr for TestOutputFormat {
     type Err = &'static str;
 
     fn from_str(format: &str) -> Result<Self, Self::Err> {

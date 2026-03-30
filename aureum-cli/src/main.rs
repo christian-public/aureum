@@ -4,7 +4,7 @@ mod utils {
 mod args;
 mod config_file;
 
-use crate::args::{CLI_BINARY_NAME, Command, ListArgs, OutputFormat, TestArgs, ValidateArgs};
+use crate::args::{CLI_BINARY_NAME, Command, ListArgs, TestArgs, TestOutputFormat, ValidateArgs};
 use aureum::print_test_case;
 use aureum::{ReportConfig, ReportFormat, RequirementData, Requirements};
 use std::env;
@@ -359,10 +359,10 @@ fn print_version() {
 
 // HELPERS
 
-fn get_report_format(output_format: &OutputFormat) -> ReportFormat {
+fn get_report_format(output_format: &TestOutputFormat) -> ReportFormat {
     match output_format {
-        OutputFormat::Summary => ReportFormat::Summary,
-        OutputFormat::Tap => ReportFormat::Tap,
+        TestOutputFormat::Summary => ReportFormat::Summary,
+        TestOutputFormat::Tap => ReportFormat::Tap,
     }
 }
 
