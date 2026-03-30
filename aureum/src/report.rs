@@ -12,6 +12,7 @@ use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
 use colored::Colorize;
 use relative_path::RelativePathBuf;
 use std::collections::BTreeMap;
+use std::io;
 use std::path::PathBuf;
 
 // TEST CASE
@@ -47,7 +48,7 @@ pub fn print_test_case(
 ) -> Result<(), RunError> {
     match report_config.format {
         ReportFormat::Summary => {
-            summary_print_test_case(result);
+            summary_print_test_case(result)?;
         }
         ReportFormat::Tap => {
             let test_number_indent_level = report_config.number_of_tests.to_string().len();
@@ -190,19 +191,23 @@ fn summary_print_start(number_of_tests: usize) {
     println!("🚀 Running {} tests:", number_of_tests)
 }
 
-fn summary_print_test_case(result: &Result<TestResult, RunError>) {
+fn summary_print_test_case(result: &Result<TestResult, RunError>) -> Result<(), RunError> {
     match result {
         Ok(test_result) => {
             if test_result.is_success() {
-                print!(".")
+                print!(".");
             } else {
-                print!("F")
+                print!("F");
             }
         }
         Err(_) => {
-            print!("F")
+            print!("F");
         }
     }
+
+    io::Write::flush(&mut io::stdout()).map_err(RunError::IOError)?;
+
+    Ok(())
 }
 
 fn summary_print_summary(number_of_tests: usize, run_results: &[RunResult]) {
