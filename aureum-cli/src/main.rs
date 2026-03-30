@@ -5,7 +5,6 @@ mod args;
 mod config_file;
 
 use crate::args::{CLI_BINARY_NAME, Command, ListArgs, TestArgs, TestOutputFormat, ValidateArgs};
-use aureum::print_test_case;
 use aureum::{ReportConfig, ReportFormat, RequirementData, Requirements};
 use std::env;
 use std::fs;
@@ -337,7 +336,7 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
         &all_test_cases,
         args.parallel,
         &current_dir,
-        &print_test_case,
+        &aureum::print_test_case,
     );
 
     aureum::print_summary(&report_config, &run_results);
