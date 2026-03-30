@@ -123,7 +123,7 @@ fn validate_config_files(current_dir: PathBuf, args: ValidateArgs) {
     }
 
     if any_failed_configs {
-        eprintln!("Some config files contain errors (See above)");
+        aureum::print_config_files_contain_errors();
         process::exit(INVALID_USER_INPUT_EXIT_CODE);
     } else {
         println!("All config files are valid")
@@ -227,7 +227,7 @@ fn list_tests(current_dir: PathBuf, args: ListArgs) {
     }
 
     if any_failed_configs {
-        eprintln!("Some config files contain errors (See above)");
+        aureum::print_config_files_contain_errors();
         process::exit(INVALID_USER_INPUT_EXIT_CODE);
     }
 }
@@ -342,7 +342,7 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
     aureum::print_summary(&report_config, &run_results);
 
     if any_failed_configs {
-        eprintln!("Some config files contain errors (See above)");
+        aureum::print_config_files_contain_errors();
     }
 
     let all_tests_passed = run_results.iter().all(|t| t.is_success());

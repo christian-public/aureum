@@ -185,6 +185,13 @@ pub fn print_toml_config_error(source_file: RelativePathBuf, error: TomlConfigEr
     print_tree(tree);
 }
 
+pub fn print_config_files_contain_errors() {
+    eprintln!(
+        "{} Some config files contain errors (See above)",
+        "warning:".yellow().bold(),
+    );
+}
+
 // SUMMARY HELPERS
 
 fn summary_print_start(number_of_tests: usize) {

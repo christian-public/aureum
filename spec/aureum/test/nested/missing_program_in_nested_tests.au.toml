@@ -16,6 +16,6 @@ expected_stderr = """
    └─ Validation errors
       └─ ❌ The field 'program' is required
 
-Some config files contain errors (See above)
+warning: Some config files contain errors (See above)
 """
 expected_exit_code = 2

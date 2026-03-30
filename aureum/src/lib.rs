@@ -36,8 +36,9 @@ pub use toml::{ParsedTomlConfig, ProgramPath, RequirementData, ValidationError};
 pub use toml::{TomlConfig, TomlConfigError};
 
 pub use report::{
-    print_config_details, print_files_found, print_invalid_paths, print_no_config_files,
-    print_start_test_cases, print_summary, print_test_case, print_toml_config_error,
+    print_config_details, print_config_files_contain_errors, print_files_found,
+    print_invalid_paths, print_no_config_files, print_start_test_cases, print_summary,
+    print_test_case, print_toml_config_error,
 };
 pub use test_runner::run_test_cases;
 pub use toml::config::parse_toml_config;
