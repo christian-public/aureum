@@ -127,9 +127,11 @@ fn read_pipe_to_string<T>(pipe: &mut T) -> Result<String, RunError>
 where
     T: Read,
 {
-    let mut buf: Vec<u8> = vec![];
+    let mut buf = Vec::<u8>::new();
     pipe.read_to_end(&mut buf).map_err(RunError::IOError)?;
-    String::from_utf8(buf).map_or(Err(RunError::FailedToDecodeUtf8), Ok)
+    let content = String::from_utf8(buf).map_err(|_| RunError::FailedToDecodeUtf8)?;
+
+    Ok(content)
 }
 
 /// Normalize line endings to line feed (LF)
