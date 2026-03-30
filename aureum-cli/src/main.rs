@@ -124,7 +124,7 @@ fn validate_config_files(current_dir: PathBuf, args: ValidateArgs) {
 
     if any_failed_configs {
         eprintln!("Some config files contain errors (See above)");
-        process::exit(TEST_FAILURE_EXIT_CODE)
+        process::exit(INVALID_USER_INPUT_EXIT_CODE);
     } else {
         println!("All config files are valid")
     }
@@ -228,7 +228,7 @@ fn list_tests(current_dir: PathBuf, args: ListArgs) {
 
     if any_failed_configs {
         eprintln!("Some config files contain errors (See above)");
-        process::exit(TEST_FAILURE_EXIT_CODE)
+        process::exit(INVALID_USER_INPUT_EXIT_CODE);
     }
 }
 
@@ -347,8 +347,10 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
 
     let all_tests_passed = run_results.iter().all(|t| t.is_success());
 
-    if any_failed_configs || !all_tests_passed {
-        process::exit(TEST_FAILURE_EXIT_CODE)
+    if !all_tests_passed {
+        process::exit(TEST_FAILURE_EXIT_CODE);
+    } else if any_failed_configs {
+        process::exit(INVALID_USER_INPUT_EXIT_CODE);
     }
 }
 

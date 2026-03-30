@@ -36,7 +36,7 @@ expected_stderr = """
 
 Some config files contain errors (See above)
 """
-expected_exit_code = 1
+expected_exit_code = 2
 
 
 [tests.empty_config]
@@ -55,7 +55,7 @@ expected_stderr = """
 
 Some config files contain errors (See above)
 """
-expected_exit_code = 1
+expected_exit_code = 2
 
 
 [tests.no_program_specified]
@@ -73,7 +73,7 @@ expected_stderr = """
 
 Some config files contain errors (See above)
 """
-expected_exit_code = 1
+expected_exit_code = 2
 
 
 [tests.unknown_test_program]
@@ -91,7 +91,7 @@ expected_stderr = """
 
 Some config files contain errors (See above)
 """
-expected_exit_code = 1
+expected_exit_code = 2
 
 
 [tests.no_expectations]
@@ -109,7 +109,7 @@ expected_stderr = """
 
 Some config files contain errors (See above)
 """
-expected_exit_code = 1
+expected_exit_code = 2
 
 
 [tests.invalid_exit_code]
@@ -127,7 +127,7 @@ expected_stderr = """
 
 Some config files contain errors (See above)
 """
-expected_exit_code = 1
+expected_exit_code = 2
 
 
 [tests.missing_env_var]
@@ -145,7 +145,7 @@ expected_stderr = """
 
 Some config files contain errors (See above)
 """
-expected_exit_code = 1
+expected_exit_code = 2
 
 
 [tests.missing_external_file]
@@ -163,4 +163,4 @@ expected_stderr = """
 
 Some config files contain errors (See above)
 """
-expected_exit_code = 1
+expected_exit_code = 2

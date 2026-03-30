@@ -55,7 +55,7 @@ expected_stderr = """
 
 Some config files contain errors (See above)
 """
-expected_exit_code = 1
+expected_exit_code = 2
 
 
 [tests.default]
@@ -79,4 +79,4 @@ expected_stderr = """
 
 Some config files contain errors (See above)
 """
-expected_exit_code = 1
+expected_exit_code = 2
