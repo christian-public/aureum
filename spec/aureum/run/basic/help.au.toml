@@ -1,0 +1,18 @@
+program = { env = "AUREUM_TEST_EXEC" }
+program_arguments = ["run", "--help"]
+
+expected_stdout = """
+Run programs from test specification
+
+Usage: aureum run [OPTIONS] <PATHS>...
+
+Arguments:
+  <PATHS>...  Paths to config files
+
+Options:
+      --output-format <OUTPUT_FORMAT>  Options: passthrough, toml [default: passthrough]
+      --verbose                        Print extra information about config files
+  -h, --help                           Print help
+"""
+expected_stderr = ""
+expected_exit_code = 0

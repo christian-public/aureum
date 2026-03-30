@@ -1,0 +1,112 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+
+[tests.specific_test_id]
+program_arguments = [
+    "run",
+    "--output-format",
+    "toml",
+    "helpers/echo_tests.toml:test1",
+]
+expected_stdout = """
+# TEST: helpers/echo_tests.toml:test1
+expected_stdout = "Test 1"
+expected_stderr = ""
+expected_exit_code = 0
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[tests.multiple_tests]
+program_arguments = [
+    "run",
+    "--output-format",
+    "toml",
+    "helpers/echo_tests.toml",
+]
+expected_stdout = """
+# TEST: helpers/echo_tests.toml:test1
+expected_stdout = "Test 1"
+expected_stderr = ""
+expected_exit_code = 0
+
+# TEST: helpers/echo_tests.toml:test2
+expected_stdout = "Test 2"
+expected_stderr = ""
+expected_exit_code = 0
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[tests.missing_program_on_test1]
+program_arguments = [
+    "run",
+    "--output-format",
+    "toml",
+    "helpers/missing_program_on_test1.toml",
+]
+expected_stdout = """
+# TEST: helpers/missing_program_on_test1.toml:test2
+expected_stdout = "Test 2"
+expected_stderr = ""
+expected_exit_code = 0
+"""
+expected_stderr = """
+📋 helpers/missing_program_on_test1.toml
+├─ :test1
+│  └─ Validation errors
+│     └─ ❌ The field 'program' is required
+└─ :test2
+
+warning: Some config files contain errors (See above)
+"""
+expected_exit_code = 3
+
+
+[tests.missing_program_on_test1_run_specific_test_id]
+program_arguments = [
+    "run",
+    "--output-format",
+    "toml",
+    "helpers/missing_program_on_test1.toml:test2",
+]
+expected_stdout = """
+# TEST: helpers/missing_program_on_test1.toml:test2
+expected_stdout = "Test 2"
+expected_stderr = ""
+expected_exit_code = 0
+"""
+expected_stderr = """
+📋 helpers/missing_program_on_test1.toml
+├─ :test1
+│  └─ Validation errors
+│     └─ ❌ The field 'program' is required
+└─ :test2
+
+warning: Some config files contain errors (See above)
+"""
+expected_exit_code = 3
+
+
+[tests.missing_program_on_all_tests]
+program_arguments = [
+    "run",
+    "--output-format",
+    "toml",
+    "helpers/missing_program_on_all_tests.toml",
+]
+expected_stdout = ""
+expected_stderr = """
+📋 helpers/missing_program_on_all_tests.toml
+├─ :test1
+│  └─ Validation errors
+│     └─ ❌ The field 'program' is required
+└─ :test2
+   └─ Validation errors
+      └─ ❌ The field 'program' is required
+
+warning: Some config files contain errors (See above)
+"""
+expected_exit_code = 3

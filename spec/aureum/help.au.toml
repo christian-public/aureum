@@ -9,6 +9,7 @@ Usage: aureum <COMMAND>
 Commands:
   validate  Validate config files
   list      List tests
+  run       Run programs from test specification
   test      Run tests
   version   Print version information
   help      Print this message or the help of the given subcommand(s)

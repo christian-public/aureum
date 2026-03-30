@@ -26,6 +26,8 @@ pub enum Command {
     Validate(ValidateArgs),
     /// List tests
     List(ListArgs),
+    /// Run programs from test specification
+    Run(RunArgs),
     /// Run tests
     Test(TestArgs),
     /// Print version information
@@ -49,6 +51,21 @@ pub struct ListArgs {
     /// Paths to config files
     #[arg(required = true)]
     pub paths: Vec<PathBuf>,
+
+    #[command(flatten)]
+    pub common: CommonArgs,
+}
+
+#[derive(Args)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub struct RunArgs {
+    /// Paths to config files
+    #[arg(required = true)]
+    pub paths: Vec<PathBuf>,
+
+    /// Options: passthrough, toml
+    #[arg(long, default_value = "passthrough")]
+    pub output_format: RunOutputFormat,
 
     #[command(flatten)]
     pub common: CommonArgs,
@@ -83,6 +100,25 @@ pub struct CommonArgs {
     /// Replace absolute paths with a platform-independent placeholder
     #[arg(long, hide = true)]
     pub hide_absolute_paths: bool,
+}
+
+#[derive(Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub enum RunOutputFormat {
+    Passthrough,
+    Toml,
+}
+
+impl str::FromStr for RunOutputFormat {
+    type Err = &'static str;
+
+    fn from_str(format: &str) -> Result<Self, Self::Err> {
+        match format {
+            "passthrough" => Ok(Self::Passthrough),
+            "toml" => Ok(Self::Toml),
+            _ => Err("Invalid output format"),
+        }
+    }
 }
 
 #[derive(Clone)]

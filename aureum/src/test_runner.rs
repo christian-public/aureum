@@ -7,6 +7,13 @@ use std::path::Path;
 use std::process::{Command, Stdio};
 
 #[cfg_attr(debug_assertions, derive(Debug))]
+pub struct ProgramOutput {
+    pub stdout: String,
+    pub stderr: String,
+    pub exit_code: i32,
+}
+
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct RunResult {
     pub test_case: TestCase,
     pub result: Result<TestResult, RunError>,
@@ -64,11 +71,21 @@ pub fn run_test_cases(
 }
 
 pub fn run_test_case(test_case: &TestCase, current_dir: &Path) -> Result<TestResult, RunError> {
-    let run_test_in_config_dir = &test_case.path_to_containing_dir.to_path(current_dir);
+    let output = run_program(test_case, current_dir)?;
 
-    let mut cmd = Command::new(&test_case.program);
-    cmd.current_dir(run_test_in_config_dir);
-    cmd.args(&test_case.arguments);
+    let expected_stdout = test_case.expected_stdout.as_deref().map(normalize_newlines);
+    let expected_stderr = test_case.expected_stderr.as_deref().map(normalize_newlines);
+
+    Ok(TestResult {
+        stdout: compare_result(expected_stdout, output.stdout),
+        stderr: compare_result(expected_stderr, output.stderr),
+        exit_code: compare_result(test_case.expected_exit_code, output.exit_code),
+    })
+}
+
+pub fn run_program(test_case: &TestCase, current_dir: &Path) -> Result<ProgramOutput, RunError> {
+    let mut cmd = init_command(test_case, current_dir);
+
     cmd.stdin(Stdio::piped());
     cmd.stdout(Stdio::piped());
     cmd.stderr(Stdio::piped());
@@ -76,13 +93,7 @@ pub fn run_test_case(test_case: &TestCase, current_dir: &Path) -> Result<TestRes
     let mut child = cmd.spawn().map_err(RunError::IOError)?;
 
     if let Some(stdin_string) = &test_case.stdin {
-        let mut stdin = child
-            .stdin
-            .take()
-            .expect("Stdin should be configured to pipe");
-        stdin
-            .write_all(stdin_string.as_bytes())
-            .map_err(RunError::IOError)?;
+        write_stdin(&mut child, stdin_string)?;
     }
 
     let stdout = read_pipe_to_string(
@@ -101,14 +112,58 @@ pub fn run_test_case(test_case: &TestCase, current_dir: &Path) -> Result<TestRes
     let exit_status = child.wait().map_err(RunError::IOError)?;
     let exit_code = exit_status.code().ok_or(RunError::ProgramTerminated)?;
 
-    let expected_stdout = test_case.expected_stdout.as_deref().map(normalize_newlines);
-    let expected_stderr = test_case.expected_stderr.as_deref().map(normalize_newlines);
-
-    Ok(TestResult {
-        stdout: compare_result(expected_stdout, normalize_newlines(&stdout)),
-        stderr: compare_result(expected_stderr, normalize_newlines(&stderr)),
-        exit_code: compare_result(test_case.expected_exit_code, exit_code),
+    Ok(ProgramOutput {
+        stdout: normalize_newlines(&stdout),
+        stderr: normalize_newlines(&stderr),
+        exit_code,
     })
+}
+
+pub fn run_program_passthrough(test_case: &TestCase, current_dir: &Path) -> Result<i32, RunError> {
+    let mut cmd = init_command(test_case, current_dir);
+
+    cmd.stdout(Stdio::inherit());
+    cmd.stderr(Stdio::inherit());
+
+    if test_case.stdin.is_some() {
+        cmd.stdin(Stdio::piped());
+    } else {
+        cmd.stdin(Stdio::inherit());
+    }
+
+    let mut child = cmd.spawn().map_err(RunError::IOError)?;
+
+    if let Some(stdin_string) = &test_case.stdin {
+        write_stdin(&mut child, stdin_string)?;
+    }
+
+    let exit_status = child.wait().map_err(RunError::IOError)?;
+    exit_status.code().ok_or(RunError::ProgramTerminated)
+}
+
+// HELPER FUNCTIONS
+
+fn init_command(test_case: &TestCase, current_dir: &Path) -> Command {
+    let run_dir = test_case.path_to_containing_dir.to_path(current_dir);
+
+    let mut cmd = Command::new(&test_case.program);
+
+    cmd.current_dir(run_dir);
+    cmd.args(&test_case.arguments);
+
+    cmd
+}
+
+fn write_stdin(child: &mut std::process::Child, stdin_string: &String) -> Result<(), RunError> {
+    let mut stdin = child
+        .stdin
+        .take()
+        .expect("Stdin should be configured to pipe");
+    stdin
+        .write_all(stdin_string.as_bytes())
+        .map_err(RunError::IOError)?;
+
+    Ok(())
 }
 
 fn compare_result<T: Eq>(expected: Option<T>, got: T) -> ValueComparison<T> {

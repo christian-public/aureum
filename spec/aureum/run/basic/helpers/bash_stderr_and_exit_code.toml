@@ -1,0 +1,4 @@
+program = { env = "AUREUM_TEST_BASH" }
+program_arguments = ["-c", "echo -n hello >&2; exit 42"]
+expected_stderr = "hello"
+expected_exit_code = 42

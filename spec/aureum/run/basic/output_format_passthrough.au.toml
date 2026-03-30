@@ -1,0 +1,51 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+
+[tests.singleline]
+program_arguments = [
+    "run",
+    "--output-format",
+    "passthrough",
+    "helpers/echo_hello.toml",
+]
+expected_stdout = "Hello world"
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[tests.multiline]
+program_arguments = [
+    "run",
+    "--output-format",
+    "passthrough",
+    "helpers/echo_multiline.toml",
+]
+expected_stdout = """
+Hello world
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[tests.stderr_and_exit_code]
+program_arguments = [
+    "run",
+    "--output-format",
+    "passthrough",
+    "helpers/bash_stderr_and_exit_code.toml",
+]
+expected_stdout = ""
+expected_stderr = "hello"
+expected_exit_code = 42
+
+
+[tests.stdin]
+program_arguments = [
+    "run",
+    "--output-format",
+    "passthrough",
+    "helpers/cat_stdin.toml",
+]
+expected_stdout = "Hello world"
+expected_stderr = ""
+expected_exit_code = 0

@@ -3,7 +3,7 @@ use crate::formats::tree;
 use crate::test_case::TestCase;
 use crate::test_id::TestId;
 use crate::test_result::TestResult;
-use crate::test_runner::{RunError, RunResult};
+use crate::test_runner::{ProgramOutput, RunError, RunResult};
 use crate::toml::{
     ParsedTomlConfig, ProgramPath, RequirementData, Requirements, TomlConfigError, ValidationError,
 };
@@ -67,6 +67,43 @@ pub fn print_summary(report_config: &ReportConfig, run_results: &[RunResult]) {
         ReportFormat::Tap => {
             tap_print_summary();
         }
+    }
+}
+
+// RUN PROGRAM
+
+pub fn print_failed_to_run_program() {
+    eprintln!("{} Failed to run program", "error:".red().bold());
+}
+
+pub fn print_one_or_more_programs_failed_to_run() {
+    eprintln!(
+        "{} One or more programs failed to run",
+        "error:".red().bold()
+    );
+}
+
+pub fn print_test_case_id_as_toml_comment(test_case: &TestCase) {
+    println!("# TEST: {}", test_case.id());
+}
+
+pub fn print_failed_to_run_program_as_toml() {
+    println!("# ERROR: Failed to run program");
+}
+
+pub fn print_output_as_toml(output: &ProgramOutput) {
+    println!("expected_stdout = {}", format_toml_string(&output.stdout));
+    println!("expected_stderr = {}", format_toml_string(&output.stderr));
+    println!("expected_exit_code = {}", output.exit_code);
+}
+
+fn format_toml_string(s: &str) -> String {
+    if s.contains('\n') {
+        let escaped = s.replace('\\', "\\\\").replace('"', "\\\"");
+        format!("\"\"\"\n{}\"\"\"", escaped)
+    } else {
+        let escaped = s.replace('\\', "\\\\").replace('"', "\\\"");
+        format!("\"{}\"", escaped)
     }
 }
 
@@ -191,6 +228,18 @@ pub fn print_config_files_contain_errors() {
     eprintln!(
         "{} Some config files contain errors (See above)",
         "warning:".yellow().bold(),
+    );
+}
+
+pub fn print_run_single_program_only(test_case_count: usize) {
+    eprintln!(
+        "{} The `--output-format passthrough` option can only run a single test, but {} were found",
+        "error:".red().bold(),
+        test_case_count,
+    );
+    eprintln!(
+        "{} Try `--output-format toml` instead or run the `list` command to list all tests",
+        "hint:".cyan().bold()
     );
 }
 

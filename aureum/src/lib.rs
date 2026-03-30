@@ -30,17 +30,19 @@ pub use test_case::TestCase;
 pub use test_id::TestId;
 pub use test_id_coverage_set::TestIdCoverageSet;
 pub use test_result::{TestResult, ValueComparison};
-pub use test_runner::{RunError, RunResult};
+pub use test_runner::{ProgramOutput, RunError, RunResult};
 pub use toml::Requirements;
 pub use toml::{ParsedTomlConfig, ProgramPath, RequirementData, ValidationError};
 pub use toml::{TomlConfig, TomlConfigError};
 
 pub use report::{
-    print_config_details, print_config_files_contain_errors, print_files_found,
-    print_invalid_paths, print_no_config_files, print_start_test_cases, print_summary,
-    print_test_case, print_toml_config_error,
+    print_config_details, print_config_files_contain_errors, print_failed_to_run_program,
+    print_failed_to_run_program_as_toml, print_files_found, print_invalid_paths,
+    print_no_config_files, print_one_or_more_programs_failed_to_run, print_output_as_toml,
+    print_run_single_program_only, print_start_test_cases, print_summary, print_test_case,
+    print_test_case_id_as_toml_comment, print_toml_config_error,
 };
-pub use test_runner::run_test_cases;
+pub use test_runner::{run_program, run_program_passthrough, run_test_cases};
 pub use toml::config::parse_toml_config;
 pub use toml::requirement::get_requirements;
 pub use toml::validate::build_test_cases;
