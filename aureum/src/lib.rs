@@ -29,6 +29,8 @@ pub use report::{ReportConfig, ReportFormat};
 pub use test_case::TestCase;
 pub use test_id::TestId;
 pub use test_id_coverage_set::TestIdCoverageSet;
+pub use test_result::{TestResult, ValueComparison};
+pub use test_runner::{RunError, RunResult};
 pub use toml::Requirements;
 pub use toml::{ParsedTomlConfig, ProgramPath, RequirementData, ValidationError};
 pub use toml::{TomlConfig, TomlConfigError};
