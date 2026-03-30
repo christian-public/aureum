@@ -24,7 +24,7 @@ impl RunResult {
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum RunError {
     FailedToDecodeUtf8,
-    MissingExitCode,
+    ProgramTerminated,
     IOError(io::Error),
 }
 
@@ -101,7 +101,7 @@ pub fn run(test_case: &TestCase, current_dir: &Path) -> Result<TestResult, RunEr
     )?;
 
     let exit_status = child.wait().map_err(RunError::IOError)?;
-    let exit_code = exit_status.code().ok_or(RunError::MissingExitCode)?;
+    let exit_code = exit_status.code().ok_or(RunError::ProgramTerminated)?;
 
     let expected_stdout = test_case.expected_stdout.as_deref().map(normalize_newlines);
     let expected_stderr = test_case.expected_stderr.as_deref().map(normalize_newlines);
