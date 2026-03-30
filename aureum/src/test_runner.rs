@@ -36,36 +36,34 @@ pub fn run_test_cases(
     run_in_parallel: bool,
     current_dir: &Path,
     report_test_case: &(
-         impl Fn(&ReportConfig, usize, &TestCase, &Result<TestResult, RunError>) + std::marker::Sync
+         impl Fn(&ReportConfig, usize, &TestCase, &Result<TestResult, RunError>) -> Result<(), RunError>
+         + std::marker::Sync
      ),
 ) -> Vec<RunResult> {
-    let run = |(i, test_case)| -> Vec<RunResult> {
-        let result = run(test_case, current_dir);
+    let run = |(i, test_case)| -> RunResult {
+        let run_result = run_test_case(test_case, current_dir);
 
-        report_test_case(report_config, i, test_case, &result);
+        let report_result = report_test_case(report_config, i, test_case, &run_result);
 
-        vec![RunResult {
+        let result = match report_result {
+            Ok(()) => run_result,
+            Err(e) => run_result.and(Err(e)),
+        };
+
+        RunResult {
             test_case: test_case.clone(),
             result,
-        }]
+        }
     };
 
     if run_in_parallel {
-        test_cases
-            .par_iter()
-            .enumerate()
-            .map(run)
-            .reduce(Vec::new, |x, y| x.into_iter().chain(y).collect())
+        test_cases.par_iter().enumerate().map(run).collect()
     } else {
-        test_cases
-            .iter()
-            .enumerate()
-            .map(run)
-            .fold(vec![], |x, y| x.into_iter().chain(y).collect())
+        test_cases.iter().enumerate().map(run).collect()
     }
 }
 
-pub fn run(test_case: &TestCase, current_dir: &Path) -> Result<TestResult, RunError> {
+pub fn run_test_case(test_case: &TestCase, current_dir: &Path) -> Result<TestResult, RunError> {
     let run_test_in_config_dir = &test_case.path_to_containing_dir.to_path(current_dir);
 
     let mut cmd = Command::new(&test_case.program);

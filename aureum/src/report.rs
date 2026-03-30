@@ -44,7 +44,7 @@ pub fn print_test_case(
     index: usize,
     test_case: &TestCase,
     result: &Result<TestResult, RunError>,
-) {
+) -> Result<(), RunError> {
     match report_config.format {
         ReportFormat::Summary => {
             summary_print_test_case(result);
@@ -54,6 +54,8 @@ pub fn print_test_case(
             tap_print_test_case(index + 1, test_case, result, test_number_indent_level);
         }
     }
+
+    Ok(())
 }
 
 pub fn print_summary(report_config: &ReportConfig, run_results: &[RunResult]) {
