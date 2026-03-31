@@ -26,16 +26,16 @@ fn main() {
     let cli = args::parse();
     match cli.command {
         Command::Validate(args) => {
-            validate_config_files(current_dir, args);
+            validate_config_files(args, current_dir);
         }
         Command::List(args) => {
-            list_tests(current_dir, args);
+            list_tests(args, current_dir);
         }
         Command::Run(args) => {
-            run_programs(current_dir, args);
+            run_programs(args, current_dir);
         }
         Command::Test(args) => {
-            run_tests(current_dir, args);
+            run_tests(args, current_dir);
         }
         Command::Version => {
             print_version();
@@ -45,7 +45,7 @@ fn main() {
 
 // COMMANDS
 
-fn validate_config_files(current_dir: PathBuf, args: ValidateArgs) {
+fn validate_config_files(args: ValidateArgs, current_dir: PathBuf) {
     let find_config_files_result = config_file::find_config_files(args.paths, &current_dir);
 
     if !find_config_files_result.errors.is_empty() {
@@ -137,7 +137,7 @@ fn validate_config_files(current_dir: PathBuf, args: ValidateArgs) {
     }
 }
 
-fn list_tests(current_dir: PathBuf, args: ListArgs) {
+fn list_tests(args: ListArgs, current_dir: PathBuf) {
     let find_config_files_result = config_file::find_config_files(args.paths, &current_dir);
 
     if !find_config_files_result.errors.is_empty() {
@@ -239,7 +239,7 @@ fn list_tests(current_dir: PathBuf, args: ListArgs) {
     }
 }
 
-fn run_programs(current_dir: PathBuf, args: RunArgs) {
+fn run_programs(args: RunArgs, current_dir: PathBuf) {
     let find_config_files_result = config_file::find_config_files(args.paths, &current_dir);
 
     if !find_config_files_result.errors.is_empty() {
@@ -379,7 +379,7 @@ fn run_programs(current_dir: PathBuf, args: RunArgs) {
     }
 }
 
-fn run_tests(current_dir: PathBuf, args: TestArgs) {
+fn run_tests(args: TestArgs, current_dir: PathBuf) {
     let find_config_files_result = config_file::find_config_files(args.paths, &current_dir);
 
     if !find_config_files_result.errors.is_empty() {
