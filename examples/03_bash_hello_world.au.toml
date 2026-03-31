@@ -1,4 +1,4 @@
 program = "bash"
-program_arguments = ["hello_world.sh"]
+program_arguments = ["helpers/hello_world.sh"]
 
 expected_stdout = "Hello world"

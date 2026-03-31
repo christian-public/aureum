@@ -1,0 +1,10 @@
+program = "cat"
+stdin = """
+Multiline input for cat
+Second line
+"""
+
+expected_stdout = """
+Multiline input for cat
+Second line
+"""
