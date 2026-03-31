@@ -29,5 +29,5 @@ jobs:
     - name: Run tests
       run: cargo test --verbose
     - name: Run spec
-      run: RELEASE=1 ./run_spec.sh test --verbose spec
+      run: RELEASE=1 ./run_spec.sh test --verbose spec examples
       shell: bash
