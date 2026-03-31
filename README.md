@@ -23,9 +23,9 @@ Inspired by [Idris 2's golden test runner](https://github.com/idris-lang/Idris2/
 
 1. `git clone https://github.com/christian-public/aureum`
 2. `cd aureum`
-3. `cargo build` (or `cargo build --release` to build a release version)
+3. `cargo install --path aureum-cli`
 
-The `aureum` executable is now available in the `target/debug` directory.
+The `aureum` executable should now be available in your `$PATH`.
 
 ## Basic usage
 
