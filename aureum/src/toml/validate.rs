@@ -61,25 +61,25 @@ pub enum ValidationError {
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
-pub struct ParsedTomlConfig {
+pub struct TestEntry {
     pub requirements: Requirements,
     pub program_path: ProgramPath,
     pub test_case: Result<TestCase, BTreeSet<ValidationError>>,
 }
 
-pub fn build_test_cases(
+pub fn build_test_entries(
     path_to_containing_dir: &RelativePath,
     file_name: &str,
     config: TomlConfig,
     requirement_data: &RequirementData,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
-) -> BTreeMap<TestId, ParsedTomlConfig> {
+) -> BTreeMap<TestId, TestEntry> {
     split_toml_config(config)
         .into_iter()
         .map(|(test_id, c)| {
             (
                 test_id.clone(),
-                build_test_case(
+                build_test_entry(
                     path_to_containing_dir.to_relative_path_buf(),
                     file_name.to_owned(),
                     test_id,
@@ -92,14 +92,14 @@ pub fn build_test_cases(
         .collect()
 }
 
-fn build_test_case(
+fn build_test_entry(
     path_to_containing_dir: RelativePathBuf,
     file_name: String,
     test_id: TestId,
     config: TomlConfig,
     requirement_data: &RequirementData,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
-) -> ParsedTomlConfig {
+) -> TestEntry {
     let mut errors = BTreeSet::new();
 
     // Requirements
@@ -186,7 +186,7 @@ fn build_test_case(
         Err(errors)
     };
 
-    ParsedTomlConfig {
+    TestEntry {
         requirements,
         program_path,
         test_case,

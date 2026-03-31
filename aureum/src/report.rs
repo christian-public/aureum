@@ -5,7 +5,7 @@ use crate::test_id::TestId;
 use crate::test_result::TestResult;
 use crate::test_runner::{ProgramOutput, RunError, RunResult};
 use crate::toml::{
-    ParsedTomlConfig, ProgramPath, RequirementData, Requirements, TomlConfigError, ValidationError,
+    ProgramPath, RequirementData, Requirements, TestEntry, TomlConfigError, ValidationError,
 };
 use crate::utils::file;
 use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
@@ -142,19 +142,19 @@ pub fn print_files_found(source_files: &[RelativePathBuf]) {
 
 pub fn print_config_details(
     source_file: RelativePathBuf,
-    parsed_toml_configs: &BTreeMap<TestId, ParsedTomlConfig>,
+    test_entries: &BTreeMap<TestId, TestEntry>,
     requirement_data: &RequirementData,
     verbose: bool,
     hide_absolute_paths: bool,
 ) {
     let mut tests = vec![];
 
-    for (test_id, parsed_toml_config) in parsed_toml_configs {
+    for (test_id, test_entry) in test_entries {
         let mut categories = vec![];
 
         if verbose {
             // Program to run
-            let program_to_run = match &parsed_toml_config.program_path {
+            let program_to_run = match &test_entry.program_path {
                 ProgramPath::NotSpecified => format!("{} Not specified", cross()),
                 ProgramPath::MissingProgram { requested_path: _ } => {
                     format!("{} Not found", cross())
@@ -178,7 +178,7 @@ pub fn print_config_details(
             categories.push(Node(heading, nodes));
 
             // Requirements
-            let requirements = requirements_map(&parsed_toml_config.requirements, requirement_data);
+            let requirements = requirements_map(&test_entry.requirements, requirement_data);
             if !requirements.is_empty() {
                 let heading = String::from("Requirements");
                 categories.push(Node(heading, requirements));
@@ -187,7 +187,7 @@ pub fn print_config_details(
 
         // Validation errors
         let heading = String::from("Validation errors");
-        if let Err(validation_errors) = &parsed_toml_config.test_case {
+        if let Err(validation_errors) = &test_entry.test_case {
             let nodes = validation_errors
                 .iter()
                 .map(|err| str_to_tree(&show_validation_error(err)))

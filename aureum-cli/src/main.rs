@@ -9,8 +9,7 @@ use crate::args::{
     ValidateArgs,
 };
 use aureum::{
-    ParsedTomlConfig, ReportConfig, ReportFormat, RequirementData, Requirements, TestId,
-    TestIdCoverageSet,
+    ReportConfig, ReportFormat, RequirementData, Requirements, TestEntry, TestId, TestIdCoverageSet,
 };
 use relative_path::RelativePathBuf;
 use std::collections::BTreeMap;
@@ -28,7 +27,7 @@ const INVALID_CONFIG_EXIT_CODE: i32 = 3;
 #[cfg_attr(debug_assertions, derive(Debug))]
 struct LoadedConfigFile {
     requirement_data: RequirementData,
-    parsed_toml_config: BTreeMap<TestId, ParsedTomlConfig>,
+    test_entries: BTreeMap<TestId, TestEntry>,
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -85,13 +84,13 @@ fn validate_config_files(args: ValidateArgs, current_dir: PathBuf) {
         match load_config_file(&config_file, &current_dir) {
             Ok(LoadedConfigFile {
                 requirement_data,
-                parsed_toml_config,
+                test_entries,
             }) => {
-                let any_issues = parsed_toml_config.values().any(|x| x.test_case.is_err());
+                let any_issues = test_entries.values().any(|x| x.test_case.is_err());
                 if any_issues || args.common.verbose {
                     aureum::print_config_details(
                         config_file,
-                        &parsed_toml_config,
+                        &test_entries,
                         &requirement_data,
                         args.common.verbose,
                         args.common.hide_absolute_paths,
@@ -141,13 +140,13 @@ fn list_tests(args: ListArgs, current_dir: PathBuf) {
         match load_config_file(&config_file, &current_dir) {
             Ok(LoadedConfigFile {
                 requirement_data,
-                parsed_toml_config,
+                test_entries,
             }) => {
-                let any_issues = parsed_toml_config.values().any(|x| x.test_case.is_err());
+                let any_issues = test_entries.values().any(|x| x.test_case.is_err());
                 if any_issues || args.common.verbose {
                     aureum::print_config_details(
                         config_file,
-                        &parsed_toml_config,
+                        &test_entries,
                         &requirement_data,
                         args.common.verbose,
                         args.common.hide_absolute_paths,
@@ -159,7 +158,7 @@ fn list_tests(args: ListArgs, current_dir: PathBuf) {
                 }
 
                 all_test_cases.extend(
-                    parsed_toml_config
+                    test_entries
                         .into_values()
                         .filter_map(|x| x.test_case.ok())
                         .filter(|x| test_id_coverage_set.contains(&x.test_id)),
@@ -206,21 +205,19 @@ fn run_programs(args: RunArgs, current_dir: PathBuf) {
         match load_config_file(&config_file, &current_dir) {
             Ok(LoadedConfigFile {
                 requirement_data,
-                parsed_toml_config,
+                test_entries,
             }) => {
                 let should_report_issues = match args.output_format {
-                    RunOutputFormat::Passthrough => parsed_toml_config
+                    RunOutputFormat::Passthrough => test_entries
                         .iter()
                         .filter(|(test_id, _)| test_id_coverage_set.contains(test_id))
                         .any(|(_, x)| x.test_case.is_err()),
-                    RunOutputFormat::Toml => {
-                        parsed_toml_config.values().any(|x| x.test_case.is_err())
-                    }
+                    RunOutputFormat::Toml => test_entries.values().any(|x| x.test_case.is_err()),
                 };
                 if should_report_issues {
                     aureum::print_config_details(
                         config_file,
-                        &parsed_toml_config,
+                        &test_entries,
                         &requirement_data,
                         args.common.verbose,
                         args.common.hide_absolute_paths,
@@ -229,7 +226,7 @@ fn run_programs(args: RunArgs, current_dir: PathBuf) {
                 }
 
                 all_test_cases.extend(
-                    parsed_toml_config
+                    test_entries
                         .into_values()
                         .filter_map(|x| x.test_case.ok())
                         .filter(|x| test_id_coverage_set.contains(&x.test_id)),
@@ -321,13 +318,13 @@ fn run_tests(args: TestArgs, current_dir: PathBuf) {
         match load_config_file(&config_file, &current_dir) {
             Ok(LoadedConfigFile {
                 requirement_data,
-                parsed_toml_config,
+                test_entries,
             }) => {
-                let any_issues = parsed_toml_config.values().any(|x| x.test_case.is_err());
+                let any_issues = test_entries.values().any(|x| x.test_case.is_err());
                 if any_issues || args.common.verbose {
                     aureum::print_config_details(
                         config_file,
-                        &parsed_toml_config,
+                        &test_entries,
                         &requirement_data,
                         args.common.verbose,
                         args.common.hide_absolute_paths,
@@ -339,7 +336,7 @@ fn run_tests(args: TestArgs, current_dir: PathBuf) {
                 }
 
                 all_test_cases.extend(
-                    parsed_toml_config
+                    test_entries
                         .into_values()
                         .filter_map(|x| x.test_case.ok())
                         .filter(|x| test_id_coverage_set.contains(&x.test_id)),
@@ -429,7 +426,7 @@ fn load_config_file(
     let requirement_data =
         retrieve_requirement_data(&path_to_containing_dir.to_path(current_dir), requirements);
 
-    let parsed_toml_config = aureum::build_test_cases(
+    let test_entries = aureum::build_test_entries(
         path_to_containing_dir,
         file_name,
         config,
@@ -439,7 +436,7 @@ fn load_config_file(
 
     Ok(LoadedConfigFile {
         requirement_data,
-        parsed_toml_config,
+        test_entries,
     })
 }
 
