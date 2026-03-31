@@ -118,8 +118,10 @@ pub fn print_config_details(
         if verbose {
             // Program to run
             let program_to_run = match &parsed_toml_config.program_path {
-                ProgramPath::NotSpecified => String::from("❌ Not specified"),
-                ProgramPath::MissingProgram { requested_path: _ } => String::from("❌ Not found"),
+                ProgramPath::NotSpecified => format!("{} Not specified", cross()),
+                ProgramPath::MissingProgram { requested_path: _ } => {
+                    format!("{} Not found", cross())
+                }
                 ProgramPath::ResolvedPath {
                     requested_path: _,
                     resolved_path,
@@ -129,7 +131,7 @@ pub fn print_config_details(
                     } else {
                         resolved_path.display().to_string()
                     };
-                    format!("✅ {}", path)
+                    format!("{} {}", checkmark(), path)
                 }
             };
 
@@ -261,7 +263,7 @@ fn summary_print_result(run_result: &RunResult) {
     }
 
     if run_result.is_success() {
-        println!("✅ {}", message)
+        println!("{} {}", checkmark(), message);
     } else {
         let nodes = match &run_result.result {
             Ok(result) => tree::nodes_from_test_result(result),
@@ -270,7 +272,7 @@ fn summary_print_result(run_result: &RunResult) {
             }
         };
 
-        let test_heading = format!("❌ {}", message);
+        let test_heading = format!("{} {}", cross(), message);
         let tree = Node(test_heading, nodes);
         let content = tree::draw_tree(&tree).unwrap_or(String::from("Failed to draw tree\n"));
         print!("{}", content); // Already contains newline
@@ -381,13 +383,23 @@ fn show_validation_error(validation_error: &ValidationError) -> String {
         ),
     };
 
-    format!("❌ {}", msg)
+    format!("{} {}", cross(), msg)
 }
 
 fn show_presence(value: bool) -> String {
-    String::from(if value { "✅" } else { "❌" })
+    if value { checkmark() } else { cross() }
 }
 
 fn str_to_tree(msg: &str) -> Tree {
     Leaf(vec![msg.to_owned()])
+}
+
+// SYMBOLS
+
+fn checkmark() -> String {
+    "✅".to_owned()
+}
+
+fn cross() -> String {
+    "❌".to_owned()
 }
