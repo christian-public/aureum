@@ -26,6 +26,8 @@ jobs:
         persist-credentials: false
     - name: Build
       run: cargo build --release --verbose
+    - name: Run clippy
+      run: cargo clippy --all-targets --all-features -- -D warnings
     - name: Run tests
       run: cargo test --verbose
     - name: Run spec
