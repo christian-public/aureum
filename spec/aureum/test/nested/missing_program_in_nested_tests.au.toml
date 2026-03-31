@@ -18,4 +18,4 @@ expected_stderr = """
 
 warning: Some config files contain errors (See above)
 """
-expected_exit_code = 2
+expected_exit_code = 3

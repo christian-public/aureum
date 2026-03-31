@@ -14,7 +14,8 @@ use std::process;
 use utils::file;
 
 const TEST_FAILURE_EXIT_CODE: i32 = 1;
-const INVALID_USER_INPUT_EXIT_CODE: i32 = 2;
+const INVALID_CLI_USAGE_EXIT_CODE: i32 = 2; // Matches clap's behavior
+const INVALID_CONFIG_EXIT_CODE: i32 = 3;
 
 fn main() {
     let current_dir = env::current_dir().expect("Current directory must be available");
@@ -53,7 +54,7 @@ fn validate_config_files(current_dir: PathBuf, args: ValidateArgs) {
 
     if find_config_files_result.found_config_files.is_empty() {
         aureum::print_no_config_files();
-        process::exit(INVALID_USER_INPUT_EXIT_CODE);
+        process::exit(INVALID_CLI_USAGE_EXIT_CODE);
     }
 
     if args.common.verbose {
@@ -124,7 +125,7 @@ fn validate_config_files(current_dir: PathBuf, args: ValidateArgs) {
 
     if any_failed_configs {
         aureum::print_config_files_contain_errors();
-        process::exit(INVALID_USER_INPUT_EXIT_CODE);
+        process::exit(INVALID_CONFIG_EXIT_CODE);
     } else {
         println!("All config files are valid")
     }
@@ -145,7 +146,7 @@ fn list_tests(current_dir: PathBuf, args: ListArgs) {
 
     if find_config_files_result.found_config_files.is_empty() {
         aureum::print_no_config_files();
-        process::exit(INVALID_USER_INPUT_EXIT_CODE);
+        process::exit(INVALID_CLI_USAGE_EXIT_CODE);
     }
 
     if args.common.verbose {
@@ -228,7 +229,7 @@ fn list_tests(current_dir: PathBuf, args: ListArgs) {
 
     if any_failed_configs {
         aureum::print_config_files_contain_errors();
-        process::exit(INVALID_USER_INPUT_EXIT_CODE);
+        process::exit(INVALID_CONFIG_EXIT_CODE);
     }
 }
 
@@ -247,7 +248,7 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
 
     if find_config_files_result.found_config_files.is_empty() {
         aureum::print_no_config_files();
-        process::exit(INVALID_USER_INPUT_EXIT_CODE);
+        process::exit(INVALID_CLI_USAGE_EXIT_CODE);
     }
 
     if args.common.verbose {
@@ -350,7 +351,7 @@ fn run_tests(current_dir: PathBuf, args: TestArgs) {
     if !all_tests_passed {
         process::exit(TEST_FAILURE_EXIT_CODE);
     } else if any_failed_configs {
-        process::exit(INVALID_USER_INPUT_EXIT_CODE);
+        process::exit(INVALID_CONFIG_EXIT_CODE);
     }
 }
 
