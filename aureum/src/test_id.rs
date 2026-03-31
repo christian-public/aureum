@@ -113,7 +113,7 @@ mod tests {
         assert!(sub_of_root.contains(&sub_of_sub_of_root));
         assert!(sub_of_sub_of_root.contains(&sub_of_sub_of_root));
 
-        assert_eq!(sub_of_root.contains(&root), false);
+        assert!(!sub_of_root.contains(&root));
     }
 
     #[test]
@@ -121,8 +121,8 @@ mod tests {
         let sub1 = TestId::from("sub1");
         let sub2 = TestId::from("sub2");
 
-        assert_eq!(sub1.contains(&sub2), false);
-        assert_eq!(sub2.contains(&sub1), false);
+        assert!(!sub1.contains(&sub2));
+        assert!(!sub2.contains(&sub1));
     }
 
     #[test]
@@ -130,7 +130,7 @@ mod tests {
         let root = TestId::root();
         let sub = TestId::from("sub");
 
-        assert_eq!(root.is_root(), true);
-        assert_eq!(sub.is_root(), false);
+        assert!(root.is_root());
+        assert!(!sub.is_root());
     }
 }

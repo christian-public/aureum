@@ -64,21 +64,21 @@ mod tests {
 
         let mut coverage_set = TestIdCoverageSet::empty();
 
-        assert_eq!(coverage_set.contains(&root), false);
-        assert_eq!(coverage_set.contains(&root_level1), false);
-        assert_eq!(coverage_set.contains(&root_level1_level2), false);
+        assert!(!coverage_set.contains(&root));
+        assert!(!coverage_set.contains(&root_level1));
+        assert!(!coverage_set.contains(&root_level1_level2));
 
-        assert_eq!(coverage_set.add(root_level1_level2.clone()), true);
+        assert!(coverage_set.add(root_level1_level2.clone()));
 
-        assert_eq!(coverage_set.contains(&root), false);
-        assert_eq!(coverage_set.contains(&root_level1), false);
-        assert_eq!(coverage_set.contains(&root_level1_level2), true);
+        assert!(!coverage_set.contains(&root));
+        assert!(!coverage_set.contains(&root_level1));
+        assert!(coverage_set.contains(&root_level1_level2));
 
-        assert_eq!(coverage_set.add(root.clone()), true);
+        assert!(coverage_set.add(root.clone()));
 
-        assert_eq!(coverage_set.contains(&root), true);
-        assert_eq!(coverage_set.contains(&root_level1), true);
-        assert_eq!(coverage_set.contains(&root_level1_level2), true);
+        assert!(coverage_set.contains(&root));
+        assert!(coverage_set.contains(&root_level1));
+        assert!(coverage_set.contains(&root_level1_level2));
     }
 
     #[test]
@@ -91,11 +91,15 @@ mod tests {
         let mut coverage_set = TestIdCoverageSet::empty();
 
         assert_eq!(coverage_set.len(), 0);
-        assert_eq!(coverage_set.add(root_level1a), true);
-        assert_eq!(coverage_set.add(root_level1b), true);
-        assert_eq!(coverage_set.add(root_level1c), true);
+
+        assert!(coverage_set.add(root_level1a));
+        assert!(coverage_set.add(root_level1b));
+        assert!(coverage_set.add(root_level1c));
+
         assert_eq!(coverage_set.len(), 3);
-        assert_eq!(coverage_set.add(root), true);
+
+        assert!(coverage_set.add(root));
+
         assert_eq!(coverage_set.len(), 1);
     }
 
@@ -107,8 +111,10 @@ mod tests {
         let mut coverage_set = TestIdCoverageSet::empty();
 
         assert_eq!(coverage_set.len(), 0);
-        assert_eq!(coverage_set.add(root), true);
-        assert_eq!(coverage_set.add(root_level1), false);
+
+        assert!(coverage_set.add(root));
+        assert!(!coverage_set.add(root_level1));
+
         assert_eq!(coverage_set.len(), 1);
     }
 }
