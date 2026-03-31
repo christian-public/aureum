@@ -64,7 +64,7 @@ pub enum ValidationError {
 pub struct ParsedTomlConfig {
     pub requirements: Requirements,
     pub program_path: ProgramPath,
-    pub test_cases: Result<TestCase, BTreeSet<ValidationError>>,
+    pub test_case: Result<TestCase, BTreeSet<ValidationError>>,
 }
 
 pub fn build_test_cases(
@@ -165,7 +165,7 @@ fn build_test_case(
             .ok()
     });
 
-    let test_cases = if errors.is_empty() {
+    let test_case = if errors.is_empty() {
         let program = program_path
             .get_resolved_path()
             .expect("Validation errors should not be empty if program path is not resolved");
@@ -189,7 +189,7 @@ fn build_test_case(
     ParsedTomlConfig {
         requirements,
         program_path,
-        test_cases,
+        test_case,
     }
 }
 

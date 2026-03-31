@@ -87,7 +87,7 @@ fn validate_config_files(args: ValidateArgs, current_dir: PathBuf) {
                 requirement_data,
                 parsed_toml_config,
             }) => {
-                let any_issues = parsed_toml_config.values().any(|x| x.test_cases.is_err());
+                let any_issues = parsed_toml_config.values().any(|x| x.test_case.is_err());
                 if any_issues || args.common.verbose {
                     aureum::print_config_details(
                         config_file,
@@ -143,7 +143,7 @@ fn list_tests(args: ListArgs, current_dir: PathBuf) {
                 requirement_data,
                 parsed_toml_config,
             }) => {
-                let any_issues = parsed_toml_config.values().any(|x| x.test_cases.is_err());
+                let any_issues = parsed_toml_config.values().any(|x| x.test_case.is_err());
                 if any_issues || args.common.verbose {
                     aureum::print_config_details(
                         config_file,
@@ -161,7 +161,7 @@ fn list_tests(args: ListArgs, current_dir: PathBuf) {
                 all_test_cases.extend(
                     parsed_toml_config
                         .into_values()
-                        .filter_map(|x| x.test_cases.ok())
+                        .filter_map(|x| x.test_case.ok())
                         .filter(|x| test_id_coverage_set.contains(&x.test_id)),
                 );
             }
@@ -212,9 +212,9 @@ fn run_programs(args: RunArgs, current_dir: PathBuf) {
                     RunOutputFormat::Passthrough => parsed_toml_config
                         .iter()
                         .filter(|(test_id, _)| test_id_coverage_set.contains(test_id))
-                        .any(|(_, x)| x.test_cases.is_err()),
+                        .any(|(_, x)| x.test_case.is_err()),
                     RunOutputFormat::Toml => {
-                        parsed_toml_config.values().any(|x| x.test_cases.is_err())
+                        parsed_toml_config.values().any(|x| x.test_case.is_err())
                     }
                 };
                 if should_report_issues {
@@ -231,7 +231,7 @@ fn run_programs(args: RunArgs, current_dir: PathBuf) {
                 all_test_cases.extend(
                     parsed_toml_config
                         .into_values()
-                        .filter_map(|x| x.test_cases.ok())
+                        .filter_map(|x| x.test_case.ok())
                         .filter(|x| test_id_coverage_set.contains(&x.test_id)),
                 );
             }
@@ -323,7 +323,7 @@ fn run_tests(args: TestArgs, current_dir: PathBuf) {
                 requirement_data,
                 parsed_toml_config,
             }) => {
-                let any_issues = parsed_toml_config.values().any(|x| x.test_cases.is_err());
+                let any_issues = parsed_toml_config.values().any(|x| x.test_case.is_err());
                 if any_issues || args.common.verbose {
                     aureum::print_config_details(
                         config_file,
@@ -341,7 +341,7 @@ fn run_tests(args: TestArgs, current_dir: PathBuf) {
                 all_test_cases.extend(
                     parsed_toml_config
                         .into_values()
-                        .filter_map(|x| x.test_cases.ok())
+                        .filter_map(|x| x.test_case.ok())
                         .filter(|x| test_id_coverage_set.contains(&x.test_id)),
                 );
             }

@@ -187,7 +187,7 @@ pub fn print_config_details(
 
         // Validation errors
         let heading = String::from("Validation errors");
-        if let Err(validation_errors) = &parsed_toml_config.test_cases {
+        if let Err(validation_errors) = &parsed_toml_config.test_case {
             let nodes = validation_errors
                 .iter()
                 .map(|err| str_to_tree(&show_validation_error(err)))
