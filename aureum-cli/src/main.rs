@@ -8,7 +8,12 @@ use crate::args::{
     CLI_BINARY_NAME, Command, ListArgs, RunArgs, RunOutputFormat, TestArgs, TestOutputFormat,
     ValidateArgs,
 };
-use aureum::{ReportConfig, ReportFormat, RequirementData, Requirements};
+use aureum::{
+    ParsedTomlConfig, ReportConfig, ReportFormat, RequirementData, Requirements, TestId,
+    TestIdCoverageSet,
+};
+use relative_path::RelativePathBuf;
+use std::collections::BTreeMap;
 use std::env;
 use std::fs;
 use std::io;
@@ -19,6 +24,21 @@ use utils::file;
 const TEST_FAILURE_EXIT_CODE: i32 = 1;
 const INVALID_CLI_USAGE_EXIT_CODE: i32 = 2; // Matches clap's behavior
 const INVALID_CONFIG_EXIT_CODE: i32 = 3;
+
+#[cfg_attr(debug_assertions, derive(Debug))]
+struct LoadedConfigFile {
+    requirement_data: RequirementData,
+    parsed_toml_config: BTreeMap<TestId, ParsedTomlConfig>,
+}
+
+#[cfg_attr(debug_assertions, derive(Debug))]
+#[allow(dead_code)]
+enum ConfigFileError {
+    NoFileName,
+    NoParentDirectory,
+    ReadFailed(io::Error),
+    ParseFailed(aureum::TomlConfigError),
+}
 
 fn main() {
     let current_dir = env::current_dir().expect("Current directory must be available");
@@ -46,67 +66,27 @@ fn main() {
 // COMMANDS
 
 fn validate_config_files(args: ValidateArgs, current_dir: PathBuf) {
-    let find_config_files_result = config_file::find_config_files(args.paths, &current_dir);
+    let found_config_files = find_and_validate_config_files(args.paths, &current_dir);
 
-    if !find_config_files_result.errors.is_empty() {
-        let paths = find_config_files_result
-            .errors
-            .into_iter()
-            .map(|(path, _err)| path)
-            .collect::<Vec<_>>();
-
-        aureum::print_invalid_paths(paths);
-    }
-
-    if find_config_files_result.found_config_files.is_empty() {
+    if found_config_files.is_empty() {
         aureum::print_no_config_files();
         process::exit(INVALID_CLI_USAGE_EXIT_CODE);
     }
 
     if args.common.verbose {
-        let config_files = find_config_files_result
-            .found_config_files
-            .keys()
-            .cloned()
-            .collect::<Vec<_>>();
+        let config_files = found_config_files.keys().cloned().collect::<Vec<_>>();
 
         aureum::print_files_found(&config_files);
     }
 
     let mut any_failed_configs = false;
 
-    for (config_file, _test_id_coverage_set) in find_config_files_result.found_config_files {
-        let Some(file_name) = config_file.file_name() else {
-            // TODO: Show error
-            continue;
-        };
-
-        let Some(path_to_containing_dir) = config_file.parent() else {
-            // TODO: Show error
-            continue;
-        };
-
-        let Ok(source) = fs::read_to_string(config_file.to_path(&current_dir)) else {
-            any_failed_configs = true; // TODO: Should save the error and display it
-            continue;
-        };
-
-        match aureum::parse_toml_config(&source) {
-            Ok(config) => {
-                let requirements = aureum::get_requirements(&config.clone());
-                let requirement_data = retrieve_requirement_data(
-                    &path_to_containing_dir.to_path(&current_dir),
-                    requirements,
-                );
-
-                let parsed_toml_config = aureum::build_test_cases(
-                    path_to_containing_dir,
-                    file_name,
-                    config,
-                    &requirement_data,
-                    &|name, dir| file::find_executable_path(name, dir).ok(),
-                );
-
+    for (config_file, _test_id_coverage_set) in found_config_files {
+        match load_config_file(&config_file, &current_dir) {
+            Ok(LoadedConfigFile {
+                requirement_data,
+                parsed_toml_config,
+            }) => {
                 let any_issues = parsed_toml_config.values().any(|x| x.test_cases.is_err());
                 if any_issues || args.common.verbose {
                     aureum::print_config_details(
@@ -122,8 +102,11 @@ fn validate_config_files(args: ValidateArgs, current_dir: PathBuf) {
                     }
                 }
             }
-            Err(error) => {
+            Err(ConfigFileError::ParseFailed(error)) => {
                 aureum::print_toml_config_error(config_file, error);
+                any_failed_configs = true;
+            }
+            Err(_) => {
                 any_failed_configs = true;
             }
         }
@@ -138,29 +121,15 @@ fn validate_config_files(args: ValidateArgs, current_dir: PathBuf) {
 }
 
 fn list_tests(args: ListArgs, current_dir: PathBuf) {
-    let find_config_files_result = config_file::find_config_files(args.paths, &current_dir);
+    let found_config_files = find_and_validate_config_files(args.paths, &current_dir);
 
-    if !find_config_files_result.errors.is_empty() {
-        let paths = find_config_files_result
-            .errors
-            .into_iter()
-            .map(|(path, _err)| path)
-            .collect::<Vec<_>>();
-
-        aureum::print_invalid_paths(paths);
-    }
-
-    if find_config_files_result.found_config_files.is_empty() {
+    if found_config_files.is_empty() {
         aureum::print_no_config_files();
         process::exit(INVALID_CLI_USAGE_EXIT_CODE);
     }
 
     if args.common.verbose {
-        let config_files = find_config_files_result
-            .found_config_files
-            .keys()
-            .cloned()
-            .collect::<Vec<_>>();
+        let config_files = found_config_files.keys().cloned().collect::<Vec<_>>();
 
         aureum::print_files_found(&config_files);
     }
@@ -168,38 +137,12 @@ fn list_tests(args: ListArgs, current_dir: PathBuf) {
     let mut all_test_cases = vec![];
     let mut any_failed_configs = false;
 
-    for (config_file, test_id_coverage_set) in find_config_files_result.found_config_files {
-        let Some(file_name) = config_file.file_name() else {
-            // TODO: Show error
-            continue;
-        };
-
-        let Some(path_to_containing_dir) = config_file.parent() else {
-            // TODO: Show error
-            continue;
-        };
-
-        let Ok(source) = fs::read_to_string(config_file.to_path(&current_dir)) else {
-            any_failed_configs = true; // TODO: Should save the error and display it
-            continue;
-        };
-
-        match aureum::parse_toml_config(&source) {
-            Ok(config) => {
-                let requirements = aureum::get_requirements(&config.clone());
-                let requirement_data = retrieve_requirement_data(
-                    &path_to_containing_dir.to_path(&current_dir),
-                    requirements,
-                );
-
-                let parsed_toml_config = aureum::build_test_cases(
-                    path_to_containing_dir,
-                    file_name,
-                    config,
-                    &requirement_data,
-                    &|name, dir| file::find_executable_path(name, dir).ok(),
-                );
-
+    for (config_file, test_id_coverage_set) in found_config_files {
+        match load_config_file(&config_file, &current_dir) {
+            Ok(LoadedConfigFile {
+                requirement_data,
+                parsed_toml_config,
+            }) => {
                 let any_issues = parsed_toml_config.values().any(|x| x.test_cases.is_err());
                 if any_issues || args.common.verbose {
                     aureum::print_config_details(
@@ -222,8 +165,11 @@ fn list_tests(args: ListArgs, current_dir: PathBuf) {
                         .filter(|x| test_id_coverage_set.contains(&x.test_id)),
                 );
             }
-            Err(error) => {
+            Err(ConfigFileError::ParseFailed(error)) => {
                 aureum::print_toml_config_error(config_file, error);
+                any_failed_configs = true;
+            }
+            Err(_) => {
                 any_failed_configs = true;
             }
         }
@@ -240,56 +186,28 @@ fn list_tests(args: ListArgs, current_dir: PathBuf) {
 }
 
 fn run_programs(args: RunArgs, current_dir: PathBuf) {
-    let find_config_files_result = config_file::find_config_files(args.paths, &current_dir);
+    let found_config_files = find_and_validate_config_files(args.paths, &current_dir);
 
-    if !find_config_files_result.errors.is_empty() {
-        let paths = find_config_files_result
-            .errors
-            .into_iter()
-            .map(|(path, _err)| path)
-            .collect::<Vec<_>>();
-
-        aureum::print_invalid_paths(paths);
-    }
-
-    if find_config_files_result.found_config_files.is_empty() {
+    if found_config_files.is_empty() {
         aureum::print_no_config_files();
         process::exit(INVALID_CLI_USAGE_EXIT_CODE);
+    }
+
+    if args.common.verbose {
+        let config_files = found_config_files.keys().cloned().collect::<Vec<_>>();
+
+        aureum::print_files_found(&config_files);
     }
 
     let mut all_test_cases = vec![];
     let mut any_failed_configs = false;
 
-    for (config_file, test_id_coverage_set) in find_config_files_result.found_config_files {
-        let Some(file_name) = config_file.file_name() else {
-            continue;
-        };
-
-        let Some(path_to_containing_dir) = config_file.parent() else {
-            continue;
-        };
-
-        let Ok(source) = fs::read_to_string(config_file.to_path(&current_dir)) else {
-            any_failed_configs = true;
-            continue;
-        };
-
-        match aureum::parse_toml_config(&source) {
-            Ok(config) => {
-                let requirements = aureum::get_requirements(&config.clone());
-                let requirement_data = retrieve_requirement_data(
-                    &path_to_containing_dir.to_path(&current_dir),
-                    requirements,
-                );
-
-                let parsed_toml_config = aureum::build_test_cases(
-                    path_to_containing_dir,
-                    file_name,
-                    config,
-                    &requirement_data,
-                    &|name, dir| file::find_executable_path(name, dir).ok(),
-                );
-
+    for (config_file, test_id_coverage_set) in found_config_files {
+        match load_config_file(&config_file, &current_dir) {
+            Ok(LoadedConfigFile {
+                requirement_data,
+                parsed_toml_config,
+            }) => {
                 let should_report_issues = match args.output_format {
                     RunOutputFormat::Passthrough => parsed_toml_config
                         .iter()
@@ -317,8 +235,11 @@ fn run_programs(args: RunArgs, current_dir: PathBuf) {
                         .filter(|x| test_id_coverage_set.contains(&x.test_id)),
                 );
             }
-            Err(error) => {
+            Err(ConfigFileError::ParseFailed(error)) => {
                 aureum::print_toml_config_error(config_file, error);
+                any_failed_configs = true;
+            }
+            Err(_) => {
                 any_failed_configs = true;
             }
         }
@@ -380,29 +301,15 @@ fn run_programs(args: RunArgs, current_dir: PathBuf) {
 }
 
 fn run_tests(args: TestArgs, current_dir: PathBuf) {
-    let find_config_files_result = config_file::find_config_files(args.paths, &current_dir);
+    let found_config_files = find_and_validate_config_files(args.paths, &current_dir);
 
-    if !find_config_files_result.errors.is_empty() {
-        let paths = find_config_files_result
-            .errors
-            .into_iter()
-            .map(|(path, _err)| path)
-            .collect::<Vec<_>>();
-
-        aureum::print_invalid_paths(paths);
-    }
-
-    if find_config_files_result.found_config_files.is_empty() {
+    if found_config_files.is_empty() {
         aureum::print_no_config_files();
         process::exit(INVALID_CLI_USAGE_EXIT_CODE);
     }
 
     if args.common.verbose {
-        let config_files = find_config_files_result
-            .found_config_files
-            .keys()
-            .cloned()
-            .collect::<Vec<_>>();
+        let config_files = found_config_files.keys().cloned().collect::<Vec<_>>();
 
         aureum::print_files_found(&config_files);
     }
@@ -410,38 +317,12 @@ fn run_tests(args: TestArgs, current_dir: PathBuf) {
     let mut all_test_cases = vec![];
     let mut any_failed_configs = false;
 
-    for (config_file, test_id_coverage_set) in find_config_files_result.found_config_files {
-        let Some(file_name) = config_file.file_name() else {
-            // TODO: Show error
-            continue;
-        };
-
-        let Some(path_to_containing_dir) = config_file.parent() else {
-            // TODO: Show error
-            continue;
-        };
-
-        let Ok(source) = fs::read_to_string(config_file.to_path(&current_dir)) else {
-            any_failed_configs = true; // TODO: Should save the error and display it
-            continue;
-        };
-
-        match aureum::parse_toml_config(&source) {
-            Ok(config) => {
-                let requirements = aureum::get_requirements(&config.clone());
-                let requirement_data = retrieve_requirement_data(
-                    &path_to_containing_dir.to_path(&current_dir),
-                    requirements,
-                );
-
-                let parsed_toml_config = aureum::build_test_cases(
-                    path_to_containing_dir,
-                    file_name,
-                    config,
-                    &requirement_data,
-                    &|name, dir| file::find_executable_path(name, dir).ok(),
-                );
-
+    for (config_file, test_id_coverage_set) in found_config_files {
+        match load_config_file(&config_file, &current_dir) {
+            Ok(LoadedConfigFile {
+                requirement_data,
+                parsed_toml_config,
+            }) => {
                 let any_issues = parsed_toml_config.values().any(|x| x.test_cases.is_err());
                 if any_issues || args.common.verbose {
                     aureum::print_config_details(
@@ -464,8 +345,11 @@ fn run_tests(args: TestArgs, current_dir: PathBuf) {
                         .filter(|x| test_id_coverage_set.contains(&x.test_id)),
                 );
             }
-            Err(error) => {
+            Err(ConfigFileError::ParseFailed(error)) => {
                 aureum::print_toml_config_error(config_file, error);
+                any_failed_configs = true;
+            }
+            Err(_) => {
                 any_failed_configs = true;
             }
         }
@@ -506,6 +390,58 @@ fn print_version() {
 }
 
 // HELPERS
+
+fn find_and_validate_config_files(
+    paths: Vec<PathBuf>,
+    current_dir: &Path,
+) -> BTreeMap<RelativePathBuf, TestIdCoverageSet> {
+    let result = config_file::find_config_files(paths, current_dir);
+
+    if !result.errors.is_empty() {
+        let paths = result
+            .errors
+            .into_iter()
+            .map(|(path, _err)| path)
+            .collect::<Vec<_>>();
+
+        aureum::print_invalid_paths(paths);
+    }
+
+    result.found_config_files
+}
+
+fn load_config_file(
+    config_file: &RelativePathBuf,
+    current_dir: &Path,
+) -> Result<LoadedConfigFile, ConfigFileError> {
+    let file_name = config_file.file_name().ok_or(ConfigFileError::NoFileName)?;
+
+    let path_to_containing_dir = config_file
+        .parent()
+        .ok_or(ConfigFileError::NoParentDirectory)?;
+
+    let source = fs::read_to_string(config_file.to_path(current_dir))
+        .map_err(ConfigFileError::ReadFailed)?;
+
+    let config = aureum::parse_toml_config(&source).map_err(ConfigFileError::ParseFailed)?;
+
+    let requirements = aureum::get_requirements(&config);
+    let requirement_data =
+        retrieve_requirement_data(&path_to_containing_dir.to_path(current_dir), requirements);
+
+    let parsed_toml_config = aureum::build_test_cases(
+        path_to_containing_dir,
+        file_name,
+        config,
+        &requirement_data,
+        &|name, dir| file::find_executable_path(name, dir).ok(),
+    );
+
+    Ok(LoadedConfigFile {
+        requirement_data,
+        parsed_toml_config,
+    })
+}
 
 fn get_report_format(output_format: &TestOutputFormat) -> ReportFormat {
     match output_format {
