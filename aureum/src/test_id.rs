@@ -83,54 +83,54 @@ mod tests {
     #[test]
     fn test_id_path() {
         let root = TestId::from("");
-        let sub_of_root = TestId::from("sub");
+        let root_level1 = TestId::from("level1");
 
         assert_eq!(root.id_path(), Vec::<String>::new());
-        assert_eq!(sub_of_root.id_path(), vec![String::from("sub")]);
+        assert_eq!(root_level1.id_path(), vec![String::from("level1")]);
     }
 
     #[test]
     fn test_to_string() {
         let root = TestId::from("");
-        let level1 = TestId::from("level1");
-        let level2 = TestId::from("level1.level2");
+        let root_level1 = TestId::from("level1");
+        let root_level1_level2 = TestId::from("level1.level2");
 
         assert_eq!(root.to_string(), "");
-        assert_eq!(level1.to_string(), "level1");
-        assert_eq!(level2.to_string(), "level1.level2");
+        assert_eq!(root_level1.to_string(), "level1");
+        assert_eq!(root_level1_level2.to_string(), "level1.level2");
     }
 
     #[test]
     fn test_contains() {
         let root = TestId::from("");
-        let sub_of_root = TestId::from("sub");
-        let sub_of_sub_of_root = TestId::from("sub.sub");
+        let root_level1 = TestId::from("level1");
+        let root_level1_level2 = TestId::from("level1.level2");
 
         assert!(root.contains(&root));
-        assert!(root.contains(&sub_of_root));
-        assert!(root.contains(&sub_of_sub_of_root));
-        assert!(sub_of_root.contains(&sub_of_root));
-        assert!(sub_of_root.contains(&sub_of_sub_of_root));
-        assert!(sub_of_sub_of_root.contains(&sub_of_sub_of_root));
+        assert!(root.contains(&root_level1));
+        assert!(root.contains(&root_level1_level2));
+        assert!(root_level1.contains(&root_level1));
+        assert!(root_level1.contains(&root_level1_level2));
+        assert!(root_level1_level2.contains(&root_level1_level2));
 
-        assert!(!sub_of_root.contains(&root));
+        assert!(!root_level1.contains(&root));
     }
 
     #[test]
-    fn test_contains_for_different_sub_levels() {
-        let sub1 = TestId::from("sub1");
-        let sub2 = TestId::from("sub2");
+    fn test_contains_for_distinct_levels() {
+        let level1a = TestId::from("level1a");
+        let level1b = TestId::from("level1b");
 
-        assert!(!sub1.contains(&sub2));
-        assert!(!sub2.contains(&sub1));
+        assert!(!level1a.contains(&level1b));
+        assert!(!level1b.contains(&level1a));
     }
 
     #[test]
     fn test_is_root() {
         let root = TestId::root();
-        let sub = TestId::from("sub");
+        let root_level1 = TestId::from("level1");
 
         assert!(root.is_root());
-        assert!(!sub.is_root());
+        assert!(!root_level1.is_root());
     }
 }
