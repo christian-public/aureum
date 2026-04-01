@@ -1,0 +1,24 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+
+[tests.single_valid_file]
+program_arguments = ["validate", "helpers/passing_test.toml"]
+expected_stdout = """
+✔ helpers/passing_test.toml  1 test
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[tests.multiple_valid_files]
+program_arguments = [
+    "validate",
+    "helpers/passing_test.toml",
+    "helpers/passing_test2.toml",
+]
+expected_stdout = """
+✔ helpers/passing_test.toml   1 test
+✔ helpers/passing_test2.toml  1 test
+"""
+expected_stderr = ""
+expected_exit_code = 0

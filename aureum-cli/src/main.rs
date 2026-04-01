@@ -9,7 +9,8 @@ use crate::args::{
     ValidateArgs,
 };
 use aureum::{
-    ReportConfig, ReportFormat, RequirementData, Requirements, TestEntry, TestId, TestIdCoverageSet,
+    ReportConfig, ReportFormat, ReportValidateResult, RequirementData, Requirements, TestEntry,
+    TestId, TestIdCoverageSet,
 };
 use relative_path::RelativePathBuf;
 use std::collections::BTreeMap;
@@ -78,10 +79,38 @@ fn validate_config_files(args: ValidateArgs, current_dir: PathBuf) {
         aureum::print_files_found(&config_files);
     }
 
+    let loaded: Vec<(RelativePathBuf, Result<LoadedConfigFile, ConfigFileError>)> =
+        found_config_files
+            .keys()
+            .map(|config_file| {
+                (
+                    config_file.clone(),
+                    load_config_file(config_file, &current_dir),
+                )
+            })
+            .collect();
+
+    let table_entries: Vec<(RelativePathBuf, ReportValidateResult)> = loaded
+        .iter()
+        .map(|(config_file, result)| match result {
+            Ok(LoadedConfigFile { test_entries, .. }) => {
+                let is_valid = test_entries.values().all(|x| !x.has_validation_error());
+                let validate_result = if is_valid {
+                    ReportValidateResult::Success(test_entries.len())
+                } else {
+                    ReportValidateResult::ValidationError(test_entries.len())
+                };
+
+                (config_file.clone(), validate_result)
+            }
+            Err(_) => (config_file.clone(), ReportValidateResult::ParseError),
+        })
+        .collect();
+
     let mut any_failed_configs = false;
 
-    for (config_file, _test_id_coverage_set) in found_config_files {
-        match load_config_file(&config_file, &current_dir) {
+    for (config_file, result) in loaded {
+        match result {
             Ok(LoadedConfigFile {
                 requirement_data,
                 test_entries,
@@ -111,11 +140,11 @@ fn validate_config_files(args: ValidateArgs, current_dir: PathBuf) {
         }
     }
 
+    aureum::print_validate_table(&table_entries);
+
     if any_failed_configs {
         aureum::print_config_files_contain_errors();
         process::exit(INVALID_CONFIG_EXIT_CODE);
-    } else {
-        println!("All config files are valid")
     }
 }
 

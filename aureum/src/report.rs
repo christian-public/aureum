@@ -109,6 +109,13 @@ fn format_toml_string(s: &str) -> String {
 
 // VALIDATION
 
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub enum ReportValidateResult {
+    ParseError,
+    ValidationError(usize),
+    Success(usize),
+}
+
 pub fn print_invalid_paths(paths: Vec<PathBuf>) {
     eprintln!(
         "{} Invalid paths to config files:",
@@ -125,6 +132,41 @@ pub fn print_no_config_files() {
         "{} No config files found for the given paths",
         "error:".red().bold(),
     );
+}
+
+pub fn print_validate_table(entries: &[(RelativePathBuf, ReportValidateResult)]) {
+    let max_len = entries
+        .iter()
+        .map(|(file, ..)| file.as_str().len())
+        .max()
+        .unwrap_or(0);
+
+    for (file, result) in entries {
+        let count_str = match result {
+            ReportValidateResult::ParseError => String::from("Parse error"),
+            ReportValidateResult::ValidationError(test_count)
+            | ReportValidateResult::Success(test_count) => {
+                if *test_count == 1 {
+                    String::from("1 test")
+                } else {
+                    format!("{test_count} tests")
+                }
+            }
+        };
+
+        let line = format!(
+            "{file:<width$}  {count_str}",
+            file = file.as_str(),
+            width = max_len,
+        );
+
+        let is_valid = matches!(result, ReportValidateResult::Success(_));
+        if is_valid {
+            println!("{} {}", checkmark(), line);
+        } else {
+            println!("{} {}", cross(), line.red());
+        }
+    }
 }
 
 pub fn print_files_found(source_files: &[RelativePathBuf]) {
