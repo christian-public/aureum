@@ -1,4 +1,3 @@
-use colored::Colorize;
 use diff::Result;
 
 pub fn indent_with(prefix: &str, input: &str) -> String {
@@ -65,55 +64,37 @@ pub fn text_block(content: &str) -> String {
     }
 }
 
-pub fn prefix_with_line_numbers(content: &str) -> String {
-    let ends_with_newline = content.ends_with('\n');
-    let display_line_count = if content.is_empty() {
-        1
-    } else {
-        content.lines().count() + if ends_with_newline { 1 } else { 0 }
-    };
-    let width = display_line_count.to_string().len();
-
-    let format_line = |num: usize, line: &str| -> String {
-        if line.is_empty() {
-            format!("{:>width$} │", num, width = width)
-        } else {
-            format!("{:>width$} │ {}", num, line, width = width)
-        }
-    };
-
+pub fn prefix_text_with_line_numbers(
+    content: &str,
+    mut format_line: impl FnMut(usize, &str) -> String,
+) -> String {
     if content.is_empty() {
         format_line(1, "")
     } else {
         let mut result = String::new();
+
         for (i, line) in content.lines().enumerate() {
             if i > 0 {
                 result.push('\n');
             }
             result.push_str(&format_line(i + 1, line));
         }
-        if ends_with_newline {
+
+        if content.ends_with('\n') {
+            let line_count = content.lines().count() + 1;
             result.push('\n');
-            result.push_str(&format_line(display_line_count, ""));
+            result.push_str(&format_line(line_count, ""));
         }
+
         result
     }
 }
 
-pub fn prefix_diff_with_line_numbers(expected: &str, got: &str, use_color: bool) -> String {
-    let expected_line_count = if expected.is_empty() {
-        1
-    } else {
-        expected.lines().count() + if expected.ends_with('\n') { 1 } else { 0 }
-    };
-    let got_line_count = if got.is_empty() {
-        1
-    } else {
-        got.lines().count() + if got.ends_with('\n') { 1 } else { 0 }
-    };
-    let width = expected_line_count.max(got_line_count).to_string().len();
-    let blank = " ".repeat(width);
-
+pub fn prefix_diff_with_line_numbers(
+    expected: &str,
+    got: &str,
+    mut format_line: impl FnMut(Option<usize>, Option<usize>, &str) -> String,
+) -> String {
     let mut left_num: usize = 1;
     let mut right_num: usize = 1;
     let mut diff_output = String::new();
@@ -121,56 +102,33 @@ pub fn prefix_diff_with_line_numbers(expected: &str, got: &str, use_color: bool)
     for diff in diff::lines(expected, got) {
         match diff {
             Result::Left(left) => {
-                let text = format!("-{}", left);
-                let colored_text = if use_color { text.red() } else { text.normal() };
-
-                diff_output.push_str(&format!(
-                    "{:>width$} {} │ {}\n",
-                    left_num,
-                    blank,
-                    colored_text,
-                    width = width
-                ));
+                diff_output.push_str(&format_line(Some(left_num), None, left));
+                diff_output.push('\n');
                 left_num += 1;
             }
             Result::Both(left, _) => {
-                let text = if left.is_empty() {
-                    String::new()
-                } else {
-                    format!("  {}", left)
-                };
-
-                diff_output.push_str(&format!(
-                    "{:>width$} {:>width$} │{}\n",
-                    left_num,
-                    right_num,
-                    text,
-                    width = width
-                ));
+                diff_output.push_str(&format_line(Some(left_num), Some(right_num), left));
+                diff_output.push('\n');
                 left_num += 1;
                 right_num += 1;
             }
             Result::Right(right) => {
-                let text = format!("+{}", right);
-                let colored_text = if use_color {
-                    text.green()
-                } else {
-                    text.normal()
-                };
-
-                diff_output.push_str(&format!(
-                    "{} {:>width$} │ {}\n",
-                    blank,
-                    right_num,
-                    colored_text,
-                    width = width
-                ));
+                diff_output.push_str(&format_line(None, Some(right_num), right));
+                diff_output.push('\n');
                 right_num += 1;
             }
         }
     }
 
     diff_output
+}
+
+pub fn displayed_line_count(content: &str) -> usize {
+    if content.is_empty() {
+        1
+    } else {
+        content.lines().count() + if content.ends_with('\n') { 1 } else { 0 }
+    }
 }
 
 #[cfg(test)]
@@ -268,71 +226,150 @@ mod tests {
         assert_eq!(text_block("line 1\n\nline 3\n"), expected);
     }
 
-    #[test]
-    fn test_prefix_with_line_numbers_empty() {
-        let expected = "1 │";
-
-        assert_eq!(prefix_with_line_numbers(""), expected);
+    fn prefix_text_format_line(width: usize) -> impl Fn(usize, &str) -> String {
+        move |line_number, line| {
+            if line.is_empty() {
+                format!("{line_number:>width$} │")
+            } else {
+                format!("{line_number:>width$} │ {line}")
+            }
+        }
     }
 
     #[test]
-    fn test_prefix_with_line_numbers_only_newline() {
+    fn test_prefix_text_with_line_numbers_empty() {
+        let expected = "1 │";
+
+        assert_eq!(
+            prefix_text_with_line_numbers("", prefix_text_format_line(1)),
+            expected
+        );
+    }
+
+    #[test]
+    fn test_prefix_text_with_line_numbers_only_newline() {
         let expected = indoc! {"
             1 │
             2 │"};
 
-        assert_eq!(prefix_with_line_numbers("\n"), expected);
+        assert_eq!(
+            prefix_text_with_line_numbers("\n", prefix_text_format_line(1)),
+            expected
+        );
     }
 
     #[test]
-    fn test_prefix_with_line_numbers_single_line_no_newline() {
+    fn test_prefix_text_with_line_numbers_single_line_no_newline() {
         let expected = "1 │ foo";
 
-        assert_eq!(prefix_with_line_numbers("foo"), expected);
+        assert_eq!(
+            prefix_text_with_line_numbers("foo", prefix_text_format_line(1)),
+            expected
+        );
     }
 
     #[test]
-    fn test_prefix_with_line_numbers_single_line_with_newline() {
+    fn test_prefix_text_with_line_numbers_single_line_with_newline() {
         let expected = indoc! {"
             1 │ foo
             2 │"};
 
-        assert_eq!(prefix_with_line_numbers("foo\n"), expected);
+        assert_eq!(
+            prefix_text_with_line_numbers("foo\n", prefix_text_format_line(1)),
+            expected
+        );
     }
 
     #[test]
-    fn test_prefix_with_line_numbers_multiple_lines_no_newline() {
+    fn test_prefix_text_with_line_numbers_multiple_lines_no_newline() {
         let expected = indoc! {"
             1 │ line 1
             2 │ line 2"};
 
-        assert_eq!(prefix_with_line_numbers("line 1\nline 2"), expected);
+        assert_eq!(
+            prefix_text_with_line_numbers("line 1\nline 2", prefix_text_format_line(1)),
+            expected
+        );
     }
 
     #[test]
-    fn test_prefix_with_line_numbers_multiple_lines_with_newline() {
+    fn test_prefix_text_with_line_numbers_multiple_lines_with_newline() {
         let expected = indoc! {"
             1 │ line 1
             2 │ line 2
             3 │"};
 
-        assert_eq!(prefix_with_line_numbers("line 1\nline 2\n"), expected);
+        assert_eq!(
+            prefix_text_with_line_numbers("line 1\nline 2\n", prefix_text_format_line(1)),
+            expected
+        );
     }
 
     #[test]
-    fn test_prefix_with_line_numbers_pads_line_numbers() {
-        let lines: Vec<String> = (1..=10).map(|i| format!("line {}", i)).collect();
+    fn test_prefix_text_with_line_numbers_pads_line_numbers() {
+        let expected = indoc! {"
+             1 │ line 1
+             2 │ line 2
+             3 │ line 3
+             4 │ line 4
+             5 │ line 5
+             6 │ line 6
+             7 │ line 7
+             8 │ line 8
+             9 │ line 9
+            10 │"};
+
+        let lines: Vec<String> = (1..=9).map(|i| format!("line {i}",)).collect();
         let content = lines.join("\n") + "\n";
-        let result = prefix_with_line_numbers(&content);
-        assert!(result.contains(" 1 │ line 1"));
-        assert!(result.contains("10 │ line 10"));
+        let width = displayed_line_count(&content).to_string().len();
+        let result = prefix_text_with_line_numbers(&content, prefix_text_format_line(width));
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_prefix_text_with_line_numbers_format_line_receives_correct_values_regardless_of_format()
+    {
+        let mut calls: Vec<(usize, String)> = Vec::new();
+        prefix_text_with_line_numbers("a\nb\n", |num, line| {
+            calls.push((num, line.to_owned()));
+            String::new()
+        });
+        assert_eq!(
+            calls,
+            vec![(1, "a".to_owned()), (2, "b".to_owned()), (3, "".to_owned())]
+        );
+    }
+
+    fn prefix_diff_format_line(
+        width: usize,
+    ) -> impl FnMut(Option<usize>, Option<usize>, &str) -> String {
+        let blank = " ".repeat(width);
+        move |left_num, right_num, line| {
+            let left_str = left_num.map_or(blank.clone(), |n| format!("{:>width$}", n));
+            let right_str = right_num.map_or(blank.clone(), |n| format!("{:>width$}", n));
+            match (left_num, right_num) {
+                (Some(_), None) => format!("{left_str} {blank} │ -{line}"),
+                (None, Some(_)) => format!("{blank} {right_str} │ +{line}"),
+                _ => {
+                    if line.is_empty() {
+                        format!("{left_str} {right_str} │")
+                    } else {
+                        format!("{left_str} {right_str} │  {line}")
+                    }
+                }
+            }
+        }
     }
 
     #[test]
     fn test_prefix_diff_with_line_numbers_empty() {
         let expected = indoc! {""};
 
-        assert_eq!(prefix_diff_with_line_numbers("", "", false), expected);
+        assert_eq!(
+            prefix_diff_with_line_numbers("", "", prefix_diff_format_line(1)),
+            expected
+        );
     }
 
     #[test]
@@ -342,7 +379,7 @@ mod tests {
             "};
 
         assert_eq!(
-            prefix_diff_with_line_numbers("line 1", "line 1", false),
+            prefix_diff_with_line_numbers("line 1", "line 1", prefix_diff_format_line(1)),
             expected
         );
     }
@@ -354,7 +391,10 @@ mod tests {
             2 2 │
             "};
 
-        assert_eq!(prefix_diff_with_line_numbers("\n", "\n", false), expected);
+        assert_eq!(
+            prefix_diff_with_line_numbers("\n", "\n", prefix_diff_format_line(1)),
+            expected
+        );
     }
 
     #[test]
@@ -364,7 +404,10 @@ mod tests {
               1 │ +b
             "};
 
-        assert_eq!(prefix_diff_with_line_numbers("a", "b", false), expected);
+        assert_eq!(
+            prefix_diff_with_line_numbers("a", "b", prefix_diff_format_line(1)),
+            expected
+        );
     }
 
     #[test]
@@ -382,9 +425,9 @@ mod tests {
             10 10 │  line 10
             "};
 
-        let lines: Vec<String> = (1..=10).map(|i| format!("line {}", i)).collect();
+        let lines: Vec<String> = (1..=10).map(|i| format!("line {i}")).collect();
         let content = lines.join("\n");
-        let result = prefix_diff_with_line_numbers(&content, &content, false);
+        let result = prefix_diff_with_line_numbers(&content, &content, prefix_diff_format_line(2));
         assert_eq!(result, expected);
     }
 
@@ -403,9 +446,9 @@ mod tests {
             10 10 │
             "};
 
-        let lines: Vec<String> = (1..=9).map(|i| format!("line {}", i)).collect();
+        let lines: Vec<String> = (1..=9).map(|i| format!("line {i}")).collect();
         let content = lines.join("\n") + "\n";
-        let result = prefix_diff_with_line_numbers(&content, &content, false);
+        let result = prefix_diff_with_line_numbers(&content, &content, prefix_diff_format_line(2));
         assert_eq!(result, expected);
     }
 }

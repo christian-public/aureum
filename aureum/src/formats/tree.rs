@@ -2,6 +2,7 @@ use crate::test_result::{TestResult, ValueComparison};
 use crate::utils::string;
 use crate::vendor::ascii_tree;
 use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
+use colored::Colorize;
 use std::fmt::Error;
 
 pub fn draw_tree(tree: &Tree) -> Result<String, Error> {
@@ -40,18 +41,72 @@ pub fn nodes_from_test_result(test_result: &TestResult) -> Vec<Tree> {
 }
 
 fn format_string_diff(expected: &str, got: &str) -> Vec<Tree> {
+    let width = string::displayed_line_count(expected)
+        .max(string::displayed_line_count(got))
+        .to_string()
+        .len();
+    let blank = " ".repeat(width);
+
+    let format_expected_line = |num: usize, line: &str| -> String {
+        let num_str = format!("{num:>width$}");
+        if line.is_empty() {
+            format!("{num_str} {blank} │")
+        } else {
+            format!("{num_str} {blank} │  {line}")
+        }
+    };
+
+    let format_got_line = |num: usize, line: &str| -> String {
+        let num_str = format!("{num:>width$}");
+        if line.is_empty() {
+            format!("{blank} {num_str} │")
+        } else {
+            format!("{blank} {num_str} │  {line}")
+        }
+    };
+
+    let format_diff_line = |left_num: Option<usize>, right_num: Option<usize>, line: &str| {
+        let left_num_str = left_num.map_or(blank.clone(), |num| format!("{num:>width$}"));
+        let right_num_str = right_num.map_or(blank.clone(), |num| format!("{num:>width$}"));
+        match (left_num, right_num) {
+            (Some(_), None) => {
+                let text = format!("-{}", line).red().to_string();
+                format!("{left_num_str} {blank} │ {text}")
+            }
+            (None, Some(_)) => {
+                let text = format!("+{}", line).green().to_string();
+                format!("{blank} {right_num_str} │ {text}")
+            }
+            _ => {
+                if line.is_empty() {
+                    format!("{left_num_str} {right_num_str} │")
+                } else {
+                    format!("{left_num_str} {right_num_str} │  {line}")
+                }
+            }
+        }
+    };
+
     let expected_lines = string_to_lines(&format!(
         "Expected\n{}",
-        string::text_block(&string::prefix_with_line_numbers(expected))
+        string::text_block(&string::prefix_text_with_line_numbers(
+            expected,
+            format_expected_line,
+        ))
     ));
     let got_lines = string_to_lines(&format!(
         "Got\n{}",
-        string::text_block(&string::prefix_with_line_numbers(got))
+        string::text_block(&string::prefix_text_with_line_numbers(got, format_got_line)),
     ));
 
-    let diff_output = string::prefix_diff_with_line_numbers(expected, got, true);
-
-    let diff_lines = string_to_lines(&format!("Diff\n{}", string::text_block(&diff_output)));
+    let diff_lines = string_to_lines(&format!(
+        "Diff\n{}",
+        string::text_block(&string::prefix_diff_with_line_numbers(
+            expected,
+            got,
+            format_diff_line,
+        ))
+    ));
 
     vec![Leaf(expected_lines), Leaf(got_lines), Leaf(diff_lines)]
 }
