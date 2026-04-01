@@ -291,9 +291,9 @@ fn summary_print_summary(number_of_tests: usize, run_results: &[RunResult]) {
     let number_of_failed_tests = number_of_tests - number_of_passed_tests;
 
     let status = if number_of_failed_tests == 0 {
-        "OK"
+        "OK".green().bold()
     } else {
-        "FAIL"
+        "FAIL".red().bold()
     };
 
     println!();
