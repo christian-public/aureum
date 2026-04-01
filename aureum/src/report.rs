@@ -448,9 +448,9 @@ fn str_to_tree(msg: &str) -> Tree {
 // SYMBOLS
 
 fn checkmark() -> String {
-    "✅".to_owned()
+    "✔".green().bold().to_string() // U+2714 HEAVY CHECK MARK
 }
 
 fn cross() -> String {
-    "❌".to_owned()
+    "✘".red().bold().to_string() // U+2718 HEAVY BALLOT X
 }

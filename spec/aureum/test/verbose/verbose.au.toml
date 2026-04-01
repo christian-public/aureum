@@ -22,36 +22,36 @@ expected_stderr = """
 📋 helpers/many_requirements.toml
 ├─ :env_var_exists
 │  ├─ Program to run
-│  │  └─ ✅ <absolute path to 'echo'>
+│  │  └─ ✔ <absolute path to 'echo'>
 │  └─ Requirements
 │     └─ Environment variables
-│        └─ ✅ AUREUM_TEST_HELLO_WORLD
+│        └─ ✔ AUREUM_TEST_HELLO_WORLD
 ├─ :env_var_missing
 │  ├─ Program to run
-│  │  └─ ✅ <absolute path to 'echo'>
+│  │  └─ ✔ <absolute path to 'echo'>
 │  ├─ Requirements
 │  │  └─ Environment variables
-│  │     └─ ❌ AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST
+│  │     └─ ✘ AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST
 │  └─ Validation errors
-│     └─ ❌ Missing environment variable 'AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST'
+│     └─ ✘ Missing environment variable 'AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST'
 ├─ :external_file_exists
 │  ├─ Program to run
-│  │  └─ ✅ <absolute path to 'echo'>
+│  │  └─ ✔ <absolute path to 'echo'>
 │  └─ Requirements
 │     └─ Files
-│        └─ ✅ hello_world.txt
+│        └─ ✔ hello_world.txt
 └─ :external_file_missing
    ├─ Program to run
-   │  └─ ✅ <absolute path to 'echo'>
+   │  └─ ✔ <absolute path to 'echo'>
    ├─ Requirements
    │  └─ Files
-   │     └─ ❌ aureum_test_this_file_does_not_exist
+   │     └─ ✘ aureum_test_this_file_does_not_exist
    └─ Validation errors
-      └─ ❌ Missing external file 'aureum_test_this_file_does_not_exist'
+      └─ ✘ Missing external file 'aureum_test_this_file_does_not_exist'
 
 📋 helpers/no_requirements.toml
 └─ Program to run
-   └─ ✅ <absolute path to 'echo'>
+   └─ ✔ <absolute path to 'echo'>
 
 warning: Some config files contain errors (See above)
 """
@@ -71,11 +71,11 @@ expected_stderr = """
 ├─ :env_var_exists
 ├─ :env_var_missing
 │  └─ Validation errors
-│     └─ ❌ Missing environment variable 'AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST'
+│     └─ ✘ Missing environment variable 'AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST'
 ├─ :external_file_exists
 └─ :external_file_missing
    └─ Validation errors
-      └─ ❌ Missing external file 'aureum_test_this_file_does_not_exist'
+      └─ ✘ Missing external file 'aureum_test_this_file_does_not_exist'
 
 warning: Some config files contain errors (See above)
 """
