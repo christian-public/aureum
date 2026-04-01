@@ -192,7 +192,7 @@ pub fn print_config_details(
         if let Err(validation_errors) = &test_entry.test_case {
             let nodes = validation_errors
                 .iter()
-                .map(|err| str_to_tree(&show_validation_error(err)))
+                .map(|err| str_to_tree(&format_validation_error(err)))
                 .collect();
 
             categories.push(Node(heading, nodes));
@@ -421,7 +421,7 @@ fn requirements_map(requirements: &Requirements, requirement_data: &RequirementD
     categories
 }
 
-fn show_validation_error(validation_error: &ValidationError) -> String {
+fn format_validation_error(validation_error: &ValidationError) -> String {
     let msg = match validation_error {
         ValidationError::MissingExternalFile(file_path) => {
             format!("Missing external file '{}'", file_path)

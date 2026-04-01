@@ -18,28 +18,28 @@ pub fn nodes_from_test_result(test_result: &TestResult) -> Vec<Tree> {
     if let ValueComparison::Diff { expected, got } = &test_result.stdout {
         categories.push(Node(
             String::from("Standard output"),
-            show_string_diff(expected, got),
+            format_string_diff(expected, got),
         ));
     }
 
     if let ValueComparison::Diff { expected, got } = &test_result.stderr {
         categories.push(Node(
             String::from("Standard error"),
-            show_string_diff(expected, got),
+            format_string_diff(expected, got),
         ));
     }
 
     if let ValueComparison::Diff { expected, got } = test_result.exit_code {
         categories.push(Node(
             String::from("Exit code"),
-            show_i32_diff(expected, got),
+            format_i32_diff(expected, got),
         ));
     }
 
     categories
 }
 
-fn show_string_diff(expected: &str, got: &str) -> Vec<Tree> {
+fn format_string_diff(expected: &str, got: &str) -> Vec<Tree> {
     let expected_lines = string_to_lines(&format!(
         "Expected\n{}",
         string::text_block(&string::prefix_with_line_numbers(expected))
@@ -60,11 +60,11 @@ fn string_to_lines(str: &str) -> Vec<String> {
     str.lines().map(|x| x.to_owned()).collect()
 }
 
-fn show_i32_diff(expected: i32, got: i32) -> Vec<Tree> {
-    show_single_line_diff(expected.to_string(), got.to_string())
+fn format_i32_diff(expected: i32, got: i32) -> Vec<Tree> {
+    format_single_line_diff(expected.to_string(), got.to_string())
 }
 
-fn show_single_line_diff(expected: String, got: String) -> Vec<Tree> {
+fn format_single_line_diff(expected: String, got: String) -> Vec<Tree> {
     vec![
         Node(String::from("Expected"), vec![Leaf(vec![expected])]),
         Node(String::from("Got"), vec![Leaf(vec![got])]),

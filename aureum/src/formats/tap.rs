@@ -64,34 +64,34 @@ fn format_test_result(test_result: &TestResult) -> String {
     let mut diagnostics = BTreeMap::new();
 
     if let ValueComparison::Diff { expected, got } = &test_result.stdout {
-        diagnostics.insert("stdout", show_string_diff(expected, got));
+        diagnostics.insert("stdout", format_string_diff(expected, got));
     }
 
     if let ValueComparison::Diff { expected, got } = &test_result.stderr {
-        diagnostics.insert("stderr", show_string_diff(expected, got));
+        diagnostics.insert("stderr", format_string_diff(expected, got));
     }
 
     if let ValueComparison::Diff { expected, got } = test_result.exit_code {
-        diagnostics.insert("exit-code", show_i32_diff(expected, got));
+        diagnostics.insert("exit-code", format_i32_diff(expected, got));
     }
 
     yaml_serde::to_string(&diagnostics).unwrap_or(String::from("Failed to convert to YAML\n"))
 }
 
-fn show_string_diff(expected: &String, got: &String) -> BTreeMap<&'static str, Value> {
-    show_diff(
+fn format_string_diff(expected: &String, got: &String) -> BTreeMap<&'static str, Value> {
+    format_diff(
         Value::String(expected.to_owned()),
         Value::String(got.to_owned()),
     )
 }
 
-fn show_i32_diff(expected: i32, got: i32) -> BTreeMap<&'static str, Value> {
-    show_diff(
+fn format_i32_diff(expected: i32, got: i32) -> BTreeMap<&'static str, Value> {
+    format_diff(
         Value::Number(Number::from(expected)),
         Value::Number(Number::from(got)),
     )
 }
 
-fn show_diff(expected: Value, got: Value) -> BTreeMap<&'static str, Value> {
+fn format_diff(expected: Value, got: Value) -> BTreeMap<&'static str, Value> {
     BTreeMap::from([("expected", expected), ("got", got)])
 }
