@@ -155,11 +155,11 @@ pub fn print_config_details(
         if verbose {
             // Program to run
             let program_to_run = match &test_entry.program_path {
-                ProgramPath::NotSpecified => format!("{} Not specified", cross()),
-                ProgramPath::MissingProgram {
-                    requested_program: _,
-                } => {
-                    format!("{} Not found", cross())
+                ProgramPath::NotSpecified => {
+                    format!("{} Not specified", cross())
+                }
+                ProgramPath::MissingProgram { requested_program } => {
+                    format!("{} {}", cross(), requested_program)
                 }
                 ProgramPath::ResolvedPath {
                     requested_program: _,
