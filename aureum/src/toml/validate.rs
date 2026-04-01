@@ -38,14 +38,11 @@ pub enum ProgramPath {
 impl ProgramPath {
     fn get_resolved_path(&self) -> Option<PathBuf> {
         match self {
-            ProgramPath::NotSpecified => None,
-            ProgramPath::MissingProgram {
-                requested_program: _,
-            } => None,
             ProgramPath::ResolvedPath {
                 requested_program: _,
                 resolved_path,
             } => Some(resolved_path.clone()),
+            _ => None,
         }
     }
 }
