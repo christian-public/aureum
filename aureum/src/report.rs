@@ -156,11 +156,13 @@ pub fn print_config_details(
             // Program to run
             let program_to_run = match &test_entry.program_path {
                 ProgramPath::NotSpecified => format!("{} Not specified", cross()),
-                ProgramPath::MissingProgram { requested_path: _ } => {
+                ProgramPath::MissingProgram {
+                    requested_program: _,
+                } => {
                     format!("{} Not found", cross())
                 }
                 ProgramPath::ResolvedPath {
-                    requested_path: _,
+                    requested_program: _,
                     resolved_path,
                 } => {
                     let path = if hide_absolute_paths {

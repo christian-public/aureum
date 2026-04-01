@@ -27,10 +27,10 @@ impl RequirementData {
 pub enum ProgramPath {
     NotSpecified,
     MissingProgram {
-        requested_path: String,
+        requested_program: String,
     },
     ResolvedPath {
-        requested_path: String,
+        requested_program: String,
         resolved_path: PathBuf,
     },
 }
@@ -39,9 +39,11 @@ impl ProgramPath {
     fn get_resolved_path(&self) -> Option<PathBuf> {
         match self {
             ProgramPath::NotSpecified => None,
-            ProgramPath::MissingProgram { requested_path: _ } => None,
+            ProgramPath::MissingProgram {
+                requested_program: _,
+            } => None,
             ProgramPath::ResolvedPath {
-                requested_path: _,
+                requested_program: _,
                 resolved_path,
             } => Some(resolved_path.clone()),
         }
@@ -116,11 +118,13 @@ fn build_test_entry(
         ProgramPath::NotSpecified => {
             errors.insert(ValidationError::ProgramRequired);
         }
-        ProgramPath::MissingProgram { requested_path } => {
+        ProgramPath::MissingProgram {
+            requested_program: requested_path,
+        } => {
             errors.insert(ValidationError::ProgramNotFound(requested_path.clone()));
         }
         ProgramPath::ResolvedPath {
-            requested_path: _,
+            requested_program: _,
             resolved_path: _,
         } => {}
     }
@@ -194,21 +198,21 @@ fn build_test_entry(
 }
 
 fn get_program_path(
-    requested_path: String,
+    requested_program: String,
     in_dir: &Path,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> ProgramPath {
-    if requested_path.is_empty() {
+    if requested_program.is_empty() {
         return ProgramPath::NotSpecified;
     }
 
-    if let Some(resolved_path) = find_executable_path(&requested_path, in_dir) {
+    if let Some(resolved_path) = find_executable_path(&requested_program, in_dir) {
         ProgramPath::ResolvedPath {
-            requested_path,
+            requested_program,
             resolved_path,
         }
     } else {
-        ProgramPath::MissingProgram { requested_path }
+        ProgramPath::MissingProgram { requested_program }
     }
 }
 
