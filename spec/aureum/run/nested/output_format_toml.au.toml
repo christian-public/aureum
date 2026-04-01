@@ -55,10 +55,10 @@ expected_exit_code = 0
 """
 expected_stderr = """
 📋 helpers/missing_program_on_test1.toml
-├─ :test1
-│  └─ Validation errors
-│     └─ ✘ The field 'program' is required
-└─ :test2
+├── :test1
+│   └── Validation errors
+│       └── ✘ The field 'program' is required
+└── :test2
 
 warning: Some config files contain errors (See above)
 """
@@ -80,10 +80,10 @@ expected_exit_code = 0
 """
 expected_stderr = """
 📋 helpers/missing_program_on_test1.toml
-├─ :test1
-│  └─ Validation errors
-│     └─ ✘ The field 'program' is required
-└─ :test2
+├── :test1
+│   └── Validation errors
+│       └── ✘ The field 'program' is required
+└── :test2
 
 warning: Some config files contain errors (See above)
 """
@@ -100,12 +100,12 @@ program_arguments = [
 expected_stdout = ""
 expected_stderr = """
 📋 helpers/missing_program_on_all_tests.toml
-├─ :test1
-│  └─ Validation errors
-│     └─ ✘ The field 'program' is required
-└─ :test2
-   └─ Validation errors
-      └─ ✘ The field 'program' is required
+├── :test1
+│   └── Validation errors
+│       └── ✘ The field 'program' is required
+└── :test2
+    └── Validation errors
+        └── ✘ The field 'program' is required
 
 warning: Some config files contain errors (See above)
 """

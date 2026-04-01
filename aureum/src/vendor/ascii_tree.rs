@@ -4,6 +4,7 @@
 
 //! Write an ascii tree
 
+use colored::Colorize;
 use std::fmt;
 use std::fmt::Write;
 
@@ -21,10 +22,13 @@ pub fn write_tree(f: &mut dyn Write, tree: &Tree) -> fmt::Result {
 
 fn write_tree_element(f: &mut dyn Write, tree: &Tree, level: &[usize]) -> fmt::Result {
     use Tree::*;
-    const EMPTY: &str = "   ";
-    const EDGE: &str = "└─ ";
-    const PIPE: &str = "│  ";
-    const BRANCH: &str = "├─ ";
+    const EMPTY: &str = "    ";
+    const EDGE: &str = "└── ";
+    const PIPE: &str = "│   ";
+    const BRANCH: &str = "├── ";
+
+    // NOTE: The code compiles without `.to_string()` but the `PIPE` string is not colored correctly.
+    let colored = |text: &str| text.dimmed().to_string();
 
     let maxpos = level.len();
     let mut second_line = String::new();
@@ -32,18 +36,18 @@ fn write_tree_element(f: &mut dyn Write, tree: &Tree, level: &[usize]) -> fmt::R
         let last_row = pos == maxpos - 1;
         if *l == 1 {
             if !last_row {
-                write!(f, "{}", EMPTY)?
+                write!(f, "{}", colored(EMPTY))?
             } else {
-                write!(f, "{}", EDGE)?
+                write!(f, "{}", colored(EDGE))?
             }
-            second_line.push_str(EMPTY);
+            second_line.push_str(&colored(EMPTY));
         } else {
             if !last_row {
-                write!(f, "{}", PIPE)?
+                write!(f, "{}", colored(PIPE))?
             } else {
-                write!(f, "{}", BRANCH)?
+                write!(f, "{}", colored(BRANCH))?
             }
-            second_line.push_str(PIPE);
+            second_line.push_str(&colored(PIPE));
         }
     }
 

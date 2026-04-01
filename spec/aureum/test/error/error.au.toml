@@ -32,7 +32,7 @@ Test result: OK (0 passed, 0 failed)
 """
 expected_stderr = """
 📋 helpers/invalid_config.toml
-└─ Failed to parse config file
+└── Failed to parse config file
 
 warning: Some config files contain errors (See above)
 """
@@ -49,9 +49,9 @@ Test result: OK (0 passed, 0 failed)
 """
 expected_stderr = """
 📋 helpers/empty_config.toml
-└─ Validation errors
-   ├─ ✘ The field 'program' is required
-   └─ ✘ At least one expectation is required
+└── Validation errors
+    ├── ✘ The field 'program' is required
+    └── ✘ At least one expectation is required
 
 warning: Some config files contain errors (See above)
 """
@@ -68,8 +68,8 @@ Test result: OK (0 passed, 0 failed)
 """
 expected_stderr = """
 📋 helpers/no_test_program.toml
-└─ Validation errors
-   └─ ✘ The field 'program' is required
+└── Validation errors
+    └── ✘ The field 'program' is required
 
 warning: Some config files contain errors (See above)
 """
@@ -86,8 +86,8 @@ Test result: OK (0 passed, 0 failed)
 """
 expected_stderr = """
 📋 helpers/unknown_test_program.toml
-└─ Validation errors
-   └─ ✘ The program 'aureum_test_this_program_does_not_exist' was not found
+└── Validation errors
+    └── ✘ The program 'aureum_test_this_program_does_not_exist' was not found
 
 warning: Some config files contain errors (See above)
 """
@@ -104,8 +104,8 @@ Test result: OK (0 passed, 0 failed)
 """
 expected_stderr = """
 📋 helpers/no_expectations.toml
-└─ Validation errors
-   └─ ✘ At least one expectation is required
+└── Validation errors
+    └── ✘ At least one expectation is required
 
 warning: Some config files contain errors (See above)
 """
@@ -122,8 +122,8 @@ Test result: OK (0 passed, 0 failed)
 """
 expected_stderr = """
 📋 helpers/invalid_exit_code.toml
-└─ Validation errors
-   └─ ✘ Exit code must be a value between -2147483648 to 2147483647 (On POSIX/Unix/Linux: Between 0 and 255)
+└── Validation errors
+    └── ✘ Exit code must be a value between -2147483648 to 2147483647 (On POSIX/Unix/Linux: Between 0 and 255)
 
 warning: Some config files contain errors (See above)
 """
@@ -140,8 +140,8 @@ Test result: OK (0 passed, 0 failed)
 """
 expected_stderr = """
 📋 helpers/missing_env_var.toml
-└─ Validation errors
-   └─ ✘ Missing environment variable 'AUREUM_TEST_THIS_ENV_VAR_DOES_NOT_EXIST'
+└── Validation errors
+    └── ✘ Missing environment variable 'AUREUM_TEST_THIS_ENV_VAR_DOES_NOT_EXIST'
 
 warning: Some config files contain errors (See above)
 """
@@ -158,8 +158,8 @@ Test result: OK (0 passed, 0 failed)
 """
 expected_stderr = """
 📋 helpers/missing_external_file.toml
-└─ Validation errors
-   └─ ✘ Missing external file 'aureum_test_this_file_does_not_exist'
+└── Validation errors
+    └── ✘ Missing external file 'aureum_test_this_file_does_not_exist'
 
 warning: Some config files contain errors (See above)
 """

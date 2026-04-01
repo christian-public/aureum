@@ -30,38 +30,38 @@ expected_stdout = """
 F
 
 ❌ helpers/failing_test.toml
-├─ Standard output
-│  ├─ Expected
-│  │  ╭
-│  │  │ 1 │ STDOUT
-│  │  ╰
-│  ├─ Got
-│  │  ╭
-│  │  │ 1 │ Hello world
-│  │  ╰
-│  └─ Diff
-│     ╭
-│     │ 1   │ -STDOUT
-│     │   1 │ +Hello world
-│     ╰
-├─ Standard error
-│  ├─ Expected
-│  │  ╭
-│  │  │ 1 │ STDERR
-│  │  ╰
-│  ├─ Got
-│  │  ╭
-│  │  │ 1 │
-│  │  ╰
-│  └─ Diff
-│     ╭
-│     │ 1   │ -STDERR
-│     ╰
-└─ Exit code
-   ├─ Expected
-   │  └─ 42
-   └─ Got
-      └─ 0
+├── Standard output
+│   ├── Expected
+│   │   ╭
+│   │   │ 1 │ STDOUT
+│   │   ╰
+│   ├── Got
+│   │   ╭
+│   │   │ 1 │ Hello world
+│   │   ╰
+│   └── Diff
+│       ╭
+│       │ 1   │ -STDOUT
+│       │   1 │ +Hello world
+│       ╰
+├── Standard error
+│   ├── Expected
+│   │   ╭
+│   │   │ 1 │ STDERR
+│   │   ╰
+│   ├── Got
+│   │   ╭
+│   │   │ 1 │
+│   │   ╰
+│   └── Diff
+│       ╭
+│       │ 1   │ -STDERR
+│       ╰
+└── Exit code
+    ├── Expected
+    │   └── 42
+    └── Got
+        └── 0
 
 Test result: FAIL (0 passed, 1 failed)
 """
@@ -124,23 +124,23 @@ expected_stdout = """
 F
 
 ❌ helpers/failing_test_newline.toml
-└─ Standard output
-   ├─ Expected
-   │  ╭
-   │  │ 1 │ Hello world
-   │  │ 2 │
-   │  ╰
-   ├─ Got
-   │  ╭
-   │  │ 1 │ Hello
-   │  │ 2 │
-   │  ╰
-   └─ Diff
-      ╭
-      │ 1   │ -Hello world
-      │   1 │ +Hello
-      │ 2 2 │
-      ╰
+└── Standard output
+    ├── Expected
+    │   ╭
+    │   │ 1 │ Hello world
+    │   │ 2 │
+    │   ╰
+    ├── Got
+    │   ╭
+    │   │ 1 │ Hello
+    │   │ 2 │
+    │   ╰
+    └── Diff
+        ╭
+        │ 1   │ -Hello world
+        │   1 │ +Hello
+        │ 2 2 │
+        ╰
 
 Test result: FAIL (0 passed, 1 failed)
 """

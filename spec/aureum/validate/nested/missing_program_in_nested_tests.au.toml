@@ -4,12 +4,12 @@ program_arguments = ["validate", "helpers/missing_program.toml"]
 expected_stdout = ""
 expected_stderr = """
 📋 helpers/missing_program.toml
-├─ :test1
-│  └─ Validation errors
-│     └─ ✘ The field 'program' is required
-└─ :test2
-   └─ Validation errors
-      └─ ✘ The field 'program' is required
+├── :test1
+│   └── Validation errors
+│       └── ✘ The field 'program' is required
+└── :test2
+    └── Validation errors
+        └── ✘ The field 'program' is required
 
 warning: Some config files contain errors (See above)
 """
