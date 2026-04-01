@@ -167,7 +167,7 @@ fn build_test_entry(
     });
 
     let test_case = if errors.is_empty() {
-        let program = program_path
+        let resolved_path = program_path
             .get_resolved_path()
             .expect("Validation errors should not be empty if program path is not resolved");
 
@@ -176,7 +176,7 @@ fn build_test_entry(
             file_name,
             test_id,
             description,
-            program,
+            program_path: resolved_path,
             arguments,
             stdin,
             expected_stdout,

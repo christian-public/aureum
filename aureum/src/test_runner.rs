@@ -146,7 +146,7 @@ pub fn run_program_passthrough(test_case: &TestCase, current_dir: &Path) -> Resu
 fn init_command(test_case: &TestCase, current_dir: &Path) -> Command {
     let run_dir = test_case.path_to_containing_dir.to_path(current_dir);
 
-    let mut cmd = Command::new(&test_case.program);
+    let mut cmd = Command::new(&test_case.program_path);
 
     cmd.current_dir(run_dir);
     cmd.args(&test_case.arguments);

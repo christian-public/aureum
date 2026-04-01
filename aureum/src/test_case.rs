@@ -9,7 +9,7 @@ pub struct TestCase {
     pub file_name: String,
     pub test_id: TestId,
     pub description: Option<String>,
-    pub program: PathBuf, // Expects an absolute path
+    pub program_path: PathBuf, // Expects an absolute path
     pub arguments: Vec<String>,
     pub stdin: Option<String>,
     pub expected_stdout: Option<String>,
