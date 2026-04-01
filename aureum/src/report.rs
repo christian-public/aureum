@@ -156,10 +156,10 @@ pub fn print_config_details(
             // Program to run
             let program_to_run = match &test_entry.program_path {
                 ProgramPath::NotSpecified => {
-                    format!("{} Not specified", cross())
+                    format!("{} {}", cross(), "Not specified".red())
                 }
                 ProgramPath::MissingProgram { requested_program } => {
-                    format!("{} {}", cross(), requested_program)
+                    format!("{} {}", cross(), requested_program.red())
                 }
                 ProgramPath::ResolvedPath {
                     requested_program: _,
@@ -382,6 +382,14 @@ fn config_heading(source_file: RelativePathBuf) -> String {
 fn requirements_map(requirements: &Requirements, requirement_data: &RequirementData) -> Vec<Tree> {
     let mut categories = vec![];
 
+    let format_requirement = |is_present: bool, text: &str| {
+        if is_present {
+            format!("{} {}", checkmark(), text)
+        } else {
+            format!("{} {}", cross(), text.red())
+        }
+    };
+
     if !requirements.files.is_empty() {
         categories.push(Node(
             String::from("Files"),
@@ -390,7 +398,7 @@ fn requirements_map(requirements: &Requirements, requirement_data: &RequirementD
                 .iter()
                 .map(|file| {
                     let is_present = requirement_data.get_file(file).is_some();
-                    str_to_tree(&format!("{} {}", show_presence(is_present), file))
+                    str_to_tree(&format_requirement(is_present, file))
                 })
                 .collect(),
         ));
@@ -404,7 +412,7 @@ fn requirements_map(requirements: &Requirements, requirement_data: &RequirementD
                 .iter()
                 .map(|env_var| {
                     let is_present = requirement_data.get_env_var(env_var).is_some();
-                    str_to_tree(&format!("{} {}", show_presence(is_present), env_var))
+                    str_to_tree(&format_requirement(is_present, env_var))
                 })
                 .collect(),
         ));
@@ -434,11 +442,7 @@ fn show_validation_error(validation_error: &ValidationError) -> String {
         ),
     };
 
-    format!("{} {}", cross(), msg)
-}
-
-fn show_presence(value: bool) -> String {
-    if value { checkmark() } else { cross() }
+    format!("{} {}", cross(), msg.red())
 }
 
 fn str_to_tree(msg: &str) -> Tree {
