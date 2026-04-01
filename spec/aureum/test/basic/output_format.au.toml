@@ -29,7 +29,7 @@ expected_stdout = """
 🚀 Running 1 tests:
 F
 
-✘ helpers/failing_test.toml
+❌ helpers/failing_test.toml
 ├─ Standard output
 │  ├─ Expected
 │  │  ╭
@@ -123,7 +123,7 @@ expected_stdout = """
 🚀 Running 1 tests:
 F
 
-✘ helpers/failing_test_newline.toml
+❌ helpers/failing_test_newline.toml
 └─ Standard output
    ├─ Expected
    │  ╭

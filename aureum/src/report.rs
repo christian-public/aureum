@@ -323,7 +323,7 @@ fn summary_print_result(run_result: &RunResult) {
             }
         };
 
-        let test_heading = format!("{} {}", cross(), message);
+        let test_heading = format!("❌ {}", message);
         let tree = Node(test_heading, nodes);
         let content = tree::draw_tree(&tree).unwrap_or(String::from("Failed to draw tree\n"));
         print!("{}", content); // Already contains newline
