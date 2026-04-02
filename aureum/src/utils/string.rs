@@ -31,33 +31,60 @@ fn decorate_lines(decorate_line: impl Fn(&str) -> String, input: &str) -> String
     output
 }
 
-pub fn text_block(content: &str) -> String {
-    let prefix_line = |line: &str| {
-        if line.is_empty() {
-            String::from("│")
-        } else {
-            format!("│ {}", line)
+pub struct TextBlockOptions {
+    pub top_line: String,
+    pub bottom_line: String,
+    pub format_line: fn(&str) -> String,
+}
+
+impl TextBlockOptions {
+    pub const CORNER_TOP: &str = "╭";
+    pub const BORDER: &str = "│";
+    pub const CORNER_BOTTOM: &str = "╰";
+}
+
+impl Default for TextBlockOptions {
+    fn default() -> Self {
+        Self {
+            top_line: TextBlockOptions::CORNER_TOP.to_owned(),
+            bottom_line: TextBlockOptions::CORNER_BOTTOM.to_owned(),
+            format_line: |line| {
+                if line.is_empty() {
+                    TextBlockOptions::BORDER.to_owned()
+                } else {
+                    format!("{} {line}", TextBlockOptions::BORDER)
+                }
+            },
         }
-    };
+    }
+}
+
+#[allow(dead_code)]
+pub fn text_block(content: &str) -> String {
+    text_block_with_options(content, &TextBlockOptions::default())
+}
+
+pub fn text_block_with_options(content: &str, options: &TextBlockOptions) -> String {
     let prefixed = if content.is_empty() {
-        prefix_line("")
+        (options.format_line)("")
     } else {
         let mut result = String::new();
         for (i, line) in content.lines().enumerate() {
             if i > 0 {
                 result.push('\n');
             }
-            result.push_str(&prefix_line(line));
+            result.push_str(&(options.format_line)(line));
         }
         if content.ends_with('\n') {
             result.push('\n');
         }
         result
     };
+
     if content.ends_with('\n') {
-        format!("╭\n{}╰", prefixed)
+        format!("{}\n{prefixed}{}", options.top_line, options.bottom_line)
     } else {
-        format!("╭\n{}\n╰", prefixed)
+        format!("{}\n{prefixed}\n{}", options.top_line, options.bottom_line)
     }
 }
 
