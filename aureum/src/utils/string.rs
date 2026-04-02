@@ -9,10 +9,7 @@ pub fn indent_by(indent_level: usize, input: &str) -> String {
     indent_with(&prefix, input)
 }
 
-fn decorate_lines<F>(decorate_line: F, input: &str) -> String
-where
-    F: Fn(&str) -> String,
-{
+fn decorate_lines(decorate_line: impl Fn(&str) -> String, input: &str) -> String {
     if input.is_empty() {
         return decorate_line("");
     }
