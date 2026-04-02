@@ -22,8 +22,8 @@ program_arguments = [
 ]
 expected_stdout = ""
 expected_stderr = """
-error: The `--output-format passthrough` option can only run a single test, but 2 were found
-hint: Try `--output-format toml` instead or run the `list` command to list all tests
+error: `--output-format passthrough` supports only a single test, but found 2 tests
+hint: Use `--output-format toml` to run multiple tests, or run the `list` command to list all tests
 """
 expected_exit_code = 2
 

@@ -235,12 +235,12 @@ pub fn print_config_files_contain_errors() {
 
 pub fn print_run_single_program_only(test_case_count: usize) {
     eprintln!(
-        "{} The `--output-format passthrough` option can only run a single test, but {} were found",
+        "{} `--output-format passthrough` supports only a single test, but found {} tests",
         "error:".red().bold(),
         test_case_count,
     );
     eprintln!(
-        "{} Try `--output-format toml` instead or run the `list` command to list all tests",
+        "{} Use `--output-format toml` to run multiple tests, or run the `list` command to list all tests",
         "hint:".cyan().bold()
     );
 }
