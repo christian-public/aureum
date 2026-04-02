@@ -152,303 +152,312 @@ mod tests {
         assert_eq!(indent_with("- ", "\n"), expected);
     }
 
-    #[test]
-    fn test_text_block_empty() {
-        let expected = indoc! {"
-            ╭
-            │
-            ╰"};
+    mod text_block {
+        use super::text_block;
+        use indoc::indoc;
 
-        assert_eq!(text_block(""), expected);
-    }
+        #[test]
+        fn test_empty() {
+            let expected = indoc! {"
+                ╭
+                │
+                ╰"};
 
-    #[test]
-    fn test_text_block_only_newline() {
-        let expected = indoc! {"
-            ╭
-            │
-            ╰"};
+            assert_eq!(text_block(""), expected);
+        }
 
-        assert_eq!(text_block("\n"), expected);
-    }
+        #[test]
+        fn test_only_newline() {
+            let expected = indoc! {"
+                ╭
+                │
+                ╰"};
 
-    #[test]
-    fn test_text_block_single_line_no_newline() {
-        let expected = indoc! {"
-            ╭
-            │ foo
-            ╰"};
+            assert_eq!(text_block("\n"), expected);
+        }
 
-        assert_eq!(text_block("foo"), expected);
-    }
+        #[test]
+        fn test_single_line_no_newline() {
+            let expected = indoc! {"
+                ╭
+                │ foo
+                ╰"};
 
-    #[test]
-    fn test_text_block_single_line_with_newline() {
-        let expected = indoc! {"
-            ╭
-            │ foo
-            ╰"};
+            assert_eq!(text_block("foo"), expected);
+        }
 
-        assert_eq!(text_block("foo\n"), expected);
-    }
+        #[test]
+        fn test_single_line_with_newline() {
+            let expected = indoc! {"
+                ╭
+                │ foo
+                ╰"};
 
-    #[test]
-    fn test_text_block_multiple_lines_no_newline() {
-        let expected = indoc! {"
-            ╭
-            │ line 1
-            │ line 2
-            ╰"};
+            assert_eq!(text_block("foo\n"), expected);
+        }
 
-        assert_eq!(text_block("line 1\nline 2"), expected);
-    }
+        #[test]
+        fn test_multiple_lines_no_newline() {
+            let expected = indoc! {"
+                ╭
+                │ line 1
+                │ line 2
+                ╰"};
 
-    #[test]
-    fn test_text_block_multiple_lines_with_newline() {
-        let expected = indoc! {"
-            ╭
-            │ line 1
-            │ line 2
-            ╰"};
+            assert_eq!(text_block("line 1\nline 2"), expected);
+        }
 
-        assert_eq!(text_block("line 1\nline 2\n"), expected);
-    }
+        #[test]
+        fn test_multiple_lines_with_newline() {
+            let expected = indoc! {"
+                ╭
+                │ line 1
+                │ line 2
+                ╰"};
 
-    #[test]
-    fn test_text_block_multiple_lines_including_empty_lines() {
-        let expected = indoc! {"
-            ╭
-            │ line 1
-            │
-            │ line 3
-            ╰"};
+            assert_eq!(text_block("line 1\nline 2\n"), expected);
+        }
 
-        assert_eq!(text_block("line 1\n\nline 3\n"), expected);
-    }
+        #[test]
+        fn test_multiple_lines_including_empty_lines() {
+            let expected = indoc! {"
+                ╭
+                │ line 1
+                │
+                │ line 3
+                ╰"};
 
-    fn prefix_text_format_line(width: usize) -> impl Fn(usize, &str) -> String {
-        move |line_number, line| {
-            if line.is_empty() {
-                format!("{line_number:>width$} │")
-            } else {
-                format!("{line_number:>width$} │ {line}")
-            }
+            assert_eq!(text_block("line 1\n\nline 3\n"), expected);
         }
     }
 
-    #[test]
-    fn test_prefix_text_with_line_numbers_empty() {
-        let expected = "1 │";
+    mod prefix_text_with_line_numbers {
+        use super::super::*;
+        use indoc::indoc;
 
-        assert_eq!(
-            prefix_text_with_line_numbers("", prefix_text_format_line(1)),
-            expected
-        );
+        fn format_line(width: usize) -> impl Fn(usize, &str) -> String {
+            move |line_number, line| {
+                if line.is_empty() {
+                    format!("{line_number:>width$} │")
+                } else {
+                    format!("{line_number:>width$} │ {line}")
+                }
+            }
+        }
+
+        #[test]
+        fn test_empty() {
+            let expected = "1 │";
+
+            assert_eq!(prefix_text_with_line_numbers("", format_line(1)), expected);
+        }
+
+        #[test]
+        fn test_only_newline() {
+            let expected = indoc! {"
+                1 │
+                2 │"};
+
+            assert_eq!(
+                prefix_text_with_line_numbers("\n", format_line(1)),
+                expected
+            );
+        }
+
+        #[test]
+        fn test_single_line_no_newline() {
+            let expected = "1 │ foo";
+
+            assert_eq!(
+                prefix_text_with_line_numbers("foo", format_line(1)),
+                expected
+            );
+        }
+
+        #[test]
+        fn test_single_line_with_newline() {
+            let expected = indoc! {"
+                1 │ foo
+                2 │"};
+
+            assert_eq!(
+                prefix_text_with_line_numbers("foo\n", format_line(1)),
+                expected
+            );
+        }
+
+        #[test]
+        fn test_multiple_lines_no_newline() {
+            let expected = indoc! {"
+                1 │ line 1
+                2 │ line 2"};
+
+            assert_eq!(
+                prefix_text_with_line_numbers("line 1\nline 2", format_line(1)),
+                expected
+            );
+        }
+
+        #[test]
+        fn test_multiple_lines_with_newline() {
+            let expected = indoc! {"
+                1 │ line 1
+                2 │ line 2
+                3 │"};
+
+            assert_eq!(
+                prefix_text_with_line_numbers("line 1\nline 2\n", format_line(1)),
+                expected
+            );
+        }
+
+        #[test]
+        fn test_pads_line_numbers() {
+            let expected = indoc! {"
+                 1 │ line 1
+                 2 │ line 2
+                 3 │ line 3
+                 4 │ line 4
+                 5 │ line 5
+                 6 │ line 6
+                 7 │ line 7
+                 8 │ line 8
+                 9 │ line 9
+                10 │"};
+
+            let lines: Vec<String> = (1..=9).map(|i| format!("line {i}",)).collect();
+            let content = lines.join("\n") + "\n";
+            let width = displayed_line_count(&content).to_string().len();
+            let result = prefix_text_with_line_numbers(&content, format_line(width));
+
+            assert_eq!(result, expected);
+        }
+
+        #[test]
+        fn test_format_line_receives_correct_values_regardless_of_format() {
+            let mut calls: Vec<(usize, String)> = Vec::new();
+            prefix_text_with_line_numbers("a\nb\n", |num, line| {
+                calls.push((num, line.to_owned()));
+                String::new()
+            });
+            assert_eq!(
+                calls,
+                vec![(1, "a".to_owned()), (2, "b".to_owned()), (3, "".to_owned())]
+            );
+        }
     }
 
-    #[test]
-    fn test_prefix_text_with_line_numbers_only_newline() {
-        let expected = indoc! {"
-            1 │
-            2 │"};
+    mod prefix_diff_with_line_numbers {
+        use super::super::*;
+        use indoc::indoc;
 
-        assert_eq!(
-            prefix_text_with_line_numbers("\n", prefix_text_format_line(1)),
-            expected
-        );
-    }
-
-    #[test]
-    fn test_prefix_text_with_line_numbers_single_line_no_newline() {
-        let expected = "1 │ foo";
-
-        assert_eq!(
-            prefix_text_with_line_numbers("foo", prefix_text_format_line(1)),
-            expected
-        );
-    }
-
-    #[test]
-    fn test_prefix_text_with_line_numbers_single_line_with_newline() {
-        let expected = indoc! {"
-            1 │ foo
-            2 │"};
-
-        assert_eq!(
-            prefix_text_with_line_numbers("foo\n", prefix_text_format_line(1)),
-            expected
-        );
-    }
-
-    #[test]
-    fn test_prefix_text_with_line_numbers_multiple_lines_no_newline() {
-        let expected = indoc! {"
-            1 │ line 1
-            2 │ line 2"};
-
-        assert_eq!(
-            prefix_text_with_line_numbers("line 1\nline 2", prefix_text_format_line(1)),
-            expected
-        );
-    }
-
-    #[test]
-    fn test_prefix_text_with_line_numbers_multiple_lines_with_newline() {
-        let expected = indoc! {"
-            1 │ line 1
-            2 │ line 2
-            3 │"};
-
-        assert_eq!(
-            prefix_text_with_line_numbers("line 1\nline 2\n", prefix_text_format_line(1)),
-            expected
-        );
-    }
-
-    #[test]
-    fn test_prefix_text_with_line_numbers_pads_line_numbers() {
-        let expected = indoc! {"
-             1 │ line 1
-             2 │ line 2
-             3 │ line 3
-             4 │ line 4
-             5 │ line 5
-             6 │ line 6
-             7 │ line 7
-             8 │ line 8
-             9 │ line 9
-            10 │"};
-
-        let lines: Vec<String> = (1..=9).map(|i| format!("line {i}",)).collect();
-        let content = lines.join("\n") + "\n";
-        let width = displayed_line_count(&content).to_string().len();
-        let result = prefix_text_with_line_numbers(&content, prefix_text_format_line(width));
-
-        assert_eq!(result, expected);
-    }
-
-    #[test]
-    fn test_prefix_text_with_line_numbers_format_line_receives_correct_values_regardless_of_format()
-    {
-        let mut calls: Vec<(usize, String)> = Vec::new();
-        prefix_text_with_line_numbers("a\nb\n", |num, line| {
-            calls.push((num, line.to_owned()));
-            String::new()
-        });
-        assert_eq!(
-            calls,
-            vec![(1, "a".to_owned()), (2, "b".to_owned()), (3, "".to_owned())]
-        );
-    }
-
-    fn prefix_diff_format_line(
-        width: usize,
-    ) -> impl FnMut(Option<usize>, Option<usize>, &str) -> String {
-        let blank = " ".repeat(width);
-        move |left_num, right_num, line| {
-            let left_str = left_num.map_or(blank.clone(), |n| format!("{:>width$}", n));
-            let right_str = right_num.map_or(blank.clone(), |n| format!("{:>width$}", n));
-            match (left_num, right_num) {
-                (Some(_), None) => format!("{left_str} {blank} │ -{line}"),
-                (None, Some(_)) => format!("{blank} {right_str} │ +{line}"),
-                _ => {
-                    if line.is_empty() {
-                        format!("{left_str} {right_str} │")
-                    } else {
-                        format!("{left_str} {right_str} │  {line}")
+        fn format_line(width: usize) -> impl FnMut(Option<usize>, Option<usize>, &str) -> String {
+            let blank = " ".repeat(width);
+            move |left_num, right_num, line| {
+                let left_str = left_num.map_or(blank.clone(), |n| format!("{:>width$}", n));
+                let right_str = right_num.map_or(blank.clone(), |n| format!("{:>width$}", n));
+                match (left_num, right_num) {
+                    (Some(_), None) => format!("{left_str} {blank} │ -{line}"),
+                    (None, Some(_)) => format!("{blank} {right_str} │ +{line}"),
+                    _ => {
+                        if line.is_empty() {
+                            format!("{left_str} {right_str} │")
+                        } else {
+                            format!("{left_str} {right_str} │  {line}")
+                        }
                     }
                 }
             }
         }
-    }
 
-    #[test]
-    fn test_prefix_diff_with_line_numbers_empty() {
-        let expected = indoc! {""};
+        #[test]
+        fn test_empty() {
+            let expected = indoc! {""};
 
-        assert_eq!(
-            prefix_diff_with_line_numbers("", "", prefix_diff_format_line(1)),
-            expected
-        );
-    }
+            assert_eq!(
+                prefix_diff_with_line_numbers("", "", format_line(1)),
+                expected
+            );
+        }
 
-    #[test]
-    fn test_prefix_diff_with_line_numbers_single_line_no_diff() {
-        let expected = indoc! {"
-            1 1 │  line 1
-            "};
+        #[test]
+        fn test_single_line_no_diff() {
+            let expected = indoc! {"
+                1 1 │  line 1
+                "};
 
-        assert_eq!(
-            prefix_diff_with_line_numbers("line 1", "line 1", prefix_diff_format_line(1)),
-            expected
-        );
-    }
+            assert_eq!(
+                prefix_diff_with_line_numbers("line 1", "line 1", format_line(1)),
+                expected
+            );
+        }
 
-    #[test]
-    fn test_prefix_diff_with_line_numbers_only_newline() {
-        let expected = indoc! {"
-            1 1 │
-            2 2 │
-            "};
+        #[test]
+        fn test_only_newline() {
+            let expected = indoc! {"
+                1 1 │
+                2 2 │
+                "};
 
-        assert_eq!(
-            prefix_diff_with_line_numbers("\n", "\n", prefix_diff_format_line(1)),
-            expected
-        );
-    }
+            assert_eq!(
+                prefix_diff_with_line_numbers("\n", "\n", format_line(1)),
+                expected
+            );
+        }
 
-    #[test]
-    fn test_prefix_diff_with_line_numbers_a_vs_b() {
-        let expected = indoc! {"
-            1   │ -a
-              1 │ +b
-            "};
+        #[test]
+        fn test_a_vs_b() {
+            let expected = indoc! {"
+                1   │ -a
+                  1 │ +b
+                "};
 
-        assert_eq!(
-            prefix_diff_with_line_numbers("a", "b", prefix_diff_format_line(1)),
-            expected
-        );
-    }
+            assert_eq!(
+                prefix_diff_with_line_numbers("a", "b", format_line(1)),
+                expected
+            );
+        }
 
-    #[test]
-    fn test_prefix_diff_with_line_numbers_pads_line_numbers() {
-        let expected = indoc! {"
-             1  1 │  line 1
-             2  2 │  line 2
-             3  3 │  line 3
-             4  4 │  line 4
-             5  5 │  line 5
-             6  6 │  line 6
-             7  7 │  line 7
-             8  8 │  line 8
-             9  9 │  line 9
-            10 10 │  line 10
-            "};
+        #[test]
+        fn test_pads_line_numbers() {
+            let expected = indoc! {"
+                 1  1 │  line 1
+                 2  2 │  line 2
+                 3  3 │  line 3
+                 4  4 │  line 4
+                 5  5 │  line 5
+                 6  6 │  line 6
+                 7  7 │  line 7
+                 8  8 │  line 8
+                 9  9 │  line 9
+                10 10 │  line 10
+                "};
 
-        let lines: Vec<String> = (1..=10).map(|i| format!("line {i}")).collect();
-        let content = lines.join("\n");
-        let result = prefix_diff_with_line_numbers(&content, &content, prefix_diff_format_line(2));
-        assert_eq!(result, expected);
-    }
+            let lines: Vec<String> = (1..=10).map(|i| format!("line {i}")).collect();
+            let content = lines.join("\n");
+            let result = prefix_diff_with_line_numbers(&content, &content, format_line(2));
+            assert_eq!(result, expected);
+        }
 
-    #[test]
-    fn test_prefix_diff_with_line_numbers_pads_line_numbers_ends_with_newline() {
-        let expected = indoc! {"
-             1  1 │  line 1
-             2  2 │  line 2
-             3  3 │  line 3
-             4  4 │  line 4
-             5  5 │  line 5
-             6  6 │  line 6
-             7  7 │  line 7
-             8  8 │  line 8
-             9  9 │  line 9
-            10 10 │
-            "};
+        #[test]
+        fn test_pads_line_numbers_ends_with_newline() {
+            let expected = indoc! {"
+                 1  1 │  line 1
+                 2  2 │  line 2
+                 3  3 │  line 3
+                 4  4 │  line 4
+                 5  5 │  line 5
+                 6  6 │  line 6
+                 7  7 │  line 7
+                 8  8 │  line 8
+                 9  9 │  line 9
+                10 10 │
+                "};
 
-        let lines: Vec<String> = (1..=9).map(|i| format!("line {i}")).collect();
-        let content = lines.join("\n") + "\n";
-        let result = prefix_diff_with_line_numbers(&content, &content, prefix_diff_format_line(2));
-        assert_eq!(result, expected);
+            let lines: Vec<String> = (1..=9).map(|i| format!("line {i}")).collect();
+            let content = lines.join("\n") + "\n";
+            let result = prefix_diff_with_line_numbers(&content, &content, format_line(2));
+            assert_eq!(result, expected);
+        }
     }
 }
