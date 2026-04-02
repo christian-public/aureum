@@ -188,13 +188,17 @@ pub fn print_config_details(
         }
 
         // Validation errors
-        let heading = String::from("Validation errors");
-        if let Err(validation_errors) = &test_entry.test_case {
+        let validation_errors = test_entry
+            .test_case_with_expectations()
+            .err()
+            .unwrap_or_default();
+        if !validation_errors.is_empty() {
             let nodes = validation_errors
                 .iter()
                 .map(|err| str_to_tree(&format_validation_error(err)))
                 .collect();
 
+            let heading = String::from("Validation errors");
             categories.push(Node(heading, nodes));
         }
 

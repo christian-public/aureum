@@ -1,5 +1,5 @@
 use crate::report::ReportConfig;
-use crate::test_case::TestCase;
+use crate::test_case::{TestCase, TestCaseExpectations};
 use crate::test_result::{TestResult, ValueComparison};
 use rayon::prelude::*;
 use std::io::{self, Read, Write};
@@ -39,7 +39,7 @@ pub enum RunError {
 
 pub fn run_test_cases(
     report_config: &ReportConfig,
-    test_cases: &[TestCase],
+    test_cases: &[(TestCase, TestCaseExpectations)],
     run_in_parallel: bool,
     current_dir: &Path,
     report_test_case: &(
@@ -47,21 +47,22 @@ pub fn run_test_cases(
          + std::marker::Sync
      ),
 ) -> Vec<RunResult> {
-    let run = |(i, test_case)| -> RunResult {
-        let run_result = run_test_case(test_case, current_dir);
+    let run =
+        |(i, (test_case, expectations)): (usize, &(TestCase, TestCaseExpectations))| -> RunResult {
+            let run_result = run_test_case(test_case, expectations, current_dir);
 
-        let report_result = report_test_case(report_config, i, test_case, &run_result);
+            let report_result = report_test_case(report_config, i, test_case, &run_result);
 
-        let result = match report_result {
-            Ok(()) => run_result,
-            Err(e) => run_result.and(Err(e)),
+            let result = match report_result {
+                Ok(()) => run_result,
+                Err(e) => run_result.and(Err(e)),
+            };
+
+            RunResult {
+                test_case: test_case.clone(),
+                result,
+            }
         };
-
-        RunResult {
-            test_case: test_case.clone(),
-            result,
-        }
-    };
 
     if run_in_parallel {
         test_cases.par_iter().enumerate().map(run).collect()
@@ -70,16 +71,20 @@ pub fn run_test_cases(
     }
 }
 
-pub fn run_test_case(test_case: &TestCase, current_dir: &Path) -> Result<TestResult, RunError> {
+pub fn run_test_case(
+    test_case: &TestCase,
+    expectations: &TestCaseExpectations,
+    current_dir: &Path,
+) -> Result<TestResult, RunError> {
     let output = run_program(test_case, current_dir)?;
 
-    let expected_stdout = test_case.expected_stdout.as_deref().map(normalize_newlines);
-    let expected_stderr = test_case.expected_stderr.as_deref().map(normalize_newlines);
+    let expected_stdout = expectations.stdout.as_deref().map(normalize_newlines);
+    let expected_stderr = expectations.stderr.as_deref().map(normalize_newlines);
 
     Ok(TestResult {
         stdout: compare_result(expected_stdout, output.stdout),
         stderr: compare_result(expected_stderr, output.stderr),
-        exit_code: compare_result(test_case.expected_exit_code, output.exit_code),
+        exit_code: compare_result(expectations.exit_code, output.exit_code),
     })
 }
 

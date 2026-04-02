@@ -86,7 +86,7 @@ fn validate_config_files(args: ValidateArgs, current_dir: PathBuf) {
                 requirement_data,
                 test_entries,
             }) => {
-                let any_issues = test_entries.values().any(|x| x.test_case.is_err());
+                let any_issues = test_entries.values().any(|x| x.has_validation_error());
                 if any_issues || args.common.verbose {
                     aureum::print_config_details(
                         config_file,
@@ -142,7 +142,7 @@ fn list_tests(args: ListArgs, current_dir: PathBuf) {
                 requirement_data,
                 test_entries,
             }) => {
-                let any_issues = test_entries.values().any(|x| x.test_case.is_err());
+                let any_issues = test_entries.values().any(|x| x.has_validation_error());
                 if any_issues || args.common.verbose {
                     aureum::print_config_details(
                         config_file,
@@ -211,8 +211,10 @@ fn run_programs(args: RunArgs, current_dir: PathBuf) {
                     RunOutputFormat::Passthrough => test_entries
                         .iter()
                         .filter(|(test_id, _)| test_id_coverage_set.contains(test_id))
-                        .any(|(_, x)| x.test_case.is_err()),
-                    RunOutputFormat::Toml => test_entries.values().any(|x| x.test_case.is_err()),
+                        .any(|(_, x)| x.has_validation_error()),
+                    RunOutputFormat::Toml => {
+                        test_entries.values().any(|x| x.has_validation_error())
+                    }
                 };
                 if should_report_issues {
                     aureum::print_config_details(
@@ -320,7 +322,7 @@ fn run_tests(args: TestArgs, current_dir: PathBuf) {
                 requirement_data,
                 test_entries,
             }) => {
-                let any_issues = test_entries.values().any(|x| x.test_case.is_err());
+                let any_issues = test_entries.values().any(|x| x.has_validation_error());
                 if any_issues || args.common.verbose {
                     aureum::print_config_details(
                         config_file,
@@ -338,8 +340,10 @@ fn run_tests(args: TestArgs, current_dir: PathBuf) {
                 all_test_cases.extend(
                     test_entries
                         .into_values()
-                        .filter_map(|x| x.test_case.ok())
-                        .filter(|x| test_id_coverage_set.contains(&x.test_id)),
+                        .filter_map(|x| x.test_case_with_expectations().ok())
+                        .filter(|(test_case, _expectations)| {
+                            test_id_coverage_set.contains(&test_case.test_id)
+                        }),
                 );
             }
             Err(ConfigFileError::ParseFailed(error)) => {

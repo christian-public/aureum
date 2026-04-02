@@ -1,4 +1,4 @@
-use crate::test_case::TestCase;
+use crate::test_case::{TestCase, TestCaseExpectations};
 use crate::toml::config::ConfigValue;
 use crate::{Requirements, TestId, TomlConfig, get_requirements};
 use relative_path::RelativePath;
@@ -47,7 +47,7 @@ impl ProgramPath {
     }
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum ValidationError {
     MissingExternalFile(String),
@@ -64,6 +64,31 @@ pub struct TestEntry {
     pub requirements: Requirements,
     pub program_path: ProgramPath,
     pub test_case: Result<TestCase, BTreeSet<ValidationError>>,
+    pub expectations: Result<TestCaseExpectations, BTreeSet<ValidationError>>,
+}
+
+impl TestEntry {
+    pub fn has_validation_error(&self) -> bool {
+        self.test_case.is_err() || self.expectations.is_err()
+    }
+
+    pub fn test_case_with_expectations(
+        &self,
+    ) -> Result<(TestCase, TestCaseExpectations), BTreeSet<ValidationError>> {
+        match (&self.test_case, &self.expectations) {
+            (Ok(tc), Ok(exp)) => Ok((tc.clone(), exp.clone())),
+            (tc_errs, exp_errs) => {
+                let mut errors = BTreeSet::new();
+                if let Err(errs) = tc_errs {
+                    errors.extend(errs.iter().cloned());
+                }
+                if let Err(errs) = exp_errs {
+                    errors.extend(errs.iter().cloned());
+                }
+                Err(errors)
+            }
+        }
+    }
 }
 
 pub fn build_test_entries(
@@ -99,12 +124,36 @@ fn build_test_entry(
     requirement_data: &RequirementData,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> TestEntry {
-    let mut errors = BTreeSet::new();
-
-    // Requirements
     let requirements = get_requirements(&config);
 
-    // Program path
+    let (program_path, test_case) = build_test_case(
+        test_id,
+        config.clone(),
+        path_to_containing_dir,
+        file_name,
+        requirement_data,
+        find_executable_path,
+    );
+    let expectations = build_test_case_expectations(config, requirement_data);
+
+    TestEntry {
+        requirements,
+        program_path,
+        test_case,
+        expectations,
+    }
+}
+
+fn build_test_case(
+    test_id: TestId,
+    config: TomlConfig,
+    path_to_containing_dir: &RelativePath,
+    file_name: &str,
+    requirement_data: &RequirementData,
+    find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
+) -> (ProgramPath, Result<TestCase, BTreeSet<ValidationError>>) {
+    let mut errors = BTreeSet::new();
+
     let program = collect_error(&mut errors, config.program, requirement_data);
     let program_path = get_program_path(
         program.unwrap_or_default(),
@@ -126,17 +175,6 @@ fn build_test_entry(
         } => {}
     }
 
-    // Validate fields in config file
-
-    if config.expected_stdout.is_none()
-        && config.expected_stderr.is_none()
-        && config.expected_exit_code.is_none()
-    {
-        errors.insert(ValidationError::ExpectationRequired);
-    }
-
-    // Read fields
-
     let description = collect_error(&mut errors, config.description, requirement_data);
 
     let mut arguments = vec![];
@@ -153,19 +191,6 @@ fn build_test_entry(
 
     let stdin = collect_error(&mut errors, config.stdin, requirement_data);
 
-    let expected_stdout = collect_error(&mut errors, config.expected_stdout, requirement_data);
-    let expected_stderr = collect_error(&mut errors, config.expected_stderr, requirement_data);
-    let expected_exit_code =
-        collect_error(&mut errors, config.expected_exit_code, requirement_data);
-
-    let validated_expected_exit_code = expected_exit_code.and_then(|v| {
-        i32::try_from(v)
-            .map_err(|_| {
-                errors.insert(ValidationError::InvalidExitCode);
-            })
-            .ok()
-    });
-
     let test_case = if errors.is_empty() {
         let resolved_path = program_path
             .get_resolved_path()
@@ -179,18 +204,48 @@ fn build_test_entry(
             program_path: resolved_path,
             arguments,
             stdin,
-            expected_stdout,
-            expected_stderr,
-            expected_exit_code: validated_expected_exit_code,
         })
     } else {
         Err(errors)
     };
 
-    TestEntry {
-        requirements,
-        program_path,
-        test_case,
+    (program_path, test_case)
+}
+
+fn build_test_case_expectations(
+    config: TomlConfig,
+    requirement_data: &RequirementData,
+) -> Result<TestCaseExpectations, BTreeSet<ValidationError>> {
+    let mut errors = BTreeSet::new();
+
+    if config.expected_stdout.is_none()
+        && config.expected_stderr.is_none()
+        && config.expected_exit_code.is_none()
+    {
+        errors.insert(ValidationError::ExpectationRequired);
+    }
+
+    let expected_stdout = collect_error(&mut errors, config.expected_stdout, requirement_data);
+    let expected_stderr = collect_error(&mut errors, config.expected_stderr, requirement_data);
+    let expected_exit_code =
+        collect_error(&mut errors, config.expected_exit_code, requirement_data);
+
+    let validated_expected_exit_code = expected_exit_code.and_then(|v| {
+        i32::try_from(v)
+            .map_err(|_| {
+                errors.insert(ValidationError::InvalidExitCode);
+            })
+            .ok()
+    });
+
+    if errors.is_empty() {
+        Ok(TestCaseExpectations {
+            stdout: expected_stdout,
+            stderr: expected_stderr,
+            exit_code: validated_expected_exit_code,
+        })
+    } else {
+        Err(errors)
     }
 }
 

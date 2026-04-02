@@ -12,9 +12,6 @@ pub struct TestCase {
     pub program_path: PathBuf, // Expects an absolute path
     pub arguments: Vec<String>,
     pub stdin: Option<String>,
-    pub expected_stdout: Option<String>,
-    pub expected_stderr: Option<String>,
-    pub expected_exit_code: Option<i32>,
 }
 
 impl TestCase {
@@ -31,4 +28,12 @@ impl TestCase {
     pub fn path_to_config_file(&self) -> RelativePathBuf {
         self.path_to_containing_dir.join(&self.file_name)
     }
+}
+
+#[derive(Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub struct TestCaseExpectations {
+    pub stdout: Option<String>,
+    pub stderr: Option<String>,
+    pub exit_code: Option<i32>,
 }
