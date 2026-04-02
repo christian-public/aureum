@@ -427,9 +427,9 @@ fn load_config_file(
         retrieve_requirement_data(&path_to_containing_dir.to_path(current_dir), requirements);
 
     let test_entries = aureum::build_test_entries(
+        config,
         path_to_containing_dir,
         file_name,
-        config,
         &requirement_data,
         &|name, dir| file::find_executable_path(name, dir).ok(),
     );

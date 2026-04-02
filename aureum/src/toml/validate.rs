@@ -1,7 +1,7 @@
 use crate::test_case::TestCase;
 use crate::toml::config::ConfigValue;
 use crate::{Requirements, TestId, TomlConfig, get_requirements};
-use relative_path::{RelativePath, RelativePathBuf};
+use relative_path::RelativePath;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -67,9 +67,9 @@ pub struct TestEntry {
 }
 
 pub fn build_test_entries(
+    config: TomlConfig,
     path_to_containing_dir: &RelativePath,
     file_name: &str,
-    config: TomlConfig,
     requirement_data: &RequirementData,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> BTreeMap<TestId, TestEntry> {
@@ -79,10 +79,10 @@ pub fn build_test_entries(
             (
                 test_id.clone(),
                 build_test_entry(
-                    path_to_containing_dir.to_relative_path_buf(),
-                    file_name.to_owned(),
                     test_id,
-                    c.clone(),
+                    c,
+                    path_to_containing_dir,
+                    file_name,
                     requirement_data,
                     find_executable_path,
                 ),
@@ -92,10 +92,10 @@ pub fn build_test_entries(
 }
 
 fn build_test_entry(
-    path_to_containing_dir: RelativePathBuf,
-    file_name: String,
     test_id: TestId,
     config: TomlConfig,
+    path_to_containing_dir: &RelativePath,
+    file_name: &str,
     requirement_data: &RequirementData,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> TestEntry {
@@ -172,8 +172,8 @@ fn build_test_entry(
             .expect("Validation errors should not be empty if program path is not resolved");
 
         Ok(TestCase {
-            path_to_containing_dir,
-            file_name,
+            path_to_containing_dir: path_to_containing_dir.to_relative_path_buf(),
+            file_name: file_name.to_owned(),
             test_id,
             description,
             program_path: resolved_path,
