@@ -484,7 +484,8 @@ fn retrieve_requirement_data(current_dir: &Path, requirements: Requirements) -> 
     let mut requirement_data = RequirementData::default();
 
     for file in requirements.files {
-        let Some(value) = read_external_file(current_dir, &file).ok() else {
+        let path = current_dir.join(&file);
+        let Ok(value) = fs::read_to_string(path) else {
             continue;
         };
 
@@ -500,9 +501,4 @@ fn retrieve_requirement_data(current_dir: &Path, requirements: Requirements) -> 
     }
 
     requirement_data
-}
-
-fn read_external_file(current_dir: &Path, file_path: &String) -> io::Result<String> {
-    let path = current_dir.join(file_path);
-    fs::read_to_string(path)
 }
