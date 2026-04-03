@@ -10,7 +10,7 @@ use crate::toml::{
 use crate::utils::file;
 use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
 use colored::Colorize;
-use relative_path::RelativePathBuf;
+use relative_path::{RelativePath, RelativePathBuf};
 use std::collections::BTreeMap;
 use std::io;
 use std::path::PathBuf;
@@ -169,11 +169,11 @@ pub fn print_validate_table(entries: &[(RelativePathBuf, ReportValidateResult)])
     }
 }
 
-pub fn print_files_found(source_files: &[RelativePathBuf]) {
-    let heading = format!("🔍 Found {} config files", source_files.len());
+pub fn print_config_files_found(config_file_paths: &[RelativePathBuf]) {
+    let heading = format!("🔍 Found {} config files", config_file_paths.len());
     let tree = Node(
         heading,
-        source_files
+        config_file_paths
             .iter()
             .map(|x| str_to_tree(x.as_ref()))
             .collect(),
@@ -183,7 +183,7 @@ pub fn print_files_found(source_files: &[RelativePathBuf]) {
 }
 
 pub fn print_config_details(
-    source_file: RelativePathBuf,
+    config_file_path: &RelativePath,
     test_entries: &BTreeMap<TestId, TestEntry>,
     requirement_data: &RequirementData,
     verbose: bool,
@@ -257,17 +257,20 @@ pub fn print_config_details(
             .collect()
     };
 
-    let tree = Node(config_heading(source_file), nodes);
+    let tree = Node(config_file_heading(config_file_path), nodes);
 
     print_tree(tree);
 }
 
-pub fn print_toml_config_error(source_file: RelativePathBuf, error: TomlConfigError) {
+pub fn print_config_file_error(config_file_path: &RelativePath, error: &TomlConfigError) {
     let msg = match error {
         TomlConfigError::InvalidTomlSyntax(_) => "Failed to parse config file",
         TomlConfigError::ParseErrors(_) => "Failed to parse config file",
     };
-    let tree = Node(config_heading(source_file), vec![str_to_tree(msg)]);
+    let tree = Node(
+        config_file_heading(config_file_path),
+        vec![str_to_tree(msg)],
+    );
 
     print_tree(tree);
 }
@@ -421,8 +424,8 @@ fn print_tree(tree: Tree) {
     eprintln!()
 }
 
-fn config_heading(source_file: RelativePathBuf) -> String {
-    format!("📋 {}", source_file)
+fn config_file_heading(config_file_path: &RelativePath) -> String {
+    format!("📋 {}", config_file_path)
 }
 
 fn requirements_map(requirements: &Requirements, requirement_data: &RequirementData) -> Vec<Tree> {
