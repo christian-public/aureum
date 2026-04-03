@@ -7,6 +7,7 @@ Golden test runner for executables
 Usage: aureum <COMMAND>
 
 Commands:
+  init      Initialize a new config file
   validate  Validate config files
   list      List tests
   run       Run programs from test specification

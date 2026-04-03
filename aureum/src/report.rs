@@ -13,7 +13,17 @@ use colored::Colorize;
 use relative_path::{RelativePath, RelativePathBuf};
 use std::collections::BTreeMap;
 use std::io;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+
+// INIT
+
+pub fn print_file_already_exists(path: &Path) {
+    eprintln!("{} file already exists: {}", error(), path.display());
+}
+
+pub fn print_failed_to_write_file(path: &Path) {
+    eprintln!("{} failed to write file: {}", error(), path.display());
+}
 
 // TEST CASE
 

@@ -22,6 +22,8 @@ pub struct Cli {
 #[derive(Subcommand)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum Command {
+    /// Initialize a new config file
+    Init(InitArgs),
     /// Validate config files
     Validate(ValidateArgs),
     /// List tests
@@ -32,6 +34,18 @@ pub enum Command {
     Test(TestArgs),
     /// Print version information
     Version,
+}
+
+#[derive(Args)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+#[command(arg_required_else_help = true)]
+pub struct InitArgs {
+    /// Where to save the config file (Recommended file extension: .au.toml)
+    pub path: Option<PathBuf>,
+
+    /// Print the config file template to stdout
+    #[arg(long, conflicts_with = "path")]
+    pub print: bool,
 }
 
 #[derive(Args)]

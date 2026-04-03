@@ -1,0 +1,17 @@
+program = { env = "AUREUM_TEST_EXEC" }
+program_arguments = ["init", "--help"]
+
+expected_stdout = """
+Initialize a new config file
+
+Usage: aureum init [OPTIONS] [PATH]
+
+Arguments:
+  [PATH]  Where to save the config file (Recommended file extension: .au.toml)
+
+Options:
+      --print  Print the config file template to stdout
+  -h, --help   Print help
+"""
+expected_stderr = ""
+expected_exit_code = 0

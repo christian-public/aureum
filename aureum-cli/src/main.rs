@@ -5,10 +5,11 @@ mod args;
 mod exit_code;
 mod find_config_file;
 mod load_config_file;
+mod template;
 
 use crate::args::{
-    CLI_BINARY_NAME, Command, ListArgs, RunArgs, RunOutputFormat, TestArgs, TestOutputFormat,
-    ValidateArgs,
+    CLI_BINARY_NAME, Command, InitArgs, ListArgs, RunArgs, RunOutputFormat, TestArgs,
+    TestOutputFormat, ValidateArgs,
 };
 use crate::exit_code::ExitCode;
 use crate::load_config_file::{ConfigFileError, LoadConfigFilesResult, LoadedConfigFile};
@@ -16,14 +17,21 @@ use aureum::{ReportConfig, ReportFormat, ReportValidateResult, TestCase};
 use relative_path::RelativePathBuf;
 use std::collections::BTreeMap;
 use std::env;
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::process;
+
+const TEMPLATE_01_MINIMAL_TEST: &str = include_str!("../assets/01_minimal_test.au.toml");
+const TEMPLATE_02_NESTED_TESTS: &str = include_str!("../assets/02_nested_tests.au.toml");
+const TEMPLATE_03_ALL_SUPPORTED_FIELDS: &str =
+    include_str!("../assets/03_all_supported_fields.au.toml");
 
 fn main() {
     let current_dir = env::current_dir().expect("Current directory must be available");
 
     let cli = args::parse();
     let exit_code = match cli.command {
+        Command::Init(args) => init_config(args),
         Command::Validate(args) => validate_config_files(args, &current_dir),
         Command::List(args) => list_tests(args, &current_dir),
         Command::Run(args) => run_programs(args, &current_dir),
@@ -38,6 +46,41 @@ fn main() {
 }
 
 // COMMANDS
+
+fn init_config(args: InitArgs) -> ExitCode {
+    let t01 = template::format_template("Minimal test", TEMPLATE_01_MINIMAL_TEST);
+    let t02 = template::format_template("Nested tests", TEMPLATE_02_NESTED_TESTS);
+    let t03 = template::format_template("All supported fields", TEMPLATE_03_ALL_SUPPORTED_FIELDS);
+
+    let template = [
+        t01,
+        template::comment_lines(&t02),
+        template::comment_lines(&t03),
+    ]
+    .join("\n\n");
+
+    match args.path {
+        None => {
+            print!("{}", template);
+
+            ExitCode::Success
+        }
+        Some(path) => {
+            if path.exists() {
+                aureum::print_file_already_exists(&path);
+                return ExitCode::GeneralError;
+            }
+
+            let write_result = fs::write(&path, template);
+            if write_result.is_err() {
+                aureum::print_failed_to_write_file(&path);
+                return ExitCode::GeneralError;
+            }
+
+            ExitCode::Success
+        }
+    }
+}
 
 fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode {
     let config_files = match prepare_config_files(args.paths, args.common.verbose, current_dir) {

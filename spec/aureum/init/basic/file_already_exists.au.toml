@@ -1,0 +1,8 @@
+program = { env = "AUREUM_TEST_EXEC" }
+program_arguments = ["init", "helpers/empty.toml"]
+
+expected_stdout = ""
+expected_stderr = """
+error: file already exists: helpers/empty.toml
+"""
+expected_exit_code = 1

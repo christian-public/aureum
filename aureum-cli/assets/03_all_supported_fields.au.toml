@@ -1,0 +1,15 @@
+description = "Test `cat` using stdin"
+program = "cat"
+program_arguments = []
+stdin = """
+This is the input for cat.
+TOML supports multi-line strings.
+"""
+
+# At least one of the following fields are required:
+expected_stdout = """
+This is the input for cat.
+TOML supports multi-line strings.
+"""
+expected_stderr = ""
+expected_exit_code = 0
