@@ -428,12 +428,7 @@ fn find_and_validate_config_files(
     let result = config_file::find_config_files(paths, current_dir);
 
     if !result.errors.is_empty() {
-        let paths = result
-            .errors
-            .into_iter()
-            .map(|(path, _err)| path)
-            .collect::<Vec<_>>();
-
+        let paths = result.errors.into_keys().collect::<Vec<_>>();
         aureum::print_invalid_paths(paths);
     }
 
