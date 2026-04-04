@@ -134,7 +134,7 @@ pub fn print_no_config_files() {
     );
 }
 
-pub fn print_validate_table(entries: &[(RelativePathBuf, ReportValidateResult)]) {
+pub fn print_validate_table(entries: &BTreeMap<RelativePathBuf, ReportValidateResult>) {
     let max_len = entries
         .iter()
         .map(|(file, ..)| file.as_str().len())
