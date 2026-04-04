@@ -11,7 +11,7 @@ static DIRECTORY_SEARCH_PATTERN: &str = "**/*.au.toml";
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct FindConfigFilesResult {
     pub found_config_files: BTreeMap<RelativePathBuf, TestIdCoverageSet>,
-    pub errors: Vec<(PathBuf, PathError)>,
+    pub errors: BTreeMap<PathBuf, PathError>,
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -26,7 +26,7 @@ pub enum PathError {
 
 pub fn find_config_files(paths: Vec<PathBuf>, current_dir: &Path) -> FindConfigFilesResult {
     let mut found_config_files = BTreeMap::new();
-    let mut errors = vec![];
+    let mut errors = BTreeMap::new();
 
     for path in paths {
         match find_config_files_in_path(&path, current_dir) {
@@ -45,7 +45,7 @@ pub fn find_config_files(paths: Vec<PathBuf>, current_dir: &Path) -> FindConfigF
                 }
             }
             Err(err) => {
-                errors.push((path, err));
+                errors.insert(path, err);
             }
         }
     }
