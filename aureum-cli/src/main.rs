@@ -46,16 +46,16 @@ fn main() {
     let cli = args::parse();
     match cli.command {
         Command::Validate(args) => {
-            validate_config_files(args, current_dir);
+            validate_config_files(args, &current_dir);
         }
         Command::List(args) => {
-            list_tests(args, current_dir);
+            list_tests(args, &current_dir);
         }
         Command::Run(args) => {
-            run_programs(args, current_dir);
+            run_programs(args, &current_dir);
         }
         Command::Test(args) => {
-            run_tests(args, current_dir);
+            run_tests(args, &current_dir);
         }
         Command::Version => {
             print_version();
@@ -65,8 +65,8 @@ fn main() {
 
 // COMMANDS
 
-fn validate_config_files(args: ValidateArgs, current_dir: PathBuf) {
-    let found_config_files = find_and_validate_config_files(args.paths, &current_dir);
+fn validate_config_files(args: ValidateArgs, current_dir: &Path) {
+    let found_config_files = find_and_validate_config_files(args.paths, current_dir);
 
     if found_config_files.is_empty() {
         aureum::print_no_config_files();
@@ -85,7 +85,7 @@ fn validate_config_files(args: ValidateArgs, current_dir: PathBuf) {
             .map(|config_file_path| {
                 (
                     config_file_path.clone(),
-                    load_config_file(config_file_path, &current_dir),
+                    load_config_file(config_file_path, current_dir),
                 )
             })
             .collect();
@@ -148,8 +148,8 @@ fn validate_config_files(args: ValidateArgs, current_dir: PathBuf) {
     }
 }
 
-fn list_tests(args: ListArgs, current_dir: PathBuf) {
-    let found_config_files = find_and_validate_config_files(args.paths, &current_dir);
+fn list_tests(args: ListArgs, current_dir: &Path) {
+    let found_config_files = find_and_validate_config_files(args.paths, current_dir);
 
     if found_config_files.is_empty() {
         aureum::print_no_config_files();
@@ -166,7 +166,7 @@ fn list_tests(args: ListArgs, current_dir: PathBuf) {
     let mut any_failed_configs = false;
 
     for (config_file_path, test_id_coverage_set) in found_config_files {
-        match load_config_file(&config_file_path, &current_dir) {
+        match load_config_file(&config_file_path, current_dir) {
             Ok(LoadedConfigFile {
                 requirement_data,
                 test_entries,
@@ -213,8 +213,8 @@ fn list_tests(args: ListArgs, current_dir: PathBuf) {
     }
 }
 
-fn run_programs(args: RunArgs, current_dir: PathBuf) {
-    let found_config_files = find_and_validate_config_files(args.paths, &current_dir);
+fn run_programs(args: RunArgs, current_dir: &Path) {
+    let found_config_files = find_and_validate_config_files(args.paths, current_dir);
 
     if found_config_files.is_empty() {
         aureum::print_no_config_files();
@@ -231,7 +231,7 @@ fn run_programs(args: RunArgs, current_dir: PathBuf) {
     let mut any_failed_configs = false;
 
     for (config_file_path, test_id_coverage_set) in found_config_files {
-        match load_config_file(&config_file_path, &current_dir) {
+        match load_config_file(&config_file_path, current_dir) {
             Ok(LoadedConfigFile {
                 requirement_data,
                 test_entries,
@@ -283,7 +283,7 @@ fn run_programs(args: RunArgs, current_dir: PathBuf) {
             }
 
             match &all_test_cases[..] {
-                [test_case] => match aureum::run_program_passthrough(test_case, &current_dir) {
+                [test_case] => match aureum::run_program_passthrough(test_case, current_dir) {
                     Ok(exit_code) => {
                         process::exit(exit_code);
                     }
@@ -306,7 +306,7 @@ fn run_programs(args: RunArgs, current_dir: PathBuf) {
 
                 aureum::print_test_case_id_as_toml_comment(test_case);
 
-                match aureum::run_program(test_case, &current_dir) {
+                match aureum::run_program(test_case, current_dir) {
                     Ok(output) => {
                         aureum::print_output_as_toml(&output);
                     }
@@ -328,8 +328,8 @@ fn run_programs(args: RunArgs, current_dir: PathBuf) {
     }
 }
 
-fn run_tests(args: TestArgs, current_dir: PathBuf) {
-    let found_config_files = find_and_validate_config_files(args.paths, &current_dir);
+fn run_tests(args: TestArgs, current_dir: &Path) {
+    let found_config_files = find_and_validate_config_files(args.paths, current_dir);
 
     if found_config_files.is_empty() {
         aureum::print_no_config_files();
@@ -346,7 +346,7 @@ fn run_tests(args: TestArgs, current_dir: PathBuf) {
     let mut any_failed_configs = false;
 
     for (config_file_path, test_id_coverage_set) in found_config_files {
-        match load_config_file(&config_file_path, &current_dir) {
+        match load_config_file(&config_file_path, current_dir) {
             Ok(LoadedConfigFile {
                 requirement_data,
                 test_entries,
@@ -396,7 +396,7 @@ fn run_tests(args: TestArgs, current_dir: PathBuf) {
         &report_config,
         &all_test_cases,
         args.parallel,
-        &current_dir,
+        current_dir,
         &aureum::print_test_case,
     );
 
