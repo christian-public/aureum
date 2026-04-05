@@ -116,7 +116,7 @@ pub enum ReportValidateResult {
     Success(usize),
 }
 
-pub fn print_invalid_paths(paths: Vec<PathBuf>) {
+pub fn print_invalid_paths(paths: &[PathBuf]) {
     eprintln!(
         "{} Invalid paths to config files:",
         "warning:".yellow().bold(),

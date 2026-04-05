@@ -43,9 +43,10 @@ fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode {
     if !found_config_files_result.errors.is_empty() {
         let paths = found_config_files_result
             .errors
-            .into_keys()
+            .keys()
+            .cloned()
             .collect::<Vec<_>>();
-        aureum::print_invalid_paths(paths);
+        aureum::print_invalid_paths(&paths);
     }
 
     let found_config_files = found_config_files_result.found_config_files;
@@ -132,9 +133,10 @@ fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
     if !found_config_files_result.errors.is_empty() {
         let paths = found_config_files_result
             .errors
-            .into_keys()
+            .keys()
+            .cloned()
             .collect::<Vec<_>>();
-        aureum::print_invalid_paths(paths);
+        aureum::print_invalid_paths(&paths);
     }
 
     let found_config_files = found_config_files_result.found_config_files;
@@ -213,9 +215,10 @@ fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
     if !found_config_files_result.errors.is_empty() {
         let paths = found_config_files_result
             .errors
-            .into_keys()
+            .keys()
+            .cloned()
             .collect::<Vec<_>>();
-        aureum::print_invalid_paths(paths);
+        aureum::print_invalid_paths(&paths);
     }
 
     let found_config_files = found_config_files_result.found_config_files;
@@ -345,9 +348,10 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
     if !found_config_files_result.errors.is_empty() {
         let paths = found_config_files_result
             .errors
-            .into_keys()
+            .keys()
+            .cloned()
             .collect::<Vec<_>>();
-        aureum::print_invalid_paths(paths);
+        aureum::print_invalid_paths(&paths);
     }
 
     let found_config_files = found_config_files_result.found_config_files;
