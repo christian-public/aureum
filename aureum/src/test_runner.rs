@@ -16,6 +16,7 @@ pub struct ProgramOutput {
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct RunResult {
     pub test_case: TestCase,
+    pub expectations: TestCaseExpectations,
     pub result: Result<TestResult, RunError>,
 }
 
@@ -60,6 +61,7 @@ pub fn run_test_cases(
 
             RunResult {
                 test_case: test_case.clone(),
+                expectations: expectations.clone(),
                 result,
             }
         };
