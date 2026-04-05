@@ -1,3 +1,4 @@
+use crate::find_config_file::FindConfigFilesResult;
 use crate::utils::file;
 use aureum::Requirements;
 use aureum::{RequirementData, TestEntry, TestId, TestIdCoverageSet};
@@ -13,6 +14,17 @@ use std::path::Path;
 pub struct LoadConfigFilesResult {
     pub loaded: BTreeMap<RelativePathBuf, LoadedConfigFile>,
     pub invalid: BTreeMap<RelativePathBuf, ConfigFileError>,
+    pub had_find_errors: bool,
+}
+
+impl LoadConfigFilesResult {
+    pub fn has_validation_errors(&self) -> bool {
+        self.loaded.values().any(|x| x.has_validation_errors())
+    }
+
+    pub fn has_config_errors(&self) -> bool {
+        self.had_find_errors || !self.invalid.is_empty() || self.has_validation_errors()
+    }
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -44,22 +56,26 @@ pub enum ConfigFileError {
 }
 
 pub fn load_config_files(
-    found_config_files: BTreeMap<RelativePathBuf, TestIdCoverageSet>,
+    found_config_files_result: FindConfigFilesResult,
     current_dir: &Path,
 ) -> LoadConfigFilesResult {
-    let (loaded, invalid) =
-        found_config_files
-            .into_iter()
-            .partition_map(|(config_file_path, test_id_coverage_set)| {
-                let result =
-                    load_config_file(config_file_path.clone(), test_id_coverage_set, current_dir);
-                match result {
-                    Ok(loaded) => Either::Left((config_file_path, loaded)),
-                    Err(err) => Either::Right((config_file_path, err)),
-                }
-            });
+    let (loaded, invalid) = found_config_files_result
+        .found_config_files
+        .into_iter()
+        .partition_map(|(config_file_path, test_id_coverage_set)| {
+            let result =
+                load_config_file(config_file_path.clone(), test_id_coverage_set, current_dir);
+            match result {
+                Ok(loaded) => Either::Left((config_file_path, loaded)),
+                Err(err) => Either::Right((config_file_path, err)),
+            }
+        });
 
-    LoadConfigFilesResult { loaded, invalid }
+    LoadConfigFilesResult {
+        loaded,
+        invalid,
+        had_find_errors: !found_config_files_result.errors.is_empty(),
+    }
 }
 
 fn load_config_file(
