@@ -63,26 +63,6 @@ fn validate_config_files(args: ValidateArgs, current_dir: &Path) {
     let (loaded_config_files, invalid_config_files) =
         load_config_file::load_config_files(found_config_files, current_dir);
 
-    let table_entries =
-        loaded_config_files
-            .iter()
-            .map(
-                |(config_file_path, LoadedConfigFile { test_entries, .. })| {
-                    let is_valid = test_entries.values().all(|x| x.is_testable());
-                    let validate_result = if is_valid {
-                        ReportValidateResult::Success(test_entries.len())
-                    } else {
-                        ReportValidateResult::ValidationError(test_entries.len())
-                    };
-
-                    (config_file_path.clone(), validate_result)
-                },
-            )
-            .chain(invalid_config_files.keys().map(|config_file_path| {
-                (config_file_path.clone(), ReportValidateResult::ParseError)
-            }))
-            .collect();
-
     for (config_file_path, config_file_error) in &invalid_config_files {
         match config_file_error {
             ConfigFileError::ParseFailed(err) => {
@@ -113,6 +93,26 @@ fn validate_config_files(args: ValidateArgs, current_dir: &Path) {
     }
 
     let any_failed_configs = !invalid_config_files.is_empty() || any_validation_errors;
+
+    let table_entries =
+        loaded_config_files
+            .iter()
+            .map(
+                |(config_file_path, LoadedConfigFile { test_entries, .. })| {
+                    let is_valid = test_entries.values().all(|x| x.is_testable());
+                    let validate_result = if is_valid {
+                        ReportValidateResult::Success(test_entries.len())
+                    } else {
+                        ReportValidateResult::ValidationError(test_entries.len())
+                    };
+
+                    (config_file_path.clone(), validate_result)
+                },
+            )
+            .chain(invalid_config_files.keys().map(|config_file_path| {
+                (config_file_path.clone(), ReportValidateResult::ParseError)
+            }))
+            .collect();
 
     aureum::print_validate_table(&table_entries);
 
