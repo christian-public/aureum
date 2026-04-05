@@ -2,7 +2,7 @@ mod utils {
     pub mod file;
 }
 mod args;
-mod config_file;
+mod find_config_file;
 
 use crate::args::{
     CLI_BINARY_NAME, Command, ListArgs, RunArgs, RunOutputFormat, TestArgs, TestOutputFormat,
@@ -471,7 +471,7 @@ fn find_and_validate_config_files(
     paths: Vec<PathBuf>,
     current_dir: &Path,
 ) -> BTreeMap<RelativePathBuf, TestIdCoverageSet> {
-    let result = config_file::find_config_files(paths, current_dir);
+    let result = find_config_file::find_config_files(paths, current_dir);
 
     if !result.errors.is_empty() {
         let paths = result.errors.into_keys().collect::<Vec<_>>();
