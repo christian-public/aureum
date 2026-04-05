@@ -2,6 +2,7 @@ mod utils {
     pub mod file;
 }
 mod args;
+mod exit_code;
 mod find_config_file;
 mod load_config_file;
 
@@ -9,42 +10,34 @@ use crate::args::{
     CLI_BINARY_NAME, Command, ListArgs, RunArgs, RunOutputFormat, TestArgs, TestOutputFormat,
     ValidateArgs,
 };
+use crate::exit_code::ExitCode;
 use crate::load_config_file::{ConfigFileError, LoadedConfigFile};
 use aureum::{ReportConfig, ReportFormat, ReportValidateResult};
 use std::env;
 use std::path::Path;
 use std::process;
 
-const TEST_FAILURE_EXIT_CODE: i32 = 1;
-const INVALID_CLI_USAGE_EXIT_CODE: i32 = 2; // Matches clap's behavior
-const INVALID_CONFIG_EXIT_CODE: i32 = 3;
-
 fn main() {
     let current_dir = env::current_dir().expect("Current directory must be available");
 
     let cli = args::parse();
-    match cli.command {
-        Command::Validate(args) => {
-            validate_config_files(args, &current_dir);
-        }
-        Command::List(args) => {
-            list_tests(args, &current_dir);
-        }
-        Command::Run(args) => {
-            run_programs(args, &current_dir);
-        }
-        Command::Test(args) => {
-            run_tests(args, &current_dir);
-        }
-        Command::Version => {
-            print_version();
-        }
+    let exit_code = match cli.command {
+        Command::Validate(args) => validate_config_files(args, &current_dir),
+        Command::List(args) => list_tests(args, &current_dir),
+        Command::Run(args) => run_programs(args, &current_dir),
+        Command::Test(args) => run_tests(args, &current_dir),
+        Command::Version => print_version(),
+    };
+
+    let code = exit_code.to_i32();
+    if code != 0 {
+        process::exit(code);
     }
 }
 
 // COMMANDS
 
-fn validate_config_files(args: ValidateArgs, current_dir: &Path) {
+fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode {
     let found_config_files_result = find_config_file::find_config_files(args.paths, current_dir);
 
     if !found_config_files_result.errors.is_empty() {
@@ -59,7 +52,7 @@ fn validate_config_files(args: ValidateArgs, current_dir: &Path) {
 
     if found_config_files.is_empty() {
         aureum::print_no_config_files();
-        process::exit(INVALID_CLI_USAGE_EXIT_CODE);
+        return ExitCode::InvalidUsage;
     }
 
     if args.common.verbose {
@@ -126,11 +119,14 @@ fn validate_config_files(args: ValidateArgs, current_dir: &Path) {
 
     if any_failed_configs {
         aureum::print_config_files_contain_errors();
-        process::exit(INVALID_CONFIG_EXIT_CODE);
+
+        ExitCode::InvalidConfig
+    } else {
+        ExitCode::Success
     }
 }
 
-fn list_tests(args: ListArgs, current_dir: &Path) {
+fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
     let found_config_files_result = find_config_file::find_config_files(args.paths, current_dir);
 
     if !found_config_files_result.errors.is_empty() {
@@ -145,7 +141,7 @@ fn list_tests(args: ListArgs, current_dir: &Path) {
 
     if found_config_files.is_empty() {
         aureum::print_no_config_files();
-        process::exit(INVALID_CLI_USAGE_EXIT_CODE);
+        return ExitCode::InvalidUsage;
     }
 
     if args.common.verbose {
@@ -204,11 +200,14 @@ fn list_tests(args: ListArgs, current_dir: &Path) {
 
     if any_failed_configs {
         aureum::print_config_files_contain_errors();
-        process::exit(INVALID_CONFIG_EXIT_CODE);
+
+        ExitCode::InvalidConfig
+    } else {
+        ExitCode::Success
     }
 }
 
-fn run_programs(args: RunArgs, current_dir: &Path) {
+fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
     let found_config_files_result = find_config_file::find_config_files(args.paths, current_dir);
 
     if !found_config_files_result.errors.is_empty() {
@@ -223,7 +222,7 @@ fn run_programs(args: RunArgs, current_dir: &Path) {
 
     if found_config_files.is_empty() {
         aureum::print_no_config_files();
-        process::exit(INVALID_CLI_USAGE_EXIT_CODE);
+        return ExitCode::InvalidUsage;
     }
 
     if args.common.verbose {
@@ -287,22 +286,22 @@ fn run_programs(args: RunArgs, current_dir: &Path) {
         RunOutputFormat::Passthrough => {
             if any_failed_configs {
                 aureum::print_config_files_contain_errors();
-                process::exit(INVALID_CONFIG_EXIT_CODE);
+                return ExitCode::InvalidConfig;
             }
 
             match &all_test_cases[..] {
                 [test_case] => match aureum::run_program_passthrough(test_case, current_dir) {
                     Ok(exit_code) => {
-                        process::exit(exit_code);
+                        return ExitCode::Passthrough(exit_code);
                     }
                     Err(_) => {
                         aureum::print_failed_to_run_program();
-                        process::exit(TEST_FAILURE_EXIT_CODE);
+                        return ExitCode::RunProgramFailure;
                     }
                 },
                 _ => {
                     aureum::print_run_single_program_only(all_test_cases.len());
-                    process::exit(INVALID_CLI_USAGE_EXIT_CODE);
+                    return ExitCode::InvalidUsage;
                 }
             }
         }
@@ -329,14 +328,18 @@ fn run_programs(args: RunArgs, current_dir: &Path) {
 
     if any_programs_failed_to_run {
         aureum::print_one_or_more_programs_failed_to_run();
-        process::exit(TEST_FAILURE_EXIT_CODE);
+
+        ExitCode::RunProgramFailure
     } else if any_failed_configs {
         aureum::print_config_files_contain_errors();
-        process::exit(INVALID_CONFIG_EXIT_CODE);
+
+        ExitCode::InvalidConfig
+    } else {
+        ExitCode::Success
     }
 }
 
-fn run_tests(args: TestArgs, current_dir: &Path) {
+fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
     let found_config_files_result = find_config_file::find_config_files(args.paths, current_dir);
 
     if !found_config_files_result.errors.is_empty() {
@@ -351,7 +354,7 @@ fn run_tests(args: TestArgs, current_dir: &Path) {
 
     if found_config_files.is_empty() {
         aureum::print_no_config_files();
-        process::exit(INVALID_CLI_USAGE_EXIT_CODE);
+        return ExitCode::InvalidUsage;
     }
 
     if args.common.verbose {
@@ -428,14 +431,18 @@ fn run_tests(args: TestArgs, current_dir: &Path) {
     let all_tests_passed = run_results.iter().all(|t| t.is_success());
 
     if !all_tests_passed {
-        process::exit(TEST_FAILURE_EXIT_CODE);
+        ExitCode::TestFailure
     } else if any_failed_configs {
-        process::exit(INVALID_CONFIG_EXIT_CODE);
+        ExitCode::InvalidConfig
+    } else {
+        ExitCode::Success
     }
 }
 
-fn print_version() {
+fn print_version() -> ExitCode {
     println!("{} {}", CLI_BINARY_NAME, env!("CARGO_PKG_VERSION"));
+
+    ExitCode::Success
 }
 
 // HELPERS
