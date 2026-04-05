@@ -94,7 +94,9 @@ fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode {
         }
     }
 
-    let any_failed_configs = !invalid_config_files.is_empty() || any_validation_errors;
+    let any_failed_configs = !found_config_files_result.errors.is_empty()
+        || !invalid_config_files.is_empty()
+        || any_validation_errors;
 
     let table_entries =
         loaded_config_files
@@ -194,7 +196,9 @@ fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
         .flat_map(|(_test_id, test_entry)| test_entry.test_case.as_ref().ok()) // This line is different than in `run_tests()`
         .collect::<Vec<_>>();
 
-    let any_failed_configs = !invalid_config_files.is_empty() || any_validation_errors;
+    let any_failed_configs = !found_config_files_result.errors.is_empty()
+        || !invalid_config_files.is_empty()
+        || any_validation_errors;
 
     for test_case in all_test_cases {
         println!("{}", test_case.id())
@@ -280,7 +284,9 @@ fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
         }
     }
 
-    let any_failed_configs = (!invalid_config_files.is_empty() || any_validation_errors)
+    let any_failed_configs = (!found_config_files_result.errors.is_empty()
+        || !invalid_config_files.is_empty()
+        || any_validation_errors)
         && !passthrough_with_single_test_entry;
 
     let mut any_programs_failed_to_run = false;
@@ -409,7 +415,9 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
         .flat_map(|(_test_id, test_entry)| test_entry.test_case_with_expectations().ok())
         .collect::<Vec<_>>();
 
-    let any_failed_configs = !invalid_config_files.is_empty() || any_validation_errors;
+    let any_failed_configs = !found_config_files_result.errors.is_empty()
+        || !invalid_config_files.is_empty()
+        || any_validation_errors;
 
     let report_config = ReportConfig {
         number_of_tests: all_test_cases.len(),
