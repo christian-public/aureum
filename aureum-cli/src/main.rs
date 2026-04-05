@@ -53,7 +53,7 @@ fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode {
 
     if found_config_files.is_empty() {
         aureum::print_no_config_files();
-        return ExitCode::InvalidUsage;
+        return ExitCode::InvalidConfig;
     }
 
     if args.common.verbose {
@@ -145,7 +145,7 @@ fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
 
     if found_config_files.is_empty() {
         aureum::print_no_config_files();
-        return ExitCode::InvalidUsage;
+        return ExitCode::InvalidConfig;
     }
 
     if args.common.verbose {
@@ -229,7 +229,7 @@ fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
 
     if found_config_files.is_empty() {
         aureum::print_no_config_files();
-        return ExitCode::InvalidUsage;
+        return ExitCode::InvalidConfig;
     }
 
     if args.common.verbose {
@@ -364,7 +364,7 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
 
     if found_config_files.is_empty() {
         aureum::print_no_config_files();
-        return ExitCode::InvalidUsage;
+        return ExitCode::InvalidConfig;
     }
 
     if args.common.verbose {

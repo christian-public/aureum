@@ -7,7 +7,7 @@ expected_stdout = ""
 expected_stderr = """
 error: No config files found for the given paths
 """
-expected_exit_code = 2
+expected_exit_code = 3
 
 
 [tests.missing_config_with_test_id]
@@ -19,7 +19,7 @@ warning: Invalid paths to config files:
 
 error: No config files found for the given paths
 """
-expected_exit_code = 2
+expected_exit_code = 3
 
 
 [tests.invalid_config]
