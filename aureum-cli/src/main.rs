@@ -38,13 +38,12 @@ fn main() {
 // COMMANDS
 
 fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode {
-    let load_config_files_result =
-        match prepare_config_files(args.paths, args.common.verbose, current_dir) {
-            Ok(result) => result,
-            Err(err) => return err,
-        };
+    let config_files = match prepare_config_files(args.paths, args.common.verbose, current_dir) {
+        Ok(result) => result,
+        Err(err) => return err,
+    };
 
-    for (config_file_path, loaded_config_file) in &load_config_files_result.loaded {
+    for (config_file_path, loaded_config_file) in &config_files.loaded {
         let any_issues = loaded_config_file.has_validation_errors();
 
         if any_issues || args.common.verbose {
@@ -58,32 +57,28 @@ fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode {
         }
     }
 
-    let any_failed_configs = load_config_files_result.has_config_errors();
+    let any_failed_configs = config_files.has_config_errors();
 
-    let table_entries = load_config_files_result
-        .loaded
-        .iter()
-        .map(
-            |(config_file_path, LoadedConfigFile { test_entries, .. })| {
-                let is_valid = test_entries.values().all(|x| x.is_testable());
-                let validate_result = if is_valid {
-                    ReportValidateResult::Success(test_entries.len())
-                } else {
-                    ReportValidateResult::ValidationError(test_entries.len())
-                };
+    let table_entries =
+        config_files
+            .loaded
+            .iter()
+            .map(
+                |(config_file_path, LoadedConfigFile { test_entries, .. })| {
+                    let is_valid = test_entries.values().all(|x| x.is_testable());
+                    let validate_result = if is_valid {
+                        ReportValidateResult::Success(test_entries.len())
+                    } else {
+                        ReportValidateResult::ValidationError(test_entries.len())
+                    };
 
-                (config_file_path.clone(), validate_result)
-            },
-        )
-        .chain(
-            load_config_files_result
-                .invalid
-                .keys()
-                .map(|config_file_path| {
-                    (config_file_path.clone(), ReportValidateResult::ParseError)
-                }),
-        )
-        .collect();
+                    (config_file_path.clone(), validate_result)
+                },
+            )
+            .chain(config_files.invalid.keys().map(|config_file_path| {
+                (config_file_path.clone(), ReportValidateResult::ParseError)
+            }))
+            .collect();
 
     aureum::print_validate_table(&table_entries);
 
@@ -97,13 +92,12 @@ fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode {
 }
 
 fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
-    let load_config_files_result =
-        match prepare_config_files(args.paths, args.common.verbose, current_dir) {
-            Ok(result) => result,
-            Err(err) => return err,
-        };
+    let config_files = match prepare_config_files(args.paths, args.common.verbose, current_dir) {
+        Ok(result) => result,
+        Err(err) => return err,
+    };
 
-    for (config_file_path, loaded_config_file) in &load_config_files_result.loaded {
+    for (config_file_path, loaded_config_file) in &config_files.loaded {
         let any_issues = loaded_config_file.has_validation_errors();
 
         if any_issues || args.common.verbose {
@@ -117,7 +111,7 @@ fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
         }
     }
 
-    let test_entries_in_coverage_set = load_config_files_result
+    let test_entries_in_coverage_set = config_files
         .loaded
         .values()
         .flat_map(|x| x.test_entries_in_coverage_set())
@@ -128,7 +122,7 @@ fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
         .flat_map(|(_test_id, test_entry)| test_entry.test_case.as_ref().ok()) // This line is different than in `run_tests()`
         .collect::<Vec<_>>();
 
-    let any_failed_configs = load_config_files_result.has_config_errors();
+    let any_failed_configs = config_files.has_config_errors();
 
     for test_case in all_test_cases {
         println!("{}", test_case.id())
@@ -144,13 +138,12 @@ fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
 }
 
 fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
-    let load_config_files_result =
-        match prepare_config_files(args.paths, args.common.verbose, current_dir) {
-            Ok(result) => result,
-            Err(err) => return err,
-        };
+    let config_files = match prepare_config_files(args.paths, args.common.verbose, current_dir) {
+        Ok(result) => result,
+        Err(err) => return err,
+    };
 
-    let test_entries_in_coverage_set = load_config_files_result
+    let test_entries_in_coverage_set = config_files
         .loaded
         .values()
         .flat_map(|x| x.test_entries_in_coverage_set())
@@ -165,7 +158,7 @@ fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
         matches!(args.output_format, RunOutputFormat::Passthrough)
             && test_entries_in_coverage_set.len() == 1;
 
-    for (config_file_path, loaded_config_file) in &load_config_files_result.loaded {
+    for (config_file_path, loaded_config_file) in &config_files.loaded {
         let any_issues = loaded_config_file.has_validation_errors();
 
         if (any_issues || args.common.verbose) && !passthrough_with_single_test_entry {
@@ -180,7 +173,7 @@ fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
     }
 
     let any_failed_configs =
-        (load_config_files_result.has_config_errors()) && !passthrough_with_single_test_entry;
+        (config_files.has_config_errors()) && !passthrough_with_single_test_entry;
 
     let mut any_programs_failed_to_run = false;
 
@@ -242,13 +235,12 @@ fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
 }
 
 fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
-    let load_config_files_result =
-        match prepare_config_files(args.paths, args.common.verbose, current_dir) {
-            Ok(result) => result,
-            Err(err) => return err,
-        };
+    let config_files = match prepare_config_files(args.paths, args.common.verbose, current_dir) {
+        Ok(result) => result,
+        Err(err) => return err,
+    };
 
-    for (config_file_path, loaded_config_file) in &load_config_files_result.loaded {
+    for (config_file_path, loaded_config_file) in &config_files.loaded {
         let any_issues = loaded_config_file.has_validation_errors();
 
         if any_issues || args.common.verbose {
@@ -262,7 +254,7 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
         }
     }
 
-    let test_entries_in_coverage_set = load_config_files_result
+    let test_entries_in_coverage_set = config_files
         .loaded
         .values()
         .flat_map(|x| x.test_entries_in_coverage_set())
@@ -273,7 +265,7 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
         .flat_map(|(_test_id, test_entry)| test_entry.test_case_with_expectations().ok())
         .collect::<Vec<_>>();
 
-    let any_failed_configs = load_config_files_result.has_config_errors();
+    let any_failed_configs = config_files.has_config_errors();
 
     let report_config = ReportConfig {
         number_of_tests: all_test_cases.len(),
