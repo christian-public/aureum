@@ -26,7 +26,7 @@ mod test_result;
 mod test_runner;
 
 pub use report::{ReportConfig, ReportFormat, ReportValidateResult};
-pub use test_case::TestCase;
+pub use test_case::{TestCase, TestCaseExpectations};
 pub use test_id::TestId;
 pub use test_id_coverage_set::TestIdCoverageSet;
 pub use test_result::{TestResult, ValueComparison};
