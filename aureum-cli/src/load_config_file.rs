@@ -10,6 +10,12 @@ use std::io;
 use std::path::Path;
 
 #[cfg_attr(debug_assertions, derive(Debug))]
+pub struct LoadConfigFilesResult {
+    pub loaded: BTreeMap<RelativePathBuf, LoadedConfigFile>,
+    pub invalid: BTreeMap<RelativePathBuf, ConfigFileError>,
+}
+
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct LoadedConfigFile {
     pub test_id_coverage_set: TestIdCoverageSet,
     pub requirement_data: RequirementData,
@@ -40,20 +46,20 @@ pub enum ConfigFileError {
 pub fn load_config_files(
     found_config_files: BTreeMap<RelativePathBuf, TestIdCoverageSet>,
     current_dir: &Path,
-) -> (
-    BTreeMap<RelativePathBuf, LoadedConfigFile>,
-    BTreeMap<RelativePathBuf, ConfigFileError>,
-) {
-    found_config_files
-        .into_iter()
-        .partition_map(|(config_file_path, test_id_coverage_set)| {
-            let result =
-                load_config_file(config_file_path.clone(), test_id_coverage_set, current_dir);
-            match result {
-                Ok(loaded) => Either::Left((config_file_path, loaded)),
-                Err(err) => Either::Right((config_file_path, err)),
-            }
-        })
+) -> LoadConfigFilesResult {
+    let (loaded, invalid) =
+        found_config_files
+            .into_iter()
+            .partition_map(|(config_file_path, test_id_coverage_set)| {
+                let result =
+                    load_config_file(config_file_path.clone(), test_id_coverage_set, current_dir);
+                match result {
+                    Ok(loaded) => Either::Left((config_file_path, loaded)),
+                    Err(err) => Either::Right((config_file_path, err)),
+                }
+            });
+
+    LoadConfigFilesResult { loaded, invalid }
 }
 
 fn load_config_file(

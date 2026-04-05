@@ -62,8 +62,11 @@ fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode {
         aureum::print_config_files_found(&config_files);
     }
 
-    let (loaded_config_files, invalid_config_files) =
+    let load_config_files_result =
         load_config_file::load_config_files(found_config_files, current_dir);
+
+    let loaded_config_files = load_config_files_result.loaded;
+    let invalid_config_files = load_config_files_result.invalid;
 
     for (config_file_path, config_file_error) in &invalid_config_files {
         match config_file_error {
@@ -154,8 +157,11 @@ fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
         aureum::print_config_files_found(&config_files);
     }
 
-    let (loaded_config_files, invalid_config_files) =
+    let load_config_files_result =
         load_config_file::load_config_files(found_config_files, current_dir);
+
+    let loaded_config_files = load_config_files_result.loaded;
+    let invalid_config_files = load_config_files_result.invalid;
 
     for (config_file_path, config_file_error) in &invalid_config_files {
         match config_file_error {
@@ -238,8 +244,11 @@ fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
         aureum::print_config_files_found(&config_files);
     }
 
-    let (loaded_config_files, invalid_config_files) =
+    let load_config_files_result =
         load_config_file::load_config_files(found_config_files, current_dir);
+
+    let loaded_config_files = load_config_files_result.loaded;
+    let invalid_config_files = load_config_files_result.invalid;
 
     for (config_file_path, config_file_error) in &invalid_config_files {
         match config_file_error {
@@ -373,8 +382,11 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
         aureum::print_config_files_found(&config_files);
     }
 
-    let (loaded_config_files, invalid_config_files) =
+    let load_config_files_result =
         load_config_file::load_config_files(found_config_files, current_dir);
+
+    let loaded_config_files = load_config_files_result.loaded;
+    let invalid_config_files = load_config_files_result.invalid;
 
     for (config_file_path, config_file_error) in &invalid_config_files {
         match config_file_error {
