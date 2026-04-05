@@ -94,18 +94,12 @@ fn validate_config_files(args: ValidateArgs, current_dir: &Path) {
         }
     }
 
-    let any_validation_errors = loaded_config_files.iter().any(|(_, loaded_config_file)| {
-        loaded_config_file
-            .test_entries
-            .iter()
-            .any(|(_test_id, test_entry)| test_entry.has_validation_error())
-    });
+    let any_validation_errors = loaded_config_files
+        .values()
+        .any(|x| x.has_validation_errors());
 
     for (config_file_path, loaded_config_file) in &loaded_config_files {
-        let any_issues = loaded_config_file
-            .test_entries
-            .iter()
-            .any(|(_test_id, test_entry)| test_entry.has_validation_error());
+        let any_issues = loaded_config_file.has_validation_errors();
 
         if any_issues || args.common.verbose {
             aureum::print_config_details(
@@ -156,18 +150,12 @@ fn list_tests(args: ListArgs, current_dir: &Path) {
         }
     }
 
-    let any_validation_errors = loaded_config_files.iter().any(|(_, loaded_config_file)| {
-        loaded_config_file
-            .test_entries
-            .iter()
-            .any(|(_test_id, test_entry)| test_entry.has_validation_error())
-    });
+    let any_validation_errors = loaded_config_files
+        .values()
+        .any(|x| x.has_validation_errors());
 
     for (config_file_path, loaded_config_file) in &loaded_config_files {
-        let any_issues = loaded_config_file
-            .test_entries
-            .iter()
-            .any(|(_test_id, test_entry)| test_entry.has_validation_error());
+        let any_issues = loaded_config_file.has_validation_errors();
 
         if any_issues || args.common.verbose {
             aureum::print_config_details(
@@ -237,12 +225,9 @@ fn run_programs(args: RunArgs, current_dir: &Path) {
         }
     }
 
-    let any_validation_errors = loaded_config_files.iter().any(|(_, loaded_config_file)| {
-        loaded_config_file
-            .test_entries
-            .iter()
-            .any(|(_test_id, test_entry)| test_entry.has_validation_error())
-    });
+    let any_validation_errors = loaded_config_files
+        .values()
+        .any(|x| x.has_validation_errors());
 
     let all_test_entries = loaded_config_files
         .iter()
@@ -265,10 +250,7 @@ fn run_programs(args: RunArgs, current_dir: &Path) {
         matches!(args.output_format, RunOutputFormat::Passthrough) && all_test_entries.len() == 1;
 
     for (config_file_path, loaded_config_file) in &loaded_config_files {
-        let any_issues = loaded_config_file
-            .test_entries
-            .iter()
-            .any(|(_test_id, test_entry)| test_entry.has_validation_error());
+        let any_issues = loaded_config_file.has_validation_errors();
 
         if (any_issues || args.common.verbose) && !passthrough_with_single_test_entry {
             aureum::print_config_details(
@@ -367,18 +349,12 @@ fn run_tests(args: TestArgs, current_dir: &Path) {
         }
     }
 
-    let any_validation_errors = loaded_config_files.iter().any(|(_, loaded_config_file)| {
-        loaded_config_file
-            .test_entries
-            .iter()
-            .any(|(_test_id, test_entry)| test_entry.has_validation_error())
-    });
+    let any_validation_errors = loaded_config_files
+        .values()
+        .any(|x| x.has_validation_errors());
 
     for (config_file_path, loaded_config_file) in &loaded_config_files {
-        let any_issues = loaded_config_file
-            .test_entries
-            .iter()
-            .any(|(_test_id, test_entry)| test_entry.has_validation_error());
+        let any_issues = loaded_config_file.has_validation_errors();
 
         if any_issues || args.common.verbose {
             aureum::print_config_details(

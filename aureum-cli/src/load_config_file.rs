@@ -16,6 +16,12 @@ pub struct LoadedConfigFile {
     pub test_entries: BTreeMap<TestId, TestEntry>,
 }
 
+impl LoadedConfigFile {
+    pub fn has_validation_errors(&self) -> bool {
+        self.test_entries.values().any(|e| e.has_validation_error())
+    }
+}
+
 #[cfg_attr(debug_assertions, derive(Debug))]
 #[allow(dead_code)]
 pub enum ConfigFileError {
