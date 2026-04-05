@@ -332,14 +332,14 @@ fn prepare_config_files(
         aureum::print_invalid_paths(&paths);
     }
 
-    if find_config_files_result.found_config_files.is_empty() {
+    if find_config_files_result.found.is_empty() {
         aureum::print_no_config_files();
         return Err(ExitCode::InvalidConfig);
     }
 
     if verbose {
         let config_files = find_config_files_result
-            .found_config_files
+            .found
             .keys()
             .cloned()
             .collect::<Vec<_>>();

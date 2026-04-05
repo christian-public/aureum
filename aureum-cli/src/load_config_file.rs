@@ -59,17 +59,16 @@ pub fn load_config_files(
     found_config_files_result: FindConfigFilesResult,
     current_dir: &Path,
 ) -> LoadConfigFilesResult {
-    let (loaded, invalid) = found_config_files_result
-        .found_config_files
-        .into_iter()
-        .partition_map(|(config_file_path, test_id_coverage_set)| {
+    let (loaded, invalid) = found_config_files_result.found.into_iter().partition_map(
+        |(config_file_path, test_id_coverage_set)| {
             let result =
                 load_config_file(config_file_path.clone(), test_id_coverage_set, current_dir);
             match result {
                 Ok(loaded) => Either::Left((config_file_path, loaded)),
                 Err(err) => Either::Right((config_file_path, err)),
             }
-        });
+        },
+    );
 
     LoadConfigFilesResult {
         loaded,
