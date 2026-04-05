@@ -12,7 +12,7 @@ use crate::args::{
 };
 use crate::exit_code::ExitCode;
 use crate::load_config_file::{ConfigFileError, LoadConfigFilesResult, LoadedConfigFile};
-use aureum::{ReportConfig, ReportFormat, ReportValidateResult};
+use aureum::{ReportConfig, ReportFormat, ReportValidateResult, TestCase};
 use relative_path::RelativePathBuf;
 use std::collections::BTreeMap;
 use std::env;
@@ -105,7 +105,7 @@ fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
 
     let all_test_cases = test_entries_in_coverage_set
         .iter()
-        .flat_map(|(_test_id, test_entry)| test_entry.test_case.as_ref().ok()) // This line is different than in `run_tests()`
+        .flat_map(|(_test_id, test_entry)| test_entry.test_case.clone().ok())
         .collect::<Vec<_>>();
 
     let has_config_errors = config_files.has_config_errors();
@@ -137,7 +137,7 @@ fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
 
     let all_test_cases = test_entries_in_coverage_set
         .iter()
-        .flat_map(|(_test_id, test_entry)| test_entry.test_case.as_ref().ok()) // This line is different than in `run_tests()`
+        .flat_map(|(_test_id, test_entry)| test_entry.test_case.clone().ok())
         .collect::<Vec<_>>();
 
     let passthrough_with_single_test_entry =
@@ -152,51 +152,65 @@ fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
         );
     }
 
-    let has_config_errors =
-        (config_files.has_config_errors()) && !passthrough_with_single_test_entry;
-
-    let mut any_programs_failed_to_run = false;
-
     match args.output_format {
         RunOutputFormat::Passthrough => {
+            let has_config_errors =
+                config_files.has_config_errors() && !passthrough_with_single_test_entry;
+
             if has_config_errors {
                 aureum::print_config_files_contain_errors();
                 return ExitCode::InvalidConfig;
             }
 
-            match &all_test_cases[..] {
-                [test_case] => match aureum::run_program_passthrough(test_case, current_dir) {
-                    Ok(exit_code) => {
-                        return ExitCode::Passthrough(exit_code);
-                    }
-                    Err(_) => {
-                        aureum::print_failed_to_run_program();
-                        return ExitCode::RunProgramFailure;
-                    }
-                },
-                _ => {
-                    aureum::print_run_single_program_only(all_test_cases.len());
-                    return ExitCode::InvalidUsage;
-                }
-            }
+            run_program_as_passthrough(&all_test_cases, current_dir)
         }
         RunOutputFormat::Toml => {
-            for (index, test_case) in all_test_cases.iter().enumerate() {
-                if index > 0 {
-                    println!(); // Print extra newline between test cases
-                }
+            let has_config_errors = config_files.has_config_errors();
 
-                aureum::print_test_case_id_as_toml_comment(test_case);
+            run_programs_with_toml_output(&all_test_cases, has_config_errors, current_dir)
+        }
+    }
+}
 
-                match aureum::run_program(test_case, current_dir) {
-                    Ok(output) => {
-                        aureum::print_output_as_toml(&output);
-                    }
-                    Err(_) => {
-                        aureum::print_failed_to_run_program_as_toml();
-                        any_programs_failed_to_run = true;
-                    }
-                }
+fn run_program_as_passthrough(all_test_cases: &[TestCase], current_dir: &Path) -> ExitCode {
+    match all_test_cases {
+        [test_case] => match aureum::run_program_passthrough(test_case, current_dir) {
+            Ok(exit_code) => ExitCode::Passthrough(exit_code),
+            Err(_) => {
+                aureum::print_failed_to_run_program();
+
+                ExitCode::RunProgramFailure
+            }
+        },
+        _ => {
+            aureum::print_run_single_program_only(all_test_cases.len());
+
+            ExitCode::InvalidUsage
+        }
+    }
+}
+
+fn run_programs_with_toml_output(
+    all_test_cases: &[TestCase],
+    has_config_errors: bool,
+    current_dir: &Path,
+) -> ExitCode {
+    let mut any_programs_failed_to_run = false;
+
+    for (index, test_case) in all_test_cases.iter().enumerate() {
+        if index > 0 {
+            println!(); // Print extra newline between test cases
+        }
+
+        aureum::print_test_case_id_as_toml_comment(test_case);
+
+        match aureum::run_program(test_case, current_dir) {
+            Ok(output) => {
+                aureum::print_output_as_toml(&output);
+            }
+            Err(_) => {
+                aureum::print_failed_to_run_program_as_toml();
+                any_programs_failed_to_run = true;
             }
         }
     }
