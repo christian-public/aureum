@@ -13,6 +13,8 @@ use crate::args::{
 use crate::exit_code::ExitCode;
 use crate::load_config_file::{ConfigFileError, LoadConfigFilesResult, LoadedConfigFile};
 use aureum::{ReportConfig, ReportFormat, ReportValidateResult};
+use relative_path::RelativePathBuf;
+use std::collections::BTreeMap;
 use std::env;
 use std::path::{Path, PathBuf};
 use std::process;
@@ -43,19 +45,11 @@ fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode {
         Err(err) => return err,
     };
 
-    for (config_file_path, loaded_config_file) in &config_files.loaded {
-        let any_issues = loaded_config_file.has_validation_errors();
-
-        if any_issues || args.common.verbose {
-            aureum::print_config_details(
-                config_file_path,
-                &loaded_config_file.test_entries,
-                &loaded_config_file.requirement_data,
-                args.common.verbose,
-                args.common.hide_absolute_paths,
-            );
-        }
-    }
+    print_config_details_if_needed(
+        &config_files.loaded,
+        args.common.verbose,
+        args.common.hide_absolute_paths,
+    );
 
     let has_config_errors = config_files.has_config_errors();
 
@@ -97,19 +91,11 @@ fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
         Err(err) => return err,
     };
 
-    for (config_file_path, loaded_config_file) in &config_files.loaded {
-        let any_issues = loaded_config_file.has_validation_errors();
-
-        if any_issues || args.common.verbose {
-            aureum::print_config_details(
-                config_file_path,
-                &loaded_config_file.test_entries,
-                &loaded_config_file.requirement_data,
-                args.common.verbose,
-                args.common.hide_absolute_paths,
-            );
-        }
-    }
+    print_config_details_if_needed(
+        &config_files.loaded,
+        args.common.verbose,
+        args.common.hide_absolute_paths,
+    );
 
     let test_entries_in_coverage_set = config_files
         .loaded
@@ -158,18 +144,12 @@ fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
         matches!(args.output_format, RunOutputFormat::Passthrough)
             && test_entries_in_coverage_set.len() == 1;
 
-    for (config_file_path, loaded_config_file) in &config_files.loaded {
-        let any_issues = loaded_config_file.has_validation_errors();
-
-        if (any_issues || args.common.verbose) && !passthrough_with_single_test_entry {
-            aureum::print_config_details(
-                config_file_path,
-                &loaded_config_file.test_entries,
-                &loaded_config_file.requirement_data,
-                args.common.verbose,
-                args.common.hide_absolute_paths,
-            );
-        }
+    if !passthrough_with_single_test_entry {
+        print_config_details_if_needed(
+            &config_files.loaded,
+            args.common.verbose,
+            args.common.hide_absolute_paths,
+        );
     }
 
     let has_config_errors =
@@ -240,19 +220,11 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
         Err(err) => return err,
     };
 
-    for (config_file_path, loaded_config_file) in &config_files.loaded {
-        let any_issues = loaded_config_file.has_validation_errors();
-
-        if any_issues || args.common.verbose {
-            aureum::print_config_details(
-                config_file_path,
-                &loaded_config_file.test_entries,
-                &loaded_config_file.requirement_data,
-                args.common.verbose,
-                args.common.hide_absolute_paths,
-            );
-        }
-    }
+    print_config_details_if_needed(
+        &config_files.loaded,
+        args.common.verbose,
+        args.common.hide_absolute_paths,
+    );
 
     let test_entries_in_coverage_set = config_files
         .loaded
@@ -353,6 +325,24 @@ fn prepare_config_files(
     }
 
     Ok(load_config_files_result)
+}
+
+fn print_config_details_if_needed(
+    loaded: &BTreeMap<RelativePathBuf, LoadedConfigFile>,
+    verbose: bool,
+    hide_absolute_paths: bool,
+) {
+    for (config_file_path, loaded_config_file) in loaded {
+        if loaded_config_file.has_validation_errors() || verbose {
+            aureum::print_config_details(
+                config_file_path,
+                &loaded_config_file.test_entries,
+                &loaded_config_file.requirement_data,
+                verbose,
+                hide_absolute_paths,
+            );
+        }
+    }
 }
 
 fn get_report_format(output_format: &TestOutputFormat) -> ReportFormat {
