@@ -180,7 +180,9 @@ fn build_test_case(
         ProgramPath::ResolvedPath {
             requested_program: _,
             resolved_path: _,
-        } => {}
+        } => {
+            // Do nothing
+        }
     }
 
     let description = collect_error(&mut errors, config.description, requirement_data);

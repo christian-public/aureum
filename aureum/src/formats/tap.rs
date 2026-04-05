@@ -8,16 +8,11 @@ pub fn print_version() {
 }
 
 pub fn print_plan(start: usize, end: usize) {
-    println!("{}..{}", start, end)
+    println!("{start}..{end}")
 }
 
 pub fn print_ok(test_number: usize, message: &str, indent_level: usize) {
-    println!(
-        "ok     {:>indent$} - {}",
-        test_number,
-        message,
-        indent = indent_level
-    )
+    println!("ok     {test_number:>indent_level$} - {message}")
 }
 
 pub fn print_not_ok(
@@ -36,12 +31,7 @@ pub fn print_not_ok_diagnostics(
     diagnostics: &str,
     indent_level: usize,
 ) {
-    println!(
-        "not ok {:>indent$} - {}",
-        test_number,
-        message,
-        indent = indent_level
-    );
+    println!("not ok {test_number:>indent_level$} - {message}");
 
     if !diagnostics.is_empty() {
         print_diagnostics(diagnostics)
@@ -49,13 +39,13 @@ pub fn print_not_ok_diagnostics(
 }
 
 pub fn print_diagnostics(diagnostics: &str) {
-    let code_block = format!("---\n{}...", diagnostics);
+    let code_block = format!("---\n{diagnostics}...");
     println!("{}", string::indent_by(2, &code_block));
 }
 
 #[allow(dead_code)]
 pub fn print_bail_out(message: &str) {
-    println!("Bail out! {}", message)
+    println!("Bail out! {message}")
 }
 
 // ERROR FORMATTING

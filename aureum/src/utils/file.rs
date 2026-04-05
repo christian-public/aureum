@@ -17,7 +17,7 @@ where
                 .strip_suffix(".exe")
                 .map_or(display_name, String::from);
 
-            format!("<absolute path to '{}'>", display_name_without_exe)
+            format!("<absolute path to '{display_name_without_exe}'>")
         } else {
             String::from("<root directory>")
         }

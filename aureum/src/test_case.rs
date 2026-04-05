@@ -21,7 +21,7 @@ impl TestCase {
         if self.test_id.is_root() {
             path.to_string()
         } else {
-            format!("{}:{}", path, self.test_id)
+            format!("{path}:{}", self.test_id)
         }
     }
 

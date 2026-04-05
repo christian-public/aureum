@@ -8,7 +8,7 @@
 //! ```
 //! use aureum::TestId;
 //! let example = TestId::from("level1.level2");
-//! assert_eq!(format!("{}", example), "level1.level2");
+//! assert_eq!(format!("{example}"), "level1.level2");
 //! ```
 use std::fmt;
 

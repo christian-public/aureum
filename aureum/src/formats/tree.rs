@@ -76,11 +76,11 @@ fn format_string_diff(expected: &str, got: &str) -> Vec<Tree> {
             .dimmed();
         match (left_num, right_num) {
             (Some(_), None) => {
-                let text = format!("-{}", line).red();
+                let text = format!("-{line}").red();
                 format!("{left_num_str} {blank} {separator} {text}")
             }
             (None, Some(_)) => {
-                let text = format!("+{}", line).green();
+                let text = format!("+{line}").green();
                 format!("{blank} {right_num_str} {separator} {text}")
             }
             _ => {
@@ -105,28 +105,23 @@ fn format_string_diff(expected: &str, got: &str) -> Vec<Tree> {
         },
     };
 
-    let expected_lines = string_to_lines(&format!(
-        "Expected\n{}",
-        string::text_block_with_options(
-            &string::prefix_text_with_line_numbers(expected, format_expected_line,),
-            &text_block_options,
-        )
-    ));
-    let got_lines = string_to_lines(&format!(
-        "Got\n{}",
-        string::text_block_with_options(
-            &string::prefix_text_with_line_numbers(got, format_got_line),
-            &text_block_options,
-        ),
-    ));
+    let expected_output = string::text_block_with_options(
+        &string::prefix_text_with_line_numbers(expected, format_expected_line),
+        &text_block_options,
+    );
+    let expected_lines = string_to_lines(&format!("Expected\n{expected_output}"));
 
-    let diff_lines = string_to_lines(&format!(
-        "Diff\n{}",
-        string::text_block_with_options(
-            &string::prefix_diff_with_line_numbers(expected, got, format_diff_line,),
-            &text_block_options,
-        )
-    ));
+    let got_output = string::text_block_with_options(
+        &string::prefix_text_with_line_numbers(got, format_got_line),
+        &text_block_options,
+    );
+    let got_lines = string_to_lines(&format!("Got\n{got_output}"));
+
+    let diff_output = string::text_block_with_options(
+        &string::prefix_diff_with_line_numbers(expected, got, format_diff_line),
+        &text_block_options,
+    );
+    let diff_lines = string_to_lines(&format!("Diff\n{diff_output}"));
 
     vec![Leaf(expected_lines), Leaf(got_lines), Leaf(diff_lines)]
 }

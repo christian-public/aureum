@@ -100,10 +100,10 @@ pub fn print_output_as_toml(output: &ProgramOutput) {
 fn format_toml_string(s: &str) -> String {
     if s.contains('\n') {
         let escaped = s.replace('\\', "\\\\").replace('"', "\\\"");
-        format!("\"\"\"\n{}\"\"\"", escaped)
+        format!("\"\"\"\n{escaped}\"\"\"")
     } else {
         let escaped = s.replace('\\', "\\\\").replace('"', "\\\"");
-        format!("\"{}\"", escaped)
+        format!("\"{escaped}\"")
     }
 }
 
@@ -162,7 +162,7 @@ pub fn print_validate_table(entries: &BTreeMap<RelativePathBuf, ReportValidateRe
 
         let is_valid = matches!(result, ReportValidateResult::Success(_));
         if is_valid {
-            println!("{} {}", checkmark(), line);
+            println!("{} {line}", checkmark());
         } else {
             println!("{} {}", cross(), line.red());
         }
@@ -212,7 +212,7 @@ pub fn print_config_details(
                     } else {
                         resolved_path.display().to_string()
                     };
-                    format!("{} {}", checkmark(), path)
+                    format!("{} {path}", checkmark())
                 }
             };
 
@@ -253,7 +253,7 @@ pub fn print_config_details(
     } else {
         tests
             .into_iter()
-            .map(|(test_id, children)| Node(format!(":{}", test_id), children))
+            .map(|(test_id, children)| Node(format!(":{test_id}"), children))
             .collect()
     };
 
@@ -284,9 +284,8 @@ pub fn print_config_files_contain_errors() {
 
 pub fn print_run_single_program_only(test_case_count: usize) {
     eprintln!(
-        "{} `--output-format passthrough` supports only a single test, but found {} tests",
+        "{} `--output-format passthrough` supports only a single test, but found {test_case_count} tests",
         "error:".red().bold(),
-        test_case_count,
     );
     eprintln!(
         "{} Use `--output-format toml` to run multiple tests, or run the `list` command to list all tests",
@@ -297,7 +296,7 @@ pub fn print_run_single_program_only(test_case_count: usize) {
 // SUMMARY HELPERS
 
 fn summary_print_start(number_of_tests: usize) {
-    println!("🚀 Running {} tests:", number_of_tests)
+    println!("🚀 Running {number_of_tests} tests:")
 }
 
 fn summary_print_test_case(result: &Result<TestResult, RunError>) -> Result<(), RunError> {
@@ -347,8 +346,7 @@ fn summary_print_summary(number_of_tests: usize, run_results: &[RunResult]) {
 
     println!();
     println!(
-        "Test result: {} ({} passed, {} failed)",
-        status, number_of_passed_tests, number_of_failed_tests,
+        "Test result: {status} ({number_of_passed_tests} passed, {number_of_failed_tests} failed)",
     );
 }
 
@@ -357,13 +355,13 @@ fn summary_print_result(run_result: &RunResult) {
 
     let message: String;
     if let Some(description) = &run_result.test_case.description {
-        message = format!("{} - {}", test_id, description);
+        message = format!("{test_id} - {description}");
     } else {
         message = test_id;
     }
 
     if run_result.is_success() {
-        println!("{} {}", checkmark(), message);
+        println!("{} {message}", checkmark());
     } else {
         let nodes = match &run_result.result {
             Ok(result) => tree::nodes_from_test_result(result),
@@ -372,10 +370,10 @@ fn summary_print_result(run_result: &RunResult) {
             }
         };
 
-        let test_heading = format!("❌ {}", message);
+        let test_heading = format!("❌ {message}");
         let tree = Node(test_heading, nodes);
         let content = tree::draw_tree(&tree).unwrap_or(String::from("Failed to draw tree\n"));
-        print!("{}", content); // Already contains newline
+        print!("{content}"); // Already contains newline
     }
 }
 
@@ -394,7 +392,7 @@ fn tap_print_test_case(
 ) {
     let message: String;
     if let Some(description) = &test_case.description {
-        message = format!("{} # {}", test_case.id(), description);
+        message = format!("{} # {description}", test_case.id());
     } else {
         message = test_case.id();
     }
@@ -413,19 +411,21 @@ fn tap_print_test_case(
     }
 }
 
-fn tap_print_summary() {}
+fn tap_print_summary() {
+    // Do nothing
+}
 
 // OTHER HELPERS
 
 fn print_tree(tree: Tree) {
     let content = tree::draw_tree(&tree).unwrap_or(String::from("Failed to draw tree\n"));
 
-    eprint!("{}", content); // Already contains newline
+    eprint!("{content}"); // Already contains newline
     eprintln!()
 }
 
 fn config_file_heading(config_file_path: &RelativePath) -> String {
-    format!("📋 {}", config_file_path)
+    format!("📋 {config_file_path}")
 }
 
 fn requirements_map(requirements: &Requirements, requirement_data: &RequirementData) -> Vec<Tree> {
@@ -433,7 +433,7 @@ fn requirements_map(requirements: &Requirements, requirement_data: &RequirementD
 
     let format_requirement = |is_present: bool, text: &str| {
         if is_present {
-            format!("{} {}", checkmark(), text)
+            format!("{} {text}", checkmark())
         } else {
             format!("{} {}", cross(), text.red())
         }
@@ -473,15 +473,15 @@ fn requirements_map(requirements: &Requirements, requirement_data: &RequirementD
 fn format_validation_error(validation_error: &ValidationError) -> String {
     let msg = match validation_error {
         ValidationError::MissingExternalFile(file_path) => {
-            format!("Missing external file '{}'", file_path)
+            format!("Missing external file '{file_path}'")
         }
         ValidationError::MissingEnvVar(var_name) => {
-            format!("Missing environment variable '{}'", var_name)
+            format!("Missing environment variable '{var_name}'")
         }
         ValidationError::FailedToParseString => String::from("Failed to parse string"),
         ValidationError::ProgramRequired => String::from("The field 'program' is required"),
         ValidationError::ProgramNotFound(program) => {
-            format!("The program '{}' was not found", program)
+            format!("The program '{program}' was not found")
         }
         ValidationError::ExpectationRequired => {
             String::from("At least one expectation is required")

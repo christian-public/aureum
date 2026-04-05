@@ -59,7 +59,9 @@ fn collect_requirements_from_config_value<T>(
     config_value: &ConfigValue<T>,
 ) {
     match config_value {
-        ConfigValue::Literal(_) => {}
+        ConfigValue::Literal(_) => {
+            // Do nothing
+        }
         ConfigValue::ReadFromFile { file } => {
             requirements.files.insert(file.to_owned());
         }

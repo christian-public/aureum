@@ -1,7 +1,7 @@
 use diff::Result;
 
 pub fn indent_with(prefix: &str, input: &str) -> String {
-    decorate_lines(|line| format!("{}{}", prefix, line), input)
+    decorate_lines(|line| format!("{prefix}{line}"), input)
 }
 
 pub fn indent_by(indent_level: usize, input: &str) -> String {
@@ -260,11 +260,11 @@ mod tests {
         use indoc::indoc;
 
         fn format_line(width: usize) -> impl Fn(usize, &str) -> String {
-            move |line_number, line| {
+            move |num, line| {
                 if line.is_empty() {
-                    format!("{line_number:>width$} │")
+                    format!("{num:>width$} │")
                 } else {
-                    format!("{line_number:>width$} │ {line}")
+                    format!("{num:>width$} │ {line}")
                 }
             }
         }
@@ -349,7 +349,7 @@ mod tests {
                  9 │ line 9
                 10 │"};
 
-            let lines: Vec<String> = (1..=9).map(|i| format!("line {i}",)).collect();
+            let lines: Vec<String> = (1..=9).map(|i| format!("line {i}")).collect();
             let content = lines.join("\n") + "\n";
             let width = displayed_line_count(&content).to_string().len();
             let result = prefix_text_with_line_numbers(&content, format_line(width));
@@ -378,8 +378,8 @@ mod tests {
         fn format_line(width: usize) -> impl FnMut(Option<usize>, Option<usize>, &str) -> String {
             let blank = " ".repeat(width);
             move |left_num, right_num, line| {
-                let left_str = left_num.map_or(blank.clone(), |n| format!("{:>width$}", n));
-                let right_str = right_num.map_or(blank.clone(), |n| format!("{:>width$}", n));
+                let left_str = left_num.map_or(blank.clone(), |num| format!("{num:>width$}"));
+                let right_str = right_num.map_or(blank.clone(), |num| format!("{num:>width$}"));
                 match (left_num, right_num) {
                     (Some(_), None) => format!("{left_str} {blank} │ -{line}"),
                     (None, Some(_)) => format!("{blank} {right_str} │ +{line}"),
