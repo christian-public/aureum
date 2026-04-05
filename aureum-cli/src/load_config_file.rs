@@ -20,6 +20,12 @@ impl LoadedConfigFile {
     pub fn has_validation_errors(&self) -> bool {
         self.test_entries.values().any(|e| e.has_validation_error())
     }
+
+    pub fn test_entries_in_coverage_set(&self) -> impl Iterator<Item = (&TestId, &TestEntry)> {
+        self.test_entries
+            .iter()
+            .filter(|(test_id, _)| self.test_id_coverage_set.contains(test_id))
+    }
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]

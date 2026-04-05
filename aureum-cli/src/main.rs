@@ -168,19 +168,12 @@ fn list_tests(args: ListArgs, current_dir: &Path) {
         }
     }
 
-    let all_test_entries = loaded_config_files
-        .iter()
-        .flat_map(|(_, loaded_config_file)| {
-            loaded_config_file
-                .test_entries
-                .iter()
-                .filter(|(test_id, _test_entry)| {
-                    loaded_config_file.test_id_coverage_set.contains(test_id)
-                })
-        })
+    let test_entries_in_coverage_set = loaded_config_files
+        .values()
+        .flat_map(|x| x.test_entries_in_coverage_set())
         .collect::<Vec<_>>();
 
-    let all_test_cases = all_test_entries
+    let all_test_cases = test_entries_in_coverage_set
         .iter()
         .flat_map(|(_test_id, test_entry)| test_entry.test_case.as_ref().ok()) // This line is different than in `run_tests()`
         .collect::<Vec<_>>();
@@ -229,25 +222,19 @@ fn run_programs(args: RunArgs, current_dir: &Path) {
         .values()
         .any(|x| x.has_validation_errors());
 
-    let all_test_entries = loaded_config_files
-        .iter()
-        .flat_map(|(_, loaded_config_file)| {
-            loaded_config_file
-                .test_entries
-                .iter()
-                .filter(|(test_id, _test_entry)| {
-                    loaded_config_file.test_id_coverage_set.contains(test_id)
-                })
-        })
+    let test_entries_in_coverage_set = loaded_config_files
+        .values()
+        .flat_map(|x| x.test_entries_in_coverage_set())
         .collect::<Vec<_>>();
 
-    let all_test_cases = all_test_entries
+    let all_test_cases = test_entries_in_coverage_set
         .iter()
         .flat_map(|(_test_id, test_entry)| test_entry.test_case.as_ref().ok()) // This line is different than in `run_tests()`
         .collect::<Vec<_>>();
 
     let passthrough_with_single_test_entry =
-        matches!(args.output_format, RunOutputFormat::Passthrough) && all_test_entries.len() == 1;
+        matches!(args.output_format, RunOutputFormat::Passthrough)
+            && test_entries_in_coverage_set.len() == 1;
 
     for (config_file_path, loaded_config_file) in &loaded_config_files {
         let any_issues = loaded_config_file.has_validation_errors();
@@ -367,19 +354,12 @@ fn run_tests(args: TestArgs, current_dir: &Path) {
         }
     }
 
-    let all_test_entries = loaded_config_files
-        .iter()
-        .flat_map(|(_, loaded_config_file)| {
-            loaded_config_file
-                .test_entries
-                .iter()
-                .filter(|(test_id, _test_entry)| {
-                    loaded_config_file.test_id_coverage_set.contains(test_id)
-                })
-        })
+    let test_entries_in_coverage_set = loaded_config_files
+        .values()
+        .flat_map(|x| x.test_entries_in_coverage_set())
         .collect::<Vec<_>>();
 
-    let all_test_cases = all_test_entries
+    let all_test_cases = test_entries_in_coverage_set
         .iter()
         .flat_map(|(_test_id, test_entry)| test_entry.test_case_with_expectations().ok())
         .collect::<Vec<_>>();
