@@ -3,44 +3,23 @@ mod utils {
 }
 mod args;
 mod find_config_file;
+mod load_config_file;
 
 use crate::args::{
     CLI_BINARY_NAME, Command, ListArgs, RunArgs, RunOutputFormat, TestArgs, TestOutputFormat,
     ValidateArgs,
 };
-use aureum::{
-    ReportConfig, ReportFormat, ReportValidateResult, RequirementData, Requirements, TestEntry,
-    TestId, TestIdCoverageSet,
-};
-use itertools::{Either, Itertools};
+use crate::load_config_file::{ConfigFileError, LoadedConfigFile};
+use aureum::{ReportConfig, ReportFormat, ReportValidateResult, TestIdCoverageSet};
 use relative_path::RelativePathBuf;
 use std::collections::BTreeMap;
 use std::env;
-use std::fs;
-use std::io;
 use std::path::{Path, PathBuf};
 use std::process;
-use utils::file;
 
 const TEST_FAILURE_EXIT_CODE: i32 = 1;
 const INVALID_CLI_USAGE_EXIT_CODE: i32 = 2; // Matches clap's behavior
 const INVALID_CONFIG_EXIT_CODE: i32 = 3;
-
-#[cfg_attr(debug_assertions, derive(Debug))]
-struct LoadedConfigFile {
-    test_id_coverage_set: TestIdCoverageSet,
-    requirement_data: RequirementData,
-    test_entries: BTreeMap<TestId, TestEntry>,
-}
-
-#[cfg_attr(debug_assertions, derive(Debug))]
-#[allow(dead_code)]
-enum ConfigFileError {
-    NoFileName,
-    NoParentDirectory,
-    ReadFailed(io::Error),
-    ParseFailed(aureum::TomlConfigError),
-}
 
 fn main() {
     let current_dir = env::current_dir().expect("Current directory must be available");
@@ -82,7 +61,7 @@ fn validate_config_files(args: ValidateArgs, current_dir: &Path) {
     }
 
     let (loaded_config_files, invalid_config_files) =
-        load_config_files(found_config_files, current_dir);
+        load_config_file::load_config_files(found_config_files, current_dir);
 
     let table_entries =
         loaded_config_files
@@ -164,7 +143,7 @@ fn list_tests(args: ListArgs, current_dir: &Path) {
     }
 
     let (loaded_config_files, invalid_config_files) =
-        load_config_files(found_config_files, current_dir);
+        load_config_file::load_config_files(found_config_files, current_dir);
 
     for (config_file_path, config_file_error) in &invalid_config_files {
         match config_file_error {
@@ -245,7 +224,7 @@ fn run_programs(args: RunArgs, current_dir: &Path) {
     }
 
     let (loaded_config_files, invalid_config_files) =
-        load_config_files(found_config_files, current_dir);
+        load_config_file::load_config_files(found_config_files, current_dir);
 
     for (config_file_path, config_file_error) in &invalid_config_files {
         match config_file_error {
@@ -375,7 +354,7 @@ fn run_tests(args: TestArgs, current_dir: &Path) {
     }
 
     let (loaded_config_files, invalid_config_files) =
-        load_config_files(found_config_files, current_dir);
+        load_config_file::load_config_files(found_config_files, current_dir);
 
     for (config_file_path, config_file_error) in &invalid_config_files {
         match config_file_error {
@@ -481,88 +460,9 @@ fn find_and_validate_config_files(
     result.found_config_files
 }
 
-fn load_config_files(
-    found_config_files: BTreeMap<RelativePathBuf, TestIdCoverageSet>,
-    current_dir: &Path,
-) -> (
-    BTreeMap<RelativePathBuf, LoadedConfigFile>,
-    BTreeMap<RelativePathBuf, ConfigFileError>,
-) {
-    found_config_files
-        .into_iter()
-        .partition_map(|(config_file_path, test_id_coverage_set)| {
-            let result =
-                load_config_file(config_file_path.clone(), test_id_coverage_set, current_dir);
-            match result {
-                Ok(loaded) => Either::Left((config_file_path, loaded)),
-                Err(err) => Either::Right((config_file_path, err)),
-            }
-        })
-}
-
-fn load_config_file(
-    config_file_path: RelativePathBuf,
-    test_id_coverage_set: TestIdCoverageSet,
-    current_dir: &Path,
-) -> Result<LoadedConfigFile, ConfigFileError> {
-    let file_name = config_file_path
-        .file_name()
-        .ok_or(ConfigFileError::NoFileName)?;
-
-    let path_to_containing_dir = config_file_path
-        .parent()
-        .ok_or(ConfigFileError::NoParentDirectory)?;
-
-    let source = fs::read_to_string(config_file_path.to_path(current_dir))
-        .map_err(ConfigFileError::ReadFailed)?;
-
-    let config = aureum::parse_toml_config(&source).map_err(ConfigFileError::ParseFailed)?;
-
-    let requirements = aureum::get_requirements(&config);
-    let requirement_data =
-        retrieve_requirement_data(&path_to_containing_dir.to_path(current_dir), requirements);
-
-    let test_entries = aureum::build_test_entries(
-        config,
-        path_to_containing_dir,
-        file_name,
-        &requirement_data,
-        &|name, dir| file::find_executable_path(name, dir).ok(),
-    );
-
-    Ok(LoadedConfigFile {
-        test_id_coverage_set,
-        requirement_data,
-        test_entries,
-    })
-}
-
 fn get_report_format(output_format: &TestOutputFormat) -> ReportFormat {
     match output_format {
         TestOutputFormat::Summary => ReportFormat::Summary,
         TestOutputFormat::Tap => ReportFormat::Tap,
     }
-}
-
-fn retrieve_requirement_data(current_dir: &Path, requirements: Requirements) -> RequirementData {
-    let mut requirement_data = RequirementData::default();
-
-    for file in requirements.files {
-        let path = current_dir.join(&file);
-        let Ok(value) = fs::read_to_string(path) else {
-            continue;
-        };
-
-        requirement_data.files.insert(file, value);
-    }
-
-    for env_var in requirements.env_vars {
-        let Some(value) = env::var(&env_var).ok() else {
-            continue;
-        };
-
-        requirement_data.env_vars.insert(env_var, value);
-    }
-
-    requirement_data
 }
