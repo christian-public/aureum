@@ -57,7 +57,7 @@ fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode {
         }
     }
 
-    let any_failed_configs = config_files.has_config_errors();
+    let has_config_errors = config_files.has_config_errors();
 
     let table_entries =
         config_files
@@ -82,7 +82,7 @@ fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode {
 
     aureum::print_validate_table(&table_entries);
 
-    if any_failed_configs {
+    if has_config_errors {
         aureum::print_config_files_contain_errors();
 
         ExitCode::InvalidConfig
@@ -122,13 +122,13 @@ fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
         .flat_map(|(_test_id, test_entry)| test_entry.test_case.as_ref().ok()) // This line is different than in `run_tests()`
         .collect::<Vec<_>>();
 
-    let any_failed_configs = config_files.has_config_errors();
+    let has_config_errors = config_files.has_config_errors();
 
     for test_case in all_test_cases {
         println!("{}", test_case.id())
     }
 
-    if any_failed_configs {
+    if has_config_errors {
         aureum::print_config_files_contain_errors();
 
         ExitCode::InvalidConfig
@@ -172,14 +172,14 @@ fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
         }
     }
 
-    let any_failed_configs =
+    let has_config_errors =
         (config_files.has_config_errors()) && !passthrough_with_single_test_entry;
 
     let mut any_programs_failed_to_run = false;
 
     match args.output_format {
         RunOutputFormat::Passthrough => {
-            if any_failed_configs {
+            if has_config_errors {
                 aureum::print_config_files_contain_errors();
                 return ExitCode::InvalidConfig;
             }
@@ -225,7 +225,7 @@ fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
         aureum::print_one_or_more_programs_failed_to_run();
 
         ExitCode::RunProgramFailure
-    } else if any_failed_configs {
+    } else if has_config_errors {
         aureum::print_config_files_contain_errors();
 
         ExitCode::InvalidConfig
@@ -265,7 +265,7 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
         .flat_map(|(_test_id, test_entry)| test_entry.test_case_with_expectations().ok())
         .collect::<Vec<_>>();
 
-    let any_failed_configs = config_files.has_config_errors();
+    let has_config_errors = config_files.has_config_errors();
 
     let report_config = ReportConfig {
         number_of_tests: all_test_cases.len(),
@@ -284,7 +284,7 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
 
     aureum::print_summary(&report_config, &run_results);
 
-    if any_failed_configs {
+    if has_config_errors {
         aureum::print_config_files_contain_errors();
     }
 
@@ -292,7 +292,7 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
 
     if !all_tests_passed {
         ExitCode::TestFailure
-    } else if any_failed_configs {
+    } else if has_config_errors {
         ExitCode::InvalidConfig
     } else {
         ExitCode::Success
