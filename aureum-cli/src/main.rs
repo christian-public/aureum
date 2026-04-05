@@ -11,10 +11,10 @@ use crate::args::{
     ValidateArgs,
 };
 use crate::exit_code::ExitCode;
-use crate::load_config_file::{ConfigFileError, LoadedConfigFile};
+use crate::load_config_file::{ConfigFileError, LoadConfigFilesResult, LoadedConfigFile};
 use aureum::{ReportConfig, ReportFormat, ReportValidateResult};
 use std::env;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process;
 
 fn main() {
@@ -38,45 +38,11 @@ fn main() {
 // COMMANDS
 
 fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode {
-    let found_config_files_result = find_config_file::find_config_files(args.paths, current_dir);
-
-    if !found_config_files_result.errors.is_empty() {
-        let paths = found_config_files_result
-            .errors
-            .keys()
-            .cloned()
-            .collect::<Vec<_>>();
-        aureum::print_invalid_paths(&paths);
-    }
-
-    if found_config_files_result.found_config_files.is_empty() {
-        aureum::print_no_config_files();
-        return ExitCode::InvalidConfig;
-    }
-
-    if args.common.verbose {
-        let config_files = found_config_files_result
-            .found_config_files
-            .keys()
-            .cloned()
-            .collect::<Vec<_>>();
-
-        aureum::print_config_files_found(&config_files);
-    }
-
     let load_config_files_result =
-        load_config_file::load_config_files(found_config_files_result, current_dir);
-
-    for (config_file_path, config_file_error) in &load_config_files_result.invalid {
-        match config_file_error {
-            ConfigFileError::ParseFailed(err) => {
-                aureum::print_config_file_error(config_file_path, err);
-            }
-            _ => {
-                // TODO: Handle other errors
-            }
-        }
-    }
+        match prepare_config_files(args.paths, args.common.verbose, current_dir) {
+            Ok(result) => result,
+            Err(err) => return err,
+        };
 
     for (config_file_path, loaded_config_file) in &load_config_files_result.loaded {
         let any_issues = loaded_config_file.has_validation_errors();
@@ -131,45 +97,11 @@ fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode {
 }
 
 fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
-    let found_config_files_result = find_config_file::find_config_files(args.paths, current_dir);
-
-    if !found_config_files_result.errors.is_empty() {
-        let paths = found_config_files_result
-            .errors
-            .keys()
-            .cloned()
-            .collect::<Vec<_>>();
-        aureum::print_invalid_paths(&paths);
-    }
-
-    if found_config_files_result.found_config_files.is_empty() {
-        aureum::print_no_config_files();
-        return ExitCode::InvalidConfig;
-    }
-
-    if args.common.verbose {
-        let config_files = found_config_files_result
-            .found_config_files
-            .keys()
-            .cloned()
-            .collect::<Vec<_>>();
-
-        aureum::print_config_files_found(&config_files);
-    }
-
     let load_config_files_result =
-        load_config_file::load_config_files(found_config_files_result, current_dir);
-
-    for (config_file_path, config_file_error) in &load_config_files_result.invalid {
-        match config_file_error {
-            ConfigFileError::ParseFailed(err) => {
-                aureum::print_config_file_error(config_file_path, err);
-            }
-            _ => {
-                // TODO: Handle other errors
-            }
-        }
-    }
+        match prepare_config_files(args.paths, args.common.verbose, current_dir) {
+            Ok(result) => result,
+            Err(err) => return err,
+        };
 
     for (config_file_path, loaded_config_file) in &load_config_files_result.loaded {
         let any_issues = loaded_config_file.has_validation_errors();
@@ -212,45 +144,11 @@ fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
 }
 
 fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
-    let found_config_files_result = find_config_file::find_config_files(args.paths, current_dir);
-
-    if !found_config_files_result.errors.is_empty() {
-        let paths = found_config_files_result
-            .errors
-            .keys()
-            .cloned()
-            .collect::<Vec<_>>();
-        aureum::print_invalid_paths(&paths);
-    }
-
-    if found_config_files_result.found_config_files.is_empty() {
-        aureum::print_no_config_files();
-        return ExitCode::InvalidConfig;
-    }
-
-    if args.common.verbose {
-        let config_files = found_config_files_result
-            .found_config_files
-            .keys()
-            .cloned()
-            .collect::<Vec<_>>();
-
-        aureum::print_config_files_found(&config_files);
-    }
-
     let load_config_files_result =
-        load_config_file::load_config_files(found_config_files_result, current_dir);
-
-    for (config_file_path, config_file_error) in &load_config_files_result.invalid {
-        match config_file_error {
-            ConfigFileError::ParseFailed(err) => {
-                aureum::print_config_file_error(config_file_path, err);
-            }
-            _ => {
-                // TODO: Handle other errors
-            }
-        }
-    }
+        match prepare_config_files(args.paths, args.common.verbose, current_dir) {
+            Ok(result) => result,
+            Err(err) => return err,
+        };
 
     let test_entries_in_coverage_set = load_config_files_result
         .loaded
@@ -344,45 +242,11 @@ fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
 }
 
 fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
-    let found_config_files_result = find_config_file::find_config_files(args.paths, current_dir);
-
-    if !found_config_files_result.errors.is_empty() {
-        let paths = found_config_files_result
-            .errors
-            .keys()
-            .cloned()
-            .collect::<Vec<_>>();
-        aureum::print_invalid_paths(&paths);
-    }
-
-    if found_config_files_result.found_config_files.is_empty() {
-        aureum::print_no_config_files();
-        return ExitCode::InvalidConfig;
-    }
-
-    if args.common.verbose {
-        let config_files = found_config_files_result
-            .found_config_files
-            .keys()
-            .cloned()
-            .collect::<Vec<_>>();
-
-        aureum::print_config_files_found(&config_files);
-    }
-
     let load_config_files_result =
-        load_config_file::load_config_files(found_config_files_result, current_dir);
-
-    for (config_file_path, config_file_error) in &load_config_files_result.invalid {
-        match config_file_error {
-            ConfigFileError::ParseFailed(err) => {
-                aureum::print_config_file_error(config_file_path, err);
-            }
-            _ => {
-                // TODO: Handle other errors
-            }
-        }
-    }
+        match prepare_config_files(args.paths, args.common.verbose, current_dir) {
+            Ok(result) => result,
+            Err(err) => return err,
+        };
 
     for (config_file_path, loaded_config_file) in &load_config_files_result.loaded {
         let any_issues = loaded_config_file.has_validation_errors();
@@ -450,6 +314,54 @@ fn print_version() -> ExitCode {
 }
 
 // HELPERS
+
+fn prepare_config_files(
+    paths: Vec<PathBuf>,
+    verbose: bool,
+    current_dir: &Path,
+) -> Result<LoadConfigFilesResult, ExitCode> {
+    let find_config_files_result = find_config_file::find_config_files(paths, current_dir);
+
+    let had_find_errors = !find_config_files_result.errors.is_empty();
+    if had_find_errors {
+        let paths = find_config_files_result
+            .errors
+            .keys()
+            .cloned()
+            .collect::<Vec<_>>();
+        aureum::print_invalid_paths(&paths);
+    }
+
+    if find_config_files_result.found_config_files.is_empty() {
+        aureum::print_no_config_files();
+        return Err(ExitCode::InvalidConfig);
+    }
+
+    if verbose {
+        let config_files = find_config_files_result
+            .found_config_files
+            .keys()
+            .cloned()
+            .collect::<Vec<_>>();
+        aureum::print_config_files_found(&config_files);
+    }
+
+    let load_config_files_result =
+        load_config_file::load_config_files(find_config_files_result, current_dir);
+
+    for (config_file_path, config_file_error) in &load_config_files_result.invalid {
+        match config_file_error {
+            ConfigFileError::ParseFailed(err) => {
+                aureum::print_config_file_error(config_file_path, err);
+            }
+            _ => {
+                // TODO: Handle other errors
+            }
+        }
+    }
+
+    Ok(load_config_files_result)
+}
 
 fn get_report_format(output_format: &TestOutputFormat) -> ReportFormat {
     match output_format {
