@@ -10,11 +10,9 @@ use crate::args::{
     ValidateArgs,
 };
 use crate::load_config_file::{ConfigFileError, LoadedConfigFile};
-use aureum::{ReportConfig, ReportFormat, ReportValidateResult, TestIdCoverageSet};
-use relative_path::RelativePathBuf;
-use std::collections::BTreeMap;
+use aureum::{ReportConfig, ReportFormat, ReportValidateResult};
 use std::env;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process;
 
 const TEST_FAILURE_EXIT_CODE: i32 = 1;
@@ -47,7 +45,17 @@ fn main() {
 // COMMANDS
 
 fn validate_config_files(args: ValidateArgs, current_dir: &Path) {
-    let found_config_files = find_and_validate_config_files(args.paths, current_dir);
+    let found_config_files_result = find_config_file::find_config_files(args.paths, current_dir);
+
+    if !found_config_files_result.errors.is_empty() {
+        let paths = found_config_files_result
+            .errors
+            .into_keys()
+            .collect::<Vec<_>>();
+        aureum::print_invalid_paths(paths);
+    }
+
+    let found_config_files = found_config_files_result.found_config_files;
 
     if found_config_files.is_empty() {
         aureum::print_no_config_files();
@@ -123,7 +131,17 @@ fn validate_config_files(args: ValidateArgs, current_dir: &Path) {
 }
 
 fn list_tests(args: ListArgs, current_dir: &Path) {
-    let found_config_files = find_and_validate_config_files(args.paths, current_dir);
+    let found_config_files_result = find_config_file::find_config_files(args.paths, current_dir);
+
+    if !found_config_files_result.errors.is_empty() {
+        let paths = found_config_files_result
+            .errors
+            .into_keys()
+            .collect::<Vec<_>>();
+        aureum::print_invalid_paths(paths);
+    }
+
+    let found_config_files = found_config_files_result.found_config_files;
 
     if found_config_files.is_empty() {
         aureum::print_no_config_files();
@@ -191,7 +209,17 @@ fn list_tests(args: ListArgs, current_dir: &Path) {
 }
 
 fn run_programs(args: RunArgs, current_dir: &Path) {
-    let found_config_files = find_and_validate_config_files(args.paths, current_dir);
+    let found_config_files_result = find_config_file::find_config_files(args.paths, current_dir);
+
+    if !found_config_files_result.errors.is_empty() {
+        let paths = found_config_files_result
+            .errors
+            .into_keys()
+            .collect::<Vec<_>>();
+        aureum::print_invalid_paths(paths);
+    }
+
+    let found_config_files = found_config_files_result.found_config_files;
 
     if found_config_files.is_empty() {
         aureum::print_no_config_files();
@@ -309,7 +337,17 @@ fn run_programs(args: RunArgs, current_dir: &Path) {
 }
 
 fn run_tests(args: TestArgs, current_dir: &Path) {
-    let found_config_files = find_and_validate_config_files(args.paths, current_dir);
+    let found_config_files_result = find_config_file::find_config_files(args.paths, current_dir);
+
+    if !found_config_files_result.errors.is_empty() {
+        let paths = found_config_files_result
+            .errors
+            .into_keys()
+            .collect::<Vec<_>>();
+        aureum::print_invalid_paths(paths);
+    }
+
+    let found_config_files = found_config_files_result.found_config_files;
 
     if found_config_files.is_empty() {
         aureum::print_no_config_files();
@@ -401,20 +439,6 @@ fn print_version() {
 }
 
 // HELPERS
-
-fn find_and_validate_config_files(
-    paths: Vec<PathBuf>,
-    current_dir: &Path,
-) -> BTreeMap<RelativePathBuf, TestIdCoverageSet> {
-    let result = find_config_file::find_config_files(paths, current_dir);
-
-    if !result.errors.is_empty() {
-        let paths = result.errors.into_keys().collect::<Vec<_>>();
-        aureum::print_invalid_paths(paths);
-    }
-
-    result.found_config_files
-}
 
 fn get_report_format(output_format: &TestOutputFormat) -> ReportFormat {
     match output_format {
