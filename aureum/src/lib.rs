@@ -45,7 +45,7 @@ pub use utils::string::format_lines;
 // Init
 pub use report::{print_failed_to_write_file, print_file_already_exists};
 // Test case
-pub use report::{print_start_test_cases, print_summary, print_test_case};
+pub use report::{print_test_case, print_test_cases_end, print_test_cases_start};
 // Run program
 pub use report::{
     print_failed_to_run_program, print_failed_to_run_program_as_toml,

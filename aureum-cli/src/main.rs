@@ -307,7 +307,7 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
         format: get_report_format(&args.output_format),
     };
 
-    aureum::print_start_test_cases(&report_config);
+    aureum::print_test_cases_start(&report_config);
 
     let run_results = aureum::run_test_cases(
         &report_config,
@@ -317,7 +317,7 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
         &aureum::print_test_case,
     );
 
-    aureum::print_summary(&report_config, &run_results);
+    aureum::print_test_cases_end(&report_config, &run_results);
 
     if has_config_errors {
         aureum::print_config_files_contain_errors();
