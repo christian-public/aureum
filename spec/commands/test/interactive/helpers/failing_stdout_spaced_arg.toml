@@ -1,0 +1,3 @@
+program = "echo"
+program_arguments = ["hello world"]
+expected_stdout = "expected"

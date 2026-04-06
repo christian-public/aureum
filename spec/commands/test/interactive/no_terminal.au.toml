@@ -1,0 +1,12 @@
+program = { env = "AUREUM_TEST_EXEC" }
+program_arguments = [
+  "test",
+  "--interactive",
+  "helpers/failing_stdout_only.toml",
+]
+
+expected_stdout = ""
+expected_stderr = """
+error: --interactive requires a terminal
+"""
+expected_exit_code = 2

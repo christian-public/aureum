@@ -1,5 +1,6 @@
 use crate::formats::summary;
 use crate::formats::tap;
+use crate::report::label;
 use crate::report::symbol;
 use crate::test_case::TestCase;
 use crate::test_result::TestResult;
@@ -21,6 +22,10 @@ pub enum ReportFormat {
 pub struct ReportConfig {
     pub number_of_tests: usize,
     pub format: ReportFormat,
+}
+
+pub fn print_interactive_mode_requires_a_terminal_error() {
+    eprintln!("{} --interactive requires a terminal", label::error());
 }
 
 pub fn print_test_cases_start(report_config: &ReportConfig) {

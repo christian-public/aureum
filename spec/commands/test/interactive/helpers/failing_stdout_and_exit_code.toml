@@ -1,0 +1,4 @@
+program = "echo"
+program_arguments = ["actual"]
+expected_stdout = "expected"
+expected_exit_code = 1

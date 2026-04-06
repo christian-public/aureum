@@ -1,14 +1,16 @@
 mod utils {
     pub mod file;
+    pub mod shell;
 }
 mod args;
 mod exit_code;
 mod find_config_file;
+mod interactive;
 mod load_config_file;
 mod template;
 
 use crate::args::{
-    CLI_BINARY_NAME, Command, InitArgs, ListArgs, RunArgs, RunOutputFormat, TestArgs,
+    CLI_BINARY_NAME, Command, InitArgs, ListArgs, RunArgs, RunOutputFormat, TerminalSize, TestArgs,
     TestOutputFormat, ValidateArgs,
 };
 use crate::exit_code::ExitCode;
@@ -18,6 +20,7 @@ use relative_path::RelativePathBuf;
 use std::collections::BTreeMap;
 use std::env;
 use std::fs;
+use std::io::{self, IsTerminal};
 use std::path::{Path, PathBuf};
 use std::process;
 
@@ -280,16 +283,15 @@ fn run_programs_with_toml_output(all_test_cases: &[TestCase], current_dir: &Path
 }
 
 fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
+    if args.interactive && !io::stdout().is_terminal() {
+        aureum::print_interactive_mode_requires_a_terminal_error();
+        return ExitCode::InvalidUsage;
+    }
+
     let config_files = match prepare_config_files(args.paths, args.common.verbose, current_dir) {
         Ok(result) => result,
         Err(err) => return err,
     };
-
-    print_config_details_if_needed(
-        &config_files.loaded,
-        args.common.verbose,
-        args.common.hide_absolute_paths,
-    );
 
     let test_entries_in_coverage_set = config_files
         .loaded
@@ -304,27 +306,71 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
 
     let has_config_errors = config_files.has_config_errors();
 
-    let report_config = ReportConfig {
-        number_of_tests: all_test_cases.len(),
-        format: get_report_format(&args.format),
+    let run_results = if args.interactive {
+        match interactive::run_with_progress_and_review(&all_test_cases, args.parallel, current_dir)
+        {
+            Ok(r) => r,
+            Err(e) => {
+                eprintln!("error: Interactive session failed: {e}");
+                return ExitCode::TestFailure;
+            }
+        }
+    } else {
+        // --record suppresses normal output; only TUI frames go to stdout.
+        let quiet = args.record.is_some();
+
+        let report_config = ReportConfig {
+            number_of_tests: all_test_cases.len(),
+            format: get_report_format(&args.format),
+        };
+
+        if !quiet {
+            print_config_details_if_needed(
+                &config_files.loaded,
+                args.common.verbose,
+                args.common.hide_absolute_paths,
+            );
+            aureum::print_test_cases_start(&report_config);
+        }
+
+        let results = aureum::run_test_cases(
+            &all_test_cases,
+            args.parallel,
+            current_dir,
+            &|index, test_case, result| {
+                if quiet {
+                    Ok(())
+                } else {
+                    aureum::print_test_case(&report_config, index, test_case, result)
+                }
+            },
+        );
+
+        if !quiet {
+            aureum::print_test_cases_end(&report_config, &results);
+        }
+
+        if has_config_errors && !quiet {
+            aureum::print_config_files_contain_errors();
+        }
+
+        if let Some(TerminalSize { width, height }) = args.record {
+            let stdin = io::stdin();
+            let stdout = io::stdout();
+            if let Err(e) = interactive::run_interactive_updates(
+                &results,
+                current_dir,
+                &mut stdin.lock(),
+                &mut stdout.lock(),
+                width,
+                height,
+            ) {
+                eprintln!("error: Record session failed: {e}");
+            }
+        }
+
+        results
     };
-
-    aureum::print_test_cases_start(&report_config);
-
-    let run_results = aureum::run_test_cases(
-        &all_test_cases,
-        args.parallel,
-        current_dir,
-        &|index, test_case, result| {
-            aureum::print_test_case(&report_config, index, test_case, result)
-        },
-    );
-
-    aureum::print_test_cases_end(&report_config, &run_results);
-
-    if has_config_errors {
-        aureum::print_config_files_contain_errors();
-    }
 
     let all_tests_passed = run_results.iter().all(|t| t.is_success());
 

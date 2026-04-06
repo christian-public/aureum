@@ -147,6 +147,56 @@ pub fn prefix_diff_with_line_numbers(
     diff_output
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub enum DiffLineType {
+    Removed,
+    Unchanged,
+    Added,
+}
+
+/// Iterates diff lines between `expected` and `got`, calling `f` for each one.
+/// Manages left/right line counters so callers don't have to.
+pub fn for_each_diff_line(
+    expected: &str,
+    got: &str,
+    mut f: impl FnMut(DiffLineType, Option<usize>, Option<usize>, &str),
+) {
+    let mut left_num = 1usize;
+    let mut right_num = 1usize;
+
+    for d in diff::lines(expected, got) {
+        match d {
+            Result::Left(line) => {
+                f(DiffLineType::Removed, Some(left_num), None, line);
+                left_num += 1;
+            }
+            Result::Both(line, _) => {
+                f(
+                    DiffLineType::Unchanged,
+                    Some(left_num),
+                    Some(right_num),
+                    line,
+                );
+                left_num += 1;
+                right_num += 1;
+            }
+            Result::Right(line) => {
+                f(DiffLineType::Added, None, Some(right_num), line);
+                right_num += 1;
+            }
+        }
+    }
+}
+
+/// Returns the width of the line-number column needed to display diffs between
+/// `expected` and `got`.
+pub fn diff_column_width(expected: &str, got: &str) -> usize {
+    displayed_line_count(expected)
+        .max(displayed_line_count(got))
+        .to_string()
+        .len()
+}
+
 pub fn displayed_line_count(content: &str) -> usize {
     if content.is_empty() {
         1

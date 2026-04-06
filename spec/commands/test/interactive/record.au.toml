@@ -1,0 +1,217 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+# The initial TUI frame is emitted when using --record (no leading --- separator).
+[tests.initial_frame]
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "helpers/failing_stdout_only.toml",
+]
+stdin = "q\n"
+expected_stdout = { file = "snapshots/record_initial_frame.txt" }
+expected_exit_code = 1
+
+# Arguments containing spaces are single-quoted so the command can be pasted into a terminal.
+[tests.spaced_arg_is_quoted]
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "helpers/failing_stdout_spaced_arg.toml",
+]
+stdin = "q\n"
+expected_stdout = { file = "snapshots/record_spaced_arg.txt" }
+expected_exit_code = 1
+
+# Pressing a navigation key emits a --- separator followed by the new frame.
+[tests.key_press_emits_separator]
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "helpers/failing_stdout_only.toml",
+]
+stdin = "1\nq\n"
+expected_stdout = { file = "snapshots/record_tab_switch_to_expected.txt" }
+expected_exit_code = 1
+
+# Switching to the Stderr field (e) and pressing 3 shows "No difference".
+[tests.not_checked_field_diff_shows_no_difference]
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "helpers/failing_stdout_only.toml",
+]
+stdin = "e\n3\nq\n"
+expected_stdout = { file = "snapshots/record_stderr_not_checked_diff.txt" }
+expected_exit_code = 1
+
+# Switching to the Stderr field (e) and pressing 1 shows "(not configured)".
+[tests.not_checked_field_expected_shows_not_configured]
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "helpers/failing_stdout_only.toml",
+]
+stdin = "e\n1\nq\n"
+expected_stdout = { file = "snapshots/record_stderr_not_checked_expected.txt" }
+expected_exit_code = 1
+
+# Switching to the Stderr field (e) and pressing 2 shows the actual program output.
+[tests.not_checked_field_got_shows_actual]
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "helpers/failing_stdout_only.toml",
+]
+stdin = "e\n2\nq\n"
+expected_stdout = { file = "snapshots/record_stderr_not_checked_got.txt" }
+expected_exit_code = 1
+
+# Pressing i switches to the stdin view, showing line numbers on the right (like Got view).
+[tests.stdin_view]
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "helpers/failing_cat_with_stdin.toml",
+]
+stdin = "i\nq\n"
+expected_stdout = { file = "snapshots/record_stdin_view.txt" }
+expected_exit_code = 1
+
+# When two fields fail, Enter after deciding the first auto-navigates to the second undecided field.
+[tests.multi_field_navigation]
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "helpers/failing_stdout_and_exit_code.toml",
+]
+stdin = "n\nenter\nn\nenter\nq\n"
+expected_stdout = { file = "snapshots/record_multi_field_navigation.txt" }
+expected_exit_code = 1
+
+# Pressing l from the diff view opens the list with the current test highlighted.
+[tests.list_initial_frame]
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "helpers/two_failing_stdout_tests.toml",
+]
+stdin = "l\nq\n"
+expected_stdout = { file = "snapshots/record_list_initial_frame.txt" }
+expected_exit_code = 1
+
+# Pressing Down in the list moves selection to the next test.
+[tests.list_navigate]
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "helpers/two_failing_stdout_tests.toml",
+]
+stdin = "l\ndown\nq\n"
+expected_stdout = { file = "snapshots/record_list_navigate.txt" }
+expected_exit_code = 1
+
+# Pressing Enter on a test in the list opens its diff view.
+[tests.list_jump_to_test]
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "helpers/two_failing_stdout_tests.toml",
+]
+stdin = "l\ndown\nenter\nq\n"
+expected_stdout = { file = "snapshots/record_list_jump.txt" }
+expected_exit_code = 1
+
+# Decision indicators show [⊘] for skipped tests and [ ] for undecided.
+[tests.list_decision_indicator]
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "helpers/two_failing_stdout_tests.toml",
+]
+stdin = "n\nenter\nl\nq\n"
+expected_stdout = { file = "snapshots/record_list_decision_indicator.txt" }
+expected_exit_code = 1
+
+# Partial decisions (only one of two failing fields decided) show [ · ] in the list.
+[tests.list_partial_decision]
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "helpers/failing_stdout_and_exit_code.toml",
+]
+stdin = "n\nl\nq\n"
+expected_stdout = { file = "snapshots/record_list_partial_decision.txt" }
+expected_exit_code = 1
+
+# Scrolling past the last content line is clamped so at least one line stays visible.
+[tests.scroll_clamped_to_last_line]
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "helpers/failing_stdout_only.toml",
+]
+stdin = "down\ndown\ndown\ndown\ndown\nq\n"
+expected_stdout = { file = "snapshots/record_scroll_clamped.txt" }
+expected_exit_code = 1
+
+# After pressing Down past the last line, the first Up immediately scrolls back up by one.
+[tests.scroll_up_after_excess_down]
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "helpers/failing_stdout_only.toml",
+]
+stdin = "down\ndown\ndown\nup\nq\n"
+expected_stdout = { file = "snapshots/record_scroll_up_after_excess_down.txt" }
+expected_exit_code = 1
+
+# Pressing Esc in the list returns to the previously viewed test, ignoring any navigation done in the list.
+[tests.list_esc_goes_back]
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "helpers/two_failing_stdout_tests.toml",
+]
+stdin = "l\ndown\nesc\nq\n"
+expected_stdout = { file = "snapshots/record_list_esc_goes_back.txt" }
+expected_exit_code = 1
+
+# Pressing p mid-way through a multi-field test preserves the decisions made so far.
+[tests.go_back_preserves_partial_decisions]
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "helpers/failing_stdout_and_exit_code.toml",
+]
+stdin = "n\nenter\np\nq\n"
+expected_stdout = { file = "snapshots/record_go_back_preserves_partial_decisions.txt" }
+expected_exit_code = 1
+
+# Pressing p after advancing to the second test goes back to the first and restores its decision.
+[tests.go_back_restores_decision]
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "helpers/two_failing_stdout_tests.toml",
+]
+stdin = "n\nenter\np\nq\n"
+expected_stdout = { file = "snapshots/record_go_back_restores_decision.txt" }
+expected_exit_code = 1

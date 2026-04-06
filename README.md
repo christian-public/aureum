@@ -46,9 +46,10 @@ Arguments:
 
 Options:
       --format <FORMAT>  Options: summary, tap [default: summary]
-      --parallel                       Run tests in parallel
-      --verbose                        Print extra information about config files
-  -h, --help                           Print help
+      --parallel         Run tests in parallel
+      --interactive      Interactively review and accept new expectations for each failed test
+      --verbose          Print extra information about config files
+  -h, --help             Print help
 ```
 
 When running `aureum test`, you may specify one or more files/directories/[glob patterns](<https://en.wikipedia.org/wiki/Glob_(programming)>). When specifying a directory, `aureum` will search for files with the file extension `.au.toml`. This file extension was chosen to allow other `.toml` files to be located in the same directory structure as the Aureum-specific config files.
@@ -107,9 +108,11 @@ Filename: `multiple_tests.au.toml`
 ```toml
 program = "echo"
 
+
 [tests.test1]
 program_arguments = ["-n", "Test 1"]
 expected_stdout = "Test 1"
+
 
 [tests.test2]
 program_arguments = ["-n", "Test 2"]

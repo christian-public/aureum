@@ -12,6 +12,7 @@ Arguments:
 Options:
       --format <FORMAT>  Options: summary, tap [default: summary]
       --parallel         Run tests in parallel
+      --interactive      Interactively review and accept new expectations for each failed test
       --verbose          Print extra information about config files
   -h, --help             Print help
 """

@@ -104,6 +104,15 @@ pub struct TestArgs {
     #[arg(long)]
     pub parallel: bool,
 
+    /// Interactively review and accept new expectations for each failed test
+    #[arg(long)]
+    pub interactive: bool,
+
+    /// Record TUI frames to stdout using a headless terminal of the given size (format: WxH).
+    /// Reads key names from stdin (one per line). Implies --interactive.
+    #[arg(long, value_name = "WxH", hide = true)]
+    pub record: Option<TerminalSize>,
+
     #[command(flatten)]
     pub common: CommonArgs,
 }
@@ -155,5 +164,32 @@ impl str::FromStr for TestOutputFormat {
             "tap" => Ok(Self::Tap),
             _ => Err("Invalid output format"),
         }
+    }
+}
+
+#[derive(Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub struct TerminalSize {
+    pub width: u16,
+    pub height: u16,
+}
+
+impl str::FromStr for TerminalSize {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let (w_str, h_str) = s
+            .split_once('x')
+            .or_else(|| s.split_once('X'))
+            .ok_or_else(|| format!("expected WxH format (e.g. 120x24), got {s:?}"))?;
+
+        let width = w_str
+            .parse::<u16>()
+            .map_err(|_| format!("invalid width {w_str:?}"))?;
+        let height = h_str
+            .parse::<u16>()
+            .map_err(|_| format!("invalid height {h_str:?}"))?;
+
+        Ok(Self { width, height })
     }
 }

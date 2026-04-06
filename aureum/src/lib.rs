@@ -58,7 +58,10 @@ pub use report::run::{
     print_one_or_more_programs_failed_to_run, print_output_as_toml,
     print_test_case_id_as_toml_comment, print_verbose_is_not_supported_in_passthrough,
 };
-pub use report::test_case::{print_test_case, print_test_cases_end, print_test_cases_start};
+pub use report::test_case::{
+    print_interactive_mode_requires_a_terminal_error, print_test_case, print_test_cases_end,
+    print_test_cases_start,
+};
 pub use report::validate::{
     print_config_details, print_config_file_error, print_config_files_contain_errors,
     print_config_files_found, print_invalid_paths, print_no_config_files,

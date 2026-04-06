@@ -1,0 +1,3 @@
+program = "cat"
+stdin = "hello\nworld\n"
+expected_stdout = "different output\n"
