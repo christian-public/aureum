@@ -179,7 +179,7 @@ fn compare_result<T: Eq>(expected: Option<T>, got: T) -> ValueComparison<T> {
             ValueComparison::Diff { expected, got }
         }
     } else {
-        ValueComparison::NotChecked
+        ValueComparison::NotChecked(got)
     }
 }
 

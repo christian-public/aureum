@@ -13,20 +13,27 @@ impl TestResult {
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum ValueComparison<T> {
-    NotChecked,
-    Matches(T),
+    NotChecked(T), // Contains the `got` value
+    Matches(T),    // Contains the `got` value
     Diff { expected: T, got: T },
 }
 
 impl<T> ValueComparison<T> {
     pub fn is_success(&self) -> bool {
         match self {
-            Self::NotChecked => true,
+            Self::NotChecked(_) => true,
             Self::Matches(_) => true,
             Self::Diff {
                 expected: _,
                 got: _,
             } => false,
+        }
+    }
+
+    pub fn got(&self) -> &T {
+        match self {
+            Self::NotChecked(got) | Self::Matches(got) => got,
+            Self::Diff { got, .. } => got,
         }
     }
 }
