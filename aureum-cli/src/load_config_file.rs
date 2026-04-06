@@ -56,10 +56,10 @@ pub enum ConfigFileError {
 }
 
 pub fn load_config_files(
-    found_config_files_result: FindConfigFilesResult,
+    find_config_files_result: FindConfigFilesResult,
     current_dir: &Path,
 ) -> LoadConfigFilesResult {
-    let (loaded, invalid) = found_config_files_result.found.into_iter().partition_map(
+    let (loaded, invalid) = find_config_files_result.found.into_iter().partition_map(
         |(config_file_path, test_id_coverage_set)| {
             let result =
                 load_config_file(config_file_path.clone(), test_id_coverage_set, current_dir);
@@ -73,7 +73,7 @@ pub fn load_config_files(
     LoadConfigFilesResult {
         loaded,
         invalid,
-        had_find_errors: !found_config_files_result.errors.is_empty(),
+        had_find_errors: !find_config_files_result.errors.is_empty(),
     }
 }
 
