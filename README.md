@@ -12,7 +12,7 @@ Key functionality:
 - Tests are allowed to reference environment variables and external files.
 - Supports two output formats: `summary` and [`tap`](https://testanything.org).
 - Tries to provide helpful error messages.
-- `aureum` is tested by `aureum`. See [`spec`](spec) directory.
+- `aureum` is tested by `aureum`. See [`spec/`](spec) directory.
 - Runs on Linux, macOS and Windows.
 
 This tool is best suited to test executables that are stateless, i.e. running an executable with a given input always produces the same output.
