@@ -221,9 +221,21 @@ fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
                 args.common.hide_absolute_paths,
             );
 
+            let any_programs_failed_to_run =
+                run_programs_with_toml_output(&all_test_cases, current_dir);
             let has_config_errors = config_files.has_config_errors();
 
-            run_programs_with_toml_output(&all_test_cases, has_config_errors, current_dir)
+            if any_programs_failed_to_run {
+                aureum::print_one_or_more_programs_failed_to_run();
+
+                ExitCode::RunProgramFailure
+            } else if has_config_errors {
+                aureum::print_config_files_contain_errors();
+
+                ExitCode::InvalidConfig
+            } else {
+                ExitCode::Success
+            }
         }
     }
 }
@@ -239,11 +251,7 @@ fn run_program_as_passthrough(test_case: &TestCase, current_dir: &Path) -> ExitC
     }
 }
 
-fn run_programs_with_toml_output(
-    all_test_cases: &[TestCase],
-    has_config_errors: bool,
-    current_dir: &Path,
-) -> ExitCode {
+fn run_programs_with_toml_output(all_test_cases: &[TestCase], current_dir: &Path) -> bool {
     let mut any_programs_failed_to_run = false;
 
     for (index, test_case) in all_test_cases.iter().enumerate() {
@@ -264,17 +272,7 @@ fn run_programs_with_toml_output(
         }
     }
 
-    if any_programs_failed_to_run {
-        aureum::print_one_or_more_programs_failed_to_run();
-
-        ExitCode::RunProgramFailure
-    } else if has_config_errors {
-        aureum::print_config_files_contain_errors();
-
-        ExitCode::InvalidConfig
-    } else {
-        ExitCode::Success
-    }
+    any_programs_failed_to_run
 }
 
 fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
