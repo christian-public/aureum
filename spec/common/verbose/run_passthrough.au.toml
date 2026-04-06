@@ -6,19 +6,10 @@ program_arguments = ["run", "--output-format", "passthrough", "helpers/*.toml"]
 expected_stdout = """
 """
 expected_stderr = """
-📋 helpers/many_requirements.toml
-├── :env_var_exists
-├── :env_var_missing
-│   └── Validation errors
-│       └── ✘ Missing environment variable 'AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST'
-├── :external_file_exists
-└── :external_file_missing
-    └── Validation errors
-        └── ✘ Missing external file 'aureum_test_this_file_does_not_exist'
-
-warning: Some config files contain errors (See above)
+error: `--output-format passthrough` supports only a single test, but found 5 tests
+hint: Use `--output-format toml` to run multiple tests, or run the `list` command to list all tests
 """
-expected_exit_code = 3
+expected_exit_code = 2
 
 
 [tests.with_verbose]

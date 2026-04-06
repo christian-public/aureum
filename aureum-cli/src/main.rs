@@ -167,6 +167,13 @@ fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
 }
 
 fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
+    let is_passthrough = matches!(args.output_format, RunOutputFormat::Passthrough);
+    if is_passthrough && args.common.verbose {
+        aureum::print_verbose_is_not_supported_in_passthrough();
+
+        return ExitCode::InvalidUsage;
+    }
+
     let config_files = match prepare_config_files(args.paths, args.common.verbose, current_dir) {
         Ok(result) => result,
         Err(err) => return err,
@@ -183,31 +190,37 @@ fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
         .flat_map(|(_test_id, test_entry)| test_entry.test_case.clone().ok())
         .collect::<Vec<_>>();
 
-    let passthrough_with_single_test_entry =
-        matches!(args.output_format, RunOutputFormat::Passthrough)
-            && test_entries_in_coverage_set.len() == 1;
-
-    if !passthrough_with_single_test_entry {
-        print_config_details_if_needed(
-            &config_files.loaded,
-            args.common.verbose,
-            args.common.hide_absolute_paths,
-        );
-    }
-
     match args.output_format {
         RunOutputFormat::Passthrough => {
-            let has_config_errors =
-                config_files.has_config_errors() && !passthrough_with_single_test_entry;
+            let test_entry_count = test_entries_in_coverage_set.len();
+            if test_entry_count != 1 {
+                aureum::print_run_single_program_only(test_entry_count);
 
-            if has_config_errors {
-                aureum::print_config_files_contain_errors();
-                return ExitCode::InvalidConfig;
+                return ExitCode::InvalidUsage;
             }
 
-            run_program_as_passthrough(&all_test_cases, current_dir)
+            match &all_test_cases[..] {
+                [test_case] => run_program_as_passthrough(test_case, current_dir),
+                _ => {
+                    print_config_details_if_needed(
+                        &config_files.loaded,
+                        args.common.verbose,
+                        args.common.hide_absolute_paths,
+                    );
+
+                    aureum::print_config_files_contain_errors();
+
+                    ExitCode::InvalidConfig
+                }
+            }
         }
         RunOutputFormat::Toml => {
+            print_config_details_if_needed(
+                &config_files.loaded,
+                args.common.verbose,
+                args.common.hide_absolute_paths,
+            );
+
             let has_config_errors = config_files.has_config_errors();
 
             run_programs_with_toml_output(&all_test_cases, has_config_errors, current_dir)
@@ -215,20 +228,13 @@ fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
     }
 }
 
-fn run_program_as_passthrough(all_test_cases: &[TestCase], current_dir: &Path) -> ExitCode {
-    match all_test_cases {
-        [test_case] => match aureum::run_program_passthrough(test_case, current_dir) {
-            Ok(exit_code) => ExitCode::Passthrough(exit_code),
-            Err(_) => {
-                aureum::print_failed_to_run_program();
+fn run_program_as_passthrough(test_case: &TestCase, current_dir: &Path) -> ExitCode {
+    match aureum::run_program_passthrough(test_case, current_dir) {
+        Ok(exit_code) => ExitCode::Passthrough(exit_code),
+        Err(_) => {
+            aureum::print_failed_to_run_program();
 
-                ExitCode::RunProgramFailure
-            }
-        },
-        _ => {
-            aureum::print_run_single_program_only(all_test_cases.len());
-
-            ExitCode::InvalidUsage
+            ExitCode::RunProgramFailure
         }
     }
 }

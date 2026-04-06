@@ -82,6 +82,17 @@ pub fn print_summary(report_config: &ReportConfig, run_results: &[RunResult]) {
 
 // RUN PROGRAM
 
+pub fn print_verbose_is_not_supported_in_passthrough() {
+    eprintln!(
+        "{} `--verbose` is not supported in passthrough mode",
+        error()
+    );
+    eprintln!(
+        "{} You may want to use `--output-format toml` instead",
+        hint()
+    );
+}
+
 pub fn print_failed_to_run_program() {
     eprintln!("{} Failed to run program", error());
 }
@@ -280,9 +291,9 @@ pub fn print_config_files_contain_errors() {
     eprintln!("{} Some config files contain errors (See above)", warning());
 }
 
-pub fn print_run_single_program_only(test_case_count: usize) {
+pub fn print_run_single_program_only(test_entry_count: usize) {
     eprintln!(
-        "{} `--output-format passthrough` supports only a single test, but found {test_case_count} tests",
+        "{} `--output-format passthrough` supports only a single test, but found {test_entry_count} tests",
         error(),
     );
     eprintln!(

@@ -50,7 +50,7 @@ pub use report::{print_start_test_cases, print_summary, print_test_case};
 pub use report::{
     print_failed_to_run_program, print_failed_to_run_program_as_toml,
     print_one_or_more_programs_failed_to_run, print_output_as_toml,
-    print_test_case_id_as_toml_comment,
+    print_test_case_id_as_toml_comment, print_verbose_is_not_supported_in_passthrough,
 };
 // Validation
 pub use report::{
