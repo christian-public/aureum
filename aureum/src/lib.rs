@@ -1,6 +1,6 @@
 mod formats {
+    pub mod summary;
     pub mod tap;
-    pub mod tree;
 }
 mod toml {
     pub mod config;
@@ -14,6 +14,7 @@ mod toml {
 mod utils {
     pub mod file;
     pub mod string;
+    pub mod tree;
 }
 mod vendor {
     pub mod ascii_tree;

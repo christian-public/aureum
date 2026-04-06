@@ -1,16 +1,8 @@
 use crate::test_result::{TestResult, ValueComparison};
 use crate::utils::string;
 use crate::utils::string::TextBlockOptions;
-use crate::vendor::ascii_tree;
 use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
 use colored::Colorize;
-use std::fmt::Error;
-
-pub fn draw_tree(tree: &Tree) -> Result<String, Error> {
-    let mut output = String::new();
-    ascii_tree::write_tree(&mut output, tree)?;
-    Ok(output)
-}
 
 // ERROR FORMATTING
 

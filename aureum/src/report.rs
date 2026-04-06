@@ -1,5 +1,5 @@
+use crate::formats::summary;
 use crate::formats::tap;
-use crate::formats::tree;
 use crate::test_case::TestCase;
 use crate::test_id::TestId;
 use crate::test_result::TestResult;
@@ -8,6 +8,7 @@ use crate::toml::{
     ProgramPath, RequirementData, Requirements, TestEntry, TomlConfigError, ValidationError,
 };
 use crate::utils::file;
+use crate::utils::tree;
 use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
 use colored::Colorize;
 use relative_path::{RelativePath, RelativePathBuf};
@@ -438,7 +439,7 @@ fn summary_print_result(run_result: &RunResult) {
         println!("{} {message}", checkmark());
     } else {
         let nodes = match &run_result.result {
-            Ok(result) => tree::nodes_from_test_result(result),
+            Ok(result) => summary::nodes_from_test_result(result),
             Err(_) => {
                 vec![Leaf(vec![String::from("Failed to run test")])]
             }
