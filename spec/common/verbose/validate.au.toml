@@ -1,18 +1,38 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[tests.verbose_mode]
+[tests.without_verbose]
+program_arguments = ["validate", "helpers/*.toml"]
+expected_stdout = """
+✘ helpers/many_requirements.toml  4 tests
+✔ helpers/no_requirements.toml    1 test
+"""
+expected_stderr = """
+📋 helpers/many_requirements.toml
+├── :env_var_exists
+├── :env_var_missing
+│   └── Validation errors
+│       └── ✘ Missing environment variable 'AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST'
+├── :external_file_exists
+└── :external_file_missing
+    └── Validation errors
+        └── ✘ Missing external file 'aureum_test_this_file_does_not_exist'
+
+warning: Some config files contain errors (See above)
+"""
+expected_exit_code = 3
+
+
+[tests.with_verbose]
 program_arguments = [
-   "test",
-   "--verbose",
-   "--hide-absolute-paths",
-   "helpers/*.toml",
+    "validate",
+    "--verbose",
+    "--hide-absolute-paths",
+    "helpers/*.toml",
 ]
 expected_stdout = """
-🚀 Running 3 tests:
-...
-
-Test result: OK (3 passed, 0 failed)
+✘ helpers/many_requirements.toml  4 tests
+✔ helpers/no_requirements.toml    1 test
 """
 expected_stderr = """
 🔍 Found 2 config files
@@ -52,30 +72,6 @@ expected_stderr = """
 📋 helpers/no_requirements.toml
 └── Program to run
     └── ✔ <absolute path to 'echo'>
-
-warning: Some config files contain errors (See above)
-"""
-expected_exit_code = 3
-
-
-[tests.default]
-program_arguments = ["test", "helpers/*.toml"]
-expected_stdout = """
-🚀 Running 3 tests:
-...
-
-Test result: OK (3 passed, 0 failed)
-"""
-expected_stderr = """
-📋 helpers/many_requirements.toml
-├── :env_var_exists
-├── :env_var_missing
-│   └── Validation errors
-│       └── ✘ Missing environment variable 'AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST'
-├── :external_file_exists
-└── :external_file_missing
-    └── Validation errors
-        └── ✘ Missing external file 'aureum_test_this_file_does_not_exist'
 
 warning: Some config files contain errors (See above)
 """
