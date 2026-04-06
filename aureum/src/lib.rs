@@ -52,6 +52,8 @@ pub use report::{
     print_one_or_more_programs_failed_to_run, print_output_as_toml,
     print_test_case_id_as_toml_comment, print_verbose_is_not_supported_in_passthrough,
 };
+// List
+pub use report::print_test_list_as_tree;
 // Validation
 pub use report::{
     print_config_details, print_config_file_error, print_config_files_contain_errors,

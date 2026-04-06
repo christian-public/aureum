@@ -66,6 +66,10 @@ pub struct ListArgs {
     #[arg(required = true)]
     pub paths: Vec<PathBuf>,
 
+    /// Display tests as a tree
+    #[arg(long)]
+    pub tree: bool,
+
     #[command(flatten)]
     pub common: CommonArgs,
 }

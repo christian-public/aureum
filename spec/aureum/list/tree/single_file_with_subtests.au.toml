@@ -1,0 +1,12 @@
+program = { env = "AUREUM_TEST_EXEC" }
+program_arguments = ["list", "--tree", "helpers/with_subtests.toml"]
+
+expected_stdout = """
+/
+└── helpers/
+    └── with_subtests.toml
+        ├── :test1
+        └── :test2
+"""
+expected_stderr = ""
+expected_exit_code = 0

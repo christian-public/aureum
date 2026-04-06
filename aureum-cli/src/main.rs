@@ -153,8 +153,12 @@ fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
 
     let has_config_errors = config_files.has_config_errors();
 
-    for test_case in all_test_cases {
-        println!("{}", test_case.id())
+    if args.tree {
+        aureum::print_test_list_as_tree(&all_test_cases);
+    } else {
+        for test_case in &all_test_cases {
+            println!("{}", test_case.id());
+        }
     }
 
     if has_config_errors {
