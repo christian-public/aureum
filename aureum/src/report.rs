@@ -73,14 +73,11 @@ pub fn print_summary(report_config: &ReportConfig, run_results: &[RunResult]) {
 // RUN PROGRAM
 
 pub fn print_failed_to_run_program() {
-    eprintln!("{} Failed to run program", "error:".red().bold());
+    eprintln!("{} Failed to run program", error());
 }
 
 pub fn print_one_or_more_programs_failed_to_run() {
-    eprintln!(
-        "{} One or more programs failed to run",
-        "error:".red().bold()
-    );
+    eprintln!("{} One or more programs failed to run", error());
 }
 
 pub fn print_test_case_id_as_toml_comment(test_case: &TestCase) {
@@ -117,10 +114,7 @@ pub enum ReportValidateResult {
 }
 
 pub fn print_invalid_paths(paths: &[PathBuf]) {
-    eprintln!(
-        "{} Invalid paths to config files:",
-        "warning:".yellow().bold(),
-    );
+    eprintln!("{} Invalid paths to config files:", warning());
     for path in paths {
         eprintln!("- {}", path.display());
     }
@@ -128,10 +122,7 @@ pub fn print_invalid_paths(paths: &[PathBuf]) {
 }
 
 pub fn print_no_config_files() {
-    eprintln!(
-        "{} No config files found for the given paths",
-        "error:".red().bold(),
-    );
+    eprintln!("{} No config files found for the given paths", error());
 }
 
 pub fn print_validate_table(entries: &BTreeMap<RelativePathBuf, ReportValidateResult>) {
@@ -276,20 +267,17 @@ pub fn print_config_file_error(config_file_path: &RelativePath, error: &TomlConf
 }
 
 pub fn print_config_files_contain_errors() {
-    eprintln!(
-        "{} Some config files contain errors (See above)",
-        "warning:".yellow().bold(),
-    );
+    eprintln!("{} Some config files contain errors (See above)", warning());
 }
 
 pub fn print_run_single_program_only(test_case_count: usize) {
     eprintln!(
         "{} `--output-format passthrough` supports only a single test, but found {test_case_count} tests",
-        "error:".red().bold(),
+        error(),
     );
     eprintln!(
         "{} Use `--output-format toml` to run multiple tests, or run the `list` command to list all tests",
-        "hint:".cyan().bold()
+        hint()
     );
 }
 
@@ -506,4 +494,18 @@ fn checkmark() -> String {
 
 fn cross() -> String {
     "✘".red().bold().to_string() // U+2718 HEAVY BALLOT X
+}
+
+// LABELS
+
+fn error() -> String {
+    "error:".red().bold().to_string()
+}
+
+fn warning() -> String {
+    "warning:".yellow().bold().to_string()
+}
+
+fn hint() -> String {
+    "hint:".cyan().bold().to_string()
 }
