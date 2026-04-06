@@ -40,7 +40,7 @@ pub fn print_not_ok_diagnostics(
 
 pub fn print_diagnostics(diagnostics: &str) {
     let code_block = format!("---\n{diagnostics}...");
-    println!("{}", string::indent_by(2, &code_block));
+    println!("{}", string::indent_by(&code_block, 2));
 }
 
 #[allow(dead_code)]

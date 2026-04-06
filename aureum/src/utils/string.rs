@@ -1,30 +1,30 @@
 use diff::Result;
 
-pub fn indent_with(prefix: &str, input: &str) -> String {
-    decorate_lines(|line| format!("{prefix}{line}"), input)
-}
-
-pub fn indent_by(indent_level: usize, input: &str) -> String {
+pub fn indent_by(contents: &str, indent_level: usize) -> String {
     let prefix = " ".repeat(indent_level);
-    indent_with(&prefix, input)
+    indent_with(contents, &prefix)
 }
 
-fn decorate_lines(decorate_line: impl Fn(&str) -> String, input: &str) -> String {
-    if input.is_empty() {
-        return decorate_line("");
+pub fn indent_with(contents: &str, prefix: &str) -> String {
+    format_lines(contents, |line| format!("{prefix}{line}"))
+}
+
+pub fn format_lines(contents: &str, format_line: impl Fn(&str) -> String) -> String {
+    if contents.is_empty() {
+        return format_line("");
     }
 
     let mut output = String::new();
 
-    for (i, line) in input.lines().enumerate() {
+    for (i, line) in contents.lines().enumerate() {
         if i > 0 {
             output.push('\n')
         }
 
-        output.push_str(&decorate_line(line))
+        output.push_str(&format_line(line))
     }
 
-    if input.ends_with('\n') {
+    if contents.ends_with('\n') {
         output.push('\n')
     }
 
@@ -165,7 +165,7 @@ mod tests {
         let expected = indoc! {"
         - "};
 
-        assert_eq!(indent_with("- ", ""), expected);
+        assert_eq!(indent_with("", "- "), expected);
     }
 
     #[test]
@@ -173,7 +173,7 @@ mod tests {
         let expected = indoc! {"
         - \n"};
 
-        assert_eq!(indent_with("- ", "\n"), expected);
+        assert_eq!(indent_with("\n", "- "), expected);
     }
 
     mod text_block {

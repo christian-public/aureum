@@ -40,6 +40,7 @@ pub use toml::config::parse_toml_config;
 pub use toml::requirement::get_requirements;
 pub use toml::validate::build_test_entries;
 pub use utils::file::display_path;
+pub use utils::string::format_lines;
 
 // Test case
 pub use report::{print_start_test_cases, print_summary, print_test_case};
