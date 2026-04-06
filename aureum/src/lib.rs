@@ -35,15 +35,23 @@ pub use toml::Requirements;
 pub use toml::{ProgramPath, RequirementData, TestEntry, ValidationError};
 pub use toml::{TomlConfig, TomlConfigError};
 
-pub use report::{
-    print_config_details, print_config_file_error, print_config_files_contain_errors,
-    print_config_files_found, print_failed_to_run_program, print_failed_to_run_program_as_toml,
-    print_invalid_paths, print_no_config_files, print_one_or_more_programs_failed_to_run,
-    print_output_as_toml, print_run_single_program_only, print_start_test_cases, print_summary,
-    print_test_case, print_test_case_id_as_toml_comment, print_validate_table,
-};
 pub use test_runner::{run_program, run_program_passthrough, run_test_cases};
 pub use toml::config::parse_toml_config;
 pub use toml::requirement::get_requirements;
 pub use toml::validate::build_test_entries;
 pub use utils::file::display_path;
+
+// Test case
+pub use report::{print_start_test_cases, print_summary, print_test_case};
+// Run program
+pub use report::{
+    print_failed_to_run_program, print_failed_to_run_program_as_toml,
+    print_one_or_more_programs_failed_to_run, print_output_as_toml,
+    print_test_case_id_as_toml_comment,
+};
+// Validation
+pub use report::{
+    print_config_details, print_config_file_error, print_config_files_contain_errors,
+    print_config_files_found, print_invalid_paths, print_no_config_files,
+    print_run_single_program_only, print_validate_table,
+};
