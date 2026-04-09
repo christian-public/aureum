@@ -465,12 +465,11 @@ fn tap_print_test_case(
     result: &Result<TestResult, RunError>,
     indent_level: usize,
 ) {
-    let message: String;
-    if let Some(description) = &test_case.description {
-        message = format!("{} # {description}", test_case.id());
+    let message: String = if let Some(description) = &test_case.description {
+        format!("{} # {description}", test_case.id())
     } else {
-        message = test_case.id();
-    }
+        test_case.id()
+    };
 
     match result {
         Ok(test_result) => {
