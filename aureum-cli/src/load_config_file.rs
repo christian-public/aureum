@@ -104,6 +104,7 @@ fn load_config_file(
         path_to_containing_dir,
         file_name,
         &requirement_data,
+        current_dir,
         &|name, dir| file::find_executable_path(name, dir).ok(),
     );
 

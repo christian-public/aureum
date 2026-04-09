@@ -101,9 +101,10 @@ impl TestEntry {
 
 pub fn build_test_entries(
     config: TomlConfig,
-    path_to_containing_dir: &RelativePath,
+    path_to_config_dir: &RelativePath,
     file_name: &str,
     requirement_data: &RequirementData,
+    current_dir: &Path,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> BTreeMap<TestId, TestEntry> {
     split_toml_config(config)
@@ -114,9 +115,10 @@ pub fn build_test_entries(
                 build_test_entry(
                     test_id,
                     c,
-                    path_to_containing_dir,
+                    path_to_config_dir,
                     file_name,
                     requirement_data,
+                    current_dir,
                     find_executable_path,
                 ),
             )
@@ -127,9 +129,10 @@ pub fn build_test_entries(
 fn build_test_entry(
     test_id: TestId,
     config: TomlConfig,
-    path_to_containing_dir: &RelativePath,
+    path_to_config_dir: &RelativePath,
     file_name: &str,
     requirement_data: &RequirementData,
+    current_dir: &Path,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> TestEntry {
     let requirements = get_requirements(&config);
@@ -137,9 +140,10 @@ fn build_test_entry(
     let (program_path, test_case) = build_test_case(
         test_id,
         config.clone(),
-        path_to_containing_dir,
+        path_to_config_dir,
         file_name,
         requirement_data,
+        current_dir,
         find_executable_path,
     );
     let expectations = build_test_case_expectations(config, requirement_data);
@@ -155,9 +159,10 @@ fn build_test_entry(
 fn build_test_case(
     test_id: TestId,
     config: TomlConfig,
-    path_to_containing_dir: &RelativePath,
+    path_to_config_dir: &RelativePath,
     file_name: &str,
     requirement_data: &RequirementData,
+    current_dir: &Path,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> (ProgramPath, Result<TestCase, BTreeSet<ValidationError>>) {
     let mut errors = BTreeSet::new();
@@ -165,7 +170,7 @@ fn build_test_case(
     let program = collect_error(&mut errors, config.program, requirement_data);
     let program_path = get_program_path(
         program.unwrap_or_default(),
-        &path_to_containing_dir.to_path("."), // TODO: Improve this
+        &path_to_config_dir.to_path(current_dir),
         find_executable_path,
     );
     match &program_path {
@@ -207,7 +212,7 @@ fn build_test_case(
             .expect("Validation errors should not be empty if program path is not resolved");
 
         Ok(TestCase {
-            path_to_containing_dir: path_to_containing_dir.to_relative_path_buf(),
+            path_to_containing_dir: path_to_config_dir.to_relative_path_buf(),
             file_name: file_name.to_owned(),
             test_id,
             description,
