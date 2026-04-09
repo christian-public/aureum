@@ -3,13 +3,17 @@ mod formats {
     pub mod tap;
 }
 mod toml {
-    pub mod config;
-    pub mod requirement;
-    pub mod validate;
+    mod config;
+    mod requirement;
+    mod validate;
 
     pub use config::{TomlConfig, TomlConfigError};
     pub use requirement::Requirements;
     pub use validate::{ProgramPath, RequirementData, TestEntry, ValidationError};
+
+    pub use config::parse_toml_config;
+    pub use requirement::get_requirements;
+    pub use validate::build_test_entries;
 }
 mod utils {
     pub mod file;
@@ -37,9 +41,7 @@ pub use toml::{ProgramPath, RequirementData, TestEntry, ValidationError};
 pub use toml::{TomlConfig, TomlConfigError};
 
 pub use test_runner::{run_program, run_program_passthrough, run_test_cases};
-pub use toml::config::parse_toml_config;
-pub use toml::requirement::get_requirements;
-pub use toml::validate::build_test_entries;
+pub use toml::{build_test_entries, get_requirements, parse_toml_config};
 pub use utils::file::display_path;
 pub use utils::string::format_lines;
 
