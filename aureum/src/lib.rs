@@ -42,21 +42,21 @@ pub use toml::validate::build_test_entries;
 pub use utils::file::display_path;
 pub use utils::string::format_lines;
 
-// Init
-pub use report::{print_failed_to_write_file, print_file_already_exists};
-// Test case
-pub use report::{print_test_case, print_test_cases_end, print_test_cases_start};
-// Run program
-pub use report::{
-    print_failed_to_run_program, print_failed_to_run_program_as_toml,
-    print_one_or_more_programs_failed_to_run, print_output_as_toml,
-    print_test_case_id_as_toml_comment, print_verbose_is_not_supported_in_passthrough,
-};
-// List
-pub use report::print_test_list_as_tree;
 // Validation
 pub use report::{
     print_config_details, print_config_file_error, print_config_files_contain_errors,
     print_config_files_found, print_invalid_paths, print_no_config_files,
     print_run_single_program_only, print_validate_table,
 };
+// Init
+pub use report::{print_failed_to_write_file, print_file_already_exists};
+// List
+pub use report::print_test_list_as_tree;
+// Run program
+pub use report::{
+    print_failed_to_run_program, print_failed_to_run_program_as_toml,
+    print_one_or_more_programs_failed_to_run, print_output_as_toml,
+    print_test_case_id_as_toml_comment, print_verbose_is_not_supported_in_passthrough,
+};
+// Test case
+pub use report::{print_test_case, print_test_cases_end, print_test_cases_start};

@@ -15,181 +15,6 @@ use std::collections::BTreeMap;
 use std::io;
 use std::path::{Path, PathBuf};
 
-// INIT
-
-pub fn print_file_already_exists(path: &Path) {
-    eprintln!("{} file already exists: {}", error(), path.display());
-}
-
-pub fn print_failed_to_write_file(path: &Path) {
-    eprintln!("{} failed to write file: {}", error(), path.display());
-}
-
-// TEST CASE
-
-#[cfg_attr(debug_assertions, derive(Debug))]
-pub enum ReportFormat {
-    Summary,
-    Tap,
-}
-
-#[cfg_attr(debug_assertions, derive(Debug))]
-pub struct ReportConfig {
-    pub number_of_tests: usize,
-    pub format: ReportFormat,
-}
-
-pub fn print_test_cases_start(report_config: &ReportConfig) {
-    match report_config.format {
-        ReportFormat::Summary => {
-            summary_print_start(report_config.number_of_tests);
-        }
-        ReportFormat::Tap => {
-            tap_print_start(report_config.number_of_tests);
-        }
-    }
-}
-
-pub fn print_test_case(
-    report_config: &ReportConfig,
-    index: usize,
-    test_case: &TestCase,
-    result: &Result<TestResult, RunError>,
-) -> Result<(), RunError> {
-    match report_config.format {
-        ReportFormat::Summary => {
-            summary_print_test_case(result)?;
-        }
-        ReportFormat::Tap => {
-            let test_number_indent_level = report_config.number_of_tests.to_string().len();
-            tap_print_test_case(index + 1, test_case, result, test_number_indent_level);
-        }
-    }
-
-    Ok(())
-}
-
-pub fn print_test_cases_end(report_config: &ReportConfig, run_results: &[RunResult]) {
-    match report_config.format {
-        ReportFormat::Summary => {
-            summary_print_summary(report_config.number_of_tests, run_results);
-        }
-        ReportFormat::Tap => {
-            tap_print_summary();
-        }
-    }
-}
-
-// LIST
-
-pub fn print_test_list_as_tree(test_cases: &[TestCase]) {
-    let tree = build_test_list_tree(test_cases);
-    let output = tree::draw_tree(&tree).unwrap_or(String::from("Failed to draw tree\n"));
-
-    print!("{}", output);
-}
-
-fn build_test_list_tree(test_cases: &[TestCase]) -> Tree {
-    let mut by_file: BTreeMap<Vec<String>, Vec<String>> = BTreeMap::new();
-
-    for test_case in test_cases {
-        let segments: Vec<String> = test_case
-            .path_to_config_file()
-            .components()
-            .map(|c| c.as_str().to_string())
-            .collect();
-        let subtests = by_file.entry(segments).or_default();
-        if !test_case.test_id.is_root() {
-            subtests.push(format!(":{}", test_case.test_id));
-        }
-    }
-
-    build_tree_node("/", &by_file, &[])
-}
-
-fn build_tree_node(
-    label: &str,
-    entries: &BTreeMap<Vec<String>, Vec<String>>,
-    prefix: &[String],
-) -> Tree {
-    let mut children: BTreeMap<String, Tree> = BTreeMap::new();
-
-    for (segments, subtests) in entries {
-        if !segments.starts_with(prefix) {
-            continue;
-        }
-        match &segments[prefix.len()..] {
-            [file] => {
-                let child = if subtests.is_empty() {
-                    Leaf(vec![file.clone()])
-                } else {
-                    let leaves = subtests.iter().map(|s| Leaf(vec![s.clone()])).collect();
-                    Node(file.clone(), leaves)
-                };
-                children.insert(file.clone(), child);
-            }
-            [dir, ..] => {
-                if !children.contains_key(dir.as_str()) {
-                    let mut child_prefix = prefix.to_vec();
-                    child_prefix.push(dir.clone());
-                    children.insert(
-                        dir.clone(),
-                        build_tree_node(&format!("{dir}/"), entries, &child_prefix),
-                    );
-                }
-            }
-            [] => {}
-        }
-    }
-
-    Node(label.to_string(), children.into_values().collect())
-}
-
-// RUN PROGRAM
-
-pub fn print_verbose_is_not_supported_in_passthrough() {
-    eprintln!(
-        "{} `--verbose` is not supported in passthrough mode",
-        error()
-    );
-    eprintln!(
-        "{} You may want to use `--output-format toml` instead",
-        hint()
-    );
-}
-
-pub fn print_failed_to_run_program() {
-    eprintln!("{} Failed to run program", error());
-}
-
-pub fn print_one_or_more_programs_failed_to_run() {
-    eprintln!("{} One or more programs failed to run", error());
-}
-
-pub fn print_test_case_id_as_toml_comment(test_case: &TestCase) {
-    println!("# TEST: {}", test_case.id());
-}
-
-pub fn print_failed_to_run_program_as_toml() {
-    println!("# ERROR: Failed to run program");
-}
-
-pub fn print_output_as_toml(output: &ProgramOutput) {
-    println!("expected_stdout = {}", format_toml_string(&output.stdout));
-    println!("expected_stderr = {}", format_toml_string(&output.stderr));
-    println!("expected_exit_code = {}", output.exit_code);
-}
-
-fn format_toml_string(s: &str) -> String {
-    if s.contains('\n') {
-        let escaped = s.replace('\\', "\\\\").replace('"', "\\\"");
-        format!("\"\"\"\n{escaped}\"\"\"")
-    } else {
-        let escaped = s.replace('\\', "\\\\").replace('"', "\\\"");
-        format!("\"{escaped}\"")
-    }
-}
-
 // VALIDATION
 
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -365,6 +190,181 @@ pub fn print_run_single_program_only(test_entry_count: usize) {
         "{} Use `--output-format toml` to run multiple tests, or run the `list` command to list all tests",
         hint()
     );
+}
+
+// INIT
+
+pub fn print_file_already_exists(path: &Path) {
+    eprintln!("{} file already exists: {}", error(), path.display());
+}
+
+pub fn print_failed_to_write_file(path: &Path) {
+    eprintln!("{} failed to write file: {}", error(), path.display());
+}
+
+// LIST
+
+pub fn print_test_list_as_tree(test_cases: &[TestCase]) {
+    let tree = build_test_list_tree(test_cases);
+    let output = tree::draw_tree(&tree).unwrap_or(String::from("Failed to draw tree\n"));
+
+    print!("{}", output);
+}
+
+fn build_test_list_tree(test_cases: &[TestCase]) -> Tree {
+    let mut by_file: BTreeMap<Vec<String>, Vec<String>> = BTreeMap::new();
+
+    for test_case in test_cases {
+        let segments: Vec<String> = test_case
+            .path_to_config_file()
+            .components()
+            .map(|c| c.as_str().to_string())
+            .collect();
+        let subtests = by_file.entry(segments).or_default();
+        if !test_case.test_id.is_root() {
+            subtests.push(format!(":{}", test_case.test_id));
+        }
+    }
+
+    build_tree_node("/", &by_file, &[])
+}
+
+fn build_tree_node(
+    label: &str,
+    entries: &BTreeMap<Vec<String>, Vec<String>>,
+    prefix: &[String],
+) -> Tree {
+    let mut children: BTreeMap<String, Tree> = BTreeMap::new();
+
+    for (segments, subtests) in entries {
+        if !segments.starts_with(prefix) {
+            continue;
+        }
+        match &segments[prefix.len()..] {
+            [file] => {
+                let child = if subtests.is_empty() {
+                    Leaf(vec![file.clone()])
+                } else {
+                    let leaves = subtests.iter().map(|s| Leaf(vec![s.clone()])).collect();
+                    Node(file.clone(), leaves)
+                };
+                children.insert(file.clone(), child);
+            }
+            [dir, ..] => {
+                if !children.contains_key(dir.as_str()) {
+                    let mut child_prefix = prefix.to_vec();
+                    child_prefix.push(dir.clone());
+                    children.insert(
+                        dir.clone(),
+                        build_tree_node(&format!("{dir}/"), entries, &child_prefix),
+                    );
+                }
+            }
+            [] => {}
+        }
+    }
+
+    Node(label.to_string(), children.into_values().collect())
+}
+
+// RUN PROGRAM
+
+pub fn print_verbose_is_not_supported_in_passthrough() {
+    eprintln!(
+        "{} `--verbose` is not supported in passthrough mode",
+        error()
+    );
+    eprintln!(
+        "{} You may want to use `--output-format toml` instead",
+        hint()
+    );
+}
+
+pub fn print_failed_to_run_program() {
+    eprintln!("{} Failed to run program", error());
+}
+
+pub fn print_one_or_more_programs_failed_to_run() {
+    eprintln!("{} One or more programs failed to run", error());
+}
+
+pub fn print_test_case_id_as_toml_comment(test_case: &TestCase) {
+    println!("# TEST: {}", test_case.id());
+}
+
+pub fn print_failed_to_run_program_as_toml() {
+    println!("# ERROR: Failed to run program");
+}
+
+pub fn print_output_as_toml(output: &ProgramOutput) {
+    println!("expected_stdout = {}", format_toml_string(&output.stdout));
+    println!("expected_stderr = {}", format_toml_string(&output.stderr));
+    println!("expected_exit_code = {}", output.exit_code);
+}
+
+fn format_toml_string(s: &str) -> String {
+    if s.contains('\n') {
+        let escaped = s.replace('\\', "\\\\").replace('"', "\\\"");
+        format!("\"\"\"\n{escaped}\"\"\"")
+    } else {
+        let escaped = s.replace('\\', "\\\\").replace('"', "\\\"");
+        format!("\"{escaped}\"")
+    }
+}
+
+// TEST CASE
+
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub enum ReportFormat {
+    Summary,
+    Tap,
+}
+
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub struct ReportConfig {
+    pub number_of_tests: usize,
+    pub format: ReportFormat,
+}
+
+pub fn print_test_cases_start(report_config: &ReportConfig) {
+    match report_config.format {
+        ReportFormat::Summary => {
+            summary_print_start(report_config.number_of_tests);
+        }
+        ReportFormat::Tap => {
+            tap_print_start(report_config.number_of_tests);
+        }
+    }
+}
+
+pub fn print_test_case(
+    report_config: &ReportConfig,
+    index: usize,
+    test_case: &TestCase,
+    result: &Result<TestResult, RunError>,
+) -> Result<(), RunError> {
+    match report_config.format {
+        ReportFormat::Summary => {
+            summary_print_test_case(result)?;
+        }
+        ReportFormat::Tap => {
+            let test_number_indent_level = report_config.number_of_tests.to_string().len();
+            tap_print_test_case(index + 1, test_case, result, test_number_indent_level);
+        }
+    }
+
+    Ok(())
+}
+
+pub fn print_test_cases_end(report_config: &ReportConfig, run_results: &[RunResult]) {
+    match report_config.format {
+        ReportFormat::Summary => {
+            summary_print_summary(report_config.number_of_tests, run_results);
+        }
+        ReportFormat::Tap => {
+            tap_print_summary();
+        }
+    }
 }
 
 // SUMMARY HELPERS
