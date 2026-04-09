@@ -312,11 +312,12 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
     aureum::print_test_cases_start(&report_config);
 
     let run_results = aureum::run_test_cases(
-        &report_config,
         &all_test_cases,
         args.parallel,
         current_dir,
-        &aureum::print_test_case,
+        &|index, test_case, result| {
+            aureum::print_test_case(&report_config, index, test_case, result)
+        },
     );
 
     aureum::print_test_cases_end(&report_config, &run_results);
