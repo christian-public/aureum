@@ -1,9 +1,9 @@
 use aureum::{TestId, TestIdCoverageSet};
 use glob::MatchOptions;
+use os_str_bytes::OsStrBytesExt;
 use relative_path::RelativePathBuf;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
-use std::str;
 
 /// Files to look for when searching in directories
 static DIRECTORY_SEARCH_PATTERN: &str = "**/*.au.toml";
@@ -17,11 +17,11 @@ pub struct FindConfigFilesResult {
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum PathError {
     FileNotFound,
-    InvalidCharactersInTestId,
-    InvalidCharactersInPath,
-    FailedToConvertToRelativePath,
+    TestIdMustBeUtf8,
+    GlobPatternMustBeUtf8,
     InvalidGlobPattern,
     InvalidGlobEntry,
+    FailedToConvertPathToRelativePath,
 }
 
 pub fn find_config_files(paths: Vec<PathBuf>, current_dir: &Path) -> FindConfigFilesResult {
@@ -73,46 +73,38 @@ fn find_config_files_in_path(
             return Err(PathError::FileNotFound);
         }
 
-        let relative_path = get_relative_path(&updated_search_path, current_dir)
-            .ok_or(PathError::FailedToConvertToRelativePath)?;
-
-        let Some(suffix_str) = suffix.to_str() else {
-            return Err(PathError::InvalidCharactersInTestId);
-        };
-
+        let suffix_str = suffix.to_str().ok_or(PathError::TestIdMustBeUtf8)?;
         let test_id = TestId::from(suffix_str);
 
-        Ok(vec![(relative_path, test_id)])
+        prepare_paths(vec![updated_search_path.to_owned()], test_id, current_dir)
     }
-    // If there is no colon in the file name, we check if the path is a file.
+    // Check if there is a file at this exact path.
     else if search_path.is_file() {
-        let relative_path = get_relative_path(search_path, current_dir)
-            .ok_or(PathError::FailedToConvertToRelativePath)?;
-
-        Ok(vec![(relative_path, TestId::root())])
+        prepare_paths(vec![search_path.to_owned()], TestId::root(), current_dir)
     }
-    // Otherwise, we fall back on glob search. This works just as well for directories.
+    // Check if there is a directory at this exact path.
+    else if search_path.is_dir() {
+        let dir_pattern = search_path.join(DIRECTORY_SEARCH_PATTERN);
+        let paths = find_config_files_for_pattern(&dir_pattern)?;
+
+        prepare_paths(paths, TestId::root(), current_dir)
+    }
+    // Search for glob pattern.
+    else if is_glob(search_path) {
+        let paths = find_config_files_for_pattern(search_path)?;
+
+        prepare_paths(paths, TestId::root(), current_dir)
+    }
+    // Otherwise: File not found.
     else {
-        let mut result = vec![];
-
-        let glob_pattern = search_path
-            .to_str()
-            .ok_or(PathError::InvalidCharactersInPath)?;
-
-        let found_files = search_for_config_files(glob_pattern)?;
-        for path in found_files {
-            let relative_path = get_relative_path(&path, current_dir)
-                .ok_or(PathError::FailedToConvertToRelativePath)?;
-
-            result.push((relative_path, TestId::root()));
-        }
-
-        Ok(result)
+        Err(PathError::FileNotFound)
     }
 }
 
-fn search_for_config_files(glob_pattern: &str) -> Result<Vec<PathBuf>, PathError> {
+fn find_config_files_for_pattern(path: &Path) -> Result<Vec<PathBuf>, PathError> {
     let mut files = vec![];
+
+    let glob_pattern = path.to_str().ok_or(PathError::GlobPatternMustBeUtf8)?;
 
     let entries = glob::glob_with(
         glob_pattern,
@@ -131,15 +123,32 @@ fn search_for_config_files(glob_pattern: &str) -> Result<Vec<PathBuf>, PathError
             files.push(path);
         } else if path.is_dir() {
             if let Some(new_glob_pattern) = path.join(DIRECTORY_SEARCH_PATTERN).to_str() {
-                let found_files = search_for_config_files(new_glob_pattern)?;
+                let found_files = find_config_files_for_pattern(Path::new(new_glob_pattern))?;
                 files.extend(found_files);
             } else {
-                return Err(PathError::InvalidCharactersInPath);
+                return Err(PathError::GlobPatternMustBeUtf8);
             }
         }
     }
 
     Ok(files)
+}
+
+fn prepare_paths(
+    paths: Vec<PathBuf>,
+    test_id: TestId,
+    current_dir: &Path,
+) -> Result<Vec<(RelativePathBuf, TestId)>, PathError> {
+    let mut result = vec![];
+
+    for path in paths {
+        let relative_path = get_relative_path(&path, current_dir)
+            .ok_or(PathError::FailedToConvertPathToRelativePath)?;
+
+        result.push((relative_path, test_id.clone()));
+    }
+
+    Ok(result)
 }
 
 fn get_relative_path(path: &Path, base: &Path) -> Option<RelativePathBuf> {
@@ -149,4 +158,10 @@ fn get_relative_path(path: &Path, base: &Path) -> Option<RelativePathBuf> {
         let path_diff = pathdiff::diff_paths(path, base)?;
         RelativePathBuf::from_path(path_diff).ok()
     }
+}
+
+fn is_glob(path: &Path) -> bool {
+    ['*', '?', '[', '{']
+        .iter()
+        .any(|needle| OsStrBytesExt::contains(path.as_os_str(), *needle))
 }

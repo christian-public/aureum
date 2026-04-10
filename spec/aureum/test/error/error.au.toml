@@ -5,6 +5,9 @@ program = { env = "AUREUM_TEST_EXEC" }
 program_arguments = ["test", "aureum_test_this_file_does_not_exist"]
 expected_stdout = ""
 expected_stderr = """
+warning: Invalid paths to config files:
+- aureum_test_this_file_does_not_exist
+
 error: No config files found for the given paths
 """
 expected_exit_code = 3
