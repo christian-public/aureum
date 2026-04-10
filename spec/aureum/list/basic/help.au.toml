@@ -1,19 +1,18 @@
 program = { env = "AUREUM_TEST_EXEC" }
-program_arguments = ["test", "--help"]
+program_arguments = ["list", "--help"]
 
 expected_stdout = """
-Run tests
+List tests
 
-Usage: aureum test [OPTIONS] <PATHS>...
+Usage: aureum list [OPTIONS] <PATHS>...
 
 Arguments:
   <PATHS>...  Paths to config files
 
 Options:
-      --format <FORMAT>  Options: summary, tap [default: summary]
-      --parallel         Run tests in parallel
-      --verbose          Print extra information about config files
-  -h, --help             Print help
+      --tree     Display tests as a tree
+      --verbose  Print extra information about config files
+  -h, --help     Print help
 """
 expected_stderr = ""
 expected_exit_code = 0
