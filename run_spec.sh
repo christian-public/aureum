@@ -4,7 +4,9 @@ set -e
 
 
 # Build the program
-cargo build ${RELEASE:+--release}
+if [[ -z $SKIP_BUILD ]]; then
+    cargo build ${RELEASE:+--release}
+fi
 
 # Set the program path
 if [[ -n $RELEASE ]]; then
