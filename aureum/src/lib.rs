@@ -38,6 +38,8 @@ mod test_id_coverage_set;
 mod test_result;
 mod test_runner;
 
+pub use utils::string;
+
 pub use report::test_case::{ReportConfig, ReportFormat};
 pub use report::validate::ReportValidateResult;
 pub use test_case::{TestCase, TestCaseExpectations};
@@ -64,5 +66,3 @@ pub use report::validate::{
 };
 pub use test_runner::{run_program, run_program_passthrough, run_test_cases};
 pub use toml::{build_test_entries, get_requirements, parse_toml_config};
-pub use utils::file::display_path;
-pub use utils::string::format_lines;
