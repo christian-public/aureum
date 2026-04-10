@@ -186,11 +186,11 @@ pub fn print_config_files_contain_errors() {
 
 pub fn print_run_single_program_only(test_entry_count: usize) {
     eprintln!(
-        "{} `--output-format passthrough` supports only a single test, but found {test_entry_count} tests",
+        "{} `--format passthrough` supports only a single test, but found {test_entry_count} tests",
         label::error(),
     );
     eprintln!(
-        "{} Use `--output-format toml` to run multiple tests, or run the `list` command to list all tests",
+        "{} Use `--format toml` to run multiple tests, or run the `list` command to list all tests",
         label::hint()
     );
 }

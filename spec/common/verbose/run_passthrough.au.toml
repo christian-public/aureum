@@ -2,12 +2,12 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 
 [tests.without_verbose]
-program_arguments = ["run", "--output-format", "passthrough", "helpers/*.toml"]
+program_arguments = ["run", "--format", "passthrough", "helpers/*.toml"]
 expected_stdout = """
 """
 expected_stderr = """
-error: `--output-format passthrough` supports only a single test, but found 5 tests
-hint: Use `--output-format toml` to run multiple tests, or run the `list` command to list all tests
+error: `--format passthrough` supports only a single test, but found 5 tests
+hint: Use `--format toml` to run multiple tests, or run the `list` command to list all tests
 """
 expected_exit_code = 2
 
@@ -15,7 +15,7 @@ expected_exit_code = 2
 [tests.with_verbose]
 program_arguments = [
     "run",
-    "--output-format",
+    "--format",
     "passthrough",
     "--verbose",
     "--hide-absolute-paths",
@@ -24,6 +24,6 @@ program_arguments = [
 expected_stdout = ""
 expected_stderr = """
 error: `--verbose` is not supported in passthrough mode
-hint: You may want to use `--output-format toml` instead
+hint: You may want to use `--format toml` instead
 """
 expected_exit_code = 2

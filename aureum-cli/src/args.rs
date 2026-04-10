@@ -83,7 +83,7 @@ pub struct RunArgs {
 
     /// Options: passthrough, toml
     #[arg(long, default_value = "passthrough")]
-    pub output_format: RunOutputFormat,
+    pub format: RunOutputFormat,
 
     #[command(flatten)]
     pub common: CommonArgs,
@@ -98,7 +98,7 @@ pub struct TestArgs {
 
     /// Options: summary, tap
     #[arg(long, default_value = "summary")]
-    pub output_format: TestOutputFormat,
+    pub format: TestOutputFormat,
 
     /// Run tests in parallel
     #[arg(long)]

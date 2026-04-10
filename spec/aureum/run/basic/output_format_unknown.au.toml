@@ -1,14 +1,9 @@
 program = { env = "AUREUM_TEST_EXEC" }
-program_arguments = [
-    "run",
-    "--output-format",
-    "UNKNOWN",
-    "helpers/echo_hello.toml",
-]
+program_arguments = ["run", "--format", "UNKNOWN", "helpers/echo_hello.toml"]
 
 expected_stdout = ""
 expected_stderr = """
-error: invalid value 'UNKNOWN' for '--output-format <OUTPUT_FORMAT>': Invalid output format
+error: invalid value 'UNKNOWN' for '--format <FORMAT>': Invalid output format
 
 For more information, try '--help'.
 """

@@ -4,7 +4,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 [tests.specific_test_id]
 program_arguments = [
     "run",
-    "--output-format",
+    "--format",
     "passthrough",
     "helpers/echo_tests.toml:test1",
 ]
@@ -16,14 +16,14 @@ expected_exit_code = 0
 [tests.multiple_tests]
 program_arguments = [
     "run",
-    "--output-format",
+    "--format",
     "passthrough",
     "helpers/echo_tests.toml",
 ]
 expected_stdout = ""
 expected_stderr = """
-error: `--output-format passthrough` supports only a single test, but found 2 tests
-hint: Use `--output-format toml` to run multiple tests, or run the `list` command to list all tests
+error: `--format passthrough` supports only a single test, but found 2 tests
+hint: Use `--format toml` to run multiple tests, or run the `list` command to list all tests
 """
 expected_exit_code = 2
 
@@ -31,14 +31,14 @@ expected_exit_code = 2
 [tests.missing_program_on_test1]
 program_arguments = [
     "run",
-    "--output-format",
+    "--format",
     "passthrough",
     "helpers/missing_program_on_test1.toml",
 ]
 expected_stdout = ""
 expected_stderr = """
-error: `--output-format passthrough` supports only a single test, but found 2 tests
-hint: Use `--output-format toml` to run multiple tests, or run the `list` command to list all tests
+error: `--format passthrough` supports only a single test, but found 2 tests
+hint: Use `--format toml` to run multiple tests, or run the `list` command to list all tests
 """
 expected_exit_code = 2
 
@@ -46,7 +46,7 @@ expected_exit_code = 2
 [tests.missing_program_on_test1_run_specific_test_id]
 program_arguments = [
     "run",
-    "--output-format",
+    "--format",
     "passthrough",
     "helpers/missing_program_on_test1.toml:test2",
 ]
@@ -58,13 +58,13 @@ expected_exit_code = 0
 [tests.missing_program_on_all_tests]
 program_arguments = [
     "run",
-    "--output-format",
+    "--format",
     "passthrough",
     "helpers/missing_program_on_all_tests.toml",
 ]
 expected_stdout = ""
 expected_stderr = """
-error: `--output-format passthrough` supports only a single test, but found 2 tests
-hint: Use `--output-format toml` to run multiple tests, or run the `list` command to list all tests
+error: `--format passthrough` supports only a single test, but found 2 tests
+hint: Use `--format toml` to run multiple tests, or run the `list` command to list all tests
 """
 expected_exit_code = 2

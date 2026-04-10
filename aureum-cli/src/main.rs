@@ -171,7 +171,7 @@ fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
 }
 
 fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
-    let is_passthrough = matches!(args.output_format, RunOutputFormat::Passthrough);
+    let is_passthrough = matches!(args.format, RunOutputFormat::Passthrough);
     if is_passthrough && args.common.verbose {
         aureum::print_verbose_is_not_supported_in_passthrough();
 
@@ -194,7 +194,7 @@ fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
         .flat_map(|(_test_id, test_entry)| test_entry.test_case.clone().ok())
         .collect::<Vec<_>>();
 
-    match args.output_format {
+    match args.format {
         RunOutputFormat::Passthrough => {
             let test_entry_count = test_entries_in_coverage_set.len();
             if test_entry_count != 1 {
@@ -306,7 +306,7 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
 
     let report_config = ReportConfig {
         number_of_tests: all_test_cases.len(),
-        format: get_report_format(&args.output_format),
+        format: get_report_format(&args.format),
     };
 
     aureum::print_test_cases_start(&report_config);
@@ -411,8 +411,8 @@ fn print_config_details_if_needed(
     }
 }
 
-fn get_report_format(output_format: &TestOutputFormat) -> ReportFormat {
-    match output_format {
+fn get_report_format(format: &TestOutputFormat) -> ReportFormat {
+    match format {
         TestOutputFormat::Summary => ReportFormat::Summary,
         TestOutputFormat::Tap => ReportFormat::Tap,
     }

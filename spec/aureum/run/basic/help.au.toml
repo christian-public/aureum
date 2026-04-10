@@ -10,9 +10,9 @@ Arguments:
   <PATHS>...  Paths to config files
 
 Options:
-      --output-format <OUTPUT_FORMAT>  Options: passthrough, toml [default: passthrough]
-      --verbose                        Print extra information about config files
-  -h, --help                           Print help
+      --format <FORMAT>  Options: passthrough, toml [default: passthrough]
+      --verbose          Print extra information about config files
+  -h, --help             Print help
 """
 expected_stderr = ""
 expected_exit_code = 0

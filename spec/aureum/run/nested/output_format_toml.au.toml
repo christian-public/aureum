@@ -4,7 +4,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 [tests.specific_test_id]
 program_arguments = [
     "run",
-    "--output-format",
+    "--format",
     "toml",
     "helpers/echo_tests.toml:test1",
 ]
@@ -21,7 +21,7 @@ expected_exit_code = 0
 [tests.multiple_tests]
 program_arguments = [
     "run",
-    "--output-format",
+    "--format",
     "toml",
     "helpers/echo_tests.toml",
 ]
@@ -43,7 +43,7 @@ expected_exit_code = 0
 [tests.missing_program_on_test1]
 program_arguments = [
     "run",
-    "--output-format",
+    "--format",
     "toml",
     "helpers/missing_program_on_test1.toml",
 ]
@@ -68,7 +68,7 @@ expected_exit_code = 3
 [tests.missing_program_on_test1_run_specific_test_id]
 program_arguments = [
     "run",
-    "--output-format",
+    "--format",
     "toml",
     "helpers/missing_program_on_test1.toml:test2",
 ]
@@ -93,7 +93,7 @@ expected_exit_code = 3
 [tests.missing_program_on_all_tests]
 program_arguments = [
     "run",
-    "--output-format",
+    "--format",
     "toml",
     "helpers/missing_program_on_all_tests.toml",
 ]

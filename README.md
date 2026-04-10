@@ -45,7 +45,7 @@ Arguments:
   <PATHS>...  Paths to config files
 
 Options:
-      --output-format <OUTPUT_FORMAT>  Options: summary, tap [default: summary]
+      --format <FORMAT>  Options: summary, tap [default: summary]
       --parallel                       Run tests in parallel
       --verbose                        Print extra information about config files
   -h, --help                           Print help

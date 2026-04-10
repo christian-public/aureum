@@ -8,7 +8,7 @@ pub fn print_verbose_is_not_supported_in_passthrough() {
         label::error()
     );
     eprintln!(
-        "{} You may want to use `--output-format toml` instead",
+        "{} You may want to use `--format toml` instead",
         label::hint()
     );
 }

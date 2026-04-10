@@ -2,12 +2,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 
 [tests.summary_passing]
-program_arguments = [
-  "test",
-  "--output-format",
-  "summary",
-  "helpers/passing_test.toml",
-]
+program_arguments = ["test", "--format", "summary", "helpers/passing_test.toml"]
 expected_stdout = """
 🚀 Running 1 tests:
 .
@@ -19,12 +14,7 @@ expected_exit_code = 0
 
 
 [tests.summary_failing]
-program_arguments = [
-  "test",
-  "--output-format",
-  "summary",
-  "helpers/failing_test.toml",
-]
+program_arguments = ["test", "--format", "summary", "helpers/failing_test.toml"]
 expected_stdout = """
 🚀 Running 1 tests:
 F
@@ -70,12 +60,7 @@ expected_exit_code = 1
 
 
 [tests.tap_passing]
-program_arguments = [
-  "test",
-  "--output-format",
-  "tap",
-  "helpers/passing_test.toml",
-]
+program_arguments = ["test", "--format", "tap", "helpers/passing_test.toml"]
 expected_stdout = """
 TAP version 14
 1..1
@@ -86,12 +71,7 @@ expected_exit_code = 0
 
 
 [tests.tap_failing]
-program_arguments = [
-  "test",
-  "--output-format",
-  "tap",
-  "helpers/failing_test.toml",
-]
+program_arguments = ["test", "--format", "tap", "helpers/failing_test.toml"]
 expected_stdout = """
 TAP version 14
 1..1
@@ -115,7 +95,7 @@ expected_exit_code = 1
 [tests.summary_failing_with_newline]
 program_arguments = [
   "test",
-  "--output-format",
+  "--format",
   "summary",
   "helpers/failing_test_newline.toml",
 ]
@@ -149,15 +129,10 @@ expected_exit_code = 1
 
 
 [tests.unknown]
-program_arguments = [
-  "test",
-  "--output-format",
-  "UNKNOWN",
-  "helpers/passing_test.toml",
-]
+program_arguments = ["test", "--format", "UNKNOWN", "helpers/passing_test.toml"]
 expected_stdout = ""
 expected_stderr = """
-error: invalid value 'UNKNOWN' for '--output-format <OUTPUT_FORMAT>': Invalid output format
+error: invalid value 'UNKNOWN' for '--format <FORMAT>': Invalid output format
 
 For more information, try '--help'.
 """

@@ -2,7 +2,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 
 [tests.without_verbose]
-program_arguments = ["test", "--output-format", "tap", "helpers/*.toml"]
+program_arguments = ["test", "--format", "tap", "helpers/*.toml"]
 expected_stdout = """
 TAP version 14
 1..3
@@ -29,7 +29,7 @@ expected_exit_code = 3
 [tests.with_verbose]
 program_arguments = [
     "test",
-    "--output-format",
+    "--format",
     "tap",
     "--verbose",
     "--hide-absolute-paths",
