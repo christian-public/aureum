@@ -2,6 +2,7 @@ mod report;
 mod vendor;
 mod utils {
     pub mod file;
+    pub mod glob;
     pub mod shell;
     pub mod time;
 }

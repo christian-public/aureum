@@ -1,6 +1,5 @@
+use crate::utils::glob;
 use aureum::{TestId, TestIdCoverageSet};
-use glob::MatchOptions;
-use os_str_bytes::OsStrBytesExt;
 use relative_path::RelativePathBuf;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -20,7 +19,6 @@ pub enum PathError {
     TestIdMustBeUtf8,
     InvalidTestId,
     GlobPatternMustBeUtf8,
-    InvalidGlobPattern,
     InvalidGlobEntry,
     FailedToConvertPathToRelativePath,
 }
@@ -85,15 +83,13 @@ fn find_config_files_in_path(
     }
     // Check if there is a directory at this exact path.
     else if search_path.is_dir() {
-        let dir_pattern = search_path.join(DIRECTORY_SEARCH_PATTERN);
-        let paths = find_config_files_for_pattern(&dir_pattern)?;
-
+        let paths = glob::walk(&search_path.join(DIRECTORY_SEARCH_PATTERN))
+            .map_err(|_| PathError::InvalidGlobEntry)?;
         prepare_paths(paths, TestId::root(), current_dir)
     }
     // Search for glob pattern.
-    else if is_glob(search_path) {
-        let paths = find_config_files_for_pattern(search_path)?;
-
+    else if glob::is_glob(search_path) {
+        let paths = find_config_files_for_glob(search_path, current_dir)?;
         prepare_paths(paths, TestId::root(), current_dir)
     }
     // Otherwise: File not found.
@@ -102,36 +98,28 @@ fn find_config_files_in_path(
     }
 }
 
-fn find_config_files_for_pattern(path: &Path) -> Result<Vec<PathBuf>, PathError> {
+/// Resolves a glob pattern to a list of config file paths.
+///
+/// Any pattern that matches a directory causes that directory to be expanded
+/// with `DIRECTORY_SEARCH_PATTERN`. Patterns that match files include them
+/// directly. This applies to both name patterns (`spec*`) and path patterns
+/// (`aureum*/src`).
+fn find_config_files_for_glob(pattern: &Path, base: &Path) -> Result<Vec<PathBuf>, PathError> {
+    pattern.to_str().ok_or(PathError::GlobPatternMustBeUtf8)?;
+
+    let entries =
+        glob::walk_entries(&base.join(pattern)).map_err(|_| PathError::InvalidGlobEntry)?;
+
     let mut files = vec![];
-
-    let glob_pattern = path.to_str().ok_or(PathError::GlobPatternMustBeUtf8)?;
-
-    let entries = glob::glob_with(
-        glob_pattern,
-        MatchOptions {
-            case_sensitive: false,
-            require_literal_separator: false,
-            require_literal_leading_dot: false,
-        },
-    )
-    .map_err(|_| PathError::InvalidGlobPattern)?;
-
     for entry in entries {
-        let path = entry.map_err(|_| PathError::InvalidGlobEntry)?;
-
-        if path.is_file() {
-            files.push(path);
-        } else if path.is_dir() {
-            if let Some(new_glob_pattern) = path.join(DIRECTORY_SEARCH_PATTERN).to_str() {
-                let found_files = find_config_files_for_pattern(Path::new(new_glob_pattern))?;
-                files.extend(found_files);
-            } else {
-                return Err(PathError::GlobPatternMustBeUtf8);
-            }
+        match entry {
+            glob::Entry::File(p) => files.push(p),
+            glob::Entry::Dir(dir) => files.extend(
+                glob::walk(&dir.join(DIRECTORY_SEARCH_PATTERN))
+                    .map_err(|_| PathError::InvalidGlobEntry)?,
+            ),
         }
     }
-
     Ok(files)
 }
 
@@ -161,8 +149,86 @@ fn get_relative_path(path: &Path, base: &Path) -> Option<RelativePathBuf> {
     }
 }
 
-fn is_glob(path: &Path) -> bool {
-    ['*', '?', '[', '{']
-        .iter()
-        .any(|needle| OsStrBytesExt::contains(path.as_os_str(), *needle))
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    fn setup_test_dir(name: &str, files: &[&str]) -> PathBuf {
+        let dir = std::env::temp_dir().join(format!("aureum_test_{name}"));
+        let _ = fs::remove_dir_all(&dir);
+        for file in files {
+            let path = dir.join(file);
+            fs::create_dir_all(path.parent().unwrap()).unwrap();
+            fs::write(&path, "").unwrap();
+        }
+        dir
+    }
+
+    #[test]
+    fn name_pattern_expands_matching_directory() {
+        let dir = setup_test_dir(
+            "name_pattern_dir",
+            &["spec/a.au.toml", "spec/sub/b.au.toml", "other/c.au.toml"],
+        );
+        let mut result = find_config_files_for_glob(Path::new("{spec}"), &dir).unwrap();
+        result.sort();
+        assert_eq!(result.len(), 2, "{result:?}");
+        assert!(result.iter().all(|p| p.starts_with(dir.join("spec"))));
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn name_pattern_includes_matching_files_directly() {
+        let dir = setup_test_dir("name_pattern_file", &["spec.au.toml", "other.au.toml"]);
+        let result = find_config_files_for_glob(Path::new("spec*"), &dir).unwrap();
+        assert_eq!(result.len(), 1, "{result:?}");
+        assert!(result[0].ends_with("spec.au.toml"));
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn name_pattern_does_not_include_non_matching_directories() {
+        let dir = setup_test_dir(
+            "name_pattern_no_other",
+            &["other/a.au.toml", "spec/b.au.toml"],
+        );
+        let result = find_config_files_for_glob(Path::new("spec*"), &dir).unwrap();
+        assert_eq!(result.len(), 1, "{result:?}");
+        assert!(result[0].ends_with("b.au.toml"));
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn path_pattern_starting_with_glob_finds_files() {
+        // "{spec,examples}/**/*.au.toml" is a path pattern (has "/") whose first
+        // component is a glob. It must work without a leading "./".
+        let dir = setup_test_dir(
+            "glob_start_path_pattern",
+            &["spec/a.au.toml", "examples/b.au.toml", "other/c.au.toml"],
+        );
+        let mut result =
+            find_config_files_for_glob(Path::new("{spec,examples}/**/*.au.toml"), &dir).unwrap();
+        result.sort();
+        assert_eq!(result.len(), 2, "{result:?}");
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn path_pattern_with_separator_expands_matching_directories() {
+        let dir = setup_test_dir(
+            "path_sep_dir",
+            &[
+                "aureum/src/a.au.toml",
+                "aureum-cli/src/b.au.toml",
+                "other/src/c.au.toml",
+            ],
+        );
+        let mut result = find_config_files_for_glob(Path::new("aureum*/src"), &dir).unwrap();
+        result.sort();
+        assert_eq!(result.len(), 2, "{result:?}");
+        assert!(result.iter().any(|p| p.ends_with("a.au.toml")));
+        assert!(result.iter().any(|p| p.ends_with("b.au.toml")));
+        let _ = fs::remove_dir_all(&dir);
+    }
 }
