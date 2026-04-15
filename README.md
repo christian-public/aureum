@@ -128,6 +128,12 @@ Running the command `aureum test multiple_tests.au.toml` will output the followi
 Test result: OK (2 passed, 0 failed)
 ```
 
+## AI usage
+
+Commits after March 11, 2026 may contain AI-generated code.
+
+The `--interactive` feature was built almost entirely by Claude Code.
+
 ## Alternative tools
 
 - [trycmd](https://github.com/assert-rs/trycmd) [Rust]
