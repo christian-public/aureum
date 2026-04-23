@@ -122,12 +122,11 @@ fn summary_print_summary(number_of_tests: usize, run_results: &[RunResult]) {
 fn summary_print_result(run_result: &RunResult) {
     let test_id = run_result.test_case.id();
 
-    let message: String;
-    if let Some(description) = &run_result.test_case.description {
-        message = format!("{test_id} - {description}");
+    let message = if let Some(description) = &run_result.test_case.description {
+        format!("{test_id} - {description}")
     } else {
-        message = test_id;
-    }
+        test_id
+    };
 
     if run_result.is_success() {
         println!("{} {message}", symbol::checkmark());

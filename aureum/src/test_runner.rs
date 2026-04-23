@@ -30,7 +30,7 @@ impl RunResult {
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum RunError {
-    FailedToDecodeUtf8,
+    FailedToDecodeUtf8(std::string::FromUtf8Error),
     ProgramTerminated,
     IOError(io::Error),
 }
@@ -149,7 +149,7 @@ fn init_command(test_case: &TestCase, current_dir: &Path) -> Command {
     cmd
 }
 
-fn write_stdin(child: &mut std::process::Child, stdin_string: &String) -> Result<(), RunError> {
+fn write_stdin(child: &mut std::process::Child, stdin_string: &str) -> Result<(), RunError> {
     let mut stdin = child
         .stdin
         .take()
@@ -179,7 +179,7 @@ where
 {
     let mut buf = Vec::<u8>::new();
     pipe.read_to_end(&mut buf).map_err(RunError::IOError)?;
-    let content = String::from_utf8(buf).map_err(|_| RunError::FailedToDecodeUtf8)?;
+    let content = String::from_utf8(buf).map_err(RunError::FailedToDecodeUtf8)?;
 
     Ok(content)
 }

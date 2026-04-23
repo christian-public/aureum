@@ -31,6 +31,7 @@ pub fn format_lines(contents: &str, format_line: impl Fn(&str) -> String) -> Str
     output
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub struct TextBlockOptions {
     pub top_line: String,
     pub bottom_line: String,

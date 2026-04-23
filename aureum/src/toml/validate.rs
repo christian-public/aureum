@@ -38,10 +38,7 @@ pub enum ProgramPath {
 impl ProgramPath {
     fn get_resolved_path(&self) -> Option<PathBuf> {
         match self {
-            ProgramPath::ResolvedPath {
-                requested_program: _,
-                resolved_path,
-            } => Some(resolved_path.clone()),
+            ProgramPath::ResolvedPath { resolved_path, .. } => Some(resolved_path.clone()),
             _ => None,
         }
     }
@@ -68,10 +65,6 @@ pub struct TestEntry {
 }
 
 impl TestEntry {
-    pub fn is_runnable(&self) -> bool {
-        self.test_case.is_ok()
-    }
-
     pub fn is_testable(&self) -> bool {
         self.test_case.is_ok() && self.expectations.is_ok()
     }
