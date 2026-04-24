@@ -1,11 +1,10 @@
+use crate::load_config_file::ConfigFileError;
 use crate::report::label;
 use crate::report::symbol;
 use crate::utils::file;
 use crate::utils::tree;
 use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
-use aureum::{
-    ProgramPath, RequirementData, Requirements, TestEntry, TestId, TomlConfigError, ValidationError,
-};
+use aureum::{ProgramPath, RequirementData, Requirements, TestEntry, TestId, ValidationError};
 use colored::Colorize;
 use relative_path::{RelativePath, RelativePathBuf};
 use std::collections::BTreeMap;
@@ -163,10 +162,12 @@ pub fn print_config_details(
     print_tree(tree);
 }
 
-pub fn print_config_file_error(config_file_path: &RelativePath, error: &TomlConfigError) {
+pub fn print_config_file_error(config_file_path: &RelativePath, error: &ConfigFileError) {
     let msg = match error {
-        TomlConfigError::InvalidTomlSyntax(_) => "Failed to parse config file",
-        TomlConfigError::ParseErrors(_) => "Failed to parse config file",
+        ConfigFileError::NoFileName => "Config file path has no filename",
+        ConfigFileError::NoParentDirectory => "Config file path has no parent directory",
+        ConfigFileError::ReadFailed(_) => "Failed to read config file",
+        ConfigFileError::ParseFailed(_) => "Failed to parse config file",
     };
     let tree = Node(
         config_file_heading(config_file_path),

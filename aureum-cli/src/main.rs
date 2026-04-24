@@ -19,7 +19,7 @@ use crate::args::{
     TestOutputFormat, ValidateArgs,
 };
 use crate::exit_code::ExitCode;
-use crate::load_config_file::{ConfigFileError, LoadConfigFilesResult, LoadedConfigFile};
+use crate::load_config_file::{LoadConfigFilesResult, LoadedConfigFile};
 use crate::report::test_case::{ReportConfig, ReportFormat};
 use crate::report::validate::ReportValidateResult;
 use aureum::TestCase;
@@ -433,14 +433,7 @@ fn prepare_config_files(
         load_config_file::load_config_files(find_config_files_result, current_dir);
 
     for (config_file_path, config_file_error) in &load_config_files_result.invalid {
-        match config_file_error {
-            ConfigFileError::ParseFailed(err) => {
-                report::validate::print_config_file_error(config_file_path, err);
-            }
-            _ => {
-                // TODO: Handle other errors
-            }
-        }
+        report::validate::print_config_file_error(config_file_path, config_file_error);
     }
 
     Ok(load_config_files_result)
