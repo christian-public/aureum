@@ -1,6 +1,6 @@
-use crate::test_case::TestCase;
 use crate::utils::tree;
 use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
+use aureum::TestCase;
 use std::collections::BTreeMap;
 
 pub fn print_test_list_as_tree(test_cases: &[TestCase]) {

@@ -6,11 +6,9 @@ edition = "2024"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-colored = "3.1.1"
 diff = "0.1.13"
 rayon = "1.11.0"
 relative-path = "2.0.1"
-yaml_serde = "0.10.4"
 toml = "1.1.0"
 
 [dev-dependencies]

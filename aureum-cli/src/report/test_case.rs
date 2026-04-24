@@ -1,12 +1,10 @@
-use crate::formats::summary;
-use crate::formats::tap;
+use crate::report::formats::summary;
+use crate::report::formats::tap;
 use crate::report::label;
 use crate::report::symbol;
-use crate::test_case::TestCase;
-use crate::test_result::TestResult;
-use crate::test_runner::{RunError, RunResult};
 use crate::utils::tree;
 use crate::vendor::ascii_tree::Tree::{Leaf, Node};
+use aureum::{RunError, RunResult, TestCase, TestResult};
 use colored::Colorize;
 use std::io;
 

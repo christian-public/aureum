@@ -1,6 +1,11 @@
+mod report;
+mod vendor {
+    pub mod ascii_tree;
+}
 mod utils {
     pub mod file;
     pub mod shell;
+    pub mod tree;
 }
 mod args;
 mod exit_code;
@@ -15,7 +20,9 @@ use crate::args::{
 };
 use crate::exit_code::ExitCode;
 use crate::load_config_file::{ConfigFileError, LoadConfigFilesResult, LoadedConfigFile};
-use aureum::{ReportConfig, ReportFormat, ReportValidateResult, TestCase};
+use crate::report::test_case::{ReportConfig, ReportFormat};
+use crate::report::validate::ReportValidateResult;
+use aureum::TestCase;
 use relative_path::RelativePathBuf;
 use std::collections::BTreeMap;
 use std::env;
@@ -70,13 +77,13 @@ fn init_config(args: InitArgs) -> ExitCode {
         }
         Some(path) => {
             if path.exists() {
-                aureum::print_file_already_exists(&path);
+                report::init::print_file_already_exists(&path);
                 return ExitCode::GeneralError;
             }
 
             let write_result = fs::write(&path, template);
             if write_result.is_err() {
-                aureum::print_failed_to_write_file(&path);
+                report::init::print_failed_to_write_file(&path);
                 return ExitCode::GeneralError;
             }
 
@@ -120,10 +127,10 @@ fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode {
             }))
             .collect();
 
-    aureum::print_validate_table(&table_entries);
+    report::validate::print_validate_table(&table_entries);
 
     if has_config_errors {
-        aureum::print_config_files_contain_errors();
+        report::validate::print_config_files_contain_errors();
 
         ExitCode::InvalidConfig
     } else {
@@ -157,7 +164,7 @@ fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
     let has_config_errors = config_files.has_config_errors();
 
     if args.tree {
-        aureum::print_test_list_as_tree(&all_test_cases);
+        report::list::print_test_list_as_tree(&all_test_cases);
     } else {
         for test_case in &all_test_cases {
             println!("{}", test_case.id());
@@ -165,7 +172,7 @@ fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
     }
 
     if has_config_errors {
-        aureum::print_config_files_contain_errors();
+        report::validate::print_config_files_contain_errors();
 
         ExitCode::InvalidConfig
     } else {
@@ -176,7 +183,7 @@ fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
 fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
     let is_passthrough = matches!(args.format, RunOutputFormat::Passthrough);
     if is_passthrough && args.common.verbose {
-        aureum::print_verbose_is_not_supported_in_passthrough();
+        report::run::print_verbose_is_not_supported_in_passthrough();
 
         return ExitCode::InvalidUsage;
     }
@@ -201,7 +208,7 @@ fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
         RunOutputFormat::Passthrough => {
             let test_entry_count = test_entries_in_coverage_set.len();
             if test_entry_count != 1 {
-                aureum::print_run_single_program_only(test_entry_count);
+                report::validate::print_run_single_program_only(test_entry_count);
 
                 return ExitCode::InvalidUsage;
             }
@@ -215,7 +222,7 @@ fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
                         args.common.hide_absolute_paths,
                     );
 
-                    aureum::print_config_files_contain_errors();
+                    report::validate::print_config_files_contain_errors();
 
                     ExitCode::InvalidConfig
                 }
@@ -233,11 +240,11 @@ fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
             let has_config_errors = config_files.has_config_errors();
 
             if any_programs_failed_to_run {
-                aureum::print_one_or_more_programs_failed_to_run();
+                report::run::print_one_or_more_programs_failed_to_run();
 
                 ExitCode::RunProgramFailure
             } else if has_config_errors {
-                aureum::print_config_files_contain_errors();
+                report::validate::print_config_files_contain_errors();
 
                 ExitCode::InvalidConfig
             } else {
@@ -251,7 +258,7 @@ fn run_program_as_passthrough(test_case: &TestCase, current_dir: &Path) -> ExitC
     match aureum::run_program_passthrough(test_case, current_dir) {
         Ok(exit_code) => ExitCode::Passthrough(exit_code),
         Err(_) => {
-            aureum::print_failed_to_run_program();
+            report::run::print_failed_to_run_program();
 
             ExitCode::RunProgramFailure
         }
@@ -266,14 +273,14 @@ fn run_programs_with_toml_output(all_test_cases: &[TestCase], current_dir: &Path
             println!(); // Print extra newline between test cases
         }
 
-        aureum::print_test_case_id_as_toml_comment(test_case);
+        report::run::print_test_case_id_as_toml_comment(test_case);
 
         match aureum::run_program(test_case, current_dir) {
             Ok(output) => {
-                aureum::print_output_as_toml(&output);
+                report::run::print_output_as_toml(&output);
             }
             Err(_) => {
-                aureum::print_failed_to_run_program_as_toml();
+                report::run::print_failed_to_run_program_as_toml();
                 any_programs_failed_to_run = true;
             }
         }
@@ -284,7 +291,7 @@ fn run_programs_with_toml_output(all_test_cases: &[TestCase], current_dir: &Path
 
 fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
     if args.interactive && !io::stdout().is_terminal() {
-        aureum::print_interactive_mode_requires_a_terminal_error();
+        report::test_case::print_interactive_mode_requires_a_terminal_error();
         return ExitCode::InvalidUsage;
     }
 
@@ -330,7 +337,7 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
                 args.common.verbose,
                 args.common.hide_absolute_paths,
             );
-            aureum::print_test_cases_start(&report_config);
+            report::test_case::print_test_cases_start(&report_config);
         }
 
         let results = aureum::run_test_cases(
@@ -341,17 +348,17 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
                 if quiet {
                     Ok(())
                 } else {
-                    aureum::print_test_case(&report_config, index, test_case, result)
+                    report::test_case::print_test_case(&report_config, index, test_case, result)
                 }
             },
         );
 
         if !quiet {
-            aureum::print_test_cases_end(&report_config, &results);
+            report::test_case::print_test_cases_end(&report_config, &results);
         }
 
         if has_config_errors && !quiet {
-            aureum::print_config_files_contain_errors();
+            report::validate::print_config_files_contain_errors();
         }
 
         if let Some(TerminalSize { width, height }) = args.record {
@@ -405,11 +412,11 @@ fn prepare_config_files(
             .keys()
             .cloned()
             .collect::<Vec<_>>();
-        aureum::print_invalid_paths(&paths);
+        report::validate::print_invalid_paths(&paths);
     }
 
     if find_config_files_result.found.is_empty() {
-        aureum::print_no_config_files();
+        report::validate::print_no_config_files();
         return Err(ExitCode::InvalidConfig);
     }
 
@@ -419,7 +426,7 @@ fn prepare_config_files(
             .keys()
             .cloned()
             .collect::<Vec<_>>();
-        aureum::print_config_files_found(&config_files);
+        report::validate::print_config_files_found(&config_files);
     }
 
     let load_config_files_result =
@@ -428,7 +435,7 @@ fn prepare_config_files(
     for (config_file_path, config_file_error) in &load_config_files_result.invalid {
         match config_file_error {
             ConfigFileError::ParseFailed(err) => {
-                aureum::print_config_file_error(config_file_path, err);
+                report::validate::print_config_file_error(config_file_path, err);
             }
             _ => {
                 // TODO: Handle other errors
@@ -446,7 +453,7 @@ fn print_config_details_if_needed(
 ) {
     for (config_file_path, loaded_config_file) in loaded {
         if loaded_config_file.has_validation_errors() || verbose {
-            aureum::print_config_details(
+            report::validate::print_config_details(
                 config_file_path,
                 &loaded_config_file.test_entries,
                 &loaded_config_file.requirement_data,

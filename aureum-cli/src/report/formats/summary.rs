@@ -1,7 +1,7 @@
-use crate::test_result::{TestResult, ValueComparison};
-use crate::utils::string;
-use crate::utils::string::TextBlockOptions;
 use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
+use aureum::string;
+use aureum::string::TextBlockOptions;
+use aureum::{TestResult, ValueComparison};
 use colored::Colorize;
 
 // ERROR FORMATTING

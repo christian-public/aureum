@@ -62,13 +62,11 @@ dependencies = [
 name = "aureum"
 version = "0.1.0"
 dependencies = [
- "colored",
  "diff",
  "indoc",
  "rayon",
  "relative-path",
  "toml",
- "yaml_serde",
 ]
 
 [[package]]
@@ -87,6 +85,7 @@ dependencies = [
  "relative-path",
  "toml_edit",
  "which",
+ "yaml_serde",
 ]
 
 [[package]]

@@ -1,6 +1,5 @@
 use crate::report::label;
-use crate::test_case::TestCase;
-use crate::test_runner::ProgramOutput;
+use aureum::{ProgramOutput, TestCase};
 
 pub fn print_verbose_is_not_supported_in_passthrough() {
     eprintln!(

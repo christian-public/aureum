@@ -1,5 +1,5 @@
-use crate::test_result::{TestResult, ValueComparison};
-use crate::utils::string;
+use aureum::string;
+use aureum::{TestResult, ValueComparison};
 use std::collections::BTreeMap;
 use yaml_serde::{Number, Value};
 
