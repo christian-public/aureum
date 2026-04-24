@@ -35,7 +35,6 @@ pub(super) fn run_tests_with_progress(
             &current_dir_owned,
             &|_i, _tc, res| {
                 let _ = progress_tx.send(res.as_ref().map(|r| r.is_success()).unwrap_or(false));
-                Ok(())
             },
         );
         let _ = results_tx.send(results);

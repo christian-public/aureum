@@ -342,10 +342,8 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
             args.parallel,
             current_dir,
             &|index, test_case, result| {
-                if quiet {
-                    Ok(())
-                } else {
-                    report::test_case::print_test_case(&report_config, index, test_case, result)
+                if !quiet {
+                    report::test_case::print_test_case(&report_config, index, test_case, result);
                 }
             },
         );

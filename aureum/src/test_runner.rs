@@ -41,20 +41,12 @@ pub fn run_test_cases(
     test_cases: &[TestCaseWithExpectations],
     run_in_parallel: bool,
     current_dir: &Path,
-    report_test_case: &(
-         impl Fn(usize, &TestCase, &Result<TestResult, RunError>) -> Result<(), RunError>
-         + std::marker::Sync
-     ),
+    report_test_case: &(impl Fn(usize, &TestCase, &Result<TestResult, RunError>) + Sync),
 ) -> Vec<RunResult> {
     let run = |(i, entry): (usize, &TestCaseWithExpectations)| -> RunResult {
-        let run_result = run_test_case(entry, current_dir);
+        let result = run_test_case(entry, current_dir);
 
-        let report_result = report_test_case(i, &entry.test_case, &run_result);
-
-        let result = match report_result {
-            Ok(()) => run_result,
-            Err(e) => run_result.and(Err(e)),
-        };
+        report_test_case(i, &entry.test_case, &result);
 
         RunResult {
             test_case: entry.test_case.clone(),

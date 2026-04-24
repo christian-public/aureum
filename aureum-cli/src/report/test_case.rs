@@ -41,18 +41,16 @@ pub fn print_test_case(
     index: usize,
     test_case: &TestCase,
     result: &Result<TestResult, RunError>,
-) -> Result<(), RunError> {
+) {
     match report_config.format {
         ReportFormat::Summary => {
-            summary_print_test_case(result)?;
+            summary_print_test_case(result);
         }
         ReportFormat::Tap => {
             let test_number_indent_level = report_config.number_of_tests.to_string().len();
             tap_print_test_case(index + 1, test_case, result, test_number_indent_level);
         }
     }
-
-    Ok(())
 }
 
 pub fn print_test_cases_end(report_config: &ReportConfig, run_results: &[RunResult]) {
@@ -72,7 +70,7 @@ fn summary_print_start(number_of_tests: usize) {
     println!("🚀 Running {number_of_tests} tests:")
 }
 
-fn summary_print_test_case(result: &Result<TestResult, RunError>) -> Result<(), RunError> {
+fn summary_print_test_case(result: &Result<TestResult, RunError>) {
     match result {
         Ok(test_result) => {
             if test_result.is_success() {
@@ -86,9 +84,7 @@ fn summary_print_test_case(result: &Result<TestResult, RunError>) -> Result<(), 
         }
     }
 
-    io::Write::flush(&mut io::stdout()).map_err(RunError::IOError)?;
-
-    Ok(())
+    let _ = io::Write::flush(&mut io::stdout());
 }
 
 fn summary_print_summary(number_of_tests: usize, run_results: &[RunResult]) {
