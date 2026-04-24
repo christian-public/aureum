@@ -19,7 +19,7 @@ use crate::exit_code::ExitCode;
 use crate::load_config_file::{LoadConfigFilesResult, LoadedConfigFile};
 use crate::report::test_case::{ReportConfig, ReportFormat};
 use crate::report::validate::ReportValidateResult;
-use aureum::TestCase;
+use aureum::{TestCase, TestCaseWithExpectations};
 use relative_path::RelativePathBuf;
 use std::collections::BTreeMap;
 use std::env;
@@ -303,10 +303,10 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
         .flat_map(|x| x.test_entries_in_coverage_set())
         .collect::<Vec<_>>();
 
-    let all_test_cases = test_entries_in_coverage_set
+    let all_test_cases: Vec<TestCaseWithExpectations> = test_entries_in_coverage_set
         .iter()
         .flat_map(|(_test_id, test_entry)| test_entry.test_case_with_expectations().ok())
-        .collect::<Vec<_>>();
+        .collect();
 
     let has_config_errors = config_files.has_config_errors();
 

@@ -14,7 +14,7 @@ use field::FieldDecisions;
 use progress_view::run_tests_with_progress;
 use review_loop::{HeadlessDriver, LiveDriver, run_review_loop};
 
-use aureum::{RunResult, TestCase, TestCaseExpectations, TestResult};
+use aureum::{RunResult, TestCaseWithExpectations, TestResult};
 use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
 use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
@@ -102,7 +102,7 @@ where
 /// Full interactive session for a real terminal: shows live test progress, then lets the user
 /// review and accept failures one by one. Enters/leaves alternate screen internally.
 pub fn run_with_progress_and_review(
-    test_cases: &[(TestCase, TestCaseExpectations)],
+    test_cases: &[TestCaseWithExpectations],
     parallel: bool,
     current_dir: &Path,
 ) -> io::Result<Vec<RunResult>> {
@@ -135,7 +135,7 @@ pub fn run_with_progress_and_review(
 
 fn run_tui_session(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
-    test_cases: &[(TestCase, TestCaseExpectations)],
+    test_cases: &[TestCaseWithExpectations],
     parallel: bool,
     current_dir: &Path,
 ) -> io::Result<Option<TuiSessionResult>> {
@@ -215,7 +215,7 @@ mod test_helpers;
 mod tests {
     use super::test_helpers::{TempDir, make_test_case_root};
     use super::*;
-    use aureum::{TestCaseExpectations, ValueComparison};
+    use aureum::{TestCase, TestCaseExpectations, ValueComparison};
     use std::io::Cursor;
 
     fn failing_run_result_stdout(

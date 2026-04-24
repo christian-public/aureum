@@ -1,4 +1,4 @@
-use crate::test_case::{TestCase, TestCaseExpectations};
+use crate::test_case::{TestCase, TestCaseExpectations, TestCaseWithExpectations};
 use crate::toml::config::ConfigValue;
 use crate::{Requirements, TestId, TomlConfig, get_requirements};
 use relative_path::RelativePath;
@@ -82,9 +82,12 @@ impl TestEntry {
 
     pub fn test_case_with_expectations(
         &self,
-    ) -> Result<(TestCase, TestCaseExpectations), BTreeSet<ValidationError>> {
+    ) -> Result<TestCaseWithExpectations, BTreeSet<ValidationError>> {
         match (&self.test_case, &self.expectations) {
-            (Ok(tc), Ok(exp)) => Ok((tc.clone(), exp.clone())),
+            (Ok(tc), Ok(exp)) => Ok(TestCaseWithExpectations {
+                test_case: tc.clone(),
+                expectations: exp.clone(),
+            }),
             (tc_errs, exp_errs) => {
                 let mut errors = BTreeSet::new();
                 if let Err(errs) = tc_errs {

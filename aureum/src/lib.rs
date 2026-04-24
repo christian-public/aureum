@@ -22,7 +22,7 @@ mod test_runner;
 
 pub use utils::string;
 
-pub use test_case::{TestCase, TestCaseExpectations};
+pub use test_case::{TestCase, TestCaseExpectations, TestCaseWithExpectations};
 pub use test_id::TestId;
 pub use test_id_coverage_set::TestIdCoverageSet;
 pub use test_result::{TestResult, ValueComparison};

@@ -37,3 +37,10 @@ pub struct TestCaseExpectations {
     pub stderr: Option<String>,
     pub exit_code: Option<i32>,
 }
+
+#[derive(Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub struct TestCaseWithExpectations {
+    pub test_case: TestCase,
+    pub expectations: TestCaseExpectations,
+}

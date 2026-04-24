@@ -1,4 +1,4 @@
-use aureum::{RunResult, TestCase, TestCaseExpectations, run_test_cases};
+use aureum::{RunResult, TestCaseWithExpectations, run_test_cases};
 use crossterm::event::{Event, KeyCode, KeyEventKind};
 use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Alignment, Constraint, Direction, Layout};
@@ -16,7 +16,7 @@ use std::time::{Duration, Instant};
 /// On quit the background thread is detached; the caller should `process::exit` after cleanup.
 pub(super) fn run_tests_with_progress(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
-    test_cases: &[(TestCase, TestCaseExpectations)],
+    test_cases: &[TestCaseWithExpectations],
     parallel: bool,
     current_dir: &Path,
 ) -> io::Result<Option<Vec<RunResult>>> {
