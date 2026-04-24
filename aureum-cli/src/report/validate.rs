@@ -1,8 +1,8 @@
 use crate::report::label;
 use crate::report::symbol;
+use crate::utils::file;
 use crate::utils::tree;
 use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
-use aureum::utils::file;
 use aureum::{
     ProgramPath, RequirementData, Requirements, TestEntry, TestId, TomlConfigError, ValidationError,
 };

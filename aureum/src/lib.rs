@@ -11,8 +11,7 @@ mod toml {
     pub use requirement::get_requirements;
     pub use validate::build_test_entries;
 }
-pub mod utils {
-    pub mod file;
+mod utils {
     pub mod string;
 }
 mod test_case;
