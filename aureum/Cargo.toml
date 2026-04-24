@@ -7,9 +7,9 @@ edition = "2024"
 
 [dependencies]
 diff = "0.1.13"
-rayon = "1.11.0"
+rayon = "1.12.0"
 relative-path = "2.0.1"
-toml = "1.1.0"
+toml = "1.1.2"
 
 [dev-dependencies]
 indoc = "2.0.7"
