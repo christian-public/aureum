@@ -1,11 +1,8 @@
 mod report;
-mod vendor {
-    pub mod ascii_tree;
-}
+mod vendor;
 mod utils {
     pub mod file;
     pub mod shell;
-    pub mod tree;
 }
 mod args;
 mod exit_code;

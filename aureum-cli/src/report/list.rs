@@ -1,11 +1,10 @@
-use crate::utils::tree;
 use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
 use aureum::TestCase;
 use std::collections::BTreeMap;
 
 pub fn print_test_list_as_tree(test_cases: &[TestCase]) {
     let tree = build_test_list_tree(test_cases);
-    let output = tree::draw_tree(&tree).unwrap_or(String::from("Failed to draw tree\n"));
+    let output = tree.to_string();
 
     print!("{}", output);
 }

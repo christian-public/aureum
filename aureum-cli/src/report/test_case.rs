@@ -2,7 +2,6 @@ use crate::report::formats::summary;
 use crate::report::formats::tap;
 use crate::report::label;
 use crate::report::symbol;
-use crate::utils::tree;
 use crate::vendor::ascii_tree::Tree::{Leaf, Node};
 use aureum::{RunError, RunResult, TestCase, TestResult};
 use colored::Colorize;
@@ -146,7 +145,7 @@ fn summary_print_result(run_result: &RunResult) {
 
         let test_heading = format!("❌ {message}");
         let tree = Node(test_heading, nodes);
-        let content = tree::draw_tree(&tree).unwrap_or(String::from("Failed to draw tree\n"));
+        let content = tree.to_string();
         print!("{content}"); // Already contains newline
     }
 }

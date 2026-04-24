@@ -2,7 +2,6 @@ use crate::load_config_file::ConfigFileError;
 use crate::report::label;
 use crate::report::symbol;
 use crate::utils::file;
-use crate::utils::tree;
 use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
 use aureum::{ProgramPath, RequirementData, Requirements, TestEntry, TestId, ValidationError};
 use colored::Colorize;
@@ -198,7 +197,7 @@ pub fn print_run_single_program_only(test_entry_count: usize) {
 // OTHER HELPERS
 
 fn print_tree(tree: Tree) {
-    let content = tree::draw_tree(&tree).unwrap_or(String::from("Failed to draw tree\n"));
+    let content = tree.to_string();
 
     eprint!("{content}"); // Already contains newline
     eprintln!()
