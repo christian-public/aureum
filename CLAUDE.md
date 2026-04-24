@@ -20,9 +20,9 @@ cargo build --release # optimized build
 ```bash
 cargo test                          # all unit tests
 cargo test <test_name>              # single test by name
-./run_spec.sh test spec             # all golden tests (uses debug build)
-RELEASE=1 ./run_spec.sh test spec   # golden tests with release build
-./run_spec.sh test spec/basic/expect_stdout.au.toml  # single golden test file
+./test_spec.sh test spec            # all golden tests (uses debug build)
+RELEASE=1 ./test_spec.sh test spec  # golden tests with release build
+./test_spec.sh test spec/basic/expect_stdout.au.toml  # single golden test file
 ```
 
 ### Lint & Format
@@ -91,4 +91,4 @@ expected_stdout = "output"
 
 ### Self-Testing
 
-Aureum is tested by Aureum — the `spec/` directory contains the golden test suite. CI runs `./run_spec.sh test spec` on Ubuntu, macOS, and Windows.
+Aureum is tested by Aureum — the `spec/` directory contains the golden test suite. CI runs `./test_spec.sh test spec` on Ubuntu, macOS, and Windows.
