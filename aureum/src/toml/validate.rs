@@ -14,11 +14,11 @@ pub struct RequirementData {
 }
 
 impl RequirementData {
-    pub fn get_file(&self, key: &String) -> Option<String> {
+    pub fn get_file(&self, key: &str) -> Option<String> {
         self.files.get(key).cloned()
     }
 
-    pub fn get_env_var(&self, key: &String) -> Option<String> {
+    pub fn get_env_var(&self, key: &str) -> Option<String> {
         self.env_vars.get(key).cloned()
     }
 }
