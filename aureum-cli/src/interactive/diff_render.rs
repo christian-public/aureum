@@ -254,9 +254,7 @@ pub(super) fn render_tui(
         *field_decisions,
         failing,
     );
-    let footer = Paragraph::new(format!(
-        "  ←→/ioex: switch field   1/2/3: switch view   ↑↓: scroll   a: accept   s: skip   Enter: {enter}\n  p: previous test   n: next test   l: list tests   q: quit"
-    ));
+    let footer = Paragraph::new(build_footer(ctx, active_field, failing, enter));
     frame.render_widget(footer, outer_chunks[1]);
 }
 
@@ -473,6 +471,51 @@ fn build_field_line(
     spans.push(Span::raw("│"));
 
     Line::from(spans)
+}
+
+fn build_footer(
+    ctx: &DiffViewContext<'_>,
+    active_field: Field,
+    failing: FailingFields,
+    enter: &'static str,
+) -> Text<'static> {
+    let dim = style::dim();
+    let switch_view_style = if active_field == Field::Stdin {
+        dim
+    } else {
+        Style::default()
+    };
+    let accept_skip_style = if !active_field.is_output() || !failing.is_failing(active_field) {
+        dim
+    } else {
+        Style::default()
+    };
+    let prev_style = if ctx.index == 1 {
+        dim
+    } else {
+        Style::default()
+    };
+    let next_style = if ctx.index == ctx.total {
+        dim
+    } else {
+        Style::default()
+    };
+
+    let line1 = Line::from(vec![
+        Span::raw("  ←→/ioex: switch field   "),
+        Span::styled("1/2/3: switch view", switch_view_style),
+        Span::raw("   ↑↓: scroll   "),
+        Span::styled("a: accept   s: skip", accept_skip_style),
+        Span::raw(format!("   Enter: {enter}")),
+    ]);
+    let line2 = Line::from(vec![
+        Span::raw("  "),
+        Span::styled("p: previous test", prev_style),
+        Span::raw("   "),
+        Span::styled("n: next test", next_style),
+        Span::raw("   l: list tests   q: quit"),
+    ]);
+    Text::from(vec![line1, line2])
 }
 
 fn enter_label(
