@@ -95,15 +95,15 @@ fn apply_key(
         KeyCode::Down => {
             state.scroll = state.scroll.saturating_add(1);
         }
-        KeyCode::Char('1') => {
+        KeyCode::Char('1') if state.active_field != Field::Stdin => {
             state.active_tab = Tab::Expected;
             state.scroll = 0;
         }
-        KeyCode::Char('2') => {
+        KeyCode::Char('2') if state.active_field != Field::Stdin => {
             state.active_tab = Tab::Got;
             state.scroll = 0;
         }
-        KeyCode::Char('3') => {
+        KeyCode::Char('3') if state.active_field != Field::Stdin => {
             state.active_tab = Tab::Diff;
             state.scroll = 0;
         }
