@@ -10,7 +10,7 @@ use std::io::{self, BufRead, Write};
 
 use crate::interactive::action::ListAction;
 use crate::interactive::diff_view;
-use crate::interactive::field::{FailingFields, FieldDecisions, OUTPUT_FIELDS};
+use crate::interactive::field::{FailingFields, FieldDecision, FieldDecisions, OUTPUT_FIELDS};
 use crate::interactive::style;
 
 pub(super) struct ListViewContext<'a> {
@@ -31,7 +31,7 @@ fn decision_indicator_spans(
         Some(d) => {
             let all_decided = OUTPUT_FIELDS
                 .iter()
-                .all(|&f| !failing.is_failing(f) || d.get(f).is_some());
+                .all(|&f| !failing.is_failing(f) || d.get(f) != FieldDecision::Undecided);
             let has_accept = d.any_accepted();
             let has_skip = d.any_skipped();
             match (all_decided, has_accept, has_skip) {

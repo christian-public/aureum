@@ -7,7 +7,9 @@ use ratatui::widgets::{Block, Borders, Paragraph, Wrap};
 
 use crate::interactive::diff_content;
 use crate::interactive::diff_view::{self, DiffViewContext, Tab, TuiState};
-use crate::interactive::field::{FailingFields, Field, FieldDecisions, OUTPUT_FIELDS};
+use crate::interactive::field::{
+    FailingFields, Field, FieldDecision, FieldDecisions, OUTPUT_FIELDS,
+};
 use crate::interactive::style;
 use crate::utils::shell;
 
@@ -196,10 +198,10 @@ pub(super) fn render_tui(
     );
     frame.render_widget(Paragraph::new(field_line), inner_chunks[9]);
 
-    // Apply pending decision for display: show the tentative y/n value in the current field's box.
+    // Apply pending decision for display: show the tentative a/s value in the current field's box.
     let mut display_decisions = *field_decisions;
-    if let Some(pending) = state.pending_decision {
-        display_decisions.set(active_field, Some(pending));
+    if state.pending_decision != FieldDecision::Undecided {
+        display_decisions.set(active_field, state.pending_decision);
     }
 
     // Field decisions row
@@ -336,9 +338,9 @@ fn build_decisions_line(decisions: FieldDecisions, failing: FailingFields) -> Li
         if failing.is_failing(field) {
             spans.push(Span::styled("[", style::dim()));
             let inner = match decisions.get(field) {
-                None => "   ",
-                Some(true) => " ✓ ",
-                Some(false) => " ⊘ ",
+                FieldDecision::Undecided => "   ",
+                FieldDecision::Accepted => " ✓ ",
+                FieldDecision::Skipped => " ⊘ ",
             };
             spans.push(Span::raw(inner));
             spans.push(Span::styled("]", style::dim()));
@@ -525,12 +527,13 @@ fn build_footer(
 
 fn enter_label(
     active_field: Field,
-    pending_decision: Option<bool>,
+    pending_decision: FieldDecision,
     field_decisions: FieldDecisions,
     failing: FailingFields,
 ) -> &'static str {
-    let needs_confirm = pending_decision.is_some()
-        || (failing.is_failing(active_field) && field_decisions.get(active_field).is_none());
+    let needs_confirm = pending_decision != FieldDecision::Undecided
+        || (failing.is_failing(active_field)
+            && field_decisions.get(active_field) == FieldDecision::Undecided);
     if needs_confirm {
         "confirm"
     } else if diff_view::proceeds_to_next_test(

@@ -81,22 +81,33 @@ impl FailingFields {
     }
 }
 
+// ── FieldDecision ─────────────────────────────────────────────────────────────
+
+/// Decision state for a single output field.
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub(super) enum FieldDecision {
+    #[default]
+    Undecided,
+    Accepted,
+    Skipped,
+}
+
 // ── FieldDecisions ────────────────────────────────────────────────────────────
 
-/// Per-test decisions for each output field. `None` = undecided, `Some(true)` = accept,
-/// `Some(false)` = skip. Stdin has no decision slot.
+/// Per-test decisions for each output field. Stdin has no decision slot.
 #[derive(Clone, Copy, Default)]
 pub(super) struct FieldDecisions {
-    pub(super) stdout: Option<bool>,
-    pub(super) stderr: Option<bool>,
-    pub(super) exit_code: Option<bool>,
+    pub(super) stdout: FieldDecision,
+    pub(super) stderr: FieldDecision,
+    pub(super) exit_code: FieldDecision,
 }
 
 impl FieldDecisions {
-    /// Returns the decision for the given field, or `None` for `Stdin`.
-    pub(super) fn get(self, field: Field) -> Option<bool> {
+    /// Returns the decision for the given field, or `Undecided` for `Stdin`.
+    pub(super) fn get(self, field: Field) -> FieldDecision {
         match field {
-            Field::Stdin => None,
+            Field::Stdin => FieldDecision::Undecided,
             Field::Stdout => self.stdout,
             Field::Stderr => self.stderr,
             Field::ExitCode => self.exit_code,
@@ -104,7 +115,7 @@ impl FieldDecisions {
     }
 
     /// Sets the decision for the given field; does nothing for `Stdin`.
-    pub(super) fn set(&mut self, field: Field, value: Option<bool>) {
+    pub(super) fn set(&mut self, field: Field, value: FieldDecision) {
         match field {
             Field::Stdin => {}
             Field::Stdout => self.stdout = value,
@@ -113,13 +124,13 @@ impl FieldDecisions {
         }
     }
 
-    /// True if any field was accepted (`Some(true)`).
+    /// True if any field was accepted.
     pub(super) fn any_accepted(self) -> bool {
-        [self.stdout, self.stderr, self.exit_code].contains(&Some(true))
+        [self.stdout, self.stderr, self.exit_code].contains(&FieldDecision::Accepted)
     }
 
-    /// True if any field was skipped (`Some(false)`).
+    /// True if any field was skipped.
     pub(super) fn any_skipped(self) -> bool {
-        [self.stdout, self.stderr, self.exit_code].contains(&Some(false))
+        [self.stdout, self.stderr, self.exit_code].contains(&FieldDecision::Skipped)
     }
 }

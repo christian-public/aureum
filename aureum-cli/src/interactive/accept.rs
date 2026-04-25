@@ -4,7 +4,7 @@ use std::io;
 use std::path::Path;
 use toml_edit::{DocumentMut, Item, Value};
 
-use crate::interactive::field::FieldDecisions;
+use crate::interactive::field::{FieldDecision, FieldDecisions};
 
 /// Updates test expectations on disk according to per-field decisions.
 /// A field is updated only when the decision is `Some(true)` AND the field has a diff.
@@ -24,7 +24,7 @@ pub(crate) fn update_test_expectations(
 
     let mut doc_modified = false;
 
-    if decisions.stdout == Some(true)
+    if decisions.stdout == FieldDecision::Accepted
         && let ValueComparison::Diff { got, .. } = &test_result.stdout
         && apply_field_update(
             &mut doc,
@@ -37,7 +37,7 @@ pub(crate) fn update_test_expectations(
         doc_modified = true;
     }
 
-    if decisions.stderr == Some(true)
+    if decisions.stderr == FieldDecision::Accepted
         && let ValueComparison::Diff { got, .. } = &test_result.stderr
         && apply_field_update(
             &mut doc,
@@ -50,7 +50,7 @@ pub(crate) fn update_test_expectations(
         doc_modified = true;
     }
 
-    if decisions.exit_code == Some(true)
+    if decisions.exit_code == FieldDecision::Accepted
         && let ValueComparison::Diff { got, .. } = &test_result.exit_code
         && apply_field_update(
             &mut doc,
@@ -175,7 +175,7 @@ fn get_subtest_section_mut<'a>(
 
 #[cfg(test)]
 mod tests {
-    use super::super::field::FieldDecisions;
+    use super::super::field::{FieldDecision, FieldDecisions};
     use super::super::test_helpers::{TempDir, make_test_case_root};
     use super::*;
     use aureum::TestId;
@@ -183,9 +183,9 @@ mod tests {
     use std::path::PathBuf;
 
     const ACCEPT_ALL: FieldDecisions = FieldDecisions {
-        stdout: Some(true),
-        stderr: Some(true),
-        exit_code: Some(true),
+        stdout: FieldDecision::Accepted,
+        stderr: FieldDecision::Accepted,
+        exit_code: FieldDecision::Accepted,
     };
 
     fn make_test_case_subtest(dir: &str, file: &str, name: &str) -> TestCase {

@@ -195,14 +195,15 @@ fn run_tui_session(
 }
 
 fn accepted_field_names(decisions: &FieldDecisions) -> String {
+    use field::FieldDecision;
     let mut names = Vec::new();
-    if decisions.stdout == Some(true) {
+    if decisions.stdout == FieldDecision::Accepted {
         names.push("stdout");
     }
-    if decisions.stderr == Some(true) {
+    if decisions.stderr == FieldDecision::Accepted {
         names.push("stderr");
     }
-    if decisions.exit_code == Some(true) {
+    if decisions.exit_code == FieldDecision::Accepted {
         names.push("exit_code");
     }
     names.join(", ")
