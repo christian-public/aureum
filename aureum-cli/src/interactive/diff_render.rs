@@ -416,7 +416,14 @@ fn build_field_line(
         } else {
             style::not_configured_span()
         };
-        spans.push(stdin_indicator);
+        spans.push(if is_active {
+            Span::styled(
+                stdin_indicator.content,
+                stdin_indicator.style.add_modifier(Modifier::BOLD),
+            )
+        } else {
+            stdin_indicator
+        });
         spans.push(Span::styled(STDIN_PRE, base_style));
         spans.push(Span::styled(
             STDIN_KEY,
@@ -445,7 +452,14 @@ fn build_field_line(
             Some(false) => style::checkmark_span(),
             None => style::not_configured_span(),
         };
-        spans.push(indicator);
+        spans.push(if is_active {
+            Span::styled(
+                indicator.content,
+                indicator.style.add_modifier(Modifier::BOLD),
+            )
+        } else {
+            indicator
+        });
         spans.push(Span::styled(*before, base_style));
         spans.push(Span::styled(
             *key,
