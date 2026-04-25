@@ -10,7 +10,7 @@ mod review_loop;
 mod style;
 
 use accept::update_test_expectations;
-use field::FieldDecisions;
+use field::{FieldDecision, FieldDecisions};
 use progress_view::run_tests_with_progress;
 use review_loop::{HeadlessDriver, LiveDriver, run_review_loop};
 
@@ -195,7 +195,6 @@ fn run_tui_session(
 }
 
 fn accepted_field_names(decisions: &FieldDecisions) -> String {
-    use field::FieldDecision;
     let mut names = Vec::new();
     if decisions.stdout == FieldDecision::Accepted {
         names.push("stdout");

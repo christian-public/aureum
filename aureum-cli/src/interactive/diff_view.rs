@@ -33,29 +33,81 @@ pub(super) struct DiffViewContext<'a> {
     pub total_count: usize,
 }
 
+// ── EnterOutcome ─────────────────────────────────────────────────────────────
+
+/// What pressing Enter will do given the current view state.
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub(super) enum EnterOutcome {
+    /// Not on a failing field — Enter navigates to the first failing field.
+    JumpToFirstFailing,
+    /// On a failing field with no decision yet — Enter will show an error.
+    NeedsDecision,
+    /// Has a staged decision; will commit it and move to the next failing field.
+    ConfirmNextField,
+    /// Has a staged decision; will commit it and proceed to the next test.
+    ConfirmNextTest,
+    /// Has a staged decision; will commit it and finish (last test).
+    ConfirmFinish,
+    /// Already decided; will move to the next failing field.
+    NextField,
+    /// Already decided; will proceed to the next test.
+    NextTest,
+    /// Already decided; will finish (last test).
+    Finish,
+}
+
+/// Computes what pressing Enter will do given the current state.
+pub(super) fn enter_outcome(
+    active_field: Field,
+    staged_decision: FieldDecision,
+    field_decisions: FieldDecisions,
+    failing: FailingFields,
+    is_last: bool,
+) -> EnterOutcome {
+    if !active_field.is_output() || !failing.is_failing(active_field) {
+        return EnterOutcome::JumpToFirstFailing;
+    }
+    let has_staged = staged_decision != FieldDecision::Undecided;
+    let has_committed = field_decisions.get(active_field) != FieldDecision::Undecided;
+    if !has_staged && !has_committed {
+        return EnterOutcome::NeedsDecision;
+    }
+    let is_last_failing = next_failing_field_after(active_field, failing).is_none();
+    match (has_staged, is_last_failing, is_last) {
+        (true, false, _) => EnterOutcome::ConfirmNextField,
+        (true, true, false) => EnterOutcome::ConfirmNextTest,
+        (true, true, true) => EnterOutcome::ConfirmFinish,
+        (false, false, _) => EnterOutcome::NextField,
+        (false, true, false) => EnterOutcome::NextTest,
+        (false, true, true) => EnterOutcome::Finish,
+    }
+}
+
 // ── TUI state ────────────────────────────────────────────────────────────────
 
 pub(super) struct TuiState {
     pub(super) active_tab: Tab,
     pub(super) active_field: Field,
     pub(super) scroll: u16,
-    /// Per-field decisions; `None` = undecided, `Some(true)` = accept, `Some(false)` = skip.
     pub(super) field_decisions: FieldDecisions,
-    /// Show "you must decide this field first" after pressing Enter on an undecided failing field.
     pub(super) show_enter_error: bool,
     /// Tentative a/s for the current field; committed on Enter, discarded on field navigation.
-    pub(super) pending_decision: FieldDecision,
+    pub(super) staged_decision: FieldDecision,
+    /// Which output fields have a diff; derived once from `TestResult` on construction.
+    pub(super) failing: FailingFields,
 }
 
 impl TuiState {
-    fn new(test_result: &TestResult, initial_decisions: Option<FieldDecisions>) -> Self {
+    fn new(test_result: &TestResult, initial_decisions: FieldDecisions) -> Self {
+        let failing = FailingFields::of(test_result);
         TuiState {
             active_tab: Tab::Diff,
-            active_field: FailingFields::of(test_result).first(),
+            active_field: failing.first(),
             scroll: 0,
-            field_decisions: initial_decisions.unwrap_or_default(),
+            field_decisions: initial_decisions,
             show_enter_error: false,
-            pending_decision: FieldDecision::Undecided,
+            staged_decision: FieldDecision::Undecided,
+            failing,
         }
     }
 }
@@ -69,23 +121,18 @@ enum KeyResult {
 }
 
 /// Pure key-handler: mutates `state` and returns whether to continue or exit.
-fn apply_key(
-    state: &mut TuiState,
-    key: KeyCode,
-    test_result: &TestResult,
-    is_last: bool,
-) -> KeyResult {
+fn apply_key(state: &mut TuiState, key: KeyCode, is_last: bool) -> KeyResult {
     match key {
         KeyCode::Right => {
-            // Navigating to a different field discards any pending a/s decision.
-            state.pending_decision = FieldDecision::Undecided;
+            // Navigating to a different field discards any staged a/s decision.
+            state.staged_decision = FieldDecision::Undecided;
             if let Some(next) = state.active_field.next() {
                 state.active_field = next;
                 state.scroll = 0;
             }
         }
         KeyCode::Left => {
-            state.pending_decision = FieldDecision::Undecided;
+            state.staged_decision = FieldDecision::Undecided;
             if let Some(prev) = state.active_field.prev() {
                 state.active_field = prev;
                 state.scroll = 0;
@@ -110,43 +157,41 @@ fn apply_key(
             state.scroll = 0;
         }
         KeyCode::Char('i') => {
-            state.pending_decision = FieldDecision::Undecided;
+            state.staged_decision = FieldDecision::Undecided;
             state.active_field = Field::Stdin;
             state.scroll = 0;
         }
         KeyCode::Char('o') => {
-            state.pending_decision = FieldDecision::Undecided;
+            state.staged_decision = FieldDecision::Undecided;
             state.active_field = Field::Stdout;
             state.scroll = 0;
         }
         KeyCode::Char('e') => {
-            state.pending_decision = FieldDecision::Undecided;
+            state.staged_decision = FieldDecision::Undecided;
             state.active_field = Field::Stderr;
             state.scroll = 0;
         }
         KeyCode::Char('x') => {
-            state.pending_decision = FieldDecision::Undecided;
+            state.staged_decision = FieldDecision::Undecided;
             state.active_field = Field::ExitCode;
             state.scroll = 0;
         }
         KeyCode::Char('a') => {
-            let failing = FailingFields::of(test_result);
-            if state.active_field.is_output() && failing.is_failing(state.active_field) {
+            if state.active_field.is_output() && state.failing.is_failing(state.active_field) {
                 let committed = state.field_decisions.get(state.active_field);
-                state.pending_decision = if committed == FieldDecision::Accepted {
+                state.staged_decision = if committed == FieldDecision::Accepted {
                     FieldDecision::Undecided
                 } else {
                     FieldDecision::Accepted
                 };
                 state.show_enter_error = false;
             }
-            return KeyResult::Continue; // skip catch-all so pending is not cleared
+            return KeyResult::Continue; // skip catch-all so staged is not cleared
         }
         KeyCode::Char('s') => {
-            let failing = FailingFields::of(test_result);
-            if state.active_field.is_output() && failing.is_failing(state.active_field) {
+            if state.active_field.is_output() && state.failing.is_failing(state.active_field) {
                 let committed = state.field_decisions.get(state.active_field);
-                state.pending_decision = if committed == FieldDecision::Skipped {
+                state.staged_decision = if committed == FieldDecision::Skipped {
                     FieldDecision::Undecided
                 } else {
                     FieldDecision::Skipped
@@ -164,9 +209,9 @@ fn apply_key(
         KeyCode::Char('q') => return KeyResult::Exit(Action::Quit),
         _ => {}
     }
-    // Field navigation and all other keys clear any pending a/s and enter-error.
+    // Field navigation and all other keys clear any staged a/s decision and enter-error.
     state.show_enter_error = false;
-    state.pending_decision = FieldDecision::Undecided;
+    state.staged_decision = FieldDecision::Undecided;
     KeyResult::Continue
 }
 
@@ -182,27 +227,11 @@ fn next_failing_field_after(current: Field, failing: FailingFields) -> Option<Fi
         .find(|&f| failing.is_failing(f))
 }
 
-/// Returns true if Enter would proceed to the next test (current is the last failing field
-/// and has a decision), false if it would advance to the next failing field.
-pub(super) fn proceeds_to_next_test(
-    active_field: Field,
-    pending_decision: FieldDecision,
-    field_decisions: FieldDecisions,
-    failing: FailingFields,
-) -> bool {
-    if !active_field.is_output() || !failing.is_failing(active_field) {
-        return false;
-    }
-    let has_decision = pending_decision != FieldDecision::Undecided
-        || field_decisions.get(active_field) != FieldDecision::Undecided;
-    has_decision && next_failing_field_after(active_field, failing).is_none()
-}
-
 /// Returns the status message shown in the right-hand panel.
 pub(super) fn compute_status(
     field_decisions: FieldDecisions,
     active_field: Field,
-    pending_decision: FieldDecision,
+    staged_decision: FieldDecision,
     show_enter_error: bool,
     failing: FailingFields,
     is_last: bool,
@@ -214,57 +243,65 @@ pub(super) fn compute_status(
             "You need to accept [a] or skip [s] the current field before continuing to the next."
         };
     }
-    let on_failing = active_field.is_output() && failing.is_failing(active_field);
-    let has_decision = pending_decision != FieldDecision::Undecided
-        || field_decisions.get(active_field) != FieldDecision::Undecided;
-    if !on_failing || !has_decision {
-        return "";
-    }
-    let to_next_test =
-        proceeds_to_next_test(active_field, pending_decision, field_decisions, failing);
-    match (
-        pending_decision != FieldDecision::Undecided,
-        to_next_test,
+    match enter_outcome(
+        active_field,
+        staged_decision,
+        field_decisions,
+        failing,
         is_last,
     ) {
-        (true, true, true) => "Press Enter to confirm and finish.",
-        (true, true, false) => "Press Enter to confirm and go to the next test.",
-        (true, false, _) => "Press Enter to confirm and go to the next field.",
-        (false, true, true) => "Press Enter to finish.",
-        (false, true, false) => "Press Enter to go to the next test.",
-        (false, false, _) => "Press Enter to go to the next field.",
+        EnterOutcome::JumpToFirstFailing | EnterOutcome::NeedsDecision => "",
+        EnterOutcome::ConfirmNextField => "Press Enter to confirm and go to the next field.",
+        EnterOutcome::ConfirmNextTest => "Press Enter to confirm and go to the next test.",
+        EnterOutcome::ConfirmFinish => "Press Enter to confirm and finish.",
+        EnterOutcome::NextField => "Press Enter to go to the next field.",
+        EnterOutcome::NextTest => "Press Enter to go to the next test.",
+        EnterOutcome::Finish => "Press Enter to finish.",
     }
 }
 
-/// Commits any pending decision, then advances to the next failing field or the next test.
-/// Returns `Some(Action::Proceed(...))` when on the last failing field, or `None` (and
-/// navigates to the next failing field) otherwise.
-fn try_proceed(state: &mut TuiState, test_result: &TestResult) -> Option<Action> {
-    if state.pending_decision != FieldDecision::Undecided {
-        let pending = state.pending_decision;
-        state.pending_decision = FieldDecision::Undecided;
-        state.field_decisions.set(state.active_field, pending);
+/// Commits any staged decision and advances to the next failing field or next test.
+/// Returns `Some(Action::Proceed(...))` on the last failing field, or `None` (and navigates
+/// to the next failing field) otherwise.
+fn try_proceed(state: &mut TuiState, is_last: bool) -> Option<Action> {
+    let outcome = enter_outcome(
+        state.active_field,
+        state.staged_decision,
+        state.field_decisions,
+        state.failing,
+        is_last,
+    );
+    state.show_enter_error = matches!(outcome, EnterOutcome::NeedsDecision);
+
+    if matches!(
+        outcome,
+        EnterOutcome::ConfirmNextField
+            | EnterOutcome::ConfirmNextTest
+            | EnterOutcome::ConfirmFinish
+    ) {
+        let staged = state.staged_decision;
+        state.staged_decision = FieldDecision::Undecided;
+        state.field_decisions.set(state.active_field, staged);
     }
-    let failing = FailingFields::of(test_result);
-    let on_failing = state.active_field.is_output() && failing.is_failing(state.active_field);
-    state.show_enter_error = false;
-    if on_failing {
-        if state.field_decisions.get(state.active_field) == FieldDecision::Undecided {
-            state.show_enter_error = true;
-            return None;
+
+    match outcome {
+        EnterOutcome::JumpToFirstFailing => {
+            state.active_field = state.failing.first();
+            state.scroll = 0;
+            None
         }
-        match next_failing_field_after(state.active_field, failing) {
-            Some(next) => {
+        EnterOutcome::NeedsDecision => None,
+        EnterOutcome::ConfirmNextField | EnterOutcome::NextField => {
+            if let Some(next) = next_failing_field_after(state.active_field, state.failing) {
                 state.active_field = next;
                 state.scroll = 0;
-                None
             }
-            None => Some(Action::Proceed(state.field_decisions)),
+            None
         }
-    } else {
-        state.active_field = failing.first();
-        state.scroll = 0;
-        None
+        EnterOutcome::ConfirmNextTest
+        | EnterOutcome::ConfirmFinish
+        | EnterOutcome::NextTest
+        | EnterOutcome::Finish => Some(Action::Proceed(state.field_decisions)),
     }
 }
 
@@ -374,7 +411,8 @@ fn run_diff_view(
     initial_decisions: Option<FieldDecisions>,
 ) -> io::Result<Action> {
     let test_result = ctx.test_result;
-    let mut state = TuiState::new(test_result, initial_decisions);
+    let is_last = ctx.index == ctx.total;
+    let mut state = TuiState::new(test_result, initial_decisions.unwrap_or_default());
     let stdin = ctx.run_result.test_case.stdin.as_deref();
 
     let content =
@@ -385,10 +423,10 @@ fn run_diff_view(
         let Some(key) = io.next_key()? else {
             return Ok(Action::Quit);
         };
-        match apply_key(&mut state, key, test_result, ctx.index == ctx.total) {
+        match apply_key(&mut state, key, is_last) {
             KeyResult::Continue => {}
             KeyResult::TryProceed => {
-                if let Some(action) = try_proceed(&mut state, test_result) {
+                if let Some(action) = try_proceed(&mut state, is_last) {
                     return Ok(action);
                 }
             }

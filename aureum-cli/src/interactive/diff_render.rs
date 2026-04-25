@@ -6,7 +6,7 @@ use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Borders, Paragraph, Wrap};
 
 use crate::interactive::diff_content;
-use crate::interactive::diff_view::{self, DiffViewContext, Tab, TuiState};
+use crate::interactive::diff_view::{self, DiffViewContext, EnterOutcome, Tab, TuiState};
 use crate::interactive::field::{
     FailingFields, Field, FieldDecision, FieldDecisions, OUTPUT_FIELDS,
 };
@@ -88,7 +88,7 @@ pub(super) fn render_tui(
     let scroll = state.scroll;
     let field_decisions = &state.field_decisions;
     let show_enter_error = state.show_enter_error;
-    let failing = FailingFields::of(test_result);
+    let failing = state.failing;
     let area = frame.area();
 
     // Outer layout: box + footer
@@ -198,10 +198,10 @@ pub(super) fn render_tui(
     );
     frame.render_widget(Paragraph::new(field_line), inner_chunks[9]);
 
-    // Apply pending decision for display: show the tentative a/s value in the current field's box.
+    // Overlay the staged decision for display before it is committed.
     let mut display_decisions = *field_decisions;
-    if state.pending_decision != FieldDecision::Undecided {
-        display_decisions.set(active_field, state.pending_decision);
+    if state.staged_decision != FieldDecision::Undecided {
+        display_decisions.set(active_field, state.staged_decision);
     }
 
     // Field decisions row
@@ -212,7 +212,7 @@ pub(super) fn render_tui(
     let status_text = diff_view::compute_status(
         *field_decisions,
         state.active_field,
-        state.pending_decision,
+        state.staged_decision,
         show_enter_error,
         failing,
         ctx.index == ctx.total,
@@ -252,9 +252,10 @@ pub(super) fn render_tui(
     // Footer
     let enter = enter_label(
         active_field,
-        state.pending_decision,
+        state.staged_decision,
         *field_decisions,
         failing,
+        ctx.index == ctx.total,
     );
     let footer = Paragraph::new(build_footer(ctx, active_field, failing, enter));
     frame.render_widget(footer, outer_chunks[1]);
@@ -527,24 +528,25 @@ fn build_footer(
 
 fn enter_label(
     active_field: Field,
-    pending_decision: FieldDecision,
+    staged_decision: FieldDecision,
     field_decisions: FieldDecisions,
     failing: FailingFields,
+    is_last: bool,
 ) -> &'static str {
-    let needs_confirm = pending_decision != FieldDecision::Undecided
-        || (failing.is_failing(active_field)
-            && field_decisions.get(active_field) == FieldDecision::Undecided);
-    if needs_confirm {
-        "confirm"
-    } else if diff_view::proceeds_to_next_test(
+    match diff_view::enter_outcome(
         active_field,
-        pending_decision,
+        staged_decision,
         field_decisions,
         failing,
+        is_last,
     ) {
-        "next test"
-    } else {
-        "next field"
+        EnterOutcome::NeedsDecision
+        | EnterOutcome::ConfirmNextField
+        | EnterOutcome::ConfirmNextTest
+        | EnterOutcome::ConfirmFinish => "confirm",
+        EnterOutcome::JumpToFirstFailing | EnterOutcome::NextField => "next field",
+        EnterOutcome::NextTest => "next test",
+        EnterOutcome::Finish => "finish",
     }
 }
 
