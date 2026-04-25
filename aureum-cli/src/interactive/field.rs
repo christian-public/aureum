@@ -122,11 +122,4 @@ impl FieldDecisions {
     pub(super) fn any_skipped(self) -> bool {
         [self.stdout, self.stderr, self.exit_code].contains(&Some(false))
     }
-
-    /// True if every field that has a diff has been decided.
-    pub(super) fn all_decided_for_failing(self, failing: FailingFields) -> bool {
-        OUTPUT_FIELDS
-            .iter()
-            .all(|&f| !failing.is_failing(f) || self.get(f).is_some())
-    }
 }

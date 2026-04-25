@@ -162,20 +162,29 @@ fn apply_key(
 
 // ── Decision logic ───────────────────────────────────────────────────────────
 
-/// Returns true if Enter would proceed to the next test, false if to the next field.
-/// Simulates committing `pending_decision` before checking.
+/// Returns the first failing field strictly after `current` in output-field order, or `None`
+/// if `current` is the last failing field.
+fn next_failing_field_after(current: Field, failing: FailingFields) -> Option<Field> {
+    let pos = OUTPUT_FIELDS.iter().position(|&f| f == current)?;
+    OUTPUT_FIELDS[pos + 1..]
+        .iter()
+        .copied()
+        .find(|&f| failing.is_failing(f))
+}
+
+/// Returns true if Enter would proceed to the next test (current is the last failing field
+/// and has a decision), false if it would advance to the next failing field.
 pub(super) fn proceeds_to_next_test(
     active_field: Field,
     pending_decision: Option<bool>,
     field_decisions: FieldDecisions,
     failing: FailingFields,
 ) -> bool {
-    let mut decisions = field_decisions;
-    decisions.set(
-        active_field,
-        pending_decision.or_else(|| field_decisions.get(active_field)),
-    );
-    decisions.all_decided_for_failing(failing)
+    if !active_field.is_output() || !failing.is_failing(active_field) {
+        return false;
+    }
+    let has_decision = pending_decision.is_some() || field_decisions.get(active_field).is_some();
+    has_decision && next_failing_field_after(active_field, failing).is_none()
 }
 
 /// Returns the status message shown in the right-hand panel.
@@ -187,24 +196,6 @@ pub(super) fn compute_status(
     failing: FailingFields,
     is_last: bool,
 ) -> &'static str {
-    if pending_decision.is_some() {
-        return if proceeds_to_next_test(active_field, pending_decision, field_decisions, failing) {
-            if is_last {
-                "Press Enter to confirm and finish."
-            } else {
-                "Press Enter to confirm and go to the next test."
-            }
-        } else {
-            "Press Enter to confirm and go to the next field."
-        };
-    }
-    if field_decisions.all_decided_for_failing(failing) {
-        return if is_last {
-            "Press Enter to finish."
-        } else {
-            "Press Enter to go to the next test."
-        };
-    }
     if show_enter_error {
         return if is_last {
             "You need to accept [a] or skip [s] the current field before finishing."
@@ -212,67 +203,51 @@ pub(super) fn compute_status(
             "You need to accept [a] or skip [s] the current field before continuing to the next."
         };
     }
-    ""
+    let on_failing = active_field.is_output() && failing.is_failing(active_field);
+    let has_decision = pending_decision.is_some() || field_decisions.get(active_field).is_some();
+    if !on_failing || !has_decision {
+        return "";
+    }
+    let to_next_test =
+        proceeds_to_next_test(active_field, pending_decision, field_decisions, failing);
+    match (pending_decision.is_some(), to_next_test, is_last) {
+        (true, true, true) => "Press Enter to confirm and finish.",
+        (true, true, false) => "Press Enter to confirm and go to the next test.",
+        (true, false, _) => "Press Enter to confirm and go to the next field.",
+        (false, true, true) => "Press Enter to finish.",
+        (false, true, false) => "Press Enter to go to the next test.",
+        (false, false, _) => "Press Enter to go to the next field.",
+    }
 }
 
-/// Commits any pending y/n decision, then checks whether all failing fields are decided.
-/// Returns `Some(Action::Proceed(...))` if ready to advance, or `None` (and navigates to
-/// the next undecided field) if not.
+/// Commits any pending decision, then advances to the next failing field or the next test.
+/// Returns `Some(Action::Proceed(...))` when on the last failing field, or `None` (and
+/// navigates to the next failing field) otherwise.
 fn try_proceed(state: &mut TuiState, test_result: &TestResult) -> Option<Action> {
     if let Some(pending) = state.pending_decision.take() {
         state.field_decisions.set(state.active_field, Some(pending));
     }
     let failing = FailingFields::of(test_result);
-    if state.field_decisions.all_decided_for_failing(failing) {
-        return Some(Action::Proceed(state.field_decisions));
-    }
-    handle_proceed(state, failing);
-    None
-}
-
-/// Finds the first output field that is failing and has no decision yet.
-/// The scan starts immediately after `after_field` (wrapping stdout→stderr→exit_code);
-/// `None` starts from the beginning.
-/// Returns `fallback` if all failing fields are already decided (shouldn't happen when
-/// `all_decided_for_failing` returned false).
-fn first_undecided_failing_field(
-    after_field: Option<Field>,
-    decisions: FieldDecisions,
-    failing: FailingFields,
-    fallback: Field,
-) -> Field {
-    let start = after_field
-        .and_then(|f| OUTPUT_FIELDS.iter().position(|&of| of == f))
-        .map_or(0, |i| (i + 1) % 3);
-    for offset in 0..3 {
-        let field = OUTPUT_FIELDS[(start + offset) % 3];
-        if failing.is_failing(field) && decisions.get(field).is_none() {
-            return field;
-        }
-    }
-    fallback
-}
-
-/// Handles an Enter keypress: advances to the next undecided field, or sets the enter-error
-/// flag if the current field is failing and still undecided.
-fn handle_proceed(state: &mut TuiState, failing: FailingFields) {
     let on_failing = state.active_field.is_output() && failing.is_failing(state.active_field);
-    if on_failing && state.field_decisions.get(state.active_field).is_none() {
-        state.show_enter_error = true;
-        return;
-    }
     state.show_enter_error = false;
-    state.active_field = if on_failing {
-        first_undecided_failing_field(
-            Some(state.active_field),
-            state.field_decisions,
-            failing,
-            state.active_field,
-        )
+    if on_failing {
+        if state.field_decisions.get(state.active_field).is_none() {
+            state.show_enter_error = true;
+            return None;
+        }
+        match next_failing_field_after(state.active_field, failing) {
+            Some(next) => {
+                state.active_field = next;
+                state.scroll = 0;
+                None
+            }
+            None => Some(Action::Proceed(state.field_decisions)),
+        }
     } else {
-        first_undecided_failing_field(None, state.field_decisions, failing, failing.first())
-    };
-    state.scroll = 0;
+        state.active_field = failing.first();
+        state.scroll = 0;
+        None
+    }
 }
 
 // ── DiffIo trait: abstracts I/O so the event loop is shared ─────────────────
