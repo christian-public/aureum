@@ -17,7 +17,7 @@
 │                  [   ]                                │                                          │
 └───────────────────────────────────────────────────────┴──────────────────────────────────────────┘
   ←→/ioex: switch field   1/2/3: switch view   ↑↓: scroll   a: accept   s: skip   Enter: confirm
-  p: previous test   l: list tests   q: quit
+  p: previous test   n: next test   l: list tests   q: quit
 ---
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
 │  Failed test 1 of 2                                                          0 passed  2 failed  │
@@ -38,7 +38,7 @@
 │                  [ ⊘ ]                                │  next test.                              │
 └───────────────────────────────────────────────────────┴──────────────────────────────────────────┘
   ←→/ioex: switch field   1/2/3: switch view   ↑↓: scroll   a: accept   s: skip   Enter: confirm
-  p: previous test   l: list tests   q: quit
+  p: previous test   n: next test   l: list tests   q: quit
 ---
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
 │  Failed test 2 of 2                                                          0 passed  2 failed  │
@@ -59,7 +59,7 @@
 │                  [   ]                                │                                          │
 └───────────────────────────────────────────────────────┴──────────────────────────────────────────┘
   ←→/ioex: switch field   1/2/3: switch view   ↑↓: scroll   a: accept   s: skip   Enter: confirm
-  p: previous test   l: list tests   q: quit
+  p: previous test   n: next test   l: list tests   q: quit
 ---
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
 │  Failed test 1 of 2                                                          0 passed  2 failed  │
@@ -80,4 +80,4 @@
 │                  [ ⊘ ]                                │                                          │
 └───────────────────────────────────────────────────────┴──────────────────────────────────────────┘
   ←→/ioex: switch field   1/2/3: switch view   ↑↓: scroll   a: accept   s: skip   Enter: next test
-  p: previous test   l: list tests   q: quit
+  p: previous test   n: next test   l: list tests   q: quit

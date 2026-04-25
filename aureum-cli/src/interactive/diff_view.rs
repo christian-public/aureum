@@ -67,7 +67,12 @@ enum KeyResult {
 }
 
 /// Pure key-handler: mutates `state` and returns whether to continue or exit.
-fn apply_key(state: &mut TuiState, key: KeyCode, test_result: &TestResult) -> KeyResult {
+fn apply_key(
+    state: &mut TuiState,
+    key: KeyCode,
+    test_result: &TestResult,
+    is_last: bool,
+) -> KeyResult {
     match key {
         KeyCode::Right => {
             // Navigating to a different field discards any pending y/n decision.
@@ -143,6 +148,9 @@ fn apply_key(state: &mut TuiState, key: KeyCode, test_result: &TestResult) -> Ke
         KeyCode::Enter => return KeyResult::TryProceed,
         KeyCode::Char('l') => return KeyResult::Exit(Action::ShowList(state.field_decisions)),
         KeyCode::Char('p') => return KeyResult::Exit(Action::Previous(state.field_decisions)),
+        KeyCode::Char('n') if !is_last => {
+            return KeyResult::Exit(Action::Proceed(state.field_decisions));
+        }
         KeyCode::Char('q') => return KeyResult::Exit(Action::Quit),
         _ => {}
     }
@@ -384,7 +392,7 @@ fn run_diff_view(
         let Some(key) = io.next_key()? else {
             return Ok(Action::Quit);
         };
-        match apply_key(&mut state, key, test_result) {
+        match apply_key(&mut state, key, test_result, ctx.index == ctx.total) {
             KeyResult::Continue => {}
             KeyResult::TryProceed => {
                 if let Some(action) = try_proceed(&mut state, test_result) {

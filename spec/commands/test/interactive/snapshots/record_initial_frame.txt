@@ -17,4 +17,4 @@
 │                  [   ]                                │                                          │
 └───────────────────────────────────────────────────────┴──────────────────────────────────────────┘
   ←→/ioex: switch field   1/2/3: switch view   ↑↓: scroll   a: accept   s: skip   Enter: confirm
-  p: previous test   l: list tests   q: quit
+  p: previous test   n: next test   l: list tests   q: quit
