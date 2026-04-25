@@ -22,11 +22,9 @@ pub(super) struct ListViewContext<'a> {
 
 /// Returns styled spans for the decision indicator box: dim `[`, inner text, dim `]`.
 /// `failing` indicates which of the 3 output fields actually have a diff.
-/// When `dim_inner` is true the inner character is also dimmed (used for non-selected rows).
 fn decision_indicator_spans(
     dec: Option<&FieldDecisions>,
     failing: FailingFields,
-    dim_inner: bool,
 ) -> [Span<'static>; 3] {
     let inner = match dec {
         None => "   ",
@@ -44,14 +42,14 @@ fn decision_indicator_spans(
             }
         }
     };
-    let inner_style = if dim_inner {
-        style::dim()
+    let inner_span = if inner.contains('✓') {
+        Span::styled(inner, Style::default().fg(Color::Green))
     } else {
-        Style::default()
+        Span::raw(inner)
     };
     [
         Span::styled("[", style::dim()),
-        Span::styled(inner, inner_style),
+        inner_span,
         Span::styled("]", style::dim()),
     ]
 }
@@ -112,27 +110,29 @@ fn render_list(frame: &mut Frame, ctx: &ListViewContext<'_>, selection: usize, s
     );
 
     // List content
-    let bold = Style::default().add_modifier(Modifier::BOLD);
     let mut lines: Vec<Line<'static>> = Vec::new();
     for (i, (run_result, test_result)) in ctx.failed.iter().enumerate() {
         let is_selected = i == selection;
         let test_id = run_result.test_case.id().to_string();
         let dec = ctx.past_decisions.get(i).and_then(|d| d.as_ref());
         let failing = FailingFields::of(test_result);
-        let [b1, inner, b2] = decision_indicator_spans(dec, failing, !is_selected);
-        let (arrow, row_style) = if is_selected {
-            ("▶ ", bold)
+        let [b1, inner, b2] = decision_indicator_spans(dec, failing);
+        let id_style = if is_selected {
+            Style::default()
+                .add_modifier(Modifier::BOLD)
+                .fg(Color::Cyan)
         } else {
-            ("  ", style::dim())
+            Style::default()
         };
+        let arrow = if is_selected { "▶ " } else { "  " };
         lines.push(Line::from(vec![
             Span::raw("  "),
-            Span::styled(arrow, row_style),
+            Span::styled(arrow, id_style),
             b1,
             inner,
             b2,
             Span::raw(" "),
-            Span::styled(test_id, row_style),
+            Span::styled(test_id, id_style),
         ]));
     }
 

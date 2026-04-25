@@ -296,7 +296,9 @@ fn build_tab_line(active_tab: Tab, _width: usize) -> Line<'static> {
         ("Diff", Tab::Diff),
     ];
 
-    let active_style = Style::default().add_modifier(Modifier::BOLD);
+    let active_style = Style::default()
+        .add_modifier(Modifier::BOLD)
+        .fg(Color::Cyan);
 
     let mut spans: Vec<Span<'static>> = vec![Span::raw("  ")];
     for (i, (name, tab)) in tabs.iter().enumerate() {
@@ -394,7 +396,9 @@ fn build_field_line(
         ),
     ];
 
-    let active_style = Style::default().add_modifier(Modifier::BOLD);
+    let active_style = Style::default()
+        .add_modifier(Modifier::BOLD)
+        .fg(Color::Cyan);
 
     let mut spans: Vec<Span<'static>> = vec![Span::raw(" ".repeat(FIELD_ROW_PREFIX))];
 
@@ -417,10 +421,7 @@ fn build_field_line(
             style::not_configured_span()
         };
         spans.push(if is_active {
-            Span::styled(
-                stdin_indicator.content,
-                stdin_indicator.style.add_modifier(Modifier::BOLD),
-            )
+            Span::styled(stdin_indicator.content, active_style)
         } else {
             stdin_indicator
         });
@@ -437,13 +438,14 @@ fn build_field_line(
         let is_active = *field == active_field;
         let base_style = match (is_active, status) {
             (true, Some(true)) => active_style.fg(Color::Red),
+            (true, Some(false)) => active_style.fg(Color::Green),
             (true, _) => active_style,
             (false, Some(true)) => Style::default().fg(Color::Red),
             (false, _) => Style::default(),
         };
 
         if is_active {
-            spans.push(Span::styled("▶ ", active_style));
+            spans.push(Span::styled("▶ ", base_style));
         } else {
             spans.push(Span::raw("  "));
         }
@@ -453,10 +455,12 @@ fn build_field_line(
             None => style::not_configured_span(),
         };
         spans.push(if is_active {
-            Span::styled(
-                indicator.content,
-                indicator.style.add_modifier(Modifier::BOLD),
-            )
+            let indicator_style = if status.is_none() {
+                active_style // circle: cyan+bold
+            } else {
+                indicator.style.add_modifier(Modifier::BOLD) // ✓/✗: keep color+bold
+            };
+            Span::styled(indicator.content, indicator_style)
         } else {
             indicator
         });
