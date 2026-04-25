@@ -297,24 +297,19 @@ fn build_tab_line(active_tab: Tab, _width: usize) -> Line<'static> {
     ];
 
     let active_style = Style::default().add_modifier(Modifier::BOLD);
-    let inactive_style = Style::default().fg(Color::DarkGray);
 
     let mut spans: Vec<Span<'static>> = vec![Span::raw("  ")];
     for (i, (name, tab)) in tabs.iter().enumerate() {
         if i > 0 {
             spans.push(Span::raw("   "));
         }
-        let style = if *tab == active_tab {
-            active_style
-        } else {
-            inactive_style
-        };
         if *tab == active_tab {
-            spans.push(Span::styled("▶ ", style));
+            spans.push(Span::styled("▶ ", active_style));
+            spans.push(Span::styled(format!("[{}] {name}", i + 1), active_style));
         } else {
             spans.push(Span::raw("  "));
+            spans.push(Span::raw(format!("[{}] {name}", i + 1)));
         }
-        spans.push(Span::styled(format!("[{}] {name}", i + 1), style));
     }
 
     Line::from(spans)
@@ -400,7 +395,6 @@ fn build_field_line(
     ];
 
     let active_style = Style::default().add_modifier(Modifier::BOLD);
-    let inactive_style = Style::default().fg(Color::DarkGray);
 
     let mut spans: Vec<Span<'static>> = vec![Span::raw(" ".repeat(FIELD_ROW_PREFIX))];
 
@@ -410,7 +404,7 @@ fn build_field_line(
         let base_style = if is_active {
             active_style
         } else {
-            inactive_style
+            Style::default()
         };
         if is_active {
             spans.push(Span::styled("▶ ", base_style));
@@ -422,11 +416,7 @@ fn build_field_line(
         } else {
             style::not_configured_span()
         };
-        spans.push(if is_active {
-            stdin_indicator
-        } else {
-            Span::styled(stdin_indicator.content, style::dim())
-        });
+        spans.push(stdin_indicator);
         spans.push(Span::styled(STDIN_PRE, base_style));
         spans.push(Span::styled(
             STDIN_KEY,
@@ -438,10 +428,12 @@ fn build_field_line(
     for (before, key, after, field, status) in output_fields.iter() {
         spans.push(Span::raw(" ".repeat(FIELD_GAP)));
         let is_active = *field == active_field;
-        let base_style = match (is_active, status) {
-            (true, Some(true)) => active_style.fg(Color::Red),
-            (true, _) => active_style,
-            (false, _) => inactive_style,
+        let base_style = if is_active && *status == Some(true) {
+            active_style.fg(Color::Red)
+        } else if is_active {
+            active_style
+        } else {
+            Style::default()
         };
 
         if is_active {
@@ -454,11 +446,7 @@ fn build_field_line(
             Some(false) => style::checkmark_span(),
             None => style::not_configured_span(),
         };
-        spans.push(if is_active {
-            indicator
-        } else {
-            Span::styled(indicator.content, style::dim())
-        });
+        spans.push(indicator);
         spans.push(Span::styled(*before, base_style));
         spans.push(Span::styled(
             *key,
