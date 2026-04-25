@@ -1,5 +1,14 @@
 use diff::Result;
 
+/// Normalize line endings to line feed (LF)
+///
+/// Windows uses carriage return line feed (CRLF) as line endings, thus
+/// test cases may contain CRLF line endings. Additionally, the output of
+/// the program under test may contain CRLF line endings.
+pub fn normalize_newlines(content: &str) -> String {
+    content.replace("\r\n", "\n")
+}
+
 pub fn indent_by(contents: &str, indent_level: usize) -> String {
     let prefix = " ".repeat(indent_level);
     indent_with(contents, &prefix)

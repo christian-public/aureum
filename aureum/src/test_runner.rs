@@ -1,5 +1,6 @@
 use crate::test_case::{TestCase, TestCaseExpectations, TestCaseWithExpectations};
 use crate::test_result::{TestResult, ValueComparison};
+use crate::utils::string;
 use rayon::prelude::*;
 use std::io::{self, Read, Write};
 use std::path::Path;
@@ -68,12 +69,9 @@ pub fn run_test_case(
 ) -> Result<TestResult, RunError> {
     let output = run_program(&entry.test_case, current_dir)?;
 
-    let expected_stdout = entry.expectations.stdout.as_deref().map(normalize_newlines);
-    let expected_stderr = entry.expectations.stderr.as_deref().map(normalize_newlines);
-
     Ok(TestResult {
-        stdout: compare_result(expected_stdout, output.stdout),
-        stderr: compare_result(expected_stderr, output.stderr),
+        stdout: compare_result(entry.expectations.stdout.clone(), output.stdout),
+        stderr: compare_result(entry.expectations.stderr.clone(), output.stderr),
         exit_code: compare_result(entry.expectations.exit_code, output.exit_code),
     })
 }
@@ -108,8 +106,8 @@ pub fn run_program(test_case: &TestCase, current_dir: &Path) -> Result<ProgramOu
     let exit_code = exit_status.code().ok_or(RunError::ProgramTerminated)?;
 
     Ok(ProgramOutput {
-        stdout: normalize_newlines(&stdout),
-        stderr: normalize_newlines(&stderr),
+        stdout: string::normalize_newlines(&stdout),
+        stderr: string::normalize_newlines(&stderr),
         exit_code,
     })
 }
@@ -182,13 +180,4 @@ where
     let content = String::from_utf8(buf).map_err(RunError::FailedToDecodeUtf8)?;
 
     Ok(content)
-}
-
-/// Normalize line endings to line feed (LF)
-///
-/// Windows uses carriage return line feed (CRLF) as line endings, thus
-/// test cases may contain CRLF line endings. Additionally, the output of
-/// the program under test may contain CRLF line endings.
-fn normalize_newlines(content: &str) -> String {
-    content.replace("\r\n", "\n")
 }

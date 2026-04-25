@@ -1,5 +1,6 @@
 use crate::test_case::{TestCase, TestCaseExpectations, TestCaseWithExpectations};
 use crate::toml::config::ConfigValue;
+use crate::utils::string;
 use crate::{Requirements, TestId, TomlConfig, get_requirements};
 use relative_path::RelativePath;
 use std::collections::{BTreeMap, BTreeSet};
@@ -163,7 +164,8 @@ fn build_test_case(
 ) -> (ProgramPath, Result<TestCase, BTreeSet<ValidationError>>) {
     let mut errors = BTreeSet::new();
 
-    let program = collect_error(&mut errors, config.program, requirement_data);
+    let program = collect_error(&mut errors, config.program, requirement_data)
+        .map(|s| string::normalize_newlines(&s));
     let program_path = get_program_path(
         program.unwrap_or_default(),
         &path_to_config_dir.to_path(current_dir),
@@ -186,13 +188,14 @@ fn build_test_case(
         }
     }
 
-    let description = collect_error(&mut errors, config.description, requirement_data);
+    let description = collect_error(&mut errors, config.description, requirement_data)
+        .map(|s| string::normalize_newlines(&s));
 
     let mut arguments = vec![];
     for config_value in config.program_arguments.unwrap_or_default() {
         match read_from_config_value(config_value, requirement_data) {
             Ok(arg) => {
-                arguments.push(arg);
+                arguments.push(string::normalize_newlines(&arg));
             }
             Err(err) => {
                 errors.insert(err);
@@ -200,7 +203,8 @@ fn build_test_case(
         }
     }
 
-    let stdin = collect_error(&mut errors, config.stdin, requirement_data);
+    let stdin = collect_error(&mut errors, config.stdin, requirement_data)
+        .map(|s| string::normalize_newlines(&s));
 
     let test_case = if errors.is_empty() {
         let resolved_path = program_path
@@ -236,8 +240,10 @@ fn build_test_case_expectations(
         errors.insert(ValidationError::ExpectationRequired);
     }
 
-    let expected_stdout = collect_error(&mut errors, config.expected_stdout, requirement_data);
-    let expected_stderr = collect_error(&mut errors, config.expected_stderr, requirement_data);
+    let expected_stdout = collect_error(&mut errors, config.expected_stdout, requirement_data)
+        .map(|s| string::normalize_newlines(&s));
+    let expected_stderr = collect_error(&mut errors, config.expected_stderr, requirement_data)
+        .map(|s| string::normalize_newlines(&s));
     let expected_exit_code =
         collect_error(&mut errors, config.expected_exit_code, requirement_data);
 
