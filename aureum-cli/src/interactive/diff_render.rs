@@ -428,12 +428,11 @@ fn build_field_line(
     for (before, key, after, field, status) in output_fields.iter() {
         spans.push(Span::raw(" ".repeat(FIELD_GAP)));
         let is_active = *field == active_field;
-        let base_style = if is_active && *status == Some(true) {
-            active_style.fg(Color::Red)
-        } else if is_active {
-            active_style
-        } else {
-            Style::default()
+        let base_style = match (is_active, status) {
+            (true, Some(true)) => active_style.fg(Color::Red),
+            (true, _) => active_style,
+            (false, Some(true)) => Style::default().fg(Color::Red),
+            (false, _) => Style::default(),
         };
 
         if is_active {
