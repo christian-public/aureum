@@ -260,7 +260,7 @@ mod tests {
             "actual\n",
         )];
 
-        let mut input = Cursor::new(b"y\nenter\n");
+        let mut input = Cursor::new(b"a\nenter\n");
         let mut output = Vec::<u8>::new();
 
         run_interactive_updates(&results, tmp.path(), &mut input, &mut output, 80, 20).unwrap();

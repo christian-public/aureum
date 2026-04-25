@@ -255,7 +255,7 @@ pub(super) fn render_tui(
         failing,
     );
     let footer = Paragraph::new(format!(
-        "  ←→/ioex: switch field   1/2/3: switch view   ↑↓: scroll   y: accept   n: skip   Enter: {enter}\n  p: previous test   l: list tests   q: quit"
+        "  ←→/ioex: switch field   1/2/3: switch view   ↑↓: scroll   a: accept   s: skip   Enter: {enter}\n  p: previous test   l: list tests   q: quit"
     ));
     frame.render_widget(footer, outer_chunks[1]);
 }

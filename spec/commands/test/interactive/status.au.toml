@@ -56,7 +56,7 @@ program_arguments = [
     "120x20",
     "helpers/failing_stdout_only.toml",
 ]
-stdin = "y\nq\n"
+stdin = "a\nq\n"
 expected_stdout = { file = "snapshots/status_all_decided.txt" }
 expected_exit_code = 1
 
@@ -68,11 +68,11 @@ program_arguments = [
     "120x20",
     "helpers/failing_stdout_and_exit_code.toml",
 ]
-stdin = "y\nq\n"
+stdin = "a\nq\n"
 expected_stdout = { file = "snapshots/status_pending_next_field.txt" }
 expected_exit_code = 1
 
-# Pressing y then navigating to another field reverts the pending decision.
+# Pressing a then navigating to another field reverts the pending decision.
 [tests.pending_decision_reverts_on_navigate]
 program_arguments = [
     "test",
@@ -80,6 +80,6 @@ program_arguments = [
     "120x20",
     "helpers/failing_stdout_only.toml",
 ]
-stdin = "y\ne\nq\n"
+stdin = "a\ne\nq\n"
 expected_stdout = { file = "snapshots/status_pending_reverts.txt" }
 expected_exit_code = 1

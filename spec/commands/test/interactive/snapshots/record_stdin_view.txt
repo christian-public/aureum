@@ -16,7 +16,7 @@
 │    ● Stdin   ▶ ✗ Stdout     ○ Stderr     ○ Exit code  │                                          │
 │                  [   ]                                │                                          │
 └───────────────────────────────────────────────────────┴──────────────────────────────────────────┘
-  ←→/ioex: switch field   1/2/3: switch view   ↑↓: scroll   y: accept   n: skip   Enter: confirm
+  ←→/ioex: switch field   1/2/3: switch view   ↑↓: scroll   a: accept   s: skip   Enter: confirm
   p: previous test   l: list tests   q: quit
 ---
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -37,5 +37,5 @@
 │  ▶ ● Stdin     ✗ Stdout     ○ Stderr     ○ Exit code  │                                          │
 │                  [   ]                                │                                          │
 └───────────────────────────────────────────────────────┴──────────────────────────────────────────┘
-  ←→/ioex: switch field   1/2/3: switch view   ↑↓: scroll   y: accept   n: skip   Enter: next field
+  ←→/ioex: switch field   1/2/3: switch view   ↑↓: scroll   a: accept   s: skip   Enter: next field
   p: previous test   l: list tests   q: quit

@@ -16,7 +16,7 @@
 │    ○ Stdin   ▶ ✗ Stdout     ○ Stderr     ○ Exit code  │                                                              │
 │                  [   ]                                │                                                              │
 └───────────────────────────────────────────────────────┴──────────────────────────────────────────────────────────────┘
-  ←→/ioex: switch field   1/2/3: switch view   ↑↓: scroll   y: accept   n: skip   Enter: confirm
+  ←→/ioex: switch field   1/2/3: switch view   ↑↓: scroll   a: accept   s: skip   Enter: confirm
   p: previous test   l: list tests   q: quit
 ---
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -34,8 +34,8 @@
 ├──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
 │    [1] Expected     [2] Got   ▶ [3] Diff                                                                             │
 ├───────────────────────────────────────────────────────┬──────────────────────────────────────────────────────────────┤
-│    ○ Stdin   ▶ ✗ Stdout     ○ Stderr     ○ Exit code  │  You need to accept [y] or skip [n] the current field before │
+│    ○ Stdin   ▶ ✗ Stdout     ○ Stderr     ○ Exit code  │  You need to accept [a] or skip [s] the current field before │
 │                  [   ]                                │  finishing.                                                  │
 └───────────────────────────────────────────────────────┴──────────────────────────────────────────────────────────────┘
-  ←→/ioex: switch field   1/2/3: switch view   ↑↓: scroll   y: accept   n: skip   Enter: confirm
+  ←→/ioex: switch field   1/2/3: switch view   ↑↓: scroll   a: accept   s: skip   Enter: confirm
   p: previous test   l: list tests   q: quit

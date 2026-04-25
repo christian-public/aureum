@@ -92,7 +92,7 @@ program_arguments = [
     "100x20",
     "helpers/failing_stdout_and_exit_code.toml",
 ]
-stdin = "n\nenter\nn\nenter\nq\n"
+stdin = "s\nenter\ns\nenter\nq\n"
 expected_stdout = { file = "snapshots/record_multi_field_navigation.txt" }
 expected_exit_code = 1
 
@@ -140,7 +140,7 @@ program_arguments = [
     "100x20",
     "helpers/two_failing_stdout_tests.toml",
 ]
-stdin = "n\nenter\nl\nq\n"
+stdin = "s\nenter\nl\nq\n"
 expected_stdout = { file = "snapshots/record_list_decision_indicator.txt" }
 expected_exit_code = 1
 
@@ -152,7 +152,7 @@ program_arguments = [
     "100x20",
     "helpers/failing_stdout_and_exit_code.toml",
 ]
-stdin = "n\nl\nq\n"
+stdin = "s\nl\nq\n"
 expected_stdout = { file = "snapshots/record_list_partial_decision.txt" }
 expected_exit_code = 1
 
@@ -200,7 +200,7 @@ program_arguments = [
     "100x20",
     "helpers/failing_stdout_and_exit_code.toml",
 ]
-stdin = "n\nenter\np\nq\n"
+stdin = "s\nenter\np\nq\n"
 expected_stdout = { file = "snapshots/record_go_back_preserves_partial_decisions.txt" }
 expected_exit_code = 1
 
@@ -212,6 +212,6 @@ program_arguments = [
     "100x20",
     "helpers/two_failing_stdout_tests.toml",
 ]
-stdin = "n\nenter\np\nq\n"
+stdin = "s\nenter\np\nq\n"
 expected_stdout = { file = "snapshots/record_go_back_restores_decision.txt" }
 expected_exit_code = 1

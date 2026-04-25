@@ -41,7 +41,7 @@ pub(super) struct TuiState {
     pub(super) field_decisions: FieldDecisions,
     /// Show "you must decide this field first" after pressing Enter on an undecided failing field.
     pub(super) show_enter_error: bool,
-    /// Tentative y/n for the current field; committed on Enter, discarded on field navigation.
+    /// Tentative a/s for the current field; committed on Enter, discarded on field navigation.
     pub(super) pending_decision: Option<bool>,
 }
 
@@ -122,7 +122,7 @@ fn apply_key(state: &mut TuiState, key: KeyCode, test_result: &TestResult) -> Ke
             state.active_field = Field::ExitCode;
             state.scroll = 0;
         }
-        KeyCode::Char('y') => {
+        KeyCode::Char('a') => {
             let failing = FailingFields::of(test_result);
             if state.active_field.is_output() && failing.is_failing(state.active_field) {
                 let committed = state.field_decisions.get(state.active_field);
@@ -131,7 +131,7 @@ fn apply_key(state: &mut TuiState, key: KeyCode, test_result: &TestResult) -> Ke
             }
             return KeyResult::Continue; // skip catch-all so pending is not cleared
         }
-        KeyCode::Char('n') => {
+        KeyCode::Char('s') => {
             let failing = FailingFields::of(test_result);
             if state.active_field.is_output() && failing.is_failing(state.active_field) {
                 let committed = state.field_decisions.get(state.active_field);
@@ -199,9 +199,9 @@ pub(super) fn compute_status(
     }
     if show_enter_error {
         return if is_last {
-            "You need to accept [y] or skip [n] the current field before finishing."
+            "You need to accept [a] or skip [s] the current field before finishing."
         } else {
-            "You need to accept [y] or skip [n] the current field before continuing to the next."
+            "You need to accept [a] or skip [s] the current field before continuing to the next."
         };
     }
     ""
