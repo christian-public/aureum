@@ -1,0 +1,6 @@
+program = "printf"
+program_arguments = ["""
+foo
+bar
+"""]
+expected_stdout = "expected"
