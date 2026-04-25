@@ -35,7 +35,7 @@
 │    [1] Expected     [2] Got   ▶ [3] Diff                                                                             │
 ├───────────────────────────────────────────────────────┬──────────────────────────────────────────────────────────────┤
 │    ○ Stdin   ▶ ✗ Stdout     ○ Stderr     ○ Exit code  │  You need to accept [y] or skip [n] the current field before │
-│                  [   ]                                │  continuing to the next.                                     │
+│                  [   ]                                │  finishing.                                                  │
 └───────────────────────────────────────────────────────┴──────────────────────────────────────────────────────────────┘
   ←→/ioex: switch field   1/2/3: switch view   ↑↓: scroll   y: accept   n: skip   Enter: confirm
   p: previous test   l: list tests   q: quit

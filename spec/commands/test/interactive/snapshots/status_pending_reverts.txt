@@ -34,7 +34,7 @@
 ├──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
 │    [1] Expected     [2] Got   ▶ [3] Diff                                                                             │
 ├───────────────────────────────────────────────────────┬──────────────────────────────────────────────────────────────┤
-│    ○ Stdin   ▶ ✗ Stdout     ○ Stderr     ○ Exit code  │  Press Enter to confirm and go to the next test.             │
+│    ○ Stdin   ▶ ✗ Stdout     ○ Stderr     ○ Exit code  │  Press Enter to confirm and finish.                          │
 │                  [ ✓ ]                                │                                                              │
 └───────────────────────────────────────────────────────┴──────────────────────────────────────────────────────────────┘
   ←→/ioex: switch field   1/2/3: switch view   ↑↓: scroll   y: accept   n: skip   Enter: confirm

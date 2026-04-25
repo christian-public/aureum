@@ -213,6 +213,7 @@ pub(super) fn render_tui(
         state.pending_decision,
         show_enter_error,
         failing,
+        ctx.index == ctx.total,
     );
     if !status_text.is_empty() {
         let status_x = inner_area.x + field_sep_col as u16 + 1 + 2; // │ + 2 space indent

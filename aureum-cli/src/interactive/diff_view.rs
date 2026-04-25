@@ -177,19 +177,32 @@ pub(super) fn compute_status(
     pending_decision: Option<bool>,
     show_enter_error: bool,
     failing: FailingFields,
+    is_last: bool,
 ) -> &'static str {
     if pending_decision.is_some() {
         return if proceeds_to_next_test(active_field, pending_decision, field_decisions, failing) {
-            "Press Enter to confirm and go to the next test."
+            if is_last {
+                "Press Enter to confirm and finish."
+            } else {
+                "Press Enter to confirm and go to the next test."
+            }
         } else {
             "Press Enter to confirm and go to the next field."
         };
     }
     if field_decisions.all_decided_for_failing(failing) {
-        return "Press Enter to go to the next test.";
+        return if is_last {
+            "Press Enter to finish."
+        } else {
+            "Press Enter to go to the next test."
+        };
     }
     if show_enter_error {
-        return "You need to accept [y] or skip [n] the current field before continuing to the next.";
+        return if is_last {
+            "You need to accept [y] or skip [n] the current field before finishing."
+        } else {
+            "You need to accept [y] or skip [n] the current field before continuing to the next."
+        };
     }
     ""
 }
