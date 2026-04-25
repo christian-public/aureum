@@ -12,6 +12,18 @@ stdin = "q\n"
 expected_stdout = { file = "snapshots/record_initial_frame.txt" }
 expected_exit_code = 1
 
+# Newline characters in arguments are displayed as \n so they fit on one line.
+[tests.newline_arg_is_escaped]
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "helpers/failing_stdout_newline_arg.toml",
+]
+stdin = "q\n"
+expected_stdout = { file = "snapshots/record_newline_arg.txt" }
+expected_exit_code = 1
+
 # Arguments containing spaces are single-quoted so the command can be pasted into a terminal.
 [tests.spaced_arg_is_quoted]
 program_arguments = [
