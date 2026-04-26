@@ -7,8 +7,6 @@ use aureum::{RunError, RunResult, TestCase, TestResult};
 use colored::Colorize;
 use std::io;
 
-// TEST CASE
-
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum ReportFormat {
     Summary,

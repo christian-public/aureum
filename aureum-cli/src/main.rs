@@ -17,7 +17,7 @@ use crate::args::{
 };
 use crate::exit_code::ExitCode;
 use crate::load_config_file::{LoadConfigFilesResult, LoadedConfigFile};
-use crate::report::test_case::{ReportConfig, ReportFormat};
+use crate::report::test::{ReportConfig, ReportFormat};
 use crate::report::validate::ReportValidateResult;
 use aureum::{TestCase, TestCaseWithExpectations};
 use relative_path::RelativePathBuf;
@@ -288,7 +288,7 @@ fn run_programs_with_toml_output(all_test_cases: &[TestCase], current_dir: &Path
 
 fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
     if args.interactive && !io::stdout().is_terminal() {
-        report::test_case::print_interactive_mode_requires_a_terminal_error();
+        report::test::print_interactive_mode_requires_a_terminal_error();
         return ExitCode::InvalidUsage;
     }
 
@@ -334,7 +334,7 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
                 args.common.verbose,
                 args.common.hide_absolute_paths,
             );
-            report::test_case::print_test_cases_start(&report_config);
+            report::test::print_test_cases_start(&report_config);
         }
 
         let results = aureum::run_test_cases(
@@ -343,13 +343,13 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
             current_dir,
             &|index, test_case, result| {
                 if !quiet {
-                    report::test_case::print_test_case(&report_config, index, test_case, result);
+                    report::test::print_test_case(&report_config, index, test_case, result);
                 }
             },
         );
 
         if !quiet {
-            report::test_case::print_test_cases_end(&report_config, &results);
+            report::test::print_test_cases_end(&report_config, &results);
         }
 
         if has_config_errors && !quiet {

@@ -7,5 +7,5 @@ mod label;
 pub mod list;
 pub mod run;
 mod symbol;
-pub mod test_case;
+pub mod test;
 pub mod validate;
