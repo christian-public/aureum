@@ -19,6 +19,12 @@ pub struct ReportConfig {
     pub format: ReportFormat,
 }
 
+pub fn print_watch_detected_file_changes(count: usize) {
+    let msg = format!("Detected changes in {count} file(s)");
+    eprintln!();
+    eprintln!("{} {}", label::watch(), msg.dimmed());
+}
+
 pub fn print_interactive_mode_requires_a_terminal_error() {
     eprintln!("{} --interactive requires a terminal", label::error());
 }

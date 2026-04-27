@@ -13,6 +13,7 @@ Options:
       --format <FORMAT>  Options: summary, tap [default: summary]
       --parallel         Run tests in parallel
       --interactive      Interactively review and accept new expectations for each failed test
+      --watch <PATTERN>  Watch PATTERN for changes and re-run tests
       --verbose          Print extra information about config files
   -h, --help             Print help
 """

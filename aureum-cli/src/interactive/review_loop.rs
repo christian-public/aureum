@@ -8,6 +8,17 @@ use crate::interactive::diff_view::{self, DiffViewContext};
 use crate::interactive::field::FieldDecisions;
 use crate::interactive::list_view::{self, ListViewContext};
 
+/// Outcome returned by `run_review_loop`.
+pub(super) enum ReviewOutcome {
+    /// The user finished reviewing all failing tests normally.
+    Done,
+    /// The user pressed `q` to quit the program entirely.
+    Quit,
+    /// The user pressed Esc in watch mode to return to the idle/watching screen.
+    /// Carries accumulated (failed-index, decisions) pairs for write-on-exit.
+    BackToWatch(Vec<(usize, FieldDecisions)>),
+}
+
 /// Abstracts the view functions so the navigation loop is shared between headless-record
 /// and live-terminal modes.
 pub(super) trait ReviewDriver {
@@ -18,6 +29,8 @@ pub(super) trait ReviewDriver {
     ) -> io::Result<Action>;
 
     fn show_list(&mut self, ctx: &ListViewContext<'_>, selection: usize) -> io::Result<ListAction>;
+
+    fn watch_mode(&self) -> bool;
 }
 
 /// Core navigation loop shared by headless-record and live-terminal review sessions.
@@ -29,7 +42,7 @@ pub(super) fn run_review_loop(
     passed_count: usize,
     total_count: usize,
     driver: &mut dyn ReviewDriver,
-) -> io::Result<()> {
+) -> io::Result<ReviewOutcome> {
     let total = failed.len();
     let mut i = 0usize;
     while i < total {
@@ -41,6 +54,7 @@ pub(super) fn run_review_loop(
             test_result,
             passed_count,
             total_count,
+            watch_mode: driver.watch_mode(),
         };
         match driver.show_diff(&ctx, past_decisions[i])? {
             Action::Proceed(decisions) => {
@@ -63,13 +77,28 @@ pub(super) fn run_review_loop(
                     ListAction::JumpTo(idx) => {
                         i = idx;
                     }
-                    ListAction::Quit => break,
+                    ListAction::Quit => return Ok(ReviewOutcome::Quit),
                 }
             }
-            Action::Quit => break,
+            Action::BackToWatch(partial_decisions) => {
+                past_decisions[i] = Some(partial_decisions);
+                return Ok(ReviewOutcome::BackToWatch(collect_decisions(
+                    past_decisions,
+                )));
+            }
+            Action::Quit => return Ok(ReviewOutcome::Quit),
         }
     }
-    Ok(())
+    Ok(ReviewOutcome::Done)
+}
+
+/// Collects all non-None decisions as (index, FieldDecisions) pairs.
+fn collect_decisions(past_decisions: &[Option<FieldDecisions>]) -> Vec<(usize, FieldDecisions)> {
+    past_decisions
+        .iter()
+        .enumerate()
+        .filter_map(|(i, d)| d.map(|dec| (i, dec)))
+        .collect()
 }
 
 pub(super) struct HeadlessDriver<'a, R: BufRead, W: Write> {
@@ -78,6 +107,7 @@ pub(super) struct HeadlessDriver<'a, R: BufRead, W: Write> {
     pub reader: &'a mut R,
     pub writer: &'a mut W,
     pub emit_separator: bool,
+    pub watch_mode: bool,
 }
 
 impl<R: BufRead, W: Write> ReviewDriver for HeadlessDriver<'_, R, W> {
@@ -109,10 +139,15 @@ impl<R: BufRead, W: Write> ReviewDriver for HeadlessDriver<'_, R, W> {
             selection,
         )
     }
+
+    fn watch_mode(&self) -> bool {
+        self.watch_mode
+    }
 }
 
 pub(super) struct LiveDriver<'a> {
     pub terminal: &'a mut Terminal<CrosstermBackend<io::Stdout>>,
+    pub watch_mode: bool,
 }
 
 impl ReviewDriver for LiveDriver<'_> {
@@ -126,5 +161,9 @@ impl ReviewDriver for LiveDriver<'_> {
 
     fn show_list(&mut self, ctx: &ListViewContext<'_>, selection: usize) -> io::Result<ListAction> {
         list_view::run_list_loop(self.terminal, ctx, selection)
+    }
+
+    fn watch_mode(&self) -> bool {
+        self.watch_mode
     }
 }

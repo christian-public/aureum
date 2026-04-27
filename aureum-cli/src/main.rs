@@ -11,6 +11,7 @@ mod find_config_file;
 mod interactive;
 mod load_config_file;
 mod template;
+mod watch;
 
 use crate::args::{
     CLI_BINARY_NAME, Command, InitArgs, ListArgs, RunArgs, RunOutputFormat, TerminalSize, TestArgs,
@@ -20,6 +21,7 @@ use crate::exit_code::ExitCode;
 use crate::load_config_file::{LoadConfigFilesResult, LoadedConfigFile};
 use crate::report::test::{ReportConfig, ReportFormat};
 use crate::report::validate::ReportValidateResult;
+use crate::watch::start_watcher;
 use aureum::{TestCase, TestCaseWithExpectations};
 use relative_path::RelativePathBuf;
 use std::collections::BTreeMap;
@@ -293,6 +295,11 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
         return ExitCode::InvalidUsage;
     }
 
+    // Build a reload closure for watch modes before args.paths is consumed.
+    let reload_paths = args.paths.clone();
+    let reload_dir = current_dir.to_path_buf();
+    let reload_fn = move || load_test_cases_for_watch(&reload_paths, &reload_dir);
+
     let config_files = match prepare_config_files(args.paths, args.common.verbose, current_dir) {
         Ok(result) => result,
         Err(err) => return err,
@@ -311,12 +318,55 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
 
     let has_config_errors = config_files.has_config_errors();
 
-    let run_results = if args.interactive {
+    let run_results = if args.interactive && args.watch.is_some() {
+        let watch_pattern = args.watch.as_deref().unwrap();
+        match interactive::run_with_progress_review_and_watch(
+            &reload_fn,
+            args.parallel,
+            current_dir,
+            watch_pattern,
+        ) {
+            Ok(r) => r,
+            Err(e) => {
+                eprintln!("error: Interactive watch session failed: {e}");
+                return ExitCode::TestFailure;
+            }
+        }
+    } else if args.interactive {
         match interactive::run_with_progress_and_review(&all_test_cases, args.parallel, current_dir)
         {
             Ok(r) => r,
             Err(e) => {
                 eprintln!("error: Interactive session failed: {e}");
+                return ExitCode::TestFailure;
+            }
+        }
+    } else if let (Some(watch_pattern), Some(TerminalSize { width, height })) =
+        (args.watch.as_deref(), args.record.clone())
+    {
+        let stdin = io::stdin();
+        let stdout = io::stdout();
+        match interactive::run_interactive_updates_with_watch(
+            &reload_fn,
+            args.parallel,
+            current_dir,
+            watch_pattern,
+            &mut stdin.lock(),
+            &mut stdout.lock(),
+            width,
+            height,
+        ) {
+            Ok(r) => r,
+            Err(e) => {
+                eprintln!("error: Watch+record session failed: {e}");
+                return ExitCode::TestFailure;
+            }
+        }
+    } else if let Some(watch_pattern) = &args.watch {
+        match run_tests_with_watch(&reload_fn, args.parallel, current_dir, watch_pattern) {
+            Ok(r) => r,
+            Err(e) => {
+                eprintln!("error: Watch session failed: {e}");
                 return ExitCode::TestFailure;
             }
         }
@@ -384,6 +434,68 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
     } else {
         ExitCode::Success
     }
+}
+
+/// Runs tests once, printing results to stdout. Returns the results.
+fn run_test_batch(
+    test_cases: &[TestCaseWithExpectations],
+    parallel: bool,
+    current_dir: &Path,
+    format: &TestOutputFormat,
+) -> Vec<aureum::RunResult> {
+    let report_config = ReportConfig {
+        number_of_tests: test_cases.len(),
+        format: get_report_format(format),
+    };
+    report::test::print_test_cases_start(&report_config);
+    let results = aureum::run_test_cases(test_cases, parallel, current_dir, &|index, tc, r| {
+        report::test::print_test_case(&report_config, index, tc, r);
+    });
+    report::test::print_test_cases_end(&report_config, &results);
+    results
+}
+
+/// Non-interactive watch loop: run → print → wait for changes → repeat.
+/// Returns the last batch of results when the watcher channel closes (e.g. on process exit).
+fn run_tests_with_watch(
+    load_test_cases: impl Fn() -> Vec<TestCaseWithExpectations>,
+    parallel: bool,
+    current_dir: &Path,
+    watch_pattern: &str,
+) -> io::Result<Vec<aureum::RunResult>> {
+    let handle = start_watcher(watch_pattern, current_dir)?;
+    let format = TestOutputFormat::Summary;
+    let mut last_results = run_test_batch(&load_test_cases(), parallel, current_dir, &format);
+    while let Ok(n) = handle.receiver.recv() {
+        // Drain any events that queued up during the previous run, collapsing
+        // them into a single re-run.
+        let mut total = n;
+        while let Ok(m) = handle.receiver.try_recv() {
+            total += m;
+        }
+        report::test::print_watch_detected_file_changes(total);
+        last_results = run_test_batch(&load_test_cases(), parallel, current_dir, &format);
+    }
+    Ok(last_results)
+}
+
+/// Silently loads test cases from the given paths for use in watch-mode re-runs.
+/// Errors are ignored — an empty vec is returned if loading fails.
+fn load_test_cases_for_watch(
+    paths: &[PathBuf],
+    current_dir: &Path,
+) -> Vec<TestCaseWithExpectations> {
+    let find_result = find_config_file::find_config_files(paths.to_vec(), current_dir);
+    if find_result.found.is_empty() {
+        return vec![];
+    }
+    let load_result = load_config_file::load_config_files(find_result, current_dir);
+    load_result
+        .loaded
+        .values()
+        .flat_map(|x| x.test_entries_in_coverage_set())
+        .flat_map(|(_, entry)| entry.test_case_with_expectations().ok())
+        .collect()
 }
 
 fn print_version() -> ExitCode {

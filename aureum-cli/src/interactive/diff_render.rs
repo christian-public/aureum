@@ -520,14 +520,18 @@ fn build_footer(
         Span::styled("a: accept   s: skip", accept_skip_style),
         Span::raw(format!("   Enter: {enter}")),
     ]);
-    let line2 = Line::from(vec![
+    let mut line2_spans = vec![
         Span::raw("  "),
         Span::styled("p: previous test", prev_style),
         Span::raw("   "),
         Span::styled("n: next test", next_style),
-        Span::raw("   l: list tests   q: quit"),
-    ]);
-    Text::from(vec![line1, line2])
+        Span::raw("   l: list tests"),
+    ];
+    if ctx.watch_mode {
+        line2_spans.push(Span::raw("   Esc: end review"));
+    }
+    line2_spans.push(Span::raw("   q: quit"));
+    Text::from(vec![line1, Line::from(line2_spans)])
 }
 
 fn enter_label(

@@ -7,6 +7,8 @@ pub(super) enum Action {
     Previous(FieldDecisions),
     /// User pressed `l` to open the test list; carries current partial decisions.
     ShowList(FieldDecisions),
+    /// User pressed Esc in watch mode to exit review and return to the idle/watching screen.
+    BackToWatch(FieldDecisions),
     Quit,
 }
 

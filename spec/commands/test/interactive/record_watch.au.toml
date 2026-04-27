@@ -1,0 +1,72 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+# The initial idle screen is shown after the first test run completes.
+[tests.initial_frame]
+program_arguments = [
+    "test",
+    "--watch",
+    ".",
+    "--record",
+    "100x20",
+    "helpers/failing_stdout_only.toml",
+]
+stdin = "q\n"
+expected_stdout = { file = "snapshots/record_watch_idle_initial.txt" }
+expected_exit_code = 1
+
+# "file-change" in the input stream simulates a watcher event, triggering a re-run.
+# A --- separator appears between the two idle screens.
+[tests.file_change_reruns_tests]
+program_arguments = [
+    "test",
+    "--watch",
+    ".",
+    "--record",
+    "100x20",
+    "helpers/failing_stdout_only.toml",
+]
+stdin = "file-change\nq\n"
+expected_stdout = { file = "snapshots/record_watch_file_change.txt" }
+expected_exit_code = 1
+
+# Pressing r opens the diff review; Esc returns to the idle screen.
+[tests.review_and_back_to_idle]
+program_arguments = [
+    "test",
+    "--watch",
+    ".",
+    "--record",
+    "100x20",
+    "helpers/failing_stdout_only.toml",
+]
+stdin = "r\nesc\nq\n"
+expected_stdout = { file = "snapshots/record_watch_review_and_back.txt" }
+expected_exit_code = 1
+
+# Pressing t manually triggers a re-run without waiting for a file change.
+[tests.t_reruns_tests]
+program_arguments = [
+    "test",
+    "--watch",
+    ".",
+    "--record",
+    "100x20",
+    "helpers/failing_stdout_only.toml",
+]
+stdin = "t\nq\n"
+expected_stdout = { file = "snapshots/record_watch_t_rerun.txt" }
+expected_exit_code = 1
+
+# From diff view, pressing l opens the list; Esc cancels the selection and returns to the diff view.
+[tests.list_esc_returns_to_diff]
+program_arguments = [
+    "test",
+    "--watch",
+    ".",
+    "--record",
+    "100x20",
+    "helpers/failing_stdout_only.toml",
+]
+stdin = "r\nl\nesc\nq\n"
+expected_stdout = { file = "snapshots/record_watch_list_esc_to_diff.txt" }
+expected_exit_code = 1

@@ -31,6 +31,8 @@ pub(super) struct DiffViewContext<'a> {
     pub test_result: &'a TestResult,
     pub passed_count: usize,
     pub total_count: usize,
+    /// True when running under `--watch`; enables Esc → back-to-watch.
+    pub watch_mode: bool,
 }
 
 // ── EnterOutcome ─────────────────────────────────────────────────────────────
@@ -121,7 +123,7 @@ enum KeyResult {
 }
 
 /// Pure key-handler: mutates `state` and returns whether to continue or exit.
-fn apply_key(state: &mut TuiState, key: KeyCode, is_last: bool) -> KeyResult {
+fn apply_key(state: &mut TuiState, key: KeyCode, is_last: bool, watch_mode: bool) -> KeyResult {
     match key {
         KeyCode::Right => {
             // Navigating to a different field discards any staged a/s decision.
@@ -205,6 +207,9 @@ fn apply_key(state: &mut TuiState, key: KeyCode, is_last: bool) -> KeyResult {
         KeyCode::Char('p') => return KeyResult::Exit(Action::Previous(state.field_decisions)),
         KeyCode::Char('n') if !is_last => {
             return KeyResult::Exit(Action::Proceed(state.field_decisions));
+        }
+        KeyCode::Esc if watch_mode => {
+            return KeyResult::Exit(Action::BackToWatch(state.field_decisions));
         }
         KeyCode::Char('q') => return KeyResult::Exit(Action::Quit),
         _ => {}
@@ -423,7 +428,7 @@ fn run_diff_view(
         let Some(key) = io.next_key()? else {
             return Ok(Action::Quit);
         };
-        match apply_key(&mut state, key, is_last) {
+        match apply_key(&mut state, key, is_last, ctx.watch_mode) {
             KeyResult::Continue => {}
             KeyResult::TryProceed => {
                 if let Some(action) = try_proceed(&mut state, is_last) {
