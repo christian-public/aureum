@@ -20,7 +20,7 @@ const FIELD_ROW_PREFIX: usize = 2; // leading "  "
 const FIELD_GAP: usize = 3; // "   " between fields
 const FIELD_ROW_PADDING: usize = 2; // "  " before |
 
-// Arrow ("▶ "/"  ") and indicator ("●"/"○"/"✓"/"✗") each occupy one display column.
+// Arrow ("❯ "/"  ") and indicator ("●"/"○"/"✓"/"✗") each occupy one display column.
 // Label strings are all ASCII, so .len() equals the display column width.
 const ARROW_WIDTH: usize = 2;
 const INDICATOR_WIDTH: usize = 1;

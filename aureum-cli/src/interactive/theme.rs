@@ -6,7 +6,7 @@ pub(super) fn dim() -> Style {
 }
 
 pub(super) fn arrow_span() -> Span<'static> {
-    Span::raw("▶")
+    Span::raw("❯")
 }
 
 pub(super) fn checkmark_span() -> Span<'static> {
