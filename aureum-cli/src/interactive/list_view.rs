@@ -20,14 +20,14 @@ pub(super) struct ListViewContext<'a> {
     pub total_count: usize,
 }
 
-/// Returns styled spans for the decision indicator box: dim `[`, inner text, dim `]`.
+/// Returns styled spans for the decision indicator box: dim `[`, space, icon, space, dim `]`.
 /// `failing` indicates which of the 3 output fields actually have a diff.
 fn decision_indicator_spans(
     dec: Option<&FieldDecisions>,
     failing: FailingFields,
-) -> [Span<'static>; 3] {
-    let inner = match dec {
-        None => "   ",
+) -> [Span<'static>; 5] {
+    let icon = match dec {
+        None => Span::raw(" "),
         Some(d) => {
             let all_decided = OUTPUT_FIELDS
                 .iter()
@@ -35,21 +35,18 @@ fn decision_indicator_spans(
             let has_accept = d.any_accepted();
             let has_skip = d.any_skipped();
             match (all_decided, has_accept, has_skip) {
-                (_, false, false) => "   ", // visited but nothing decided yet
-                (true, true, false) => " ✓ ",
-                (true, false, true) => " ⊘ ",
-                _ => " · ", // partial progress or mixed accept+skip
+                (_, false, false) => Span::raw(" "), // visited but nothing decided yet
+                (true, true, false) => theme::checkmark_span(),
+                (true, false, true) => theme::skip_span(),
+                _ => theme::partial_span(), // partial progress or mixed accept+skip
             }
         }
     };
-    let inner_span = if inner.contains('✓') {
-        Span::styled(inner, Style::default().fg(Color::Green))
-    } else {
-        Span::raw(inner)
-    };
     [
         Span::styled("[", theme::dim()),
-        inner_span,
+        Span::raw(" "),
+        icon,
+        Span::raw(" "),
         Span::styled("]", theme::dim()),
     ]
 }
@@ -116,7 +113,7 @@ fn render_list(frame: &mut Frame, ctx: &ListViewContext<'_>, selection: usize, s
         let test_id = run_result.test_case.id().to_string();
         let dec = ctx.past_decisions.get(i).and_then(|d| d.as_ref());
         let failing = FailingFields::of(test_result);
-        let [b1, inner, b2] = decision_indicator_spans(dec, failing);
+        let [b1, sp1, icon, sp2, b2] = decision_indicator_spans(dec, failing);
         let id_style = if is_selected {
             Style::default()
                 .add_modifier(Modifier::BOLD)
@@ -134,7 +131,9 @@ fn render_list(frame: &mut Frame, ctx: &ListViewContext<'_>, selection: usize, s
             arrow_span,
             Span::raw(" "),
             b1,
-            inner,
+            sp1,
+            icon,
+            sp2,
             b2,
             Span::raw(" "),
             Span::styled(test_id, id_style),

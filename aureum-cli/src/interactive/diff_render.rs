@@ -339,12 +339,13 @@ fn build_decisions_line(decisions: FieldDecisions, failing: FailingFields) -> Li
     for (i, &field) in OUTPUT_FIELDS.iter().enumerate() {
         if failing.is_failing(field) {
             spans.push(Span::styled("[", theme::dim()));
-            let inner = match decisions.get(field) {
-                FieldDecision::Undecided => "   ",
-                FieldDecision::Accepted => " ✓ ",
-                FieldDecision::Skipped => " ⊘ ",
-            };
-            spans.push(Span::raw(inner));
+            spans.push(Span::raw(" "));
+            spans.push(match decisions.get(field) {
+                FieldDecision::Undecided => Span::raw(" "),
+                FieldDecision::Accepted => theme::checkmark_span(),
+                FieldDecision::Skipped => theme::skip_span(),
+            });
+            spans.push(Span::raw(" "));
             spans.push(Span::styled("]", theme::dim()));
         } else {
             spans.push(Span::raw(" ".repeat(DECISION_BOX_WIDTH)));

@@ -24,3 +24,11 @@ pub(super) fn configured_span() -> Span<'static> {
 pub(super) fn not_configured_span() -> Span<'static> {
     Span::raw("○")
 }
+
+pub(super) fn skip_span() -> Span<'static> {
+    Span::raw("⊘")
+}
+
+pub(super) fn partial_span() -> Span<'static> {
+    Span::raw("·")
+}
