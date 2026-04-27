@@ -322,7 +322,7 @@ fn build_tab_line(active_tab: Tab, _width: usize) -> Line<'static> {
 
 /// Program row: `$ program args`.
 fn build_program_line(program: &str) -> Line<'static> {
-    let program_style = Style::default().fg(Color::DarkGray);
+    let program_style = style::dim();
     Line::from(vec![
         Span::raw("  "),
         Span::styled("$ ".to_owned(), program_style),
