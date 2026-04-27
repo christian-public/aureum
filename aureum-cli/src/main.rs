@@ -3,6 +3,7 @@ mod vendor;
 mod utils {
     pub mod file;
     pub mod shell;
+    pub mod time;
 }
 mod args;
 mod exit_code;

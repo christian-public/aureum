@@ -146,10 +146,8 @@ fn render_list(frame: &mut Frame, ctx: &ListViewContext<'_>, selection: usize, s
     );
 
     // Footer
-    frame.render_widget(
-        Paragraph::new("  ↑↓: navigate   Enter: select test   Esc: cancel selection\n  q: quit"),
-        outer_chunks[1],
-    );
+    let footer = "  ↑↓: navigate   Enter: select test   Esc: cancel selection\n  q: quit";
+    frame.render_widget(Paragraph::new(footer), outer_chunks[1]);
 }
 
 enum ListKeyResult {

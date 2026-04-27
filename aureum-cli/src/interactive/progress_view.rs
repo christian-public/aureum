@@ -1,4 +1,5 @@
 use crate::interactive::theme;
+use crate::utils::time;
 use aureum::{RunResult, TestCaseWithExpectations, run_test_cases};
 use crossterm::event::{Event, KeyCode, KeyEventKind};
 use ratatui::backend::CrosstermBackend;
@@ -185,7 +186,7 @@ fn render_progress(
     let elapsed_text = if stopping {
         "Stopping…".to_string()
     } else {
-        format_elapsed(elapsed)
+        time::format_duration(elapsed)
     };
     // Align info columns to the same width and horizontal position as the bar.
     let bar_left = body_chunks[2].x + (w as u16).saturating_sub(bar_width as u16) / 2;
@@ -220,15 +221,6 @@ fn render_progress(
         "\n  q: quit"
     };
     frame.render_widget(Paragraph::new(footer_text), outer_chunks[1]);
-}
-
-fn format_elapsed(elapsed: Duration) -> String {
-    let secs = elapsed.as_secs();
-    if secs < 60 {
-        format!("{:.1}s", elapsed.as_secs_f64())
-    } else {
-        format!("{}m {:02}s", secs / 60, secs % 60)
-    }
 }
 
 #[cfg(test)]
