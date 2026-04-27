@@ -10,7 +10,7 @@ use crate::interactive::diff_view::{self, DiffViewContext, EnterOutcome, Tab, Tu
 use crate::interactive::field::{
     FailingFields, Field, FieldDecision, FieldDecisions, OUTPUT_FIELDS,
 };
-use crate::interactive::style;
+use crate::interactive::theme;
 use crate::utils::shell;
 
 // FIELD SELECTOR ROW LAYOUT
@@ -240,7 +240,7 @@ pub(super) fn render_tui(
         if needed > 0 {
             let pad = Line::from(vec![
                 Span::raw(" ".repeat(sep)),
-                Span::styled("│", style::dim()),
+                Span::styled("│", theme::dim()),
             ]);
             all_lines.extend(std::iter::repeat_n(pad, needed));
         }
@@ -322,7 +322,7 @@ fn build_tab_line(active_tab: Tab, _width: usize) -> Line<'static> {
 
 /// Program row: `$ program args`.
 fn build_program_line(program: &str) -> Line<'static> {
-    let program_style = style::dim();
+    let program_style = theme::dim();
     Line::from(vec![
         Span::raw("  "),
         Span::styled("$ ".to_owned(), program_style),
@@ -337,14 +337,14 @@ fn build_decisions_line(decisions: FieldDecisions, failing: FailingFields) -> Li
     let mut spans: Vec<Span<'static>> = vec![Span::raw(" ".repeat(DECISIONS_PREFIX))];
     for (i, &field) in OUTPUT_FIELDS.iter().enumerate() {
         if failing.is_failing(field) {
-            spans.push(Span::styled("[", style::dim()));
+            spans.push(Span::styled("[", theme::dim()));
             let inner = match decisions.get(field) {
                 FieldDecision::Undecided => "   ",
                 FieldDecision::Accepted => " ✓ ",
                 FieldDecision::Skipped => " ⊘ ",
             };
             spans.push(Span::raw(inner));
-            spans.push(Span::styled("]", style::dim()));
+            spans.push(Span::styled("]", theme::dim()));
         } else {
             spans.push(Span::raw(" ".repeat(DECISION_BOX_WIDTH)));
         }
@@ -419,9 +419,9 @@ fn build_field_line(
             spans.push(Span::raw("  "));
         }
         let stdin_indicator = if stdin_present {
-            style::configured_span()
+            theme::configured_span()
         } else {
-            style::not_configured_span()
+            theme::not_configured_span()
         };
         spans.push(if is_active {
             Span::styled(stdin_indicator.content, active_style)
@@ -453,9 +453,9 @@ fn build_field_line(
             spans.push(Span::raw("  "));
         }
         let indicator = match status {
-            Some(true) => style::cross_span(),
-            Some(false) => style::checkmark_span(),
-            None => style::not_configured_span(),
+            Some(true) => theme::cross_span(),
+            Some(false) => theme::checkmark_span(),
+            None => theme::not_configured_span(),
         };
         spans.push(if is_active {
             let indicator_style = if status.is_none() {
@@ -487,7 +487,7 @@ fn build_footer(
     failing: FailingFields,
     enter: &'static str,
 ) -> Text<'static> {
-    let dim = style::dim();
+    let dim = theme::dim();
     let switch_view_style = if active_field == Field::Stdin {
         dim
     } else {

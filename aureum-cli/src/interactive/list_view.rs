@@ -11,7 +11,7 @@ use std::io::{self, BufRead, Write};
 use crate::interactive::action::ListAction;
 use crate::interactive::diff_view;
 use crate::interactive::field::{FailingFields, FieldDecision, FieldDecisions, OUTPUT_FIELDS};
-use crate::interactive::style;
+use crate::interactive::theme;
 
 pub(super) struct ListViewContext<'a> {
     pub failed: &'a [(&'a RunResult, &'a TestResult)],
@@ -48,9 +48,9 @@ fn decision_indicator_spans(
         Span::raw(inner)
     };
     [
-        Span::styled("[", style::dim()),
+        Span::styled("[", theme::dim()),
         inner_span,
-        Span::styled("]", style::dim()),
+        Span::styled("]", theme::dim()),
     ]
 }
 

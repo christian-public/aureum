@@ -7,7 +7,7 @@ mod field;
 mod list_view;
 mod progress_view;
 mod review_loop;
-mod style;
+mod theme;
 
 use accept::update_test_expectations;
 use field::{FieldDecision, FieldDecisions};

@@ -4,7 +4,7 @@ use ratatui::text::{Line, Span};
 
 use crate::interactive::diff_view::Tab;
 use crate::interactive::field::Field;
-use crate::interactive::style;
+use crate::interactive::theme;
 
 pub(super) enum Side {
     Expected,
@@ -79,7 +79,7 @@ fn build_text_diff(comparison: &ValueComparison<String>) -> Vec<Line<'static>> {
         ValueComparison::NotChecked(_) => not_configured_line(),
         ValueComparison::Matches(_) => vec![Line::from(vec![
             Span::raw("  "),
-            style::checkmark_span(),
+            theme::checkmark_span(),
             Span::raw(" No difference"),
         ])],
     }
@@ -97,11 +97,11 @@ fn build_diff_content(
             ValueComparison::Diff { expected, got } => {
                 vec![
                     Line::from(vec![
-                        Span::styled("  Expected: ", style::dim()),
+                        Span::styled("  Expected: ", theme::dim()),
                         Span::styled(expected.to_string(), Style::default().fg(Color::Red)),
                     ]),
                     Line::from(vec![
-                        Span::styled("       Got: ", style::dim()),
+                        Span::styled("       Got: ", theme::dim()),
                         Span::styled(got.to_string(), Style::default().fg(Color::Green)),
                     ]),
                 ]
@@ -109,7 +109,7 @@ fn build_diff_content(
             ValueComparison::NotChecked(_) => not_configured_line(),
             ValueComparison::Matches(_) => vec![Line::from(vec![
                 Span::raw("  "),
-                style::checkmark_span(),
+                theme::checkmark_span(),
                 Span::raw(" No difference"),
             ])],
         },
@@ -139,7 +139,7 @@ fn diff_lines_colored(expected: &str, got: &str) -> Vec<Line<'static>> {
                 result.push(Line::from(vec![
                     Span::styled(
                         format!(" {:>width$} {blank} │ ", left_num.unwrap()),
-                        style::dim(),
+                        theme::dim(),
                     ),
                     Span::styled(format!("-{line}"), Style::default().fg(Color::Red)),
                 ]));
@@ -159,10 +159,10 @@ fn diff_lines_colored(expected: &str, got: &str) -> Vec<Line<'static>> {
                     )
                 };
                 if line.is_empty() {
-                    result.push(Line::from(Span::styled(prefix, style::dim())));
+                    result.push(Line::from(Span::styled(prefix, theme::dim())));
                 } else {
                     result.push(Line::from(vec![
-                        Span::styled(prefix, style::dim()),
+                        Span::styled(prefix, theme::dim()),
                         Span::raw(line.to_owned()),
                     ]));
                 }
@@ -171,7 +171,7 @@ fn diff_lines_colored(expected: &str, got: &str) -> Vec<Line<'static>> {
                 result.push(Line::from(vec![
                     Span::styled(
                         format!(" {blank} {:>width$} │ ", right_num.unwrap()),
-                        style::dim(),
+                        theme::dim(),
                     ),
                     Span::styled(format!("+{line}"), Style::default().fg(Color::Green)),
                 ]));
@@ -190,11 +190,11 @@ fn styled_lines_left(content: &str, col_width: usize) -> Vec<Line<'static>> {
         if line.is_empty() {
             lines.push(Line::from(Span::styled(
                 format!(" {num:>col_width$} {blank} │"),
-                style::dim(),
+                theme::dim(),
             )));
         } else {
             lines.push(Line::from(vec![
-                Span::styled(format!(" {num:>col_width$} {blank} │  "), style::dim()),
+                Span::styled(format!(" {num:>col_width$} {blank} │  "), theme::dim()),
                 Span::raw(line.to_owned()),
             ]));
         }
@@ -210,11 +210,11 @@ fn styled_lines_right(content: &str, col_width: usize) -> Vec<Line<'static>> {
         if line.is_empty() {
             lines.push(Line::from(Span::styled(
                 format!(" {blank} {num:>col_width$} │"),
-                style::dim(),
+                theme::dim(),
             )));
         } else {
             lines.push(Line::from(vec![
-                Span::styled(format!(" {blank} {num:>col_width$} │  "), style::dim()),
+                Span::styled(format!(" {blank} {num:>col_width$} │  "), theme::dim()),
                 Span::raw(line.to_owned()),
             ]));
         }
@@ -225,7 +225,7 @@ fn styled_lines_right(content: &str, col_width: usize) -> Vec<Line<'static>> {
 fn not_configured_line() -> Vec<Line<'static>> {
     vec![Line::from(vec![
         Span::raw("  "),
-        style::not_configured_span(),
+        theme::not_configured_span(),
         Span::raw(" Not configured"),
     ])]
 }

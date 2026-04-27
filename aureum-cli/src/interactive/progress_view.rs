@@ -1,4 +1,4 @@
-use crate::interactive::style;
+use crate::interactive::theme;
 use aureum::{RunResult, TestCaseWithExpectations, run_test_cases};
 use crossterm::event::{Event, KeyCode, KeyEventKind};
 use ratatui::backend::CrosstermBackend;
@@ -174,7 +174,7 @@ fn render_progress(
 
     let bar_line = Line::from(vec![
         Span::styled("█".repeat(filled_chars), Style::default().fg(Color::Cyan)),
-        Span::styled("░".repeat(empty_chars), style::dim()),
+        Span::styled("░".repeat(empty_chars), theme::dim()),
     ]);
     frame.render_widget(
         Paragraph::new(bar_line).alignment(Alignment::Center),
