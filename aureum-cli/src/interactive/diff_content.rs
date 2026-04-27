@@ -136,45 +136,68 @@ fn diff_lines_colored(expected: &str, got: &str) -> Vec<Line<'static>> {
         use aureum::string::DiffLineType::*;
         match kind {
             Removed => {
-                result.push(Line::from(vec![
+                let trimmed_len = line.trim_end().len();
+                let red = Style::default().fg(Color::Red);
+                let mut spans = vec![
                     Span::styled(
-                        format!(" {:>width$} {blank} │ ", left_num.unwrap()),
+                        format!(
+                            " {:>width$} {blank} │ ",
+                            left_num.expect("Removed line always has left_num")
+                        ),
                         theme::dim(),
                     ),
-                    Span::styled(format!("-{line}"), Style::default().fg(Color::Red)),
-                ]));
+                    Span::styled(format!("-{}", &line[..trimmed_len]), red),
+                ];
+                if trimmed_len < line.len() {
+                    spans.push(Span::styled(
+                        line[trimmed_len..].to_owned(),
+                        Style::default().bg(Color::Red),
+                    ));
+                }
+                result.push(Line::from(spans));
             }
             Unchanged => {
                 let prefix = if line.is_empty() {
                     format!(
                         " {:>width$} {:>width$} │",
-                        left_num.unwrap(),
-                        right_num.unwrap()
+                        left_num.expect("Unchanged line always has left_num"),
+                        right_num.expect("Unchanged line always has right_num")
                     )
                 } else {
                     format!(
                         " {:>width$} {:>width$} │  ",
-                        left_num.unwrap(),
-                        right_num.unwrap()
+                        left_num.expect("Unchanged line always has left_num"),
+                        right_num.expect("Unchanged line always has right_num")
                     )
                 };
                 if line.is_empty() {
                     result.push(Line::from(Span::styled(prefix, theme::dim())));
                 } else {
-                    result.push(Line::from(vec![
-                        Span::styled(prefix, theme::dim()),
-                        Span::raw(line.to_owned()),
-                    ]));
+                    let mut spans = vec![Span::styled(prefix, theme::dim())];
+                    spans.extend(theme::highlight_trailing_whitespace(line));
+                    result.push(Line::from(spans));
                 }
             }
             Added => {
-                result.push(Line::from(vec![
+                let trimmed_len = line.trim_end().len();
+                let green = Style::default().fg(Color::Green);
+                let mut spans = vec![
                     Span::styled(
-                        format!(" {blank} {:>width$} │ ", right_num.unwrap()),
+                        format!(
+                            " {blank} {:>width$} │ ",
+                            right_num.expect("Added line always has right_num")
+                        ),
                         theme::dim(),
                     ),
-                    Span::styled(format!("+{line}"), Style::default().fg(Color::Green)),
-                ]));
+                    Span::styled(format!("+{}", &line[..trimmed_len]), green),
+                ];
+                if trimmed_len < line.len() {
+                    spans.push(Span::styled(
+                        line[trimmed_len..].to_owned(),
+                        Style::default().bg(Color::Red),
+                    ));
+                }
+                result.push(Line::from(spans));
             }
         }
     });
@@ -185,41 +208,45 @@ fn diff_lines_colored(expected: &str, got: &str) -> Vec<Line<'static>> {
 /// Expected view: line number on the LEFT column, blank right column.
 fn styled_lines_left(content: &str, col_width: usize) -> Vec<Line<'static>> {
     let blank = " ".repeat(col_width);
-    let mut lines = Vec::new();
-    each_numbered_line(content, |num, line| {
-        if line.is_empty() {
-            lines.push(Line::from(Span::styled(
-                format!(" {num:>col_width$} {blank} │"),
-                theme::dim(),
-            )));
-        } else {
-            lines.push(Line::from(vec![
-                Span::styled(format!(" {num:>col_width$} {blank} │  "), theme::dim()),
-                Span::raw(line.to_owned()),
-            ]));
-        }
-    });
-    lines
+    numbered_lines(content)
+        .map(|(num, line)| {
+            if line.is_empty() {
+                Line::from(Span::styled(
+                    format!(" {num:>col_width$} {blank} │"),
+                    theme::dim(),
+                ))
+            } else {
+                let mut spans = vec![Span::styled(
+                    format!(" {num:>col_width$} {blank} │  "),
+                    theme::dim(),
+                )];
+                spans.extend(theme::highlight_trailing_whitespace(line));
+                Line::from(spans)
+            }
+        })
+        .collect()
 }
 
 /// Got view: blank left column, line number on the RIGHT column.
 fn styled_lines_right(content: &str, col_width: usize) -> Vec<Line<'static>> {
     let blank = " ".repeat(col_width);
-    let mut lines = Vec::new();
-    each_numbered_line(content, |num, line| {
-        if line.is_empty() {
-            lines.push(Line::from(Span::styled(
-                format!(" {blank} {num:>col_width$} │"),
-                theme::dim(),
-            )));
-        } else {
-            lines.push(Line::from(vec![
-                Span::styled(format!(" {blank} {num:>col_width$} │  "), theme::dim()),
-                Span::raw(line.to_owned()),
-            ]));
-        }
-    });
-    lines
+    numbered_lines(content)
+        .map(|(num, line)| {
+            if line.is_empty() {
+                Line::from(Span::styled(
+                    format!(" {blank} {num:>col_width$} │"),
+                    theme::dim(),
+                ))
+            } else {
+                let mut spans = vec![Span::styled(
+                    format!(" {blank} {num:>col_width$} │  "),
+                    theme::dim(),
+                )];
+                spans.extend(theme::highlight_trailing_whitespace(line));
+                Line::from(spans)
+            }
+        })
+        .collect()
 }
 
 fn not_configured_line() -> Vec<Line<'static>> {
@@ -230,18 +257,23 @@ fn not_configured_line() -> Vec<Line<'static>> {
     ])]
 }
 
-/// Calls `f(line_number, line_text)` for each displayed line in `content`.
-fn each_numbered_line(content: &str, mut f: impl FnMut(usize, &str)) {
+/// Returns an iterator of `(1-based line number, line text)` for every displayed
+/// line in `content`, including a trailing empty line when `content` ends with `\n`.
+fn numbered_lines(content: &str) -> impl Iterator<Item = (usize, &str)> {
+    let mut v: Vec<(usize, &str)> = Vec::new();
     if content.is_empty() {
-        f(1, "");
+        v.push((1, ""));
     } else {
+        let mut count = 0;
         for (i, line) in content.lines().enumerate() {
-            f(i + 1, line);
+            v.push((i + 1, line));
+            count = i + 1;
         }
         if content.ends_with('\n') {
-            f(content.lines().count() + 1, "");
+            v.push((count + 1, ""));
         }
     }
+    v.into_iter()
 }
 
 /// Returns the display column of the `│` separator in content lines.
@@ -257,4 +289,125 @@ pub(super) fn sep_col_from_lines(lines: &[Line<'static>]) -> usize {
         }
     }
     0
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ratatui::Terminal;
+    use ratatui::backend::TestBackend;
+    use ratatui::style::Color;
+    use ratatui::widgets::Paragraph;
+
+    // Helper: collect (content, bg) pairs from a Line's spans.
+    fn span_bgs<'a>(line: &'a Line<'static>) -> Vec<(&'a str, Option<Color>)> {
+        line.spans
+            .iter()
+            .map(|s| (s.content.as_ref(), s.style.bg))
+            .collect()
+    }
+
+    mod expected_got_views {
+        use super::*;
+
+        #[test]
+        fn no_trailing_whitespace_produces_single_content_span() {
+            let lines = styled_lines_left("hello", 1);
+            let bgs = span_bgs(&lines[0]);
+            assert!(bgs.iter().all(|(_, bg)| *bg != Some(Color::Red)));
+        }
+
+        #[test]
+        fn trailing_whitespace_gets_red_bg() {
+            let lines = styled_lines_left("hello   ", 1);
+            let bgs = span_bgs(&lines[0]);
+            let last = bgs.last().unwrap();
+            assert_eq!(last.0, "   ");
+            assert_eq!(last.1, Some(Color::Red));
+        }
+
+        #[test]
+        fn got_view_trailing_whitespace_gets_red_bg() {
+            let lines = styled_lines_right("hi  ", 1);
+            let bgs = span_bgs(&lines[0]);
+            let last = bgs.last().unwrap();
+            assert_eq!(last.0, "  ");
+            assert_eq!(last.1, Some(Color::Red));
+        }
+    }
+
+    mod diff_view {
+        use super::*;
+
+        #[test]
+        fn unchanged_trailing_whitespace_gets_red_bg() {
+            let lines = diff_lines_colored("same   ", "same   ");
+            let bgs = span_bgs(&lines[0]);
+            let last = bgs.last().unwrap();
+            assert_eq!(last.0, "   ");
+            assert_eq!(last.1, Some(Color::Red));
+        }
+
+        #[test]
+        fn removed_trailing_whitespace_gets_red_bg_not_red_fg() {
+            let lines = diff_lines_colored("old   ", "new");
+            let removed = &lines[0];
+            let bgs = span_bgs(removed);
+            let last = bgs.last().unwrap();
+            assert_eq!(last.0, "   ");
+            assert_eq!(last.1, Some(Color::Red));
+            // The fg of trailing ws span should NOT be red (red fg is only for the content)
+            assert_ne!(removed.spans.last().unwrap().style.fg, Some(Color::Red));
+        }
+
+        #[test]
+        fn added_trailing_whitespace_gets_red_bg() {
+            let lines = diff_lines_colored("old", "new  ");
+            let added = lines
+                .iter()
+                .find(|l| l.spans.iter().any(|s| s.content.starts_with('+')))
+                .unwrap();
+            let bgs = span_bgs(added);
+            let last = bgs.last().unwrap();
+            assert_eq!(last.0, "  ");
+            assert_eq!(last.1, Some(Color::Red));
+        }
+    }
+
+    // TestBackend test: verify rendered cells carry the red background at the
+    // exact terminal columns where trailing whitespace appears.
+    #[test]
+    fn rendered_trailing_whitespace_cells_have_red_bg() {
+        // "hello   " with col_width=1 produces prefix " 1   │  " (8 cols)
+        // then "hello" (cols 8-12) + "   " (cols 13-15) = total 16 cols
+        let lines = styled_lines_left("hello   ", 1);
+        let backend = TestBackend::new(16, 1);
+        let mut terminal = Terminal::new(backend).unwrap();
+        terminal
+            .draw(|frame| {
+                frame.render_widget(
+                    Paragraph::new(ratatui::text::Text::from(lines)),
+                    frame.area(),
+                );
+            })
+            .unwrap();
+        let buf = terminal.backend().buffer();
+
+        // Content columns must not be red
+        for col in 8u16..=12 {
+            assert_ne!(
+                buf[(col, 0)].bg,
+                Color::Red,
+                "col {col} (content) should not have red bg"
+            );
+        }
+        // Trailing whitespace columns must be red
+        for col in 13u16..=15 {
+            assert_eq!(
+                buf[(col, 0)].bg,
+                Color::Red,
+                "col {col} (trailing ws) should have red bg"
+            );
+        }
+    }
 }

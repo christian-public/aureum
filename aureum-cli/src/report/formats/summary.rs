@@ -33,6 +33,16 @@ pub fn nodes_from_test_result(test_result: &TestResult) -> Vec<Tree> {
     categories
 }
 
+/// Highlights trailing whitespace with a red ANSI background.
+/// The interactive (ratatui) equivalent is `interactive::theme::highlight_trailing_whitespace`.
+fn highlight_trailing_whitespace(line: &str) -> String {
+    let trimmed_len = line.trim_end().len();
+    if trimmed_len == line.len() {
+        return line.to_owned();
+    }
+    format!("{}{}", &line[..trimmed_len], line[trimmed_len..].on_red())
+}
+
 fn format_string_diff(expected: &str, got: &str) -> Vec<Tree> {
     let width = string::displayed_line_count(expected)
         .max(string::displayed_line_count(got))
@@ -46,7 +56,10 @@ fn format_string_diff(expected: &str, got: &str) -> Vec<Tree> {
         if line.is_empty() {
             format!("{num_str} {blank} {separator}")
         } else {
-            format!("{num_str} {blank} {separator}  {line}")
+            format!(
+                "{num_str} {blank} {separator}  {}",
+                highlight_trailing_whitespace(line)
+            )
         }
     };
 
@@ -55,7 +68,10 @@ fn format_string_diff(expected: &str, got: &str) -> Vec<Tree> {
         if line.is_empty() {
             format!("{blank} {num_str} {separator}")
         } else {
-            format!("{blank} {num_str} {separator}  {line}")
+            format!(
+                "{blank} {num_str} {separator}  {}",
+                highlight_trailing_whitespace(line)
+            )
         }
     };
 
@@ -68,18 +84,25 @@ fn format_string_diff(expected: &str, got: &str) -> Vec<Tree> {
             .dimmed();
         match (left_num, right_num) {
             (Some(_), None) => {
-                let text = format!("-{line}").red();
-                format!("{left_num_str} {blank} {separator} {text}")
+                let t = line.trim_end().len();
+                let text = format!("-{}", &line[..t]).red();
+                let trailing = line[t..].on_red();
+                format!("{left_num_str} {blank} {separator} {text}{trailing}")
             }
             (None, Some(_)) => {
-                let text = format!("+{line}").green();
-                format!("{blank} {right_num_str} {separator} {text}")
+                let t = line.trim_end().len();
+                let text = format!("+{}", &line[..t]).green();
+                let trailing = line[t..].on_red();
+                format!("{blank} {right_num_str} {separator} {text}{trailing}")
             }
             _ => {
                 if line.is_empty() {
                     format!("{left_num_str} {right_num_str} {separator}")
                 } else {
-                    format!("{left_num_str} {right_num_str} {separator}  {line}")
+                    format!(
+                        "{left_num_str} {right_num_str} {separator}  {}",
+                        highlight_trailing_whitespace(line)
+                    )
                 }
             }
         }
@@ -131,4 +154,29 @@ fn format_single_line_diff(expected: String, got: String) -> Vec<Tree> {
         Node(String::from("Expected"), vec![Leaf(vec![expected])]),
         Node(String::from("Got"), vec![Leaf(vec![got])]),
     ]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::highlight_trailing_whitespace;
+
+    #[test]
+    fn no_trailing_whitespace_unchanged() {
+        assert_eq!(highlight_trailing_whitespace("hello"), "hello");
+    }
+
+    #[test]
+    fn trailing_spaces_get_red_bg_ansi() {
+        use colored::Colorize;
+        colored::control::set_override(true);
+        let result = highlight_trailing_whitespace("hello   ");
+        let expected = format!("hello{}", "   ".on_red());
+        colored::control::unset_override();
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn empty_line_unchanged() {
+        assert_eq!(highlight_trailing_whitespace(""), "");
+    }
 }
