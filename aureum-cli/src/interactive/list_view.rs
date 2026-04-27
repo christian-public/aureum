@@ -124,10 +124,15 @@ fn render_list(frame: &mut Frame, ctx: &ListViewContext<'_>, selection: usize, s
         } else {
             Style::default()
         };
-        let arrow = if is_selected { "▶ " } else { "  " };
+        let arrow_span = if is_selected {
+            theme::arrow_span().style(id_style)
+        } else {
+            Span::raw(" ")
+        };
         lines.push(Line::from(vec![
             Span::raw("  "),
-            Span::styled(arrow, id_style),
+            arrow_span,
+            Span::raw(" "),
             b1,
             inner,
             b2,

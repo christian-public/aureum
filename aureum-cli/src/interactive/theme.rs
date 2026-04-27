@@ -5,6 +5,10 @@ pub(super) fn dim() -> Style {
     Style::default().dim()
 }
 
+pub(super) fn arrow_span() -> Span<'static> {
+    Span::raw("▶")
+}
+
 pub(super) fn checkmark_span() -> Span<'static> {
     Span::styled("✓", Style::default().fg(Color::Green))
 }

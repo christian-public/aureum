@@ -309,7 +309,8 @@ fn build_tab_line(active_tab: Tab, _width: usize) -> Line<'static> {
             spans.push(Span::raw("   "));
         }
         if *tab == active_tab {
-            spans.push(Span::styled("▶ ", active_style));
+            spans.push(theme::arrow_span().style(active_style));
+            spans.push(Span::raw(" "));
             spans.push(Span::styled(format!("[{}] {name}", i + 1), active_style));
         } else {
             spans.push(Span::raw("  "));
@@ -414,7 +415,8 @@ fn build_field_line(
             Style::default()
         };
         if is_active {
-            spans.push(Span::styled("▶ ", base_style));
+            spans.push(theme::arrow_span().style(base_style));
+            spans.push(Span::raw(" "));
         } else {
             spans.push(Span::raw("  "));
         }
@@ -448,7 +450,8 @@ fn build_field_line(
         };
 
         if is_active {
-            spans.push(Span::styled("▶ ", base_style));
+            spans.push(theme::arrow_span().style(base_style));
+            spans.push(Span::raw(" "));
         } else {
             spans.push(Span::raw("  "));
         }
