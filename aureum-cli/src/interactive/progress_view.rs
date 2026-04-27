@@ -158,7 +158,7 @@ fn render_progress(
         .constraints([
             Constraint::Fill(1),
             Constraint::Length(1), // ████░░░░  progress bar
-            Constraint::Length(1), // 20 / 42        47%        1.4s
+            Constraint::Length(1), // 20 / 42        1.4s
             Constraint::Fill(1),
         ])
         .split(inner_chunks[2]);
