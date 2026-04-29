@@ -58,8 +58,8 @@
 │                                                                                                  │
 │                                                                                                  │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
-  ↑↓: navigate   Enter: select test   Esc: cancel selection
-  q: quit
+  ↑↓: navigate   Enter: select test
+  Esc: cancel selection   q: quit
 ---
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
 │  Failed test 1 of 1                                                          0 passed  1 failed  │

@@ -37,8 +37,8 @@
 │                                                                                                  │
 │                                                                                                  │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
-  ↑↓: navigate   Enter: select test   Esc: cancel selection
-  q: quit
+  ↑↓: navigate   Enter: select test
+  Esc: cancel selection   q: quit
 ---
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
 │  Failed tests                                                                0 passed  2 failed  │
@@ -58,8 +58,8 @@
 │                                                                                                  │
 │                                                                                                  │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
-  ↑↓: navigate   Enter: select test   Esc: cancel selection
-  q: quit
+  ↑↓: navigate   Enter: select test
+  Esc: cancel selection   q: quit
 ---
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
 │  Failed test 1 of 2                                                          0 passed  2 failed  │

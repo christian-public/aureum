@@ -146,7 +146,7 @@ fn render_list(frame: &mut Frame, ctx: &ListViewContext<'_>, selection: usize, s
     );
 
     // Footer
-    let footer = "  ↑↓: navigate   Enter: select test   Esc: cancel selection\n  q: quit";
+    let footer = "  ↑↓: navigate   Enter: select test\n  Esc: cancel selection   q: quit";
     frame.render_widget(Paragraph::new(footer), outer_chunks[1]);
 }
 

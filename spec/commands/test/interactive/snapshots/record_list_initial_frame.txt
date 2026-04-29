@@ -37,5 +37,5 @@
 │                                                                                                  │
 │                                                                                                  │
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
-  ↑↓: navigate   Enter: select test   Esc: cancel selection
-  q: quit
+  ↑↓: navigate   Enter: select test
+  Esc: cancel selection   q: quit
