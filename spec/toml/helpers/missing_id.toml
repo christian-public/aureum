@@ -1,0 +1,10 @@
+program = "echo"
+
+[[tests]]
+program_arguments = ["-n", "test1"]
+expected_stdout = "test1"
+
+[[tests]]
+id = "test2"
+program_arguments = ["-n", "test2"]
+expected_stdout = "test2"

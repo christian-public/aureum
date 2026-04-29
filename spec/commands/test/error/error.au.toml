@@ -38,7 +38,8 @@ Test result: OK (0 passed, 0 failed)
 """
 expected_stderr = """
 📋 helpers/invalid_config.toml
-└── Failed to parse config file
+└── Parse errors
+    └── ✘ field 'program': expected string, got boolean
 
 warning: Some config files contain errors (See above)
 """

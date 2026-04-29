@@ -1,0 +1,3 @@
+program = false
+program_arguments = "should be an array"
+expected_exit_code = "should be an integer"

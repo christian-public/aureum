@@ -3,7 +3,7 @@ mod toml {
     mod requirement;
     mod validate;
 
-    pub use config::{TomlConfig, TomlConfigError};
+    pub use config::{ParseError, TomlConfig, TomlConfigError};
     pub use requirement::Requirements;
     pub use validate::{ProgramPath, RequirementData, TestEntry, ValidationError};
 
@@ -28,8 +28,8 @@ pub use test_id_coverage_set::TestIdCoverageSet;
 pub use test_result::{TestResult, ValueComparison};
 pub use test_runner::{ProgramOutput, RunError, RunResult};
 pub use toml::Requirements;
+pub use toml::{ParseError, TomlConfig, TomlConfigError};
 pub use toml::{ProgramPath, RequirementData, TestEntry, ValidationError};
-pub use toml::{TomlConfig, TomlConfigError};
 
 pub use test_runner::{run_program, run_program_passthrough, run_test_cases};
 pub use toml::{build_test_entries, get_requirements, parse_toml_config};

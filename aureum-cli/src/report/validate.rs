@@ -3,7 +3,10 @@ use crate::report::label;
 use crate::report::symbol;
 use crate::utils::file;
 use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
-use aureum::{ProgramPath, RequirementData, Requirements, TestEntry, TestId, ValidationError};
+use aureum::{
+    ParseError, ProgramPath, RequirementData, Requirements, TestEntry, TestId, TomlConfigError,
+    ValidationError,
+};
 use colored::Colorize;
 use relative_path::{RelativePath, RelativePathBuf};
 use std::collections::BTreeMap;
@@ -162,18 +165,49 @@ pub fn print_config_details(
 }
 
 pub fn print_config_file_error(config_file_path: &RelativePath, error: &ConfigFileError) {
-    let msg = match error {
-        ConfigFileError::NoFileName => "Config file path has no filename",
-        ConfigFileError::NoParentDirectory => "Config file path has no parent directory",
-        ConfigFileError::ReadFailed(_) => "Failed to read config file",
-        ConfigFileError::ParseFailed(_) => "Failed to parse config file",
+    let nodes: Vec<Tree> = match error {
+        ConfigFileError::NoFileName => vec![str_to_tree("Config file path has no filename")],
+        ConfigFileError::NoParentDirectory => {
+            vec![str_to_tree("Config file path has no parent directory")]
+        }
+        ConfigFileError::ReadFailed(_) => vec![str_to_tree("Failed to read config file")],
+        ConfigFileError::ParseFailed(err) => vec![Node(
+            String::from("Parse errors"),
+            format_toml_config_error(err),
+        )],
     };
-    let tree = Node(
-        config_file_heading(config_file_path),
-        vec![str_to_tree(msg)],
-    );
 
+    let tree = Node(config_file_heading(config_file_path), nodes);
     print_tree(tree);
+}
+
+fn format_toml_config_error(err: &TomlConfigError) -> Vec<Tree> {
+    match err {
+        TomlConfigError::InvalidTomlSyntax(e) => {
+            let lines: Vec<String> = e
+                .to_string()
+                .trim_end()
+                .lines()
+                .enumerate()
+                .map(|(i, line)| {
+                    if i == 0 {
+                        format!("{} invalid TOML syntax: {}", symbol::cross(), line)
+                    } else {
+                        line.to_owned()
+                    }
+                })
+                .collect();
+            vec![Leaf(lines)]
+        }
+        TomlConfigError::ParseErrors(errors) => errors
+            .iter()
+            .map(|e| str_to_tree(&format_parse_error(e)))
+            .collect(),
+    }
+}
+
+fn format_parse_error(error: &ParseError) -> String {
+    format!("{} {}", symbol::cross(), error.to_string().red())
 }
 
 pub fn print_config_files_contain_errors() {

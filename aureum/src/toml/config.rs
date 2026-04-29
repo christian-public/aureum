@@ -1,6 +1,7 @@
 use crate::TestId;
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
+use std::fmt;
 
 #[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -68,6 +69,57 @@ pub enum ConfigValueType {
     Datetime,
     Array(Vec<ConfigValueType>),
     Table(BTreeMap<String, ConfigValueType>),
+}
+
+impl fmt::Display for ConfigValueType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let name = match self {
+            ConfigValueType::String => "string",
+            ConfigValueType::Integer => "integer",
+            ConfigValueType::Float => "float",
+            ConfigValueType::Boolean => "boolean",
+            ConfigValueType::Datetime => "datetime",
+            ConfigValueType::Array(_) => "array",
+            ConfigValueType::Table(_) => "table",
+        };
+        write!(f, "{name}")
+    }
+}
+
+impl fmt::Display for ParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ParseError::ErrorInField { field, error } => write!(f, "field '{field}': {error}"),
+            ParseError::ErrorAtIndex { index, error } => write!(f, "[{index}]: {error}"),
+            ParseError::InvalidType { expected, got } => {
+                write!(f, "expected {expected}, got {got}")
+            }
+            ParseError::AmbiguousSpecialForm {
+                conflicting_keys, ..
+            } => write!(
+                f,
+                "cannot specify both '{}' and '{}'",
+                conflicting_keys[0], conflicting_keys[1]
+            ),
+            ParseError::InvalidSpecialForm {
+                error,
+                unexpected_keys,
+            } => match (error.as_deref(), unexpected_keys.as_slice()) {
+                (Some(e), []) => write!(f, "{e}"),
+                (Some(e), keys) => write!(f, "{e}; unexpected keys: {}", keys.join(", ")),
+                (None, keys) => {
+                    write!(
+                        f,
+                        "unknown keys: {}; expected 'file' or 'env'",
+                        keys.join(", ")
+                    )
+                }
+            },
+            ParseError::MissingId => write!(f, "missing required field 'id'"),
+            ParseError::InvalidId { id } => write!(f, "invalid id '{id}'"),
+            ParseError::IdForbiddenAtRoot => write!(f, "'id' is not allowed at the root level"),
+        }
+    }
 }
 
 // PARSING

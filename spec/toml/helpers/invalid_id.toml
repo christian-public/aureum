@@ -1,0 +1,16 @@
+program = "echo"
+
+[[tests]]
+id = "valid_id"
+program_arguments = ["-n", "hello"]
+expected_stdout = "hello"
+
+[[tests]]
+id = "invalid id!"
+program_arguments = ["-n", "world"]
+expected_stdout = "world"
+
+[[tests]]
+id = ""
+program_arguments = ["-n", "empty"]
+expected_stdout = "empty"
