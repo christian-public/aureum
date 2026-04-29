@@ -10,11 +10,11 @@ pub(super) fn arrow_span() -> Span<'static> {
 }
 
 pub(super) fn checkmark_span() -> Span<'static> {
-    Span::styled("✓", Style::default().fg(Color::Green)) // U+2713 Check Mark
+    Span::styled("✔", Style::default().fg(Color::Green)) // U+2714 Heavy Check Mark
 }
 
 pub(super) fn cross_span() -> Span<'static> {
-    Span::styled("✗", Style::default().fg(Color::Red)) // U+2717 Ballot X
+    Span::styled("✘", Style::default().fg(Color::Red)) // U+2718 Heavy Ballot X
 }
 
 pub(super) fn configured_span() -> Span<'static> {
