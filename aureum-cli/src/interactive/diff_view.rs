@@ -123,7 +123,14 @@ enum KeyResult {
 }
 
 /// Pure key-handler: mutates `state` and returns whether to continue or exit.
-fn apply_key(state: &mut TuiState, key: KeyCode, is_last: bool, watch_mode: bool) -> KeyResult {
+/// `is_field_configured` must reflect whether the current field has an expected value.
+fn apply_key(
+    state: &mut TuiState,
+    key: KeyCode,
+    is_last: bool,
+    watch_mode: bool,
+    is_field_configured: bool,
+) -> KeyResult {
     match key {
         KeyCode::Right => {
             // Navigating to a different field discards any staged a/s decision.
@@ -146,7 +153,7 @@ fn apply_key(state: &mut TuiState, key: KeyCode, is_last: bool, watch_mode: bool
         KeyCode::Down => {
             state.scroll = state.scroll.saturating_add(1);
         }
-        KeyCode::Char('1') if state.active_field != Field::Stdin => {
+        KeyCode::Char('1') if state.active_field != Field::Stdin && is_field_configured => {
             state.active_tab = Tab::Expected;
             state.scroll = 0;
         }
@@ -154,7 +161,7 @@ fn apply_key(state: &mut TuiState, key: KeyCode, is_last: bool, watch_mode: bool
             state.active_tab = Tab::Got;
             state.scroll = 0;
         }
-        KeyCode::Char('3') if state.active_field != Field::Stdin => {
+        KeyCode::Char('3') if state.active_field != Field::Stdin && is_field_configured => {
             state.active_tab = Tab::Diff;
             state.scroll = 0;
         }
@@ -428,7 +435,15 @@ fn run_diff_view(
         let Some(key) = io.next_key()? else {
             return Ok(Action::Quit);
         };
-        match apply_key(&mut state, key, is_last, ctx.watch_mode) {
+        let is_field_configured =
+            diff_content::is_field_configured(test_result, state.active_field);
+        match apply_key(
+            &mut state,
+            key,
+            is_last,
+            ctx.watch_mode,
+            is_field_configured,
+        ) {
             KeyResult::Continue => {}
             KeyResult::TryProceed => {
                 if let Some(action) = try_proceed(&mut state, is_last) {

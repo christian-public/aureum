@@ -11,19 +11,35 @@ pub(super) enum Side {
     Got,
 }
 
+/// True when the given field has an expected value configured in the test.
+pub(super) fn is_field_configured(test_result: &TestResult, field: Field) -> bool {
+    match field {
+        Field::Stdout => !matches!(test_result.stdout, ValueComparison::NotChecked(_)),
+        Field::Stderr => !matches!(test_result.stderr, ValueComparison::NotChecked(_)),
+        Field::ExitCode => !matches!(test_result.exit_code, ValueComparison::NotChecked(_)),
+        Field::Stdin => false,
+    }
+}
+
 /// Dispatches to the Expected/Got or Diff content builder based on `active_tab`.
+/// When the field is unconfigured, always uses the Got view regardless of `active_tab`.
 pub(super) fn build_content(
     test_result: &TestResult,
     active_field: Field,
     stdin: Option<&str>,
     active_tab: Tab,
 ) -> Vec<Line<'static>> {
-    match active_tab {
+    let effective_tab = if !is_field_configured(test_result, active_field) {
+        Tab::Got
+    } else {
+        active_tab
+    };
+    match effective_tab {
         Tab::Expected => {
             build_expected_or_got_content(test_result, active_field, stdin, Side::Expected)
         }
         Tab::Got => build_expected_or_got_content(test_result, active_field, stdin, Side::Got),
-        Tab::Diff => build_diff_content(test_result, active_field, stdin),
+        Tab::Diff => build_diff_content(test_result, active_field),
     }
 }
 
@@ -41,7 +57,9 @@ fn build_expected_or_got_content(
                 ValueComparison::Diff { expected, .. } | ValueComparison::Matches(expected) => {
                     vec![Line::from(format!("  {expected}"))]
                 }
-                ValueComparison::NotChecked(_) => not_configured_line(),
+                ValueComparison::NotChecked(_) => {
+                    unreachable!("Expected view is only shown for configured fields")
+                }
             },
             Side::Got => vec![Line::from(format!("  {}", test_result.exit_code.got()))],
         },
@@ -60,7 +78,9 @@ fn build_text_view(side: Side, comparison: &ValueComparison<String>) -> Vec<Line
             ValueComparison::Matches(value) => {
                 styled_lines_left(value, string::displayed_line_count(value).to_string().len())
             }
-            ValueComparison::NotChecked(_) => not_configured_line(),
+            ValueComparison::NotChecked(_) => {
+                unreachable!("Expected view is only shown for configured fields")
+            }
         },
         Side::Got => match comparison {
             ValueComparison::Diff { expected, got } => {
@@ -76,20 +96,18 @@ fn build_text_view(side: Side, comparison: &ValueComparison<String>) -> Vec<Line
 fn build_text_diff(comparison: &ValueComparison<String>) -> Vec<Line<'static>> {
     match comparison {
         ValueComparison::Diff { expected, got } => diff_lines_colored(expected, got),
-        ValueComparison::NotChecked(_) => not_configured_line(),
         ValueComparison::Matches(_) => vec![Line::from(vec![
             Span::raw("  "),
             theme::checkmark_span(),
             Span::raw(" No difference"),
         ])],
+        ValueComparison::NotChecked(_) => {
+            unreachable!("Diff view is only shown for configured fields")
+        }
     }
 }
 
-fn build_diff_content(
-    test_result: &TestResult,
-    active_field: Field,
-    stdin: Option<&str>,
-) -> Vec<Line<'static>> {
+fn build_diff_content(test_result: &TestResult, active_field: Field) -> Vec<Line<'static>> {
     match active_field {
         Field::Stdout => build_text_diff(&test_result.stdout),
         Field::Stderr => build_text_diff(&test_result.stderr),
@@ -106,14 +124,16 @@ fn build_diff_content(
                     ]),
                 ]
             }
-            ValueComparison::NotChecked(_) => not_configured_line(),
             ValueComparison::Matches(_) => vec![Line::from(vec![
                 Span::raw("  "),
                 theme::checkmark_span(),
                 Span::raw(" No difference"),
             ])],
+            ValueComparison::NotChecked(_) => {
+                unreachable!("Diff view is only shown for configured fields")
+            }
         },
-        Field::Stdin => format_stdin_content(stdin),
+        Field::Stdin => unreachable!("Diff view is only shown for configured fields"),
     }
 }
 

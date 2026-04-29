@@ -184,9 +184,11 @@ pub(super) fn render_tui(
         },
     );
 
+    let is_field_configured = diff_content::is_field_configured(test_result, active_field);
+
     // Tabs row — hidden when Stdin is selected (tabs are not relevant for stdin content)
     if active_field != Field::Stdin {
-        let tab_line = build_tab_line(active_tab, w);
+        let tab_line = build_tab_line(active_tab, is_field_configured, w);
         frame.render_widget(Paragraph::new(tab_line), inner_chunks[7]);
     }
 
@@ -257,7 +259,13 @@ pub(super) fn render_tui(
         failing,
         ctx.index == ctx.total,
     );
-    let footer = Paragraph::new(build_footer(ctx, active_field, failing, enter));
+    let footer = Paragraph::new(build_footer(
+        ctx,
+        active_field,
+        failing,
+        enter,
+        is_field_configured,
+    ));
     frame.render_widget(footer, outer_chunks[1]);
 }
 
@@ -292,7 +300,8 @@ fn build_title_line(ctx: &DiffViewContext<'_>) -> Line<'static> {
 }
 
 /// Builds the [1] Expected / [2] Got / [3] Diff tab row.
-fn build_tab_line(active_tab: Tab, _width: usize) -> Line<'static> {
+/// When `!is_field_configured`, Got is shown as active and Expected/Diff are dimmed.
+fn build_tab_line(active_tab: Tab, is_field_configured: bool, _width: usize) -> Line<'static> {
     let tabs = [
         ("Expected", Tab::Expected),
         ("Got", Tab::Got),
@@ -308,13 +317,25 @@ fn build_tab_line(active_tab: Tab, _width: usize) -> Line<'static> {
         if i > 0 {
             spans.push(Span::raw("   "));
         }
-        if *tab == active_tab {
+        let is_active = if !is_field_configured {
+            *tab == Tab::Got
+        } else {
+            *tab == active_tab
+        };
+        let is_disabled = !is_field_configured && *tab != Tab::Got;
+
+        if is_active {
             spans.push(theme::arrow_span().style(active_style));
             spans.push(Span::raw(" "));
             spans.push(Span::styled(format!("[{}] {name}", i + 1), active_style));
         } else {
             spans.push(Span::raw("  "));
-            spans.push(Span::raw(format!("[{}] {name}", i + 1)));
+            let text = format!("[{}] {name}", i + 1);
+            if is_disabled {
+                spans.push(Span::styled(text, theme::dim()));
+            } else {
+                spans.push(Span::raw(text));
+            }
         }
     }
 
@@ -490,9 +511,10 @@ fn build_footer(
     active_field: Field,
     failing: FailingFields,
     enter: &'static str,
+    is_field_configured: bool,
 ) -> Text<'static> {
     let dim = theme::dim();
-    let switch_view_style = if active_field == Field::Stdin {
+    let switch_view_style = if active_field == Field::Stdin || !is_field_configured {
         dim
     } else {
         Style::default()

@@ -36,40 +36,16 @@ stdin = "1\nq\n"
 expected_stdout = { file = "snapshots/record_tab_switch_to_expected.txt" }
 expected_exit_code = 1
 
-# Switching to the Stderr field (e) and pressing 3 shows "No difference".
-[tests.not_checked_field_diff_shows_no_difference]
+# On an unconfigured field, pressing [1] Expected and [3] Diff in sequence are both no-ops.
+[tests.not_checked_field_view_switch_disabled]
 program_arguments = [
     "test",
     "--record",
     "100x20",
     "helpers/failing_stdout_only.toml",
 ]
-stdin = "e\n3\nq\n"
-expected_stdout = { file = "snapshots/record_stderr_not_checked_diff.txt" }
-expected_exit_code = 1
-
-# Switching to the Stderr field (e) and pressing 1 shows "(not configured)".
-[tests.not_checked_field_expected_shows_not_configured]
-program_arguments = [
-    "test",
-    "--record",
-    "100x20",
-    "helpers/failing_stdout_only.toml",
-]
-stdin = "e\n1\nq\n"
-expected_stdout = { file = "snapshots/record_stderr_not_checked_expected.txt" }
-expected_exit_code = 1
-
-# Switching to the Stderr field (e) and pressing 2 shows the actual program output.
-[tests.not_checked_field_got_shows_actual]
-program_arguments = [
-    "test",
-    "--record",
-    "100x20",
-    "helpers/failing_stdout_only.toml",
-]
-stdin = "e\n2\nq\n"
-expected_stdout = { file = "snapshots/record_stderr_not_checked_got.txt" }
+stdin = "e\n1\n3\nq\n"
+expected_stdout = { file = "snapshots/record_stderr_not_checked_view_switch_disabled.txt" }
 expected_exit_code = 1
 
 # Pressing i switches to the stdin view, showing line numbers on the right (like Got view).
