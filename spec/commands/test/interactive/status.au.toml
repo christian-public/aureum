@@ -1,7 +1,8 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 # Status area starts empty: no message shown when on a failing field that is undecided.
-[tests.empty_when_on_failing_undecided_field]
+[[tests]]
+id = "empty_when_on_failing_undecided_field"
 program_arguments = [
     "test",
     "--record",
@@ -13,7 +14,8 @@ expected_stdout = { file = "snapshots/status_empty.txt" }
 expected_exit_code = 1
 
 # Switching to a non-failing output field (stderr is NotChecked) shows the navigation hint.
-[tests.non_failing_output_field]
+[[tests]]
+id = "non_failing_output_field"
 program_arguments = [
     "test",
     "--record",
@@ -25,7 +27,8 @@ expected_stdout = { file = "snapshots/status_non_failing_field.txt" }
 expected_exit_code = 1
 
 # Switching to stdin shows the same navigation hint.
-[tests.stdin_field]
+[[tests]]
+id = "stdin_field"
 program_arguments = [
     "test",
     "--record",
@@ -37,7 +40,8 @@ expected_stdout = { file = "snapshots/status_stdin_field.txt" }
 expected_exit_code = 1
 
 # Pressing Enter on a failing field without a decision shows the error message.
-[tests.enter_on_undecided_failing_field]
+[[tests]]
+id = "enter_on_undecided_failing_field"
 program_arguments = [
     "test",
     "--record",
@@ -49,7 +53,8 @@ expected_stdout = { file = "snapshots/status_enter_undecided.txt" }
 expected_exit_code = 1
 
 # With a pending decision that would resolve all fields, shows "go to the next test."
-[tests.pending_decision_last_field]
+[[tests]]
+id = "pending_decision_last_field"
 program_arguments = [
     "test",
     "--record",
@@ -61,7 +66,8 @@ expected_stdout = { file = "snapshots/status_all_decided.txt" }
 expected_exit_code = 1
 
 # With a pending decision but other fields still undecided, shows "go to the next field."
-[tests.pending_decision_more_fields_remain]
+[[tests]]
+id = "pending_decision_more_fields_remain"
 program_arguments = [
     "test",
     "--record",
@@ -73,7 +79,8 @@ expected_stdout = { file = "snapshots/status_pending_next_field.txt" }
 expected_exit_code = 1
 
 # Pressing a then navigating to another field reverts the pending decision.
-[tests.pending_decision_reverts_on_navigate]
+[[tests]]
+id = "pending_decision_reverts_on_navigate"
 program_arguments = [
     "test",
     "--record",

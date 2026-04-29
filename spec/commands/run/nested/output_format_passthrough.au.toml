@@ -1,7 +1,8 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[tests.specific_test_id]
+[[tests]]
+id = "specific_test_id"
 program_arguments = [
     "run",
     "--format",
@@ -13,7 +14,8 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[tests.multiple_tests]
+[[tests]]
+id = "multiple_tests"
 program_arguments = [
     "run",
     "--format",
@@ -28,7 +30,8 @@ hint: Use `--format toml` to run multiple tests, or run the `list` command to li
 expected_exit_code = 2
 
 
-[tests.missing_program_on_test1]
+[[tests]]
+id = "missing_program_on_test1"
 program_arguments = [
     "run",
     "--format",
@@ -43,7 +46,8 @@ hint: Use `--format toml` to run multiple tests, or run the `list` command to li
 expected_exit_code = 2
 
 
-[tests.missing_program_on_test1_run_specific_test_id]
+[[tests]]
+id = "missing_program_on_test1_run_specific_test_id"
 program_arguments = [
     "run",
     "--format",
@@ -55,7 +59,8 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[tests.missing_program_on_all_tests]
+[[tests]]
+id = "missing_program_on_all_tests"
 program_arguments = [
     "run",
     "--format",

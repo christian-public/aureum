@@ -1,7 +1,8 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[tests.singleline]
+[[tests]]
+id = "singleline"
 program_arguments = [
     "run",
     "--format",
@@ -13,7 +14,8 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[tests.multiline]
+[[tests]]
+id = "multiline"
 program_arguments = [
     "run",
     "--format",
@@ -27,7 +29,8 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[tests.stderr_and_exit_code]
+[[tests]]
+id = "stderr_and_exit_code"
 program_arguments = [
     "run",
     "--format",
@@ -39,7 +42,8 @@ expected_stderr = "hello"
 expected_exit_code = 42
 
 
-[tests.stdin]
+[[tests]]
+id = "stdin"
 program_arguments = [
     "run",
     "--format",

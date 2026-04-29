@@ -1,7 +1,8 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[tests.without_verbose]
+[[tests]]
+id = "without_verbose"
 program_arguments = ["test", "helpers/*.toml"]
 expected_stdout = """
 🚀 Running 3 tests:
@@ -25,7 +26,8 @@ warning: Some config files contain errors (See above)
 expected_exit_code = 3
 
 
-[tests.with_verbose]
+[[tests]]
+id = "with_verbose"
 program_arguments = [
     "test",
     "--verbose",

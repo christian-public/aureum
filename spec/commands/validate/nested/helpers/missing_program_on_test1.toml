@@ -1,10 +1,12 @@
-[tests.test1]
+[[tests]]
+id = "test1"
 # program = "echo" # This should produce an error
 program_arguments = ["-n", "Test 1"]
 expected_stdout = "Test 1"
 
 
-[tests.test2]
+[[tests]]
+id = "test2"
 program = "echo"
 program_arguments = ["-n", "Test 2"]
 expected_stdout = "Test 2"

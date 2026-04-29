@@ -339,14 +339,17 @@ where
 
 // SPLIT TOML CONFIG
 
-// Currently only merges a single level
 fn split_toml_config(base_config: TomlConfig) -> BTreeMap<TestId, TomlConfig> {
     if let Some(tests) = base_config.tests.clone() {
         let mut toml_configs = BTreeMap::new();
 
-        for (name, sub_config) in tests.into_iter() {
+        for sub_config in tests.into_iter() {
+            let test_id = sub_config
+                .id
+                .clone()
+                .expect("id is validated as required during parsing");
             let merged_toml_config = merge_toml_configs(base_config.clone(), sub_config);
-            toml_configs.insert(TestId::new(vec![name]), merged_toml_config);
+            toml_configs.insert(test_id, merged_toml_config);
         }
 
         toml_configs
@@ -357,6 +360,7 @@ fn split_toml_config(base_config: TomlConfig) -> BTreeMap<TestId, TomlConfig> {
 
 fn merge_toml_configs(base_config: TomlConfig, prioritized_config: TomlConfig) -> TomlConfig {
     TomlConfig {
+        id: None,
         description: prioritized_config.description.or(base_config.description),
         program: prioritized_config.program.or(base_config.program),
         program_arguments: prioritized_config
@@ -372,6 +376,6 @@ fn merge_toml_configs(base_config: TomlConfig, prioritized_config: TomlConfig) -
         expected_exit_code: prioritized_config
             .expected_exit_code
             .or(base_config.expected_exit_code),
-        tests: prioritized_config.tests, // Do not propagate tests from `base_config`
+        tests: None, // Do not propagate tests from either config
     }
 }

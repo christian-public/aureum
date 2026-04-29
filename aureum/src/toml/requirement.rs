@@ -47,8 +47,8 @@ fn collect_requirements_from_toml_config(requirements: &mut Requirements, config
         collect_requirements_from_config_value(requirements, value);
     }
 
-    if let Some(table) = &config.tests {
-        for value in table.values() {
+    if let Some(tests) = &config.tests {
+        for value in tests.iter() {
             collect_requirements_from_toml_config(requirements, value);
         }
     }

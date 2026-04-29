@@ -1,8 +1,11 @@
+use crate::TestId;
 use std::collections::BTreeMap;
+use std::convert::TryFrom;
 
 #[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct TomlConfig {
+    pub id: Option<TestId>,
     pub description: Option<ConfigValue<String>>,
     pub program: Option<ConfigValue<String>>,
     pub program_arguments: Option<Vec<ConfigValue<String>>>,
@@ -10,7 +13,7 @@ pub struct TomlConfig {
     pub expected_stdout: Option<ConfigValue<String>>,
     pub expected_stderr: Option<ConfigValue<String>>,
     pub expected_exit_code: Option<ConfigValue<i64>>,
-    pub tests: Option<BTreeMap<String, TomlConfig>>,
+    pub tests: Option<Vec<TomlConfig>>,
 }
 
 #[derive(Clone)]
@@ -49,6 +52,11 @@ pub enum ParseError {
         error: Option<Box<ParseError>>,
         unexpected_keys: Vec<String>,
     },
+    MissingId,
+    InvalidId {
+        id: String,
+    },
+    IdForbiddenAtRoot,
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -69,12 +77,19 @@ pub fn parse_toml_config(file_content: &str) -> Result<TomlConfig, TomlConfigErr
         toml::from_str::<toml::Table>(file_content).map_err(TomlConfigError::InvalidTomlSyntax)?;
     let config = parse_toml_config_from_table(&table).map_err(TomlConfigError::ParseErrors)?;
 
+    if config.id.is_some() {
+        return Err(TomlConfigError::ParseErrors(vec![
+            ParseError::IdForbiddenAtRoot,
+        ]));
+    }
+
     Ok(config)
 }
 
 fn parse_toml_config_from_table(table: &toml::Table) -> Result<TomlConfig, Vec<ParseError>> {
     let mut errors: Vec<ParseError> = vec![];
 
+    let id = collect_error(&mut errors, get_test_id_from_table(table, "id"));
     let description = collect_error(&mut errors, get_string_from_table(table, "description"));
     let program = collect_error(&mut errors, get_string_from_table(table, "program"));
 
@@ -94,10 +109,11 @@ fn parse_toml_config_from_table(table: &toml::Table) -> Result<TomlConfig, Vec<P
         get_integer_from_table(table, "expected_exit_code"),
     );
 
-    let tests = collect_errors(&mut errors, get_tests_from_table(table, "tests"));
+    let tests = collect_errors(&mut errors, get_tests_from_array(table, "tests"));
 
     if errors.is_empty() {
         Ok(TomlConfig {
+            id,
             description,
             program,
             program_arguments,
@@ -112,34 +128,58 @@ fn parse_toml_config_from_table(table: &toml::Table) -> Result<TomlConfig, Vec<P
     }
 }
 
-fn get_tests_from_table(
-    table: &toml::Table,
-    key: &str,
-) -> Result<Option<BTreeMap<String, TomlConfig>>, Vec<ParseError>> {
+fn get_test_id_from_table(table: &toml::Table, key: &str) -> Result<Option<TestId>, ParseError> {
     let Some(value) = table.get(key) else {
         return Ok(None);
     };
 
-    let Some(table) = value.as_table() else {
+    match value {
+        toml::Value::String(s) => {
+            TestId::try_from(s.as_str())
+                .map(Some)
+                .map_err(|_| ParseError::ErrorInField {
+                    field: key.to_owned(),
+                    error: Box::new(ParseError::InvalidId { id: s.clone() }),
+                })
+        }
+        _ => Err(ParseError::ErrorInField {
+            field: key.to_owned(),
+            error: Box::new(ParseError::InvalidType {
+                expected: ConfigValueType::String,
+                got: type_from_value(value),
+            }),
+        }),
+    }
+}
+
+fn get_tests_from_array(
+    table: &toml::Table,
+    key: &str,
+) -> Result<Option<Vec<TomlConfig>>, Vec<ParseError>> {
+    let Some(value) = table.get(key) else {
+        return Ok(None);
+    };
+
+    let Some(array) = value.as_array() else {
         return Err(vec![ParseError::ErrorInField {
             field: key.to_owned(),
             error: Box::new(ParseError::InvalidType {
-                expected: ConfigValueType::Table(BTreeMap::new()),
+                expected: ConfigValueType::Array(vec![]),
                 got: type_from_value(value),
             }),
         }]);
     };
 
     let mut errors: Vec<ParseError> = vec![];
-    let mut parsed_configs: BTreeMap<String, TomlConfig> = BTreeMap::new();
+    let mut parsed_configs: Vec<TomlConfig> = vec![];
 
-    for (k, v) in table {
-        let Some(inner_table) = v.as_table() else {
-            errors.push(ParseError::ErrorInField {
-                field: k.to_owned(),
+    for (index, item) in array.iter().enumerate() {
+        let Some(inner_table) = item.as_table() else {
+            errors.push(ParseError::ErrorAtIndex {
+                index,
                 error: Box::new(ParseError::InvalidType {
                     expected: ConfigValueType::Table(BTreeMap::new()),
-                    got: type_from_value(v),
+                    got: type_from_value(item),
                 }),
             });
             continue;
@@ -147,12 +187,19 @@ fn get_tests_from_table(
 
         match parse_toml_config_from_table(inner_table) {
             Ok(parsed_config) => {
-                parsed_configs.insert(k.to_owned(), parsed_config);
+                if parsed_config.id.is_none() {
+                    errors.push(ParseError::ErrorAtIndex {
+                        index,
+                        error: Box::new(ParseError::MissingId),
+                    });
+                } else {
+                    parsed_configs.push(parsed_config);
+                }
             }
             Err(errs) => {
                 for err in errs {
-                    errors.push(ParseError::ErrorInField {
-                        field: k.to_owned(),
+                    errors.push(ParseError::ErrorAtIndex {
+                        index,
                         error: Box::new(err),
                     });
                 }

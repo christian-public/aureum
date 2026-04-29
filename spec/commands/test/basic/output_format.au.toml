@@ -1,7 +1,8 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[tests.summary_passing]
+[[tests]]
+id = "summary_passing"
 program_arguments = ["test", "--format", "summary", "helpers/passing_test.toml"]
 expected_stdout = """
 🚀 Running 1 tests:
@@ -13,7 +14,8 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[tests.summary_failing]
+[[tests]]
+id = "summary_failing"
 program_arguments = ["test", "--format", "summary", "helpers/failing_test.toml"]
 expected_stdout = """
 🚀 Running 1 tests:
@@ -59,7 +61,8 @@ expected_stderr = ""
 expected_exit_code = 1
 
 
-[tests.tap_passing]
+[[tests]]
+id = "tap_passing"
 program_arguments = ["test", "--format", "tap", "helpers/passing_test.toml"]
 expected_stdout = """
 TAP version 14
@@ -70,7 +73,8 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[tests.tap_failing]
+[[tests]]
+id = "tap_failing"
 program_arguments = ["test", "--format", "tap", "helpers/failing_test.toml"]
 expected_stdout = """
 TAP version 14
@@ -92,7 +96,8 @@ expected_stderr = ""
 expected_exit_code = 1
 
 
-[tests.summary_failing_with_newline]
+[[tests]]
+id = "summary_failing_with_newline"
 program_arguments = [
   "test",
   "--format",
@@ -128,7 +133,8 @@ expected_stderr = ""
 expected_exit_code = 1
 
 
-[tests.unknown]
+[[tests]]
+id = "unknown"
 program_arguments = ["test", "--format", "UNKNOWN", "helpers/passing_test.toml"]
 expected_stdout = ""
 expected_stderr = """

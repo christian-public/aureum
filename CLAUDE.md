@@ -77,7 +77,8 @@ program_arguments = ["-n", "Hello"]
 expected_stdout = "Hello"       # literal, or { file = "path" }, or { env = "VAR" }
 expected_exit_code = 0
 
-[tests.subtest1]                # multiple tests in one file
+[[tests]] # Multiple tests in one file
+id = "subtest1"
 program_arguments = ["arg"]
 expected_stdout = "output"
 ```

@@ -4,7 +4,8 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[tests.single_file]
+[[tests]]
+id = "single_file"
 program_arguments = ["test", "helpers/dir1/test1.toml"]
 expected_stdout = """
 🚀 Running 1 tests:
@@ -14,7 +15,8 @@ Test result: OK (1 passed, 0 failed)
 """
 
 
-[tests.single_dir]
+[[tests]]
+id = "single_dir"
 program_arguments = ["test", "helpers/dir1/*.toml"]
 expected_stdout = """
 🚀 Running 2 tests:
@@ -24,7 +26,8 @@ Test result: OK (2 passed, 0 failed)
 """
 
 
-[tests.multiple_dirs]
+[[tests]]
+id = "multiple_dirs"
 program_arguments = [
   "test",
   "helpers/dir1/*.toml",
@@ -39,7 +42,8 @@ Test result: OK (4 passed, 0 failed)
 """
 
 
-[tests.multiple_files]
+[[tests]]
+id = "multiple_files"
 program_arguments = [
   "test",
   "helpers/dir1/test1.toml",

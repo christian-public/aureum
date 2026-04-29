@@ -1,7 +1,8 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[tests.missing_config]
+[[tests]]
+id = "missing_config"
 program_arguments = ["test", "aureum_test_this_file_does_not_exist"]
 expected_stdout = ""
 expected_stderr = """
@@ -13,7 +14,8 @@ error: No config files found for the given paths
 expected_exit_code = 3
 
 
-[tests.missing_config_with_test_id]
+[[tests]]
+id = "missing_config_with_test_id"
 program_arguments = ["test", "aureum_test_this_file_does_not_exist:sub1"]
 expected_stdout = ""
 expected_stderr = """
@@ -25,7 +27,8 @@ error: No config files found for the given paths
 expected_exit_code = 3
 
 
-[tests.invalid_config]
+[[tests]]
+id = "invalid_config"
 program_arguments = ["test", "helpers/invalid_config.toml"]
 expected_stdout = """
 🚀 Running 0 tests:
@@ -42,7 +45,8 @@ warning: Some config files contain errors (See above)
 expected_exit_code = 3
 
 
-[tests.empty_config]
+[[tests]]
+id = "empty_config"
 program_arguments = ["test", "helpers/empty_config.toml"]
 expected_stdout = """
 🚀 Running 0 tests:
@@ -61,7 +65,8 @@ warning: Some config files contain errors (See above)
 expected_exit_code = 3
 
 
-[tests.no_program_specified]
+[[tests]]
+id = "no_program_specified"
 program_arguments = ["test", "helpers/no_test_program.toml"]
 expected_stdout = """
 🚀 Running 0 tests:
@@ -79,7 +84,8 @@ warning: Some config files contain errors (See above)
 expected_exit_code = 3
 
 
-[tests.unknown_test_program]
+[[tests]]
+id = "unknown_test_program"
 program_arguments = ["test", "helpers/unknown_test_program.toml"]
 expected_stdout = """
 🚀 Running 0 tests:
@@ -97,7 +103,8 @@ warning: Some config files contain errors (See above)
 expected_exit_code = 3
 
 
-[tests.no_expectations]
+[[tests]]
+id = "no_expectations"
 program_arguments = ["test", "helpers/no_expectations.toml"]
 expected_stdout = """
 🚀 Running 0 tests:
@@ -115,7 +122,8 @@ warning: Some config files contain errors (See above)
 expected_exit_code = 3
 
 
-[tests.invalid_exit_code]
+[[tests]]
+id = "invalid_exit_code"
 program_arguments = ["test", "helpers/invalid_exit_code.toml"]
 expected_stdout = """
 🚀 Running 0 tests:
@@ -133,7 +141,8 @@ warning: Some config files contain errors (See above)
 expected_exit_code = 3
 
 
-[tests.missing_env_var]
+[[tests]]
+id = "missing_env_var"
 program_arguments = ["test", "helpers/missing_env_var.toml"]
 expected_stdout = """
 🚀 Running 0 tests:
@@ -151,7 +160,8 @@ warning: Some config files contain errors (See above)
 expected_exit_code = 3
 
 
-[tests.missing_external_file]
+[[tests]]
+id = "missing_external_file"
 program_arguments = ["test", "helpers/missing_external_file.toml"]
 expected_stdout = """
 🚀 Running 0 tests:

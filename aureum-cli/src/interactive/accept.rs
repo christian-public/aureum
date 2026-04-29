@@ -160,7 +160,10 @@ fn apply_to_section(
 }
 
 fn get_subtest_section<'a>(doc: &'a DocumentMut, test_name: &str) -> Option<&'a toml_edit::Table> {
-    doc.get("tests")?.as_table()?.get(test_name)?.as_table()
+    doc.get("tests")?
+        .as_array_of_tables()?
+        .iter()
+        .find(|t| table_has_id(t, test_name))
 }
 
 fn get_subtest_section_mut<'a>(
@@ -168,9 +171,18 @@ fn get_subtest_section_mut<'a>(
     test_name: &str,
 ) -> Option<&'a mut toml_edit::Table> {
     doc.get_mut("tests")?
-        .as_table_mut()?
-        .get_mut(test_name)?
-        .as_table_mut()
+        .as_array_of_tables_mut()?
+        .iter_mut()
+        .find(|t| table_has_id(t, test_name))
+}
+
+fn table_has_id(table: &toml_edit::Table, name: &str) -> bool {
+    table
+        .get("id")
+        .and_then(|v| v.as_value())
+        .and_then(|v| v.as_str())
+        .map(|id| id == name)
+        .unwrap_or(false)
 }
 
 #[cfg(test)]
@@ -341,7 +353,7 @@ mod tests {
         let tmp = TempDir::new("subtest_in_sub");
         tmp.write(
             "test.toml",
-            "program = \"echo\"\n\n[tests.t1]\nprogram_arguments = [\"-n\", \"x\"]\nexpected_stdout = \"WRONG\"\n",
+            "program = \"echo\"\n\n[[tests]]\nid = \"t1\"\nprogram_arguments = [\"-n\", \"x\"]\nexpected_stdout = \"WRONG\"\n",
         );
 
         let tc = make_test_case_subtest("", "test.toml", "t1");
@@ -366,7 +378,7 @@ mod tests {
         let tmp = TempDir::new("subtest_inherited");
         tmp.write(
             "test.toml",
-            "program = \"echo\"\nexpected_exit_code = 99\n\n[tests.t1]\nprogram_arguments = [\"-n\", \"x\"]\nexpected_stdout = \"x\"\n",
+            "program = \"echo\"\nexpected_exit_code = 99\n\n[[tests]]\nid = \"t1\"\nprogram_arguments = [\"-n\", \"x\"]\nexpected_stdout = \"x\"\n",
         );
 
         let tc = make_test_case_subtest("", "test.toml", "t1");

@@ -1,7 +1,8 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 # The initial TUI frame is emitted when using --record (no leading --- separator).
-[tests.initial_frame]
+[[tests]]
+id = "initial_frame"
 program_arguments = [
     "test",
     "--record",
@@ -13,7 +14,8 @@ expected_stdout = { file = "snapshots/record_initial_frame.txt" }
 expected_exit_code = 1
 
 # Arguments containing spaces are single-quoted so the command can be pasted into a terminal.
-[tests.spaced_arg_is_quoted]
+[[tests]]
+id = "spaced_arg_is_quoted"
 program_arguments = [
     "test",
     "--record",
@@ -25,7 +27,8 @@ expected_stdout = { file = "snapshots/record_spaced_arg.txt" }
 expected_exit_code = 1
 
 # Pressing a navigation key emits a --- separator followed by the new frame.
-[tests.key_press_emits_separator]
+[[tests]]
+id = "key_press_emits_separator"
 program_arguments = [
     "test",
     "--record",
@@ -37,7 +40,8 @@ expected_stdout = { file = "snapshots/record_tab_switch_to_expected.txt" }
 expected_exit_code = 1
 
 # On an unconfigured field, pressing [1] Expected and [3] Diff in sequence are both no-ops.
-[tests.not_checked_field_view_switch_disabled]
+[[tests]]
+id = "not_checked_field_view_switch_disabled"
 program_arguments = [
     "test",
     "--record",
@@ -49,7 +53,8 @@ expected_stdout = { file = "snapshots/record_stderr_not_checked_view_switch_disa
 expected_exit_code = 1
 
 # Pressing i switches to the stdin view, showing line numbers on the right (like Got view).
-[tests.stdin_view]
+[[tests]]
+id = "stdin_view"
 program_arguments = [
     "test",
     "--record",
@@ -61,7 +66,8 @@ expected_stdout = { file = "snapshots/record_stdin_view.txt" }
 expected_exit_code = 1
 
 # When two fields fail, Enter after deciding the first auto-navigates to the second undecided field.
-[tests.multi_field_navigation]
+[[tests]]
+id = "multi_field_navigation"
 program_arguments = [
     "test",
     "--record",
@@ -73,7 +79,8 @@ expected_stdout = { file = "snapshots/record_multi_field_navigation.txt" }
 expected_exit_code = 1
 
 # Pressing l from the diff view opens the list with the current test highlighted.
-[tests.list_initial_frame]
+[[tests]]
+id = "list_initial_frame"
 program_arguments = [
     "test",
     "--record",
@@ -85,7 +92,8 @@ expected_stdout = { file = "snapshots/record_list_initial_frame.txt" }
 expected_exit_code = 1
 
 # Pressing Down in the list moves selection to the next test.
-[tests.list_navigate]
+[[tests]]
+id = "list_navigate"
 program_arguments = [
     "test",
     "--record",
@@ -97,7 +105,8 @@ expected_stdout = { file = "snapshots/record_list_navigate.txt" }
 expected_exit_code = 1
 
 # Pressing Enter on a test in the list opens its diff view.
-[tests.list_jump_to_test]
+[[tests]]
+id = "list_jump_to_test"
 program_arguments = [
     "test",
     "--record",
@@ -109,7 +118,8 @@ expected_stdout = { file = "snapshots/record_list_jump.txt" }
 expected_exit_code = 1
 
 # Decision indicators show [⊘] for skipped tests and [ ] for undecided.
-[tests.list_decision_indicator]
+[[tests]]
+id = "list_decision_indicator"
 program_arguments = [
     "test",
     "--record",
@@ -121,7 +131,8 @@ expected_stdout = { file = "snapshots/record_list_decision_indicator.txt" }
 expected_exit_code = 1
 
 # Partial decisions (only one of two failing fields decided) show [ · ] in the list.
-[tests.list_partial_decision]
+[[tests]]
+id = "list_partial_decision"
 program_arguments = [
     "test",
     "--record",
@@ -133,7 +144,8 @@ expected_stdout = { file = "snapshots/record_list_partial_decision.txt" }
 expected_exit_code = 1
 
 # Scrolling past the last content line is clamped so at least one line stays visible.
-[tests.scroll_clamped_to_last_line]
+[[tests]]
+id = "scroll_clamped_to_last_line"
 program_arguments = [
     "test",
     "--record",
@@ -145,7 +157,8 @@ expected_stdout = { file = "snapshots/record_scroll_clamped.txt" }
 expected_exit_code = 1
 
 # After pressing Down past the last line, the first Up immediately scrolls back up by one.
-[tests.scroll_up_after_excess_down]
+[[tests]]
+id = "scroll_up_after_excess_down"
 program_arguments = [
     "test",
     "--record",
@@ -157,7 +170,8 @@ expected_stdout = { file = "snapshots/record_scroll_up_after_excess_down.txt" }
 expected_exit_code = 1
 
 # Pressing Esc in the list returns to the previously viewed test, ignoring any navigation done in the list.
-[tests.list_esc_goes_back]
+[[tests]]
+id = "list_esc_goes_back"
 program_arguments = [
     "test",
     "--record",
@@ -169,7 +183,8 @@ expected_stdout = { file = "snapshots/record_list_esc_goes_back.txt" }
 expected_exit_code = 1
 
 # Pressing p mid-way through a multi-field test preserves the decisions made so far.
-[tests.go_back_preserves_partial_decisions]
+[[tests]]
+id = "go_back_preserves_partial_decisions"
 program_arguments = [
     "test",
     "--record",
@@ -181,7 +196,8 @@ expected_stdout = { file = "snapshots/record_go_back_preserves_partial_decisions
 expected_exit_code = 1
 
 # Pressing p after advancing to the second test goes back to the first and restores its decision.
-[tests.go_back_restores_decision]
+[[tests]]
+id = "go_back_restores_decision"
 program_arguments = [
     "test",
     "--record",

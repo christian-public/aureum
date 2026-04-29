@@ -1,7 +1,8 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[tests.singleline]
+[[tests]]
+id = "singleline"
 program_arguments = [
     "run",
     "--format",
@@ -18,7 +19,8 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[tests.multiline]
+[[tests]]
+id = "multiline"
 program_arguments = [
     "run",
     "--format",
@@ -37,7 +39,8 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[tests.stderr_and_exit_code]
+[[tests]]
+id = "stderr_and_exit_code"
 program_arguments = [
     "run",
     "--format",
@@ -54,7 +57,8 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[tests.stdin]
+[[tests]]
+id = "stdin"
 program_arguments = ["run", "--format", "toml", "helpers/cat_stdin.toml"]
 expected_stdout = """
 # TEST: helpers/cat_stdin.toml

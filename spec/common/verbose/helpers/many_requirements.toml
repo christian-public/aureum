@@ -1,14 +1,18 @@
 program = "echo"
 program_arguments = ["-n", "Hello world"]
 
-[tests.env_var_exists]
+[[tests]]
+id = "env_var_exists"
 expected_stdout = { env = "AUREUM_TEST_HELLO_WORLD" }
 
-[tests.env_var_missing]
+[[tests]]
+id = "env_var_missing"
 expected_stdout = { env = "AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST" }
 
-[tests.external_file_exists]
+[[tests]]
+id = "external_file_exists"
 expected_stdout = { file = "hello_world.txt" }
 
-[tests.external_file_missing]
+[[tests]]
+id = "external_file_missing"
 expected_stdout = { file = "aureum_test_this_file_does_not_exist" }
