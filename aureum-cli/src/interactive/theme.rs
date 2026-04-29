@@ -6,31 +6,31 @@ pub(super) fn dim() -> Style {
 }
 
 pub(super) fn arrow_span() -> Span<'static> {
-    Span::raw("❯")
+    Span::raw("❯") // U+276F Heavy Right-Pointing Angle Quotation Mark Ornament
 }
 
 pub(super) fn checkmark_span() -> Span<'static> {
-    Span::styled("✓", Style::default().fg(Color::Green))
+    Span::styled("✓", Style::default().fg(Color::Green)) // U+2713 Check Mark
 }
 
 pub(super) fn cross_span() -> Span<'static> {
-    Span::styled("✗", Style::default().fg(Color::Red))
+    Span::styled("✗", Style::default().fg(Color::Red)) // U+2717 Ballot X
 }
 
 pub(super) fn configured_span() -> Span<'static> {
-    Span::raw("●")
+    Span::raw("●") // U+25CF Black Circle
 }
 
 pub(super) fn not_configured_span() -> Span<'static> {
-    Span::raw("○")
+    Span::raw("○") // U+25CB White Circle
 }
 
 pub(super) fn skip_span() -> Span<'static> {
-    Span::raw("⊘")
+    Span::raw("⊘") // U+2298 Circled Division Slash
 }
 
 pub(super) fn partial_span() -> Span<'static> {
-    Span::raw("·")
+    Span::raw("·") // U+00B7 Middle Dot
 }
 
 /// Splits `line` into content and trailing-whitespace spans. The trailing-whitespace
