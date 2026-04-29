@@ -59,8 +59,8 @@ mod tests {
     #[test]
     fn test_contains() {
         let root = TestId::root();
-        let root_level1 = TestId::from("level1");
-        let root_level1_level2 = TestId::from("level1.level2");
+        let root_level1 = TestId::new(vec!["level1"]);
+        let root_level1_level2 = TestId::new(vec!["level1", "level2"]);
 
         let mut coverage_set = TestIdCoverageSet::empty();
 
@@ -84,9 +84,9 @@ mod tests {
     #[test]
     fn test_add_root_late_collapses_test_ids() {
         let root = TestId::root();
-        let root_level1a = TestId::from("level1a");
-        let root_level1b = TestId::from("level1b");
-        let root_level1c = TestId::from("level1c");
+        let root_level1a = TestId::new(vec!["level1a"]);
+        let root_level1b = TestId::new(vec!["level1b"]);
+        let root_level1c = TestId::new(vec!["level1c"]);
 
         let mut coverage_set = TestIdCoverageSet::empty();
 
@@ -106,7 +106,7 @@ mod tests {
     #[test]
     fn test_add_root_early_blocks_test_ids() {
         let root = TestId::root();
-        let root_level1 = TestId::from("level1");
+        let root_level1 = TestId::new(vec!["level1"]);
 
         let mut coverage_set = TestIdCoverageSet::empty();
 

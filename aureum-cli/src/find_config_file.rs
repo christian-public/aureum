@@ -18,6 +18,7 @@ pub struct FindConfigFilesResult {
 pub enum PathError {
     FileNotFound,
     TestIdMustBeUtf8,
+    InvalidTestId,
     GlobPatternMustBeUtf8,
     InvalidGlobPattern,
     InvalidGlobEntry,
@@ -74,7 +75,7 @@ fn find_config_files_in_path(
         }
 
         let suffix_str = suffix.to_str().ok_or(PathError::TestIdMustBeUtf8)?;
-        let test_id = TestId::from(suffix_str);
+        let test_id = TestId::try_from(suffix_str).map_err(|_| PathError::InvalidTestId)?;
 
         prepare_paths(vec![updated_search_path.to_owned()], test_id, current_dir)
     }
