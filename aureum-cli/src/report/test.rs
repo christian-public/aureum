@@ -19,10 +19,13 @@ pub struct ReportConfig {
     pub format: ReportFormat,
 }
 
-pub fn print_watch_detected_file_changes(count: usize) {
-    let msg = format!("Detected changes in {count} file(s)");
+pub fn print_watch_detected_file_changes() {
     eprintln!();
-    eprintln!("{} {}", label::watch(), msg.dimmed());
+    eprintln!(
+        "{} {}",
+        label::watch(),
+        "changes detected, rerunning...".dimmed()
+    );
 }
 
 pub fn print_interactive_mode_requires_a_terminal_error() {

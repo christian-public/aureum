@@ -466,14 +466,13 @@ fn run_tests_with_watch(
     let handle = start_watcher(watch_pattern, current_dir)?;
     let format = TestOutputFormat::Summary;
     let mut last_results = run_test_batch(&load_test_cases(), parallel, current_dir, &format);
-    while let Ok(n) = handle.receiver.recv() {
+    while let Ok(_count) = handle.receiver.recv() {
         // Drain any events that queued up during the previous run, collapsing
         // them into a single re-run.
-        let mut total = n;
-        while let Ok(m) = handle.receiver.try_recv() {
-            total += m;
-        }
-        report::test::print_watch_detected_file_changes(total);
+        while let Ok(_count) = handle.receiver.try_recv() {}
+
+        report::test::print_watch_detected_file_changes();
+
         last_results = run_test_batch(&load_test_cases(), parallel, current_dir, &format);
     }
     Ok(last_results)
