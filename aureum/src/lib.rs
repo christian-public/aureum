@@ -3,12 +3,12 @@ mod toml {
     mod requirement;
     mod validate;
 
-    pub use config::{ParseError, TomlConfig, TomlConfigError};
+    pub use config::{ParseError, TomlConfigError, TomlConfigFile, TomlConfigTest};
     pub use requirement::Requirements;
     pub use validate::{ProgramPath, RequirementData, TestEntry, ValidationError};
 
     pub use config::parse_toml_config;
-    pub use requirement::get_requirements;
+    pub use requirement::{get_requirements, get_test_requirements};
     pub use validate::build_test_entries;
 }
 mod utils {
@@ -28,8 +28,8 @@ pub use test_id_coverage_set::TestIdCoverageSet;
 pub use test_result::{TestResult, ValueComparison};
 pub use test_runner::{ProgramOutput, RunError, RunResult};
 pub use toml::Requirements;
-pub use toml::{ParseError, TomlConfig, TomlConfigError};
+pub use toml::{ParseError, TomlConfigError, TomlConfigFile, TomlConfigTest};
 pub use toml::{ProgramPath, RequirementData, TestEntry, ValidationError};
 
 pub use test_runner::{run_program, run_program_passthrough, run_test_cases};
-pub use toml::{build_test_entries, get_requirements, parse_toml_config};
+pub use toml::{build_test_entries, get_requirements, get_test_requirements, parse_toml_config};

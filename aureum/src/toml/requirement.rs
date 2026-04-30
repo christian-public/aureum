@@ -1,4 +1,4 @@
-use crate::toml::config::{ConfigValue, TomlConfig};
+use crate::toml::config::{ConfigValue, TomlConfigFile, TomlConfigTest};
 use std::collections::BTreeSet;
 
 #[derive(Default)]
@@ -8,15 +8,27 @@ pub struct Requirements {
     pub env_vars: BTreeSet<String>,
 }
 
-pub fn get_requirements(config: &TomlConfig) -> Requirements {
+pub fn get_requirements(config: &TomlConfigFile) -> Requirements {
     let mut requirements = Requirements::default();
 
-    collect_requirements_from_toml_config(&mut requirements, config);
+    collect_requirements_from_toml_config_test(&mut requirements, &config.root);
+    for test in &config.tests {
+        collect_requirements_from_toml_config_test(&mut requirements, test);
+    }
 
     requirements
 }
 
-fn collect_requirements_from_toml_config(requirements: &mut Requirements, config: &TomlConfig) {
+pub fn get_test_requirements(config: &TomlConfigTest) -> Requirements {
+    let mut requirements = Requirements::default();
+    collect_requirements_from_toml_config_test(&mut requirements, config);
+    requirements
+}
+
+fn collect_requirements_from_toml_config_test(
+    requirements: &mut Requirements,
+    config: &TomlConfigTest,
+) {
     if let Some(value) = &config.description {
         collect_requirements_from_config_value(requirements, value);
     }
@@ -45,12 +57,6 @@ fn collect_requirements_from_toml_config(requirements: &mut Requirements, config
 
     if let Some(value) = &config.expected_exit_code {
         collect_requirements_from_config_value(requirements, value);
-    }
-
-    if let Some(tests) = &config.tests {
-        for value in tests.iter() {
-            collect_requirements_from_toml_config(requirements, value);
-        }
     }
 }
 

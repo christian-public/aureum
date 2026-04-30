@@ -1,7 +1,7 @@
 use crate::test_case::{TestCase, TestCaseExpectations, TestCaseWithExpectations};
 use crate::toml::config::ConfigValue;
 use crate::utils::string;
-use crate::{Requirements, TestId, TomlConfig, get_requirements};
+use crate::{Requirements, TestId, TomlConfigFile, TomlConfigTest, get_test_requirements};
 use relative_path::RelativePath;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -97,7 +97,7 @@ impl TestEntry {
 }
 
 pub fn build_test_entries(
-    config: TomlConfig,
+    config: TomlConfigFile,
     path_to_config_dir: &RelativePath,
     file_name: &str,
     requirement_data: &RequirementData,
@@ -125,14 +125,14 @@ pub fn build_test_entries(
 
 fn build_test_entry(
     test_id: TestId,
-    config: TomlConfig,
+    config: TomlConfigTest,
     path_to_config_dir: &RelativePath,
     file_name: &str,
     requirement_data: &RequirementData,
     current_dir: &Path,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> TestEntry {
-    let requirements = get_requirements(&config);
+    let requirements = get_test_requirements(&config);
 
     let (program_path, test_case) = build_test_case(
         test_id,
@@ -155,7 +155,7 @@ fn build_test_entry(
 
 fn build_test_case(
     test_id: TestId,
-    config: TomlConfig,
+    config: TomlConfigTest,
     path_to_config_dir: &RelativePath,
     file_name: &str,
     requirement_data: &RequirementData,
@@ -206,12 +206,8 @@ fn build_test_case(
     let stdin = collect_error(&mut errors, config.stdin, requirement_data)
         .map(|s| string::normalize_newlines(&s));
 
-    let test_case = if errors.is_empty() {
-        let resolved_path = program_path
-            .get_resolved_path()
-            .expect("Validation errors should not be empty if program path is not resolved");
-
-        Ok(TestCase {
+    let test_case = match (program_path.get_resolved_path(), errors.is_empty()) {
+        (Some(resolved_path), true) => Ok(TestCase {
             path_to_containing_dir: path_to_config_dir.to_relative_path_buf(),
             file_name: file_name.to_owned(),
             test_id,
@@ -219,16 +215,15 @@ fn build_test_case(
             program_path: resolved_path,
             arguments,
             stdin,
-        })
-    } else {
-        Err(errors)
+        }),
+        _ => Err(errors),
     };
 
     (program_path, test_case)
 }
 
 fn build_test_case_expectations(
-    config: TomlConfig,
+    config: TomlConfigTest,
     requirement_data: &RequirementData,
 ) -> Result<TestCaseExpectations, BTreeSet<ValidationError>> {
     let mut errors = BTreeSet::new();
@@ -339,28 +334,34 @@ where
 
 // SPLIT TOML CONFIG
 
-fn split_toml_config(base_config: TomlConfig) -> BTreeMap<TestId, TomlConfig> {
-    if let Some(tests) = base_config.tests.clone() {
-        let mut toml_configs = BTreeMap::new();
+fn split_toml_config(config: TomlConfigFile) -> BTreeMap<TestId, TomlConfigTest> {
+    if config.tests.is_empty() {
+        let mut root_test = config.root;
+        root_test.id = Some(TestId::root());
 
-        for sub_config in tests.into_iter() {
-            let test_id = sub_config
-                .id
-                .clone()
-                .expect("id is validated as required during parsing");
-            let merged_toml_config = merge_toml_configs(base_config.clone(), sub_config);
-            toml_configs.insert(test_id, merged_toml_config);
-        }
-
-        toml_configs
+        BTreeMap::from([(TestId::root(), root_test)])
     } else {
-        BTreeMap::from([(TestId::root(), base_config)])
+        let TomlConfigFile { root, tests } = config;
+        tests
+            .into_iter()
+            .map(|sub_config| {
+                let test_id = sub_config
+                    .id
+                    .clone()
+                    .expect("id is validated as required during parsing");
+                let merged_toml_config = merge_toml_configs(root.clone(), sub_config);
+                (test_id, merged_toml_config)
+            })
+            .collect()
     }
 }
 
-fn merge_toml_configs(base_config: TomlConfig, prioritized_config: TomlConfig) -> TomlConfig {
-    TomlConfig {
-        id: None,
+fn merge_toml_configs(
+    base_config: TomlConfigTest,
+    prioritized_config: TomlConfigTest,
+) -> TomlConfigTest {
+    TomlConfigTest {
+        id: prioritized_config.id.or(base_config.id),
         description: prioritized_config.description.or(base_config.description),
         program: prioritized_config.program.or(base_config.program),
         program_arguments: prioritized_config
@@ -376,6 +377,5 @@ fn merge_toml_configs(base_config: TomlConfig, prioritized_config: TomlConfig) -
         expected_exit_code: prioritized_config
             .expected_exit_code
             .or(base_config.expected_exit_code),
-        tests: None, // Do not propagate tests from either config
     }
 }

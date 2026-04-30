@@ -5,7 +5,14 @@ use std::fmt;
 
 #[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
-pub struct TomlConfig {
+pub struct TomlConfigFile {
+    pub root: TomlConfigTest,
+    pub tests: Vec<TomlConfigTest>,
+}
+
+#[derive(Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub struct TomlConfigTest {
     pub id: Option<TestId>,
     pub description: Option<ConfigValue<String>>,
     pub program: Option<ConfigValue<String>>,
@@ -14,7 +21,6 @@ pub struct TomlConfig {
     pub expected_stdout: Option<ConfigValue<String>>,
     pub expected_stderr: Option<ConfigValue<String>>,
     pub expected_exit_code: Option<ConfigValue<i64>>,
-    pub tests: Option<Vec<TomlConfig>>,
 }
 
 #[derive(Clone)]
@@ -124,21 +130,42 @@ impl fmt::Display for ParseError {
 
 // PARSING
 
-pub fn parse_toml_config(file_content: &str) -> Result<TomlConfig, TomlConfigError> {
+pub fn parse_toml_config(file_content: &str) -> Result<TomlConfigFile, TomlConfigError> {
     let table =
         toml::from_str::<toml::Table>(file_content).map_err(TomlConfigError::InvalidTomlSyntax)?;
-    let config = parse_toml_config_from_table(&table).map_err(TomlConfigError::ParseErrors)?;
 
-    if config.id.is_some() {
-        return Err(TomlConfigError::ParseErrors(vec![
-            ParseError::IdForbiddenAtRoot,
-        ]));
+    let mut all_errors: Vec<ParseError> = vec![];
+
+    let root = match parse_toml_config_from_table(&table) {
+        Ok(config) => {
+            if config.id.is_some() {
+                all_errors.push(ParseError::IdForbiddenAtRoot);
+                None
+            } else {
+                Some(config)
+            }
+        }
+        Err(errs) => {
+            all_errors.extend(errs);
+            None
+        }
+    };
+
+    let tests = match get_tests_from_array(&table, "tests") {
+        Ok(tests) => Some(tests),
+        Err(errs) => {
+            all_errors.extend(errs);
+            None
+        }
+    };
+
+    match (root, tests) {
+        (Some(root), Some(tests)) => Ok(TomlConfigFile { root, tests }),
+        _ => Err(TomlConfigError::ParseErrors(all_errors)),
     }
-
-    Ok(config)
 }
 
-fn parse_toml_config_from_table(table: &toml::Table) -> Result<TomlConfig, Vec<ParseError>> {
+fn parse_toml_config_from_table(table: &toml::Table) -> Result<TomlConfigTest, Vec<ParseError>> {
     let mut errors: Vec<ParseError> = vec![];
 
     let id = collect_error(&mut errors, get_test_id_from_table(table, "id"));
@@ -161,10 +188,8 @@ fn parse_toml_config_from_table(table: &toml::Table) -> Result<TomlConfig, Vec<P
         get_integer_from_table(table, "expected_exit_code"),
     );
 
-    let tests = collect_errors(&mut errors, get_tests_from_array(table, "tests"));
-
     if errors.is_empty() {
-        Ok(TomlConfig {
+        Ok(TomlConfigTest {
             id,
             description,
             program,
@@ -173,7 +198,6 @@ fn parse_toml_config_from_table(table: &toml::Table) -> Result<TomlConfig, Vec<P
             expected_stdout,
             expected_stderr,
             expected_exit_code,
-            tests,
         })
     } else {
         Err(errors)
@@ -207,9 +231,9 @@ fn get_test_id_from_table(table: &toml::Table, key: &str) -> Result<Option<TestI
 fn get_tests_from_array(
     table: &toml::Table,
     key: &str,
-) -> Result<Option<Vec<TomlConfig>>, Vec<ParseError>> {
+) -> Result<Vec<TomlConfigTest>, Vec<ParseError>> {
     let Some(value) = table.get(key) else {
-        return Ok(None);
+        return Ok(vec![]);
     };
 
     let Some(array) = value.as_array() else {
@@ -223,7 +247,7 @@ fn get_tests_from_array(
     };
 
     let mut errors: Vec<ParseError> = vec![];
-    let mut parsed_configs: Vec<TomlConfig> = vec![];
+    let mut parsed_configs: Vec<TomlConfigTest> = vec![];
 
     for (index, item) in array.iter().enumerate() {
         let Some(inner_table) = item.as_table() else {
@@ -260,7 +284,7 @@ fn get_tests_from_array(
     }
 
     if errors.is_empty() {
-        Ok(Some(parsed_configs))
+        Ok(parsed_configs)
     } else {
         Err(errors)
     }
