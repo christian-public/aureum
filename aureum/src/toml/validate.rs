@@ -358,23 +358,23 @@ fn split_toml_config(config: TomlConfigFile) -> BTreeMap<TestId, TomlConfigTest>
 
 fn merge_toml_configs(
     base_config: TomlConfigTest,
-    prioritized_config: TomlConfigTest,
+    override_config: TomlConfigTest,
 ) -> TomlConfigTest {
     TomlConfigTest {
-        id: prioritized_config.id.or(base_config.id),
-        description: prioritized_config.description.or(base_config.description),
-        program: prioritized_config.program.or(base_config.program),
-        program_arguments: prioritized_config
+        id: override_config.id.or(base_config.id),
+        description: override_config.description.or(base_config.description),
+        program: override_config.program.or(base_config.program),
+        program_arguments: override_config
             .program_arguments
             .or(base_config.program_arguments),
-        stdin: prioritized_config.stdin.or(base_config.stdin),
-        expected_stdout: prioritized_config
+        stdin: override_config.stdin.or(base_config.stdin),
+        expected_stdout: override_config
             .expected_stdout
             .or(base_config.expected_stdout),
-        expected_stderr: prioritized_config
+        expected_stderr: override_config
             .expected_stderr
             .or(base_config.expected_stderr),
-        expected_exit_code: prioritized_config
+        expected_exit_code: override_config
             .expected_exit_code
             .or(base_config.expected_exit_code),
     }
