@@ -1,5 +1,5 @@
 use aureum::{RunResult, TestResult};
-use crossterm::event::{Event, KeyCode, KeyEventKind, KeyModifiers};
+use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use ratatui::Terminal;
 use ratatui::backend::{CrosstermBackend, TestBackend};
 use ratatui::text::Line;
@@ -9,6 +9,7 @@ use crate::interactive::action::Action;
 use crate::interactive::field::{
     FailingFields, Field, FieldDecision, FieldDecisions, OUTPUT_FIELDS,
 };
+use crate::interactive::keys;
 use crate::interactive::views::diff_content;
 use crate::interactive::views::diff_render;
 
@@ -126,13 +127,15 @@ enum KeyResult {
 /// `is_field_configured` must reflect whether the current field has an expected value.
 fn apply_key(
     state: &mut TuiState,
-    key: KeyCode,
-    modifiers: KeyModifiers,
+    key: KeyEvent,
     is_last: bool,
     watch_mode: bool,
     is_field_configured: bool,
 ) -> KeyResult {
-    match key {
+    if keys::is_quit_key(&key) {
+        return KeyResult::Exit(Action::Quit);
+    }
+    match key.code {
         KeyCode::Right => {
             // Navigating to a different field discards any staged a/s decision.
             state.staged_decision = FieldDecision::Undecided;
@@ -219,10 +222,6 @@ fn apply_key(
         KeyCode::Esc if watch_mode => {
             return KeyResult::Exit(Action::BackToWatch(state.field_decisions));
         }
-        KeyCode::Char('c') if modifiers.contains(KeyModifiers::CONTROL) => {
-            return KeyResult::Exit(Action::Quit);
-        }
-        KeyCode::Char('q') => return KeyResult::Exit(Action::Quit),
         _ => {}
     }
     // Field navigation and all other keys clear any staged a/s decision and enter-error.
@@ -333,7 +332,7 @@ trait DiffIo {
     ) -> io::Result<()>;
 
     /// Returns the next key to process, or `None` on EOF.
-    fn next_key(&mut self) -> io::Result<Option<(KeyCode, KeyModifiers)>>;
+    fn next_key(&mut self) -> io::Result<Option<KeyEvent>>;
 }
 
 // Live terminal implementation
@@ -356,12 +355,12 @@ impl DiffIo for LiveDiffIo<'_> {
         Ok(())
     }
 
-    fn next_key(&mut self) -> io::Result<Option<(KeyCode, KeyModifiers)>> {
+    fn next_key(&mut self) -> io::Result<Option<KeyEvent>> {
         loop {
             if let Event::Key(key) = crossterm::event::read()?
                 && key.kind == KeyEventKind::Press
             {
-                return Ok(Some((key.code, key.modifiers)));
+                return Ok(Some(key));
             }
         }
     }
@@ -401,7 +400,7 @@ impl<R: BufRead, W: Write> DiffIo for HeadlessDiffIo<'_, R, W> {
         )
     }
 
-    fn next_key(&mut self) -> io::Result<Option<(KeyCode, KeyModifiers)>> {
+    fn next_key(&mut self) -> io::Result<Option<KeyEvent>> {
         let mut line = String::new();
         loop {
             line.clear();
@@ -412,8 +411,8 @@ impl<R: BufRead, W: Write> DiffIo for HeadlessDiffIo<'_, R, W> {
             if key_name.is_empty() {
                 continue;
             }
-            if let Some(key) = parse_key_name(key_name) {
-                return Ok(Some((key, KeyModifiers::NONE)));
+            if let Some(code) = parse_key_name(key_name) {
+                return Ok(Some(KeyEvent::new(code, KeyModifiers::NONE)));
             }
         }
     }
@@ -436,7 +435,7 @@ fn run_diff_view(
     io.render(ctx, test_result, &state, &content)?;
 
     loop {
-        let Some((key, modifiers)) = io.next_key()? else {
+        let Some(key) = io.next_key()? else {
             return Ok(Action::Quit);
         };
         let is_field_configured =
@@ -444,7 +443,6 @@ fn run_diff_view(
         match apply_key(
             &mut state,
             key,
-            modifiers,
             is_last,
             ctx.watch_mode,
             is_field_configured,
