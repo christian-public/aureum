@@ -98,7 +98,7 @@ fn build_text_diff(comparison: &ValueComparison<String>) -> Vec<Line<'static>> {
         ValueComparison::Diff { expected, got } => diff_lines_colored(expected, got),
         ValueComparison::Matches(_) => vec![Line::from(vec![
             Span::raw("  "),
-            theme::checkmark_span(),
+            theme::success_span(),
             Span::raw(" No difference"),
         ])],
         ValueComparison::NotChecked(_) => {
@@ -126,7 +126,7 @@ fn build_diff_content(test_result: &TestResult, active_field: Field) -> Vec<Line
             }
             ValueComparison::Matches(_) => vec![Line::from(vec![
                 Span::raw("  "),
-                theme::checkmark_span(),
+                theme::success_span(),
                 Span::raw(" No difference"),
             ])],
             ValueComparison::NotChecked(_) => {

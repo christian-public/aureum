@@ -363,7 +363,7 @@ fn build_decisions_line(decisions: FieldDecisions, failing: FailingFields) -> Li
             spans.push(Span::raw(" "));
             spans.push(match decisions.get(field) {
                 FieldDecision::Undecided => Span::raw(" "),
-                FieldDecision::Accepted => theme::checkmark_span(),
+                FieldDecision::Accepted => theme::accept_span(),
                 FieldDecision::Skipped => theme::skip_span(),
             });
             spans.push(Span::raw(" "));
@@ -478,8 +478,8 @@ fn build_field_line(
             spans.push(Span::raw("  "));
         }
         let indicator = match status {
-            Some(true) => theme::cross_span(),
-            Some(false) => theme::checkmark_span(),
+            Some(true) => theme::failure_span(),
+            Some(false) => theme::success_span(),
             None => theme::not_configured_span(),
         };
         spans.push(if is_active {

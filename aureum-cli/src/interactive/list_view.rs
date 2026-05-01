@@ -36,7 +36,7 @@ fn decision_indicator_spans(
             let has_skip = d.any_skipped();
             match (all_decided, has_accept, has_skip) {
                 (_, false, false) => Span::raw(" "), // visited but nothing decided yet
-                (true, true, false) => theme::checkmark_span(),
+                (true, true, false) => theme::accept_span(),
                 (true, false, true) => theme::skip_span(),
                 _ => theme::partial_span(), // partial progress or mixed accept+skip
             }
