@@ -2,9 +2,10 @@ use aureum::{TestResult, ValueComparison, string};
 use ratatui::style::{Color, Style};
 use ratatui::text::{Line, Span};
 
-use crate::interactive::diff_view::Tab;
 use crate::interactive::field::Field;
 use crate::interactive::theme;
+use crate::interactive::utils::spans;
+use crate::interactive::views::diff_view::Tab;
 
 pub(super) enum Side {
     Expected,
@@ -194,7 +195,7 @@ fn diff_lines_colored(expected: &str, got: &str) -> Vec<Line<'static>> {
                     result.push(Line::from(Span::styled(prefix, theme::dim())));
                 } else {
                     let mut spans = vec![Span::styled(prefix, theme::dim())];
-                    spans.extend(theme::highlight_trailing_whitespace(line));
+                    spans.extend(spans::highlight_trailing_whitespace(line));
                     result.push(Line::from(spans));
                 }
             }
@@ -240,7 +241,7 @@ fn styled_lines_left(content: &str, col_width: usize) -> Vec<Line<'static>> {
                     format!(" {num:>col_width$} {blank} │  "),
                     theme::dim(),
                 )];
-                spans.extend(theme::highlight_trailing_whitespace(line));
+                spans.extend(spans::highlight_trailing_whitespace(line));
                 Line::from(spans)
             }
         })
@@ -262,7 +263,7 @@ fn styled_lines_right(content: &str, col_width: usize) -> Vec<Line<'static>> {
                     format!(" {blank} {num:>col_width$} │  "),
                     theme::dim(),
                 )];
-                spans.extend(theme::highlight_trailing_whitespace(line));
+                spans.extend(spans::highlight_trailing_whitespace(line));
                 Line::from(spans)
             }
         })

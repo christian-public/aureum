@@ -6,11 +6,11 @@ use ratatui::text::Line;
 use std::io::{self, BufRead, Write};
 
 use crate::interactive::action::Action;
-use crate::interactive::diff_content;
-use crate::interactive::diff_render;
 use crate::interactive::field::{
     FailingFields, Field, FieldDecision, FieldDecisions, OUTPUT_FIELDS,
 };
+use crate::interactive::views::diff_content;
+use crate::interactive::views::diff_render;
 
 // ── Tab enum ─────────────────────────────────────────────────────────────────
 
@@ -24,7 +24,7 @@ pub(super) enum Tab {
 
 // ── Context ──────────────────────────────────────────────────────────────────
 
-pub(super) struct DiffViewContext<'a> {
+pub(crate) struct DiffViewContext<'a> {
     pub index: usize,
     pub total: usize,
     pub run_result: &'a RunResult,
@@ -462,7 +462,7 @@ fn run_diff_view(
 // ── Public API ───────────────────────────────────────────────────────────────
 
 /// Interactive diff view for a real terminal.
-pub(super) fn run_tui_loop(
+pub(crate) fn run_tui_loop(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
     ctx: &DiffViewContext<'_>,
     initial_decisions: Option<FieldDecisions>,
@@ -472,7 +472,7 @@ pub(super) fn run_tui_loop(
 
 /// Headless diff view for `--record` mode. Reads key names from `reader`, emits frames
 /// to `writer` separated by `---`.
-pub(super) fn record_view_diff<R: BufRead, W: Write>(
+pub(crate) fn record_view_diff<R: BufRead, W: Write>(
     ctx: &DiffViewContext<'_>,
     width: u16,
     height: u16,

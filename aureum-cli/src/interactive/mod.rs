@@ -1,21 +1,17 @@
 mod accept;
 mod action;
-mod diff_content;
-mod diff_render;
-mod diff_view;
 mod field;
-mod list_view;
-mod progress_view;
 mod review_loop;
 mod theme;
-mod watch_view;
+mod utils;
+mod views;
 
+use crate::interactive::views::progress_view;
+use crate::interactive::views::watch_view::{self, IdleOutcome, WatchIdleContext, run_watch_idle};
 use crate::utils::time;
 use accept::update_test_expectations;
 use field::{FieldDecision, FieldDecisions};
-use progress_view::run_tests_with_progress;
 use review_loop::{HeadlessDriver, LiveDriver, ReviewOutcome, run_review_loop};
-use watch_view::{IdleOutcome, WatchIdleContext, run_watch_idle};
 
 use aureum::{self, RunResult, TestCaseWithExpectations, TestResult};
 use chrono::Local;
@@ -268,7 +264,7 @@ fn run_watch_interactive_loop(
         let run_start = Instant::now();
         // Run tests with live progress view.
         let Some(last_results) =
-            run_tests_with_progress(terminal, &test_cases, parallel, current_dir)?
+            progress_view::run_tests_with_progress(terminal, &test_cases, parallel, current_dir)?
         else {
             return Ok(None); // user pressed q during progress
         };
@@ -426,7 +422,8 @@ fn run_tui_session(
     parallel: bool,
     current_dir: &Path,
 ) -> io::Result<Option<TuiSessionResult>> {
-    let Some(run_results) = run_tests_with_progress(terminal, test_cases, parallel, current_dir)?
+    let Some(run_results) =
+        progress_view::run_tests_with_progress(terminal, test_cases, parallel, current_dir)?
     else {
         return Ok(None); // user quit; background thread detached
     };
@@ -500,11 +497,8 @@ fn accepted_field_names(decisions: &FieldDecisions) -> String {
 }
 
 #[cfg(test)]
-mod test_helpers;
-
-#[cfg(test)]
 mod tests {
-    use super::test_helpers::{TempDir, make_test_case_root};
+    use super::utils::test_helpers::{TempDir, make_test_case_root};
     use super::*;
     use aureum::{TestCase, TestCaseExpectations, ValueComparison};
     use std::io::Cursor;

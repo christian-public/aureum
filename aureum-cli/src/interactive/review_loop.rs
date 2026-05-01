@@ -4,9 +4,9 @@ use ratatui::backend::CrosstermBackend;
 use std::io::{self, BufRead, Write};
 
 use crate::interactive::action::{Action, ListAction};
-use crate::interactive::diff_view::{self, DiffViewContext};
 use crate::interactive::field::FieldDecisions;
-use crate::interactive::list_view::{self, ListViewContext};
+use crate::interactive::views::diff_view::{self, DiffViewContext};
+use crate::interactive::views::list_view::{self, ListViewContext};
 
 /// Outcome returned by `run_review_loop`.
 pub(super) enum ReviewOutcome {

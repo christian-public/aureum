@@ -1,0 +1,74 @@
+use ratatui::style::{Color, Style};
+use ratatui::text::Span;
+
+/// Splits `line` into content and trailing-whitespace spans. The trailing-whitespace
+/// span (if any) gets a red background so it is visible even when colorless characters
+/// would otherwise hide it. The non-interactive equivalent is in
+/// `report::formats::summary::highlight_trailing_whitespace`.
+pub(crate) fn highlight_trailing_whitespace(line: &str) -> Vec<Span<'static>> {
+    let trimmed_len = line.trim_end().len();
+    if trimmed_len == line.len() {
+        return vec![Span::raw(line.to_owned())];
+    }
+    let mut spans = Vec::new();
+    if trimmed_len > 0 {
+        spans.push(Span::raw(line[..trimmed_len].to_owned()));
+    }
+    spans.push(Span::styled(
+        line[trimmed_len..].to_owned(),
+        Style::default().bg(Color::Red),
+    ));
+    spans
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod highlight_trailing_whitespace {
+        use super::*;
+
+        #[test]
+        fn no_trailing_whitespace() {
+            let spans = highlight_trailing_whitespace("hello");
+            assert_eq!(spans.len(), 1);
+            assert_eq!(spans[0].content.as_ref(), "hello");
+            assert_eq!(spans[0].style.bg, None);
+        }
+
+        #[test]
+        fn trailing_spaces() {
+            let spans = highlight_trailing_whitespace("hello   ");
+            assert_eq!(spans.len(), 2);
+            assert_eq!(spans[0].content.as_ref(), "hello");
+            assert_eq!(spans[0].style.bg, None);
+            assert_eq!(spans[1].content.as_ref(), "   ");
+            assert_eq!(spans[1].style.bg, Some(Color::Red));
+        }
+
+        #[test]
+        fn trailing_tab() {
+            let spans = highlight_trailing_whitespace("hello\t");
+            assert_eq!(spans.len(), 2);
+            assert_eq!(spans[0].content.as_ref(), "hello");
+            assert_eq!(spans[1].content.as_ref(), "\t");
+            assert_eq!(spans[1].style.bg, Some(Color::Red));
+        }
+
+        #[test]
+        fn all_whitespace() {
+            let spans = highlight_trailing_whitespace("   ");
+            assert_eq!(spans.len(), 1);
+            assert_eq!(spans[0].content.as_ref(), "   ");
+            assert_eq!(spans[0].style.bg, Some(Color::Red));
+        }
+
+        #[test]
+        fn empty() {
+            let spans = highlight_trailing_whitespace("");
+            assert_eq!(spans.len(), 1);
+            assert_eq!(spans[0].content.as_ref(), "");
+            assert_eq!(spans[0].style.bg, None);
+        }
+    }
+}

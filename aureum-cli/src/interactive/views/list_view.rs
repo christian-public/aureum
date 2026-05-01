@@ -9,11 +9,11 @@ use ratatui::{Frame, Terminal};
 use std::io::{self, BufRead, Write};
 
 use crate::interactive::action::ListAction;
-use crate::interactive::diff_view;
 use crate::interactive::field::{FailingFields, FieldDecision, FieldDecisions, OUTPUT_FIELDS};
 use crate::interactive::theme;
+use crate::interactive::views::diff_view;
 
-pub(super) struct ListViewContext<'a> {
+pub(crate) struct ListViewContext<'a> {
     pub failed: &'a [(&'a RunResult, &'a TestResult)],
     pub past_decisions: &'a [Option<FieldDecisions>],
     pub passed_count: usize,
@@ -339,7 +339,7 @@ pub(crate) fn run_list_loop(
 
 /// Headless list view for `--record` mode. Reads key names from `reader`, emits frames
 /// to `writer` separated by `---`. Always writes a separator before the first frame.
-pub(super) fn record_list_view<R: BufRead, W: Write>(
+pub(crate) fn record_list_view<R: BufRead, W: Write>(
     ctx: &ListViewContext<'_>,
     width: u16,
     height: u16,

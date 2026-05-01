@@ -188,7 +188,7 @@ fn table_has_id(table: &toml_edit::Table, name: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::super::field::{FieldDecision, FieldDecisions};
-    use super::super::test_helpers::{TempDir, make_test_case_root};
+    use super::super::utils::test_helpers::{TempDir, make_test_case_root};
     use super::*;
     use aureum::TestId;
     use relative_path::RelativePathBuf;

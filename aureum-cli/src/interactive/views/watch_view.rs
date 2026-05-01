@@ -1,5 +1,5 @@
-use crate::interactive::diff_view;
 use crate::interactive::theme;
+use crate::interactive::views::diff_view;
 use aureum::RunResult;
 use crossterm::event::{Event, KeyCode, KeyEventKind};
 use ratatui::backend::{CrosstermBackend, TestBackend};
@@ -13,7 +13,7 @@ use std::sync::mpsc::Receiver;
 use std::time::Duration;
 
 /// Outcome of the idle/watching screen.
-pub(super) enum IdleOutcome {
+pub(crate) enum IdleOutcome {
     /// User pressed `r` to enter review mode (only possible when failures > 0).
     Review,
     /// A file change was received from the watcher, or the user pressed `t` to re-run.
@@ -22,7 +22,7 @@ pub(super) enum IdleOutcome {
     Quit,
 }
 
-pub(super) struct WatchIdleContext<'a> {
+pub(crate) struct WatchIdleContext<'a> {
     pub run_results: &'a [RunResult],
     pub finished_at: &'a str,
     pub duration: &'a str,
@@ -30,7 +30,7 @@ pub(super) struct WatchIdleContext<'a> {
 
 /// Shows the idle/watching screen until a file change arrives, the user presses `r`
 /// (review, only when failures exist), or `q` (quit).
-pub(super) fn run_watch_idle(
+pub(crate) fn run_watch_idle(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
     ctx: &WatchIdleContext<'_>,
     change_rx: &Receiver<usize>,
@@ -261,7 +261,7 @@ fn render_idle(frame: &mut Frame, passed: usize, total: usize, finished_at: &str
 /// to `writer`. Reads key names from `reader` (one per line); the special command
 /// `"file-change"` simulates a watcher event and returns `IdleOutcome::FileChange`.
 #[allow(clippy::too_many_arguments)]
-pub(super) fn record_watch_idle<R: BufRead, W: Write>(
+pub(crate) fn record_watch_idle<R: BufRead, W: Write>(
     run_results: &[RunResult],
     width: u16,
     height: u16,

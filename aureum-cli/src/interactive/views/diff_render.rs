@@ -5,12 +5,12 @@ use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Borders, Paragraph, Wrap};
 
-use crate::interactive::diff_content;
-use crate::interactive::diff_view::{self, DiffViewContext, EnterOutcome, Tab, TuiState};
 use crate::interactive::field::{
     FailingFields, Field, FieldDecision, FieldDecisions, OUTPUT_FIELDS,
 };
 use crate::interactive::theme;
+use crate::interactive::views::diff_content;
+use crate::interactive::views::diff_view::{self, DiffViewContext, EnterOutcome, Tab, TuiState};
 use crate::utils::shell;
 
 // FIELD SELECTOR ROW LAYOUT
