@@ -1,0 +1,22 @@
+program = "echo"
+
+
+[[tests]]
+id = "test_z"
+program_arguments = ["-n", "Z"]
+
+expected_stdout = "Z"
+
+
+[[tests]]
+id = "test_a"
+program_arguments = ["-n", "A"]
+
+expected_stdout = "A"
+
+
+[[tests]]
+id = "test_m"
+program_arguments = ["-n", "M"]
+
+expected_stdout = "M"

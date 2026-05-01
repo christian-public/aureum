@@ -31,18 +31,21 @@ impl LoadConfigFilesResult {
 pub struct LoadedConfigFile {
     pub test_id_coverage_set: TestIdCoverageSet,
     pub requirement_data: RequirementData,
-    pub test_entries: BTreeMap<TestId, TestEntry>,
+    pub test_entries: Vec<(TestId, TestEntry)>,
 }
 
 impl LoadedConfigFile {
     pub fn has_validation_errors(&self) -> bool {
-        self.test_entries.values().any(|e| e.has_validation_error())
+        self.test_entries
+            .iter()
+            .any(|(_, e)| e.has_validation_error())
     }
 
     pub fn test_entries_in_coverage_set(&self) -> impl Iterator<Item = (&TestId, &TestEntry)> {
         self.test_entries
             .iter()
             .filter(|(test_id, _)| self.test_id_coverage_set.contains(test_id))
+            .map(|(id, entry)| (id, entry))
     }
 }
 

@@ -1,0 +1,74 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+
+[[tests]]
+id = "validate"
+program_arguments = ["validate", "helpers/insertion_order_tests.toml"]
+
+expected_stdout = """
+✔ helpers/insertion_order_tests.toml  3 tests
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "list"
+program_arguments = ["list", "helpers/insertion_order_tests.toml"]
+
+expected_stdout = """
+helpers/insertion_order_tests.toml:test_z
+helpers/insertion_order_tests.toml:test_a
+helpers/insertion_order_tests.toml:test_m
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "run"
+program_arguments = [
+    "run",
+    "--format",
+    "toml",
+    "helpers/insertion_order_tests.toml",
+]
+
+expected_stdout = """
+# TEST: helpers/insertion_order_tests.toml:test_z
+expected_stdout = "Z"
+expected_stderr = ""
+expected_exit_code = 0
+
+# TEST: helpers/insertion_order_tests.toml:test_a
+expected_stdout = "A"
+expected_stderr = ""
+expected_exit_code = 0
+
+# TEST: helpers/insertion_order_tests.toml:test_m
+expected_stdout = "M"
+expected_stderr = ""
+expected_exit_code = 0
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "test"
+program_arguments = [
+    "test",
+    "--format",
+    "tap",
+    "helpers/insertion_order_tests.toml",
+]
+
+expected_stdout = """
+TAP version 14
+1..3
+ok     1 - helpers/insertion_order_tests.toml:test_z
+ok     2 - helpers/insertion_order_tests.toml:test_a
+ok     3 - helpers/insertion_order_tests.toml:test_m
+"""
+expected_stderr = ""
+expected_exit_code = 0

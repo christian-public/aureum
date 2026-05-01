@@ -103,10 +103,12 @@ pub fn build_test_entries(
     requirement_data: &RequirementData,
     current_dir: &Path,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
-) -> BTreeMap<TestId, TestEntry> {
+) -> Vec<(TestId, TestEntry)> {
     split_toml_config(config)
         .into_iter()
-        .map(|(test_id, c)| {
+        .map(|c| {
+            let test_id = c.id.clone().expect("id must exist after parsing");
+
             (
                 test_id.clone(),
                 build_test_entry(
@@ -334,24 +336,17 @@ where
 
 // SPLIT TOML CONFIG
 
-fn split_toml_config(config: TomlConfigFile) -> BTreeMap<TestId, TomlConfigTest> {
+fn split_toml_config(config: TomlConfigFile) -> Vec<TomlConfigTest> {
     if config.tests.is_empty() {
         let mut root_test = config.root;
         root_test.id = Some(TestId::root());
 
-        BTreeMap::from([(TestId::root(), root_test)])
+        vec![root_test]
     } else {
         let TomlConfigFile { root, tests } = config;
         tests
             .into_iter()
-            .map(|sub_config| {
-                let test_id = sub_config
-                    .id
-                    .clone()
-                    .expect("id is validated as required during parsing");
-                let merged_toml_config = merge_toml_configs(root.clone(), sub_config);
-                (test_id, merged_toml_config)
-            })
+            .map(|sub_config| merge_toml_configs(root.clone(), sub_config))
             .collect()
     }
 }

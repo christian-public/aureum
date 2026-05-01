@@ -86,7 +86,7 @@ pub fn print_config_files_found(config_file_paths: &[RelativePathBuf]) {
 
 pub fn print_config_details(
     config_file_path: &RelativePath,
-    test_entries: &BTreeMap<TestId, TestEntry>,
+    test_entries: &[(TestId, TestEntry)],
     requirement_data: &RequirementData,
     verbose: bool,
     hide_absolute_paths: bool,
