@@ -1,5 +1,5 @@
 use aureum::{RunResult, TestResult};
-use crossterm::event::{Event, KeyCode, KeyEventKind};
+use crossterm::event::{Event, KeyCode, KeyEventKind, KeyModifiers};
 use ratatui::Terminal;
 use ratatui::backend::{CrosstermBackend, TestBackend};
 use ratatui::text::Line;
@@ -127,6 +127,7 @@ enum KeyResult {
 fn apply_key(
     state: &mut TuiState,
     key: KeyCode,
+    modifiers: KeyModifiers,
     is_last: bool,
     watch_mode: bool,
     is_field_configured: bool,
@@ -217,6 +218,9 @@ fn apply_key(
         }
         KeyCode::Esc if watch_mode => {
             return KeyResult::Exit(Action::BackToWatch(state.field_decisions));
+        }
+        KeyCode::Char('c') if modifiers.contains(KeyModifiers::CONTROL) => {
+            return KeyResult::Exit(Action::Quit);
         }
         KeyCode::Char('q') => return KeyResult::Exit(Action::Quit),
         _ => {}
@@ -329,7 +333,7 @@ trait DiffIo {
     ) -> io::Result<()>;
 
     /// Returns the next key to process, or `None` on EOF.
-    fn next_key(&mut self) -> io::Result<Option<KeyCode>>;
+    fn next_key(&mut self) -> io::Result<Option<(KeyCode, KeyModifiers)>>;
 }
 
 // Live terminal implementation
@@ -352,12 +356,12 @@ impl DiffIo for LiveDiffIo<'_> {
         Ok(())
     }
 
-    fn next_key(&mut self) -> io::Result<Option<KeyCode>> {
+    fn next_key(&mut self) -> io::Result<Option<(KeyCode, KeyModifiers)>> {
         loop {
             if let Event::Key(key) = crossterm::event::read()?
                 && key.kind == KeyEventKind::Press
             {
-                return Ok(Some(key.code));
+                return Ok(Some((key.code, key.modifiers)));
             }
         }
     }
@@ -397,7 +401,7 @@ impl<R: BufRead, W: Write> DiffIo for HeadlessDiffIo<'_, R, W> {
         )
     }
 
-    fn next_key(&mut self) -> io::Result<Option<KeyCode>> {
+    fn next_key(&mut self) -> io::Result<Option<(KeyCode, KeyModifiers)>> {
         let mut line = String::new();
         loop {
             line.clear();
@@ -409,7 +413,7 @@ impl<R: BufRead, W: Write> DiffIo for HeadlessDiffIo<'_, R, W> {
                 continue;
             }
             if let Some(key) = parse_key_name(key_name) {
-                return Ok(Some(key));
+                return Ok(Some((key, KeyModifiers::NONE)));
             }
         }
     }
@@ -432,7 +436,7 @@ fn run_diff_view(
     io.render(ctx, test_result, &state, &content)?;
 
     loop {
-        let Some(key) = io.next_key()? else {
+        let Some((key, modifiers)) = io.next_key()? else {
             return Ok(Action::Quit);
         };
         let is_field_configured =
@@ -440,6 +444,7 @@ fn run_diff_view(
         match apply_key(
             &mut state,
             key,
+            modifiers,
             is_last,
             ctx.watch_mode,
             is_field_configured,

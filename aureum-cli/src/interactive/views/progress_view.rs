@@ -1,7 +1,7 @@
 use crate::interactive::theme;
 use crate::utils::time;
 use aureum::{RunResult, TestCaseWithExpectations, run_test_cases};
-use crossterm::event::{Event, KeyCode, KeyEventKind};
+use crossterm::event::{Event, KeyCode, KeyEventKind, KeyModifiers};
 use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Alignment, Constraint, Direction, Layout};
 use ratatui::style::{Color, Style};
@@ -73,7 +73,9 @@ pub(crate) fn run_tests_with_progress(
             Ok(true) => {
                 if let Ok(Event::Key(key)) = crossterm::event::read()
                     && key.kind == KeyEventKind::Press
-                    && key.code == KeyCode::Char('q')
+                    && (key.code == KeyCode::Char('q')
+                        || (key.code == KeyCode::Char('c')
+                            && key.modifiers.contains(KeyModifiers::CONTROL)))
                 {
                     // Show "Stopping..." and return immediately; _handle is detached on drop.
                     terminal

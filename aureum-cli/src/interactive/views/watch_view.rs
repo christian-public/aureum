@@ -1,7 +1,7 @@
 use crate::interactive::theme;
 use crate::interactive::views::diff_view;
 use aureum::RunResult;
-use crossterm::event::{Event, KeyCode, KeyEventKind};
+use crossterm::event::{Event, KeyCode, KeyEventKind, KeyModifiers};
 use ratatui::backend::{CrosstermBackend, TestBackend};
 use ratatui::layout::{Alignment, Constraint, Direction, Layout};
 use ratatui::style::{Color, Modifier, Style};
@@ -54,6 +54,9 @@ pub(crate) fn run_watch_idle(
                         KeyCode::Char('r') if failed > 0 => return Ok(IdleOutcome::Review),
                         KeyCode::Char('t') => return Ok(IdleOutcome::Rerun),
                         KeyCode::Char('q') => return Ok(IdleOutcome::Quit),
+                        KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                            return Ok(IdleOutcome::Quit);
+                        }
                         _ => {}
                     }
                 }
