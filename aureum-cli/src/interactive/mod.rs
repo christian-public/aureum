@@ -20,7 +20,7 @@ use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
 use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
 use std::io::{self, BufRead, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::mpsc::Receiver;
 use std::time::Instant;
 
@@ -113,7 +113,6 @@ pub fn run_interactive_updates_with_watch<R, W>(
     load_test_cases: &dyn Fn() -> Vec<TestCaseWithExpectations>,
     parallel: bool,
     current_dir: &Path,
-    _watch_pattern: &str,
     reader: &mut R,
     writer: &mut W,
     width: u16,
@@ -224,13 +223,13 @@ where
 
 /// Full interactive watch session: runs tests, shows idle screen, lets the user review and
 /// accept failures, and re-runs on file changes. Always returns the last run's results.
-pub fn run_with_progress_review_and_watch(
+pub fn run_with_progress_review_and_watch<'a>(
     load_test_cases: &dyn Fn() -> Vec<TestCaseWithExpectations>,
     parallel: bool,
     current_dir: &Path,
-    watch_pattern: &str,
+    watch_paths: impl IntoIterator<Item = &'a PathBuf>,
 ) -> io::Result<Vec<RunResult>> {
-    let watch_handle = crate::watch::start_watcher(watch_pattern, current_dir)?;
+    let watch_handle = crate::watch::start_watcher_for_paths(watch_paths)?;
 
     crossterm::terminal::enable_raw_mode()?;
     let mut stdout = io::stdout();

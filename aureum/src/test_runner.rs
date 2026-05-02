@@ -87,6 +87,10 @@ pub fn run_program(test_case: &TestCase, current_dir: &Path) -> Result<ProgramOu
 
     if let Some(stdin_string) = &test_case.stdin {
         write_stdin(&mut child, stdin_string)?;
+    } else {
+        // Close the write end of the stdin pipe so the child sees EOF immediately
+        // rather than blocking indefinitely waiting for input.
+        drop(child.stdin.take());
     }
 
     let stdout = read_pipe_to_string(

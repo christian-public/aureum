@@ -19,13 +19,14 @@ pub struct ReportConfig {
     pub format: ReportFormat,
 }
 
+pub fn print_watch_started(count: usize) {
+    let paths = if count == 1 { "path" } else { "paths" };
+    eprintln!("{} watching {count} {paths} for changes...", label::watch());
+}
+
 pub fn print_watch_detected_file_changes() {
     eprintln!();
-    eprintln!(
-        "{} {}",
-        label::watch(),
-        "changes detected, rerunning...".dimmed()
-    );
+    eprintln!("{} changes detected", label::watch());
 }
 
 pub fn print_interactive_mode_requires_a_terminal_error() {

@@ -1,0 +1,75 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+[[tests]]
+id = "startup_message"
+program_arguments = [
+    "test",
+    "--watch",
+    "helpers/passing.toml",
+]
+expected_stdout = """
+🚀 Running 1 tests:
+.
+
+Test result: OK (1 passed, 0 failed)
+"""
+expected_stderr = """
+watch: watching 2 paths for changes...
+"""
+expected_exit_code = 0
+
+[[tests]]
+id = "file_change_reruns_tests"
+program_arguments = [
+    "test",
+    "--watch",
+    "helpers/passing.toml",
+]
+stdin = "file-change\n"
+expected_stdout = """
+🚀 Running 1 tests:
+.
+
+Test result: OK (1 passed, 0 failed)
+🚀 Running 1 tests:
+.
+
+Test result: OK (1 passed, 0 failed)
+"""
+expected_stderr = """
+watch: watching 2 paths for changes...
+
+watch: changes detected
+"""
+expected_exit_code = 0
+
+[[tests]]
+id = "verbose"
+program_arguments = [
+    "test",
+    "--watch",
+    "--verbose",
+    "--hide-absolute-paths",
+    "helpers/passing.toml",
+]
+expected_stdout = """
+🚀 Running 1 tests:
+.
+
+Test result: OK (1 passed, 0 failed)
+"""
+expected_stderr = """
+🔍 Found 1 config files
+└── helpers/passing.toml
+
+👁 Watching 2 paths
+├── <absolute path to 'echo'>
+└── helpers/passing.toml
+
+📋 helpers/passing.toml
+└── Program to run
+    └── ✔ <absolute path to 'echo'>
+
+watch: watching 2 paths for changes...
+"""
+expected_exit_code = 0

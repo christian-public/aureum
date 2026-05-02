@@ -11,12 +11,6 @@ pub enum Entry {
     Dir(PathBuf),
 }
 
-/// Returns true when `pattern` contains a path separator — i.e. it describes a
-/// multi-component path rather than a bare entry name like `foo*` or `{a,b}`.
-pub fn has_separator(pattern: &Path) -> bool {
-    pattern.parent().is_some_and(|p| !p.as_os_str().is_empty())
-}
-
 pub fn is_glob(path: &Path) -> bool {
     ['*', '?', '[', '{']
         .iter()
@@ -175,22 +169,6 @@ fn walk_recursive(
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    // --- has_separator ---
-
-    #[test]
-    fn has_separator_name_only() {
-        assert!(!has_separator(Path::new("foo*")));
-        assert!(!has_separator(Path::new("{foo,bar}")));
-        assert!(!has_separator(Path::new("*.toml")));
-    }
-
-    #[test]
-    fn has_separator_path_patterns() {
-        assert!(has_separator(Path::new("spec/**/*.toml")));
-        assert!(has_separator(Path::new("**/*.toml")));
-        assert!(has_separator(Path::new("src/foo*")));
-    }
 
     // --- is_glob ---
 

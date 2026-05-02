@@ -84,6 +84,44 @@ pub fn print_config_files_found(config_file_paths: &[RelativePathBuf]) {
     print_tree(tree);
 }
 
+pub fn print_watch_files_verbose<'a>(
+    watch_paths: impl IntoIterator<Item = &'a PathBuf>,
+    current_dir: &std::path::Path,
+    hide_absolute_paths: bool,
+) {
+    let mut display_paths: Vec<String> = watch_paths
+        .into_iter()
+        .map(|p| format_watch_path(p, current_dir, hide_absolute_paths))
+        .collect();
+    display_paths.sort();
+    let n = display_paths.len();
+    let paths = if n == 1 { "path" } else { "paths" };
+    let heading = format!("👁 Watching {n} {paths}");
+    let tree = Node(
+        heading,
+        display_paths.iter().map(|s| str_to_tree(s)).collect(),
+    );
+    print_tree(tree);
+}
+
+fn format_watch_path(
+    path: &std::path::Path,
+    current_dir: &std::path::Path,
+    hide_absolute_paths: bool,
+) -> String {
+    // Prefer showing a path relative to current_dir; fall back to absolute.
+    if let Ok(rel) = path.strip_prefix(current_dir)
+        && let Ok(relative) = RelativePathBuf::from_path(rel)
+    {
+        return relative.to_string();
+    }
+    if hide_absolute_paths {
+        file::display_path(path)
+    } else {
+        path.display().to_string()
+    }
+}
+
 pub fn print_config_details(
     config_file_path: &RelativePath,
     test_entries: &[(TestId, TestEntry)],

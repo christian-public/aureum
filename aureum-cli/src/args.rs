@@ -108,9 +108,9 @@ pub struct TestArgs {
     #[arg(long)]
     pub interactive: bool,
 
-    /// Watch PATTERN for changes and re-run tests
-    #[arg(long, value_name = "PATTERN")]
-    pub watch: Option<String>,
+    /// Watch files for changes and re-run tests
+    #[arg(long)]
+    pub watch: bool,
 
     /// Record TUI frames to stdout using a headless terminal of the given size (format: WxH).
     /// Reads key names from stdin (one per line). Implies --interactive.

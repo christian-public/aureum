@@ -22,10 +22,10 @@ use crate::exit_code::ExitCode;
 use crate::load_config_file::{LoadConfigFilesResult, LoadedConfigFile};
 use crate::report::test::{ReportConfig, ReportFormat};
 use crate::report::validate::ReportValidateResult;
-use crate::watch::start_watcher;
+use crate::watch::start_watcher_for_paths;
 use aureum::{TestCase, TestCaseWithExpectations};
 use relative_path::RelativePathBuf;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::env;
 use std::fs;
 use std::io::{self, IsTerminal};
@@ -297,6 +297,7 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
     }
 
     // Build a reload closure for watch modes before args.paths is consumed.
+    let watch_input_paths = args.paths.clone();
     let reload_paths = args.paths.clone();
     let reload_dir = current_dir.to_path_buf();
     let reload_fn = move || load_test_cases_for_watch(&reload_paths, &reload_dir);
@@ -319,13 +320,34 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
 
     let has_config_errors = config_files.has_config_errors();
 
-    let run_results = if args.interactive && args.watch.is_some() {
-        let watch_pattern = args.watch.as_deref().unwrap();
+    let watch_paths: BTreeSet<PathBuf> = if args.watch {
+        collect_watch_paths(&watch_input_paths, &config_files, current_dir)
+    } else {
+        BTreeSet::new()
+    };
+
+    if args.watch && args.common.verbose {
+        report::validate::print_watch_files_verbose(
+            &watch_paths,
+            current_dir,
+            args.common.hide_absolute_paths,
+        );
+    }
+
+    if args.watch {
+        print_config_details_if_needed(
+            &config_files.loaded,
+            args.common.verbose,
+            args.common.hide_absolute_paths,
+        );
+    }
+
+    let run_results = if args.interactive && args.watch {
         match interactive::run_with_progress_review_and_watch(
             &reload_fn,
             args.parallel,
             current_dir,
-            watch_pattern,
+            &watch_paths,
         ) {
             Ok(r) => r,
             Err(e) => {
@@ -342,16 +364,13 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
                 return ExitCode::TestFailure;
             }
         }
-    } else if let (Some(watch_pattern), Some(TerminalSize { width, height })) =
-        (args.watch.as_deref(), args.record.clone())
-    {
+    } else if let (true, Some(TerminalSize { width, height })) = (args.watch, args.record.clone()) {
         let stdin = io::stdin();
         let stdout = io::stdout();
         match interactive::run_interactive_updates_with_watch(
             &reload_fn,
             args.parallel,
             current_dir,
-            watch_pattern,
             &mut stdin.lock(),
             &mut stdout.lock(),
             width,
@@ -363,8 +382,8 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
                 return ExitCode::TestFailure;
             }
         }
-    } else if let Some(watch_pattern) = &args.watch {
-        match run_tests_with_watch(&reload_fn, args.parallel, current_dir, watch_pattern) {
+    } else if args.watch {
+        match run_tests_with_watch(&reload_fn, args.parallel, current_dir, &watch_paths) {
             Ok(r) => r,
             Err(e) => {
                 eprintln!("error: Watch session failed: {e}");
@@ -462,20 +481,71 @@ fn run_tests_with_watch(
     load_test_cases: impl Fn() -> Vec<TestCaseWithExpectations>,
     parallel: bool,
     current_dir: &Path,
-    watch_pattern: &str,
+    watch_paths: &BTreeSet<PathBuf>,
 ) -> io::Result<Vec<aureum::RunResult>> {
-    let handle = start_watcher(watch_pattern, current_dir)?;
+    use std::io::BufRead;
+    use std::sync::mpsc;
+
+    let watch::WatchHandle {
+        receiver: watch_rx,
+        watched_path_count,
+        _debouncer: _watcher,
+    } = start_watcher_for_paths(watch_paths)?;
+    report::test::print_watch_started(watched_path_count);
     let format = TestOutputFormat::Summary;
     let mut last_results = run_test_batch(&load_test_cases(), parallel, current_dir, &format);
-    while let Ok(_count) = handle.receiver.recv() {
-        // Drain any events that queued up during the previous run, collapsing
-        // them into a single re-run.
-        while let Ok(_count) = handle.receiver.try_recv() {}
 
-        report::test::print_watch_detected_file_changes();
+    // Merge OS file-change events and stdin commands into a single channel.
+    // Payload: true = run tests again, false = quit.
+    let (trigger_tx, trigger_rx) = mpsc::channel::<bool>();
 
-        last_results = run_test_batch(&load_test_cases(), parallel, current_dir, &format);
+    // Forward OS watcher events as rerun triggers.
+    {
+        let tx = trigger_tx.clone();
+        std::thread::spawn(move || {
+            while watch_rx.recv().is_ok() {
+                if tx.send(true).is_err() {
+                    break;
+                }
+            }
+        });
     }
+
+    // When stdin is not a terminal: "file-change" lines trigger a rerun,
+    // and EOF quits the session.
+    if !io::stdin().is_terminal() {
+        std::thread::spawn(move || {
+            for line in io::stdin().lock().lines() {
+                match line {
+                    Ok(l) if l == "file-change" => {
+                        if trigger_tx.send(true).is_err() {
+                            return;
+                        }
+                    }
+                    Ok(_) => {}
+                    Err(_) => break,
+                }
+            }
+            let _ = trigger_tx.send(false); // EOF → quit
+        });
+    }
+
+    while let Ok(true) = trigger_rx.recv() {
+        // Drain any extra triggers queued during the previous run;
+        // track whether a quit signal was among them.
+        let mut quit_pending = false;
+        while let Ok(msg) = trigger_rx.try_recv() {
+            if !msg {
+                quit_pending = true;
+            }
+        }
+        report::test::print_watch_detected_file_changes();
+        last_results = run_test_batch(&load_test_cases(), parallel, current_dir, &format);
+        if quit_pending {
+            break;
+        }
+    }
+
     Ok(last_results)
 }
 
@@ -496,6 +566,53 @@ fn load_test_cases_for_watch(
         .flat_map(|x| x.test_entries_in_coverage_set())
         .flat_map(|(_, entry)| entry.test_case_with_expectations().ok())
         .collect()
+}
+
+fn collect_watch_paths(
+    user_paths: &[PathBuf],
+    config_files: &LoadConfigFilesResult,
+    current_dir: &Path,
+) -> BTreeSet<PathBuf> {
+    let user_watch_paths: BTreeSet<PathBuf> = user_paths
+        .iter()
+        .map(|path| {
+            let watchable = if utils::glob::is_glob(path) {
+                utils::glob::base_dir_from_pattern(path)
+            } else {
+                path.to_path_buf()
+            };
+            current_dir.join(watchable)
+        })
+        .collect();
+
+    let mut all_paths = user_watch_paths.clone();
+
+    for (config_file_path, loaded) in &config_files.loaded {
+        let containing_dir = config_file_path
+            .parent()
+            .map(|p| p.to_path(current_dir))
+            .unwrap_or_else(|| current_dir.to_path_buf());
+
+        let mut discovered = vec![config_file_path.to_path(current_dir)];
+
+        for file_key in loaded.requirement_data.files.keys() {
+            discovered.push(containing_dir.join(file_key));
+        }
+
+        for (_, entry) in &loaded.test_entries {
+            if let Ok(test_case) = &entry.test_case {
+                discovered.push(test_case.program_path.clone());
+            }
+        }
+
+        for file in discovered {
+            if !user_watch_paths.iter().any(|wp| file.starts_with(wp)) {
+                all_paths.insert(file);
+            }
+        }
+    }
+
+    all_paths
 }
 
 fn print_version() -> ExitCode {
