@@ -129,7 +129,8 @@ fn render_progress(
         .split(inner_area);
 
     // Header row
-    let left = format!("  Running {} tests", total);
+    let label = if total == 1 { "test" } else { "tests" };
+    let left = format!("  Running {} {label}", total);
     let passed_str = format!("{} passed", passed);
     let failed_str = format!("{} failed", failed);
     let right_len = passed_str.len() + 2 + failed_str.len() + 2;

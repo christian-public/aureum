@@ -5,7 +5,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 id = "summary_passing"
 program_arguments = ["test", "--format", "summary", "helpers/passing_test.toml"]
 expected_stdout = """
-🚀 Running 1 tests:
+🚀 Running 1 test:
 .
 
 Test result: OK (1 passed, 0 failed)
@@ -18,7 +18,7 @@ expected_exit_code = 0
 id = "summary_failing"
 program_arguments = ["test", "--format", "summary", "helpers/failing_test.toml"]
 expected_stdout = """
-🚀 Running 1 tests:
+🚀 Running 1 test:
 F
 
 ❌ helpers/failing_test.toml
@@ -105,7 +105,7 @@ program_arguments = [
   "helpers/failing_test_newline.toml",
 ]
 expected_stdout = """
-🚀 Running 1 tests:
+🚀 Running 1 test:
 F
 
 ❌ helpers/failing_test_newline.toml

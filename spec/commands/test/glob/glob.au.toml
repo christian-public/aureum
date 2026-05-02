@@ -8,7 +8,7 @@ expected_exit_code = 0
 id = "single_file"
 program_arguments = ["test", "helpers/dir1/test1.toml"]
 expected_stdout = """
-🚀 Running 1 tests:
+🚀 Running 1 test:
 .
 
 Test result: OK (1 passed, 0 failed)

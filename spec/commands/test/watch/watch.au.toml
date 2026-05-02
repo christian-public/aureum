@@ -8,7 +8,7 @@ program_arguments = [
     "helpers/passing.toml",
 ]
 expected_stdout = """
-🚀 Running 1 tests:
+🚀 Running 1 test:
 .
 
 Test result: OK (1 passed, 0 failed)
@@ -27,11 +27,11 @@ program_arguments = [
 ]
 stdin = "file-change\n"
 expected_stdout = """
-🚀 Running 1 tests:
+🚀 Running 1 test:
 .
 
 Test result: OK (1 passed, 0 failed)
-🚀 Running 1 tests:
+🚀 Running 1 test:
 .
 
 Test result: OK (1 passed, 0 failed)
@@ -53,7 +53,7 @@ program_arguments = [
     "helpers/passing.toml",
 ]
 expected_stdout = """
-🚀 Running 1 tests:
+🚀 Running 1 test:
 .
 
 Test result: OK (1 passed, 0 failed)

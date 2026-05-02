@@ -75,7 +75,12 @@ pub fn print_test_cases_end(report_config: &ReportConfig, run_results: &[RunResu
 // SUMMARY HELPERS
 
 fn summary_print_start(number_of_tests: usize) {
-    println!("🚀 Running {number_of_tests} tests:")
+    let label = if number_of_tests == 1 {
+        "test"
+    } else {
+        "tests"
+    };
+    println!("🚀 Running {number_of_tests} {label}:")
 }
 
 fn summary_print_test_case(result: &Result<TestResult, RunError>) {
