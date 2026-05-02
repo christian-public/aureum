@@ -1,4 +1,5 @@
 use crate::toml::config::{ConfigValue, TomlConfigFile, TomlConfigTest};
+use crate::toml::validate::RequirementData;
 use std::collections::BTreeSet;
 
 #[derive(Default)]
@@ -15,8 +16,26 @@ pub fn get_requirements(config: &TomlConfigFile) -> Requirements {
     for test in &config.tests {
         collect_requirements_from_toml_config_test(&mut requirements, test);
     }
+    for watch_file in &config.watch_files {
+        collect_requirements_from_config_value(&mut requirements, watch_file);
+    }
 
     requirements
+}
+
+pub fn resolve_watch_files(
+    config: &TomlConfigFile,
+    requirement_data: &RequirementData,
+) -> BTreeSet<String> {
+    config
+        .watch_files
+        .iter()
+        .filter_map(|cv| match cv {
+            ConfigValue::Literal(s) => Some(s.clone()),
+            ConfigValue::ReadFromFile { file } => requirement_data.files.get(file).cloned(),
+            ConfigValue::FetchFromEnv { env } => requirement_data.env_vars.get(env).cloned(),
+        })
+        .collect()
 }
 
 pub fn get_test_requirements(config: &TomlConfigTest) -> Requirements {
@@ -74,5 +93,113 @@ fn collect_requirements_from_config_value<T>(
         ConfigValue::FetchFromEnv { env } => {
             requirements.env_vars.insert(env.to_owned());
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn empty_test() -> TomlConfigTest {
+        TomlConfigTest {
+            id: None,
+            description: None,
+            program: None,
+            program_arguments: None,
+            stdin: None,
+            expected_stdout: None,
+            expected_stderr: None,
+            expected_exit_code: None,
+        }
+    }
+
+    fn make_config(watch_files: Vec<ConfigValue<String>>) -> TomlConfigFile {
+        TomlConfigFile {
+            root: empty_test(),
+            tests: vec![],
+            watch_files,
+        }
+    }
+
+    // TEST: resolve_watch_files()
+
+    #[test]
+    fn test_resolve_watch_files_literal() {
+        let config = make_config(vec![ConfigValue::Literal("script.sh".to_owned())]);
+        let result = resolve_watch_files(&config, &RequirementData::default());
+        assert_eq!(result, BTreeSet::from(["script.sh".to_owned()]));
+    }
+
+    #[test]
+    fn test_resolve_watch_files_fetch_from_env() {
+        let config = make_config(vec![ConfigValue::FetchFromEnv {
+            env: "MY_SCRIPT".to_owned(),
+        }]);
+        let mut requirement_data = RequirementData::default();
+        requirement_data.env_vars.insert(
+            "MY_SCRIPT".to_owned(),
+            "/usr/local/bin/script.sh".to_owned(),
+        );
+        let result = resolve_watch_files(&config, &requirement_data);
+        assert_eq!(
+            result,
+            BTreeSet::from(["/usr/local/bin/script.sh".to_owned()])
+        );
+    }
+
+    #[test]
+    fn test_resolve_watch_files_read_from_file() {
+        let config = make_config(vec![ConfigValue::ReadFromFile {
+            file: "path_file".to_owned(),
+        }]);
+        let mut requirement_data = RequirementData::default();
+        requirement_data.files.insert(
+            "path_file".to_owned(),
+            "/usr/local/bin/script.sh".to_owned(),
+        );
+        let result = resolve_watch_files(&config, &requirement_data);
+        assert_eq!(
+            result,
+            BTreeSet::from(["/usr/local/bin/script.sh".to_owned()])
+        );
+    }
+
+    #[test]
+    fn test_resolve_watch_files_missing_env_var_is_skipped() {
+        let config = make_config(vec![ConfigValue::FetchFromEnv {
+            env: "MISSING_VAR".to_owned(),
+        }]);
+        let result = resolve_watch_files(&config, &RequirementData::default());
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_resolve_watch_files_deduplicates() {
+        let config = make_config(vec![
+            ConfigValue::Literal("script.sh".to_owned()),
+            ConfigValue::Literal("script.sh".to_owned()),
+        ]);
+        let result = resolve_watch_files(&config, &RequirementData::default());
+        assert_eq!(result.len(), 1);
+    }
+
+    // TEST: get_requirements() - watch_files
+
+    #[test]
+    fn test_get_requirements_includes_watch_files_env() {
+        let config = make_config(vec![ConfigValue::FetchFromEnv {
+            env: "MY_SCRIPT".to_owned(),
+        }]);
+        let requirements = get_requirements(&config);
+        assert!(requirements.env_vars.contains("MY_SCRIPT"));
+    }
+
+    #[test]
+    fn test_get_requirements_includes_watch_files_file() {
+        let config = make_config(vec![ConfigValue::ReadFromFile {
+            file: "path_file".to_owned(),
+        }]);
+        let requirements = get_requirements(&config);
+        assert!(requirements.files.contains("path_file"));
     }
 }

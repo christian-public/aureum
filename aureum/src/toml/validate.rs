@@ -343,7 +343,7 @@ fn split_toml_config(config: TomlConfigFile) -> Vec<TomlConfigTest> {
 
         vec![root_test]
     } else {
-        let TomlConfigFile { root, tests } = config;
+        let TomlConfigFile { root, tests, .. } = config;
         tests
             .into_iter()
             .map(|sub_config| merge_toml_configs(root.clone(), sub_config))

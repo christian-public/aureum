@@ -8,6 +8,7 @@ use std::fmt;
 pub struct TomlConfigFile {
     pub root: TomlConfigTest,
     pub tests: Vec<TomlConfigTest>,
+    pub watch_files: Vec<ConfigValue<String>>,
 }
 
 #[derive(Clone)]
@@ -159,8 +160,20 @@ pub fn parse_toml_config(file_content: &str) -> Result<TomlConfigFile, TomlConfi
         }
     };
 
-    match (root, tests) {
-        (Some(root), Some(tests)) => Ok(TomlConfigFile { root, tests }),
+    let watch_files = match get_array_of_strings_from_table(&table, "watch_files") {
+        Ok(values) => Some(values.unwrap_or_default()),
+        Err(errs) => {
+            all_errors.extend(errs);
+            None
+        }
+    };
+
+    match (root, tests, watch_files) {
+        (Some(root), Some(tests), Some(watch_files)) => Ok(TomlConfigFile {
+            root,
+            tests,
+            watch_files,
+        }),
         _ => Err(TomlConfigError::ParseErrors(all_errors)),
     }
 }
@@ -510,6 +523,64 @@ mod tests {
         let str = r#""invalid config""#;
         let result = parse_toml_config(str);
         assert!(matches!(result, Err(TomlConfigError::InvalidTomlSyntax(_))));
+    }
+
+    // TEST: parse_toml_config() - watch_files
+
+    #[test]
+    fn test_parse_toml_config_watch_files_literal() {
+        let str = r#"
+            program = "echo"
+            expected_stdout = "hello"
+            watch_files = ["script.sh"]
+        "#;
+        let result = parse_toml_config(str);
+        assert!(matches!(
+            result,
+            Ok(TomlConfigFile { watch_files, .. })
+                if matches!(watch_files.as_slice(), [ConfigValue::Literal(s)] if s == "script.sh")
+        ));
+    }
+
+    #[test]
+    fn test_parse_toml_config_watch_files_env() {
+        let str = r#"
+            program = "echo"
+            expected_stdout = "hello"
+            watch_files = [{ env = "MY_SCRIPT" }]
+        "#;
+        let result = parse_toml_config(str);
+        assert!(matches!(
+            result,
+            Ok(TomlConfigFile { watch_files, .. })
+                if matches!(watch_files.as_slice(), [ConfigValue::FetchFromEnv { env }] if env == "MY_SCRIPT")
+        ));
+    }
+
+    #[test]
+    fn test_parse_toml_config_watch_files_file() {
+        let str = r#"
+            program = "echo"
+            expected_stdout = "hello"
+            watch_files = [{ file = "path_to_script" }]
+        "#;
+        let result = parse_toml_config(str);
+        assert!(matches!(
+            result,
+            Ok(TomlConfigFile { watch_files, .. })
+                if matches!(watch_files.as_slice(), [ConfigValue::ReadFromFile { file }] if file == "path_to_script")
+        ));
+    }
+
+    #[test]
+    fn test_parse_toml_config_watch_files_invalid_type() {
+        let str = r#"
+            program = "echo"
+            expected_stdout = "hello"
+            watch_files = [false]
+        "#;
+        let result = parse_toml_config(str);
+        assert!(matches!(result, Err(TomlConfigError::ParseErrors(_))));
     }
 
     // TEST: parse_string_value()

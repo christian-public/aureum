@@ -4,7 +4,7 @@ use aureum::Requirements;
 use aureum::{RequirementData, TestEntry, TestId, TestIdCoverageSet};
 use itertools::{Either, Itertools};
 use relative_path::RelativePathBuf;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::env;
 use std::fs;
 use std::io;
@@ -32,6 +32,7 @@ pub struct LoadedConfigFile {
     pub test_id_coverage_set: TestIdCoverageSet,
     pub requirement_data: RequirementData,
     pub test_entries: Vec<(TestId, TestEntry)>,
+    pub watch_files: BTreeSet<String>,
 }
 
 impl LoadedConfigFile {
@@ -102,6 +103,8 @@ fn load_config_file(
     let requirement_data =
         retrieve_requirement_data(&path_to_containing_dir.to_path(current_dir), requirements);
 
+    let watch_files = aureum::resolve_watch_files(&config, &requirement_data);
+
     let test_entries = aureum::build_test_entries(
         config,
         path_to_containing_dir,
@@ -115,6 +118,7 @@ fn load_config_file(
         test_id_coverage_set,
         requirement_data,
         test_entries,
+        watch_files,
     })
 }
 

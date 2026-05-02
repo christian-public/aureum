@@ -605,6 +605,10 @@ fn collect_watch_paths(
             }
         }
 
+        for file in &loaded.watch_files {
+            discovered.push(containing_dir.join(file));
+        }
+
         for file in discovered {
             if !user_watch_paths.iter().any(|wp| file.starts_with(wp)) {
                 all_paths.insert(file);
