@@ -1,0 +1,3 @@
+program = "echo"
+expected_stdout = "hello"
+typo_field = "oops"

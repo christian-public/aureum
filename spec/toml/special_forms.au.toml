@@ -18,6 +18,22 @@ expected_exit_code = 3
 
 
 [[tests]]
+id = "extra_keys"
+program_arguments = ["validate", "helpers/special_form_extra_keys.toml"]
+expected_stdout = """
+✘ helpers/special_form_extra_keys.toml  Parse error
+"""
+expected_stderr = """
+📋 helpers/special_form_extra_keys.toml
+└── Parse errors
+    └── ✘ field 'expected_stdout': unknown keys: unknown_key; expected 'file' or 'env'
+
+warning: Some config files contain errors (See above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
 id = "invalid"
 program_arguments = ["validate", "helpers/invalid_special_form.toml"]
 expected_stdout = """

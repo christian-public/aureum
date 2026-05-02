@@ -1,0 +1,6 @@
+program = "echo"
+
+[[tests]]
+id = "test1"
+expected_stdout = "hello"
+typo_field = "oops"

@@ -1,5 +1,5 @@
 use crate::TestId;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 use std::convert::TryFrom;
 use std::fmt;
 
@@ -65,6 +65,9 @@ pub enum ParseError {
         id: String,
     },
     IdForbiddenAtRoot,
+    UnknownField {
+        field: String,
+    },
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -125,11 +128,37 @@ impl fmt::Display for ParseError {
             ParseError::MissingId => write!(f, "missing required field 'id'"),
             ParseError::InvalidId { id } => write!(f, "invalid id '{id}'"),
             ParseError::IdForbiddenAtRoot => write!(f, "'id' is not allowed at the root level"),
+            ParseError::UnknownField { field } => write!(f, "unknown field '{field}'"),
         }
     }
 }
 
 // PARSING
+
+static KNOWN_TEST_FIELDS: &[&str] = &[
+    "id",
+    "description",
+    "program",
+    "program_arguments",
+    "stdin",
+    "expected_stdout",
+    "expected_stderr",
+    "expected_exit_code",
+];
+
+static KNOWN_ROOT_ONLY_FIELDS: &[&str] = &["tests", "watch_files"];
+
+fn check_unknown_fields(
+    table: &toml::Table,
+    known_fields: impl IntoIterator<Item = &'static str>,
+) -> Vec<ParseError> {
+    let known: HashSet<&str> = known_fields.into_iter().collect();
+    table
+        .keys()
+        .filter(|key| !known.contains(key.as_str()))
+        .map(|key| ParseError::UnknownField { field: key.clone() })
+        .collect()
+}
 
 pub fn parse_toml_config(file_content: &str) -> Result<TomlConfigFile, TomlConfigError> {
     let table =
@@ -168,12 +197,22 @@ pub fn parse_toml_config(file_content: &str) -> Result<TomlConfigFile, TomlConfi
         }
     };
 
+    all_errors.extend(check_unknown_fields(
+        &table,
+        KNOWN_TEST_FIELDS
+            .iter()
+            .copied()
+            .chain(KNOWN_ROOT_ONLY_FIELDS.iter().copied()),
+    ));
+
     match (root, tests, watch_files) {
-        (Some(root), Some(tests), Some(watch_files)) => Ok(TomlConfigFile {
-            root,
-            tests,
-            watch_files,
-        }),
+        (Some(root), Some(tests), Some(watch_files)) if all_errors.is_empty() => {
+            Ok(TomlConfigFile {
+                root,
+                tests,
+                watch_files,
+            })
+        }
         _ => Err(TomlConfigError::ParseErrors(all_errors)),
     }
 }
@@ -273,6 +312,13 @@ fn get_tests_from_array(
             });
             continue;
         };
+
+        for err in check_unknown_fields(inner_table, KNOWN_TEST_FIELDS.iter().copied()) {
+            errors.push(ParseError::ErrorAtIndex {
+                index,
+                error: Box::new(err),
+            });
+        }
 
         match parse_toml_config_from_table(inner_table) {
             Ok(parsed_config) => {
@@ -434,7 +480,9 @@ fn parse_special_form<T>(table: &toml::Table) -> Result<ConfigValue<T>, ParseErr
     if let Some(value) = table.get("file") {
         match value {
             toml::Value::String(s) => {
-                return Ok(ConfigValue::ReadFromFile { file: s.to_owned() });
+                if unexpected_keys.is_empty() {
+                    return Ok(ConfigValue::ReadFromFile { file: s.to_owned() });
+                }
             }
             _ => {
                 inner_error = Some(Box::new(ParseError::InvalidType {
@@ -448,7 +496,9 @@ fn parse_special_form<T>(table: &toml::Table) -> Result<ConfigValue<T>, ParseErr
     if let Some(value) = table.get("env") {
         match value {
             toml::Value::String(s) => {
-                return Ok(ConfigValue::FetchFromEnv { env: s.to_owned() });
+                if unexpected_keys.is_empty() {
+                    return Ok(ConfigValue::FetchFromEnv { env: s.to_owned() });
+                }
             }
             _ => {
                 inner_error = Some(Box::new(ParseError::InvalidType {
@@ -523,6 +573,78 @@ mod tests {
         let str = r#""invalid config""#;
         let result = parse_toml_config(str);
         assert!(matches!(result, Err(TomlConfigError::InvalidTomlSyntax(_))));
+    }
+
+    // TEST: parse_toml_config() - unknown fields
+
+    #[test]
+    fn test_parse_toml_config_unknown_field_at_root() {
+        let str = r#"
+            program = "echo"
+            expected_stdout = "hello"
+            typo_field = "oops"
+        "#;
+        let result = parse_toml_config(str);
+        assert!(matches!(
+            result,
+            Err(TomlConfigError::ParseErrors(errors))
+                if errors.iter().any(|e| matches!(e, ParseError::UnknownField { field } if field == "typo_field"))
+        ));
+    }
+
+    #[test]
+    fn test_parse_toml_config_unknown_field_in_subtest() {
+        let str = r#"
+            program = "echo"
+
+            [[tests]]
+            id = "test1"
+            expected_stdout = "hello"
+            typo_field = "oops"
+        "#;
+        let result = parse_toml_config(str);
+        assert!(matches!(
+            result,
+            Err(TomlConfigError::ParseErrors(errors))
+                if errors.iter().any(|e| matches!(
+                    e,
+                    ParseError::ErrorAtIndex { index: 0, error }
+                        if matches!(error.as_ref(), ParseError::UnknownField { field } if field == "typo_field")
+                ))
+        ));
+    }
+
+    #[test]
+    fn test_parse_toml_config_tests_and_watch_files_not_unknown_at_root() {
+        let str = r#"
+            program = "echo"
+            expected_stdout = "hello"
+            watch_files = ["script.sh"]
+        "#;
+        let result = parse_toml_config(str);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_parse_toml_config_watch_files_unknown_in_subtest() {
+        let str = r#"
+            program = "echo"
+
+            [[tests]]
+            id = "test1"
+            expected_stdout = "hello"
+            watch_files = ["script.sh"]
+        "#;
+        let result = parse_toml_config(str);
+        assert!(matches!(
+            result,
+            Err(TomlConfigError::ParseErrors(errors))
+                if errors.iter().any(|e| matches!(
+                    e,
+                    ParseError::ErrorAtIndex { index: 0, error }
+                        if matches!(error.as_ref(), ParseError::UnknownField { field } if field == "watch_files")
+                ))
+        ));
     }
 
     // TEST: parse_toml_config() - watch_files
@@ -656,11 +778,32 @@ mod tests {
     // TEST: parse_special_form()
 
     #[test]
-    fn test_parse_special_form_expect_read_from_file() {
+    fn test_parse_special_form_extra_keys_with_valid_file() {
         let table = r#"file = "path_to_file"
-test = "abc""#
+unknown_key = "oops""#
             .parse::<Table>()
             .unwrap();
+        let result = parse_special_form::<String>(&table);
+        assert!(
+            matches!(result, Err(ParseError::InvalidSpecialForm { error, unexpected_keys }) if error.is_none() && unexpected_keys == vec!["unknown_key"])
+        );
+    }
+
+    #[test]
+    fn test_parse_special_form_extra_keys_with_valid_env() {
+        let table = r#"env = "ENV_VAR"
+unknown_key = "oops""#
+            .parse::<Table>()
+            .unwrap();
+        let result = parse_special_form::<String>(&table);
+        assert!(
+            matches!(result, Err(ParseError::InvalidSpecialForm { error, unexpected_keys }) if error.is_none() && unexpected_keys == vec!["unknown_key"])
+        );
+    }
+
+    #[test]
+    fn test_parse_special_form_expect_read_from_file() {
+        let table = r#"file = "path_to_file""#.parse::<Table>().unwrap();
         let result = parse_special_form::<String>(&table);
         assert!(matches!(
             result,

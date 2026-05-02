@@ -1,0 +1,2 @@
+program = "echo"
+expected_stdout = { file = "path", unknown_key = "oops" }
