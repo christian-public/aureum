@@ -2,7 +2,7 @@ use crate::utils::glob;
 use aureum::{TestId, TestIdCoverageSet};
 use relative_path::RelativePathBuf;
 use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 
 /// Files to look for when searching in directories
 static DIRECTORY_SEARCH_PATTERN: &str = "**/*.au.toml";
@@ -107,8 +107,12 @@ fn find_config_files_in_path(
 fn find_config_files_for_glob(pattern: &Path, base: &Path) -> Result<Vec<PathBuf>, PathError> {
     pattern.to_str().ok_or(PathError::GlobPatternMustBeUtf8)?;
 
+    let normalized: PathBuf = pattern
+        .components()
+        .filter(|c| !matches!(c, Component::CurDir))
+        .collect();
     let entries =
-        glob::walk_entries(&base.join(pattern)).map_err(|_| PathError::InvalidGlobEntry)?;
+        glob::walk_entries(&base.join(&normalized)).map_err(|_| PathError::InvalidGlobEntry)?;
 
     let mut files = vec![];
     for entry in entries {
@@ -229,6 +233,44 @@ mod tests {
         assert_eq!(result.len(), 2, "{result:?}");
         assert!(result.iter().any(|p| p.ends_with("a.au.toml")));
         assert!(result.iter().any(|p| p.ends_with("b.au.toml")));
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn dot_slash_prefix_matches_same_as_no_prefix() {
+        let dir = setup_test_dir(
+            "dot_slash_prefix",
+            &[
+                "examples/a.au.toml",
+                "examples/b.au.toml",
+                "other/c.au.toml",
+            ],
+        );
+        let mut without =
+            find_config_files_for_glob(Path::new("examples/*.au.toml"), &dir).unwrap();
+        let mut with = find_config_files_for_glob(Path::new("./examples/*.au.toml"), &dir).unwrap();
+        without.sort();
+        with.sort();
+        assert_eq!(
+            with, without,
+            "\"./examples/...\" should match the same files as \"examples/...\""
+        );
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn dot_component_in_middle_of_pattern_is_ignored() {
+        let dir = setup_test_dir("dot_middle", &["examples/sub/a.au.toml", "other/b.au.toml"]);
+        let mut without =
+            find_config_files_for_glob(Path::new("examples/sub/*.au.toml"), &dir).unwrap();
+        let mut with =
+            find_config_files_for_glob(Path::new("examples/./sub/*.au.toml"), &dir).unwrap();
+        without.sort();
+        with.sort();
+        assert_eq!(
+            with, without,
+            "\".\" in the middle of a pattern should be ignored"
+        );
         let _ = fs::remove_dir_all(&dir);
     }
 }
