@@ -26,7 +26,7 @@ expected_stdout = """
 expected_stderr = """
 📋 helpers/special_form_extra_keys.toml
 └── Parse errors
-    └── ✘ field 'expected_stdout': unknown keys: unknown_key; expected 'file' or 'env'
+    └── ✘ field 'expected_stdout': unknown keys: 'unknown_key'; expected 'file' or 'env'
 
 warning: Some config files contain errors (See above)
 """
@@ -42,7 +42,7 @@ expected_stdout = """
 expected_stderr = """
 📋 helpers/invalid_special_form.toml
 └── Parse errors
-    ├── ✘ field 'expected_stdout': unknown keys: unknown_key; expected 'file' or 'env'
+    ├── ✘ field 'expected_stdout': unknown keys: 'unknown_key'; expected 'file' or 'env'
     └── ✘ field 'expected_stderr': expected string, got integer
 
 warning: Some config files contain errors (See above)

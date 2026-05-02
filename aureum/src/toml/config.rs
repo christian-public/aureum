@@ -116,12 +116,16 @@ impl fmt::Display for ParseError {
                 unexpected_keys,
             } => match (error.as_deref(), unexpected_keys.as_slice()) {
                 (Some(e), []) => write!(f, "{e}"),
-                (Some(e), keys) => write!(f, "{e}; unexpected keys: {}", keys.join(", ")),
+                (Some(e), keys) => {
+                    let quoted = keys.iter().map(|k| format!("'{k}'")).collect::<Vec<_>>();
+                    write!(f, "{e}; unexpected keys: {}", quoted.join(", "))
+                }
                 (None, keys) => {
+                    let quoted = keys.iter().map(|k| format!("'{k}'")).collect::<Vec<_>>();
                     write!(
                         f,
                         "unknown keys: {}; expected 'file' or 'env'",
-                        keys.join(", ")
+                        quoted.join(", ")
                     )
                 }
             },
