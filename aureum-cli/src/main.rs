@@ -116,11 +116,11 @@ fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode {
                     config_file_path,
                     LoadedConfigFile {
                         test_entries,
-                        validation_errors,
+                        watch_file_errors,
                         ..
                     },
                 )| {
-                    let is_valid = validation_errors.is_empty()
+                    let is_valid = watch_file_errors.is_empty()
                         && test_entries.iter().all(|(_, x)| x.is_testable());
                     let validate_result = if is_valid {
                         ReportValidateResult::Success(test_entries.len())
@@ -689,7 +689,7 @@ fn print_config_details_if_needed(
                 &loaded_config_file.requirement_data,
                 &loaded_config_file.requirements,
                 &loaded_config_file.watch_files,
-                &loaded_config_file.validation_errors,
+                &loaded_config_file.watch_file_errors,
                 verbose,
                 hide_absolute_paths,
             );

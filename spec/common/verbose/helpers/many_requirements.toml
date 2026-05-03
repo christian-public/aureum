@@ -1,17 +1,27 @@
+watch_files = [
+    "hello_world.txt",
+    { file = "AUREUM_TEST_FILE_WITH_PATH_TO_WATCH_DOES_NOT_EXIST" },
+    { env = "AUREUM_TEST_ENV_VAR_WITH_PATH_TO_WATCH_DOES_NOT_EXIST" },
+]
+
 program = "echo"
 program_arguments = ["-n", "Hello world"]
+
 
 [[tests]]
 id = "env_var_exists"
 expected_stdout = { env = "AUREUM_TEST_HELLO_WORLD" }
 
+
 [[tests]]
 id = "env_var_missing"
 expected_stdout = { env = "AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST" }
 
+
 [[tests]]
 id = "external_file_exists"
 expected_stdout = { file = "hello_world.txt" }
+
 
 [[tests]]
 id = "external_file_missing"

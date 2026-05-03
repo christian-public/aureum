@@ -129,7 +129,7 @@ pub fn print_config_details(
     requirement_data: &RequirementData,
     requirements: &Requirements,
     watch_files: &BTreeSet<String>,
-    validation_errors: &BTreeSet<ValidationError>,
+    watch_file_errors: &BTreeSet<ValidationError>,
     verbose: bool,
     hide_absolute_paths: bool,
 ) {
@@ -200,10 +200,10 @@ pub fn print_config_details(
         ));
     }
 
-    if !validation_errors.is_empty() {
+    if !watch_file_errors.is_empty() {
         nodes.push(Node(
-            String::from("Validation errors"),
-            validation_errors
+            String::from("Watch file errors"),
+            watch_file_errors
                 .iter()
                 .map(|e| str_to_tree(&format_validation_error(e)))
                 .collect(),

@@ -7,10 +7,12 @@ program_arguments = ["validate", "helpers/*.toml"]
 expected_stdout = """
 ✘ helpers/many_requirements.toml  4 tests
 ✔ helpers/no_requirements.toml    1 test
-✔ helpers/watch_files.toml        2 tests
 """
 expected_stderr = """
 📋 helpers/many_requirements.toml
+├── Watch file errors
+│   ├── ✘ Missing external file 'AUREUM_TEST_FILE_WITH_PATH_TO_WATCH_DOES_NOT_EXIST'
+│   └── ✘ Missing environment variable 'AUREUM_TEST_ENV_VAR_WITH_PATH_TO_WATCH_DOES_NOT_EXIST'
 ├── :env_var_exists
 ├── :env_var_missing
 │   └── Validation errors
@@ -36,22 +38,27 @@ program_arguments = [
 expected_stdout = """
 ✘ helpers/many_requirements.toml  4 tests
 ✔ helpers/no_requirements.toml    1 test
-✔ helpers/watch_files.toml        2 tests
 """
 expected_stderr = """
-🔍 Found 3 config files
+🔍 Found 2 config files
 ├── helpers/many_requirements.toml
-├── helpers/no_requirements.toml
-└── helpers/watch_files.toml
+└── helpers/no_requirements.toml
 
 📋 helpers/many_requirements.toml
 ├── Requirements
 │   ├── Files
+│   │   ├── ✘ AUREUM_TEST_FILE_WITH_PATH_TO_WATCH_DOES_NOT_EXIST
 │   │   ├── ✘ aureum_test_this_file_does_not_exist
 │   │   └── ✔ hello_world.txt
 │   └── Environment variables
 │       ├── ✘ AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST
+│       ├── ✘ AUREUM_TEST_ENV_VAR_WITH_PATH_TO_WATCH_DOES_NOT_EXIST
 │       └── ✔ AUREUM_TEST_HELLO_WORLD
+├── Watch files
+│   └── hello_world.txt
+├── Watch file errors
+│   ├── ✘ Missing external file 'AUREUM_TEST_FILE_WITH_PATH_TO_WATCH_DOES_NOT_EXIST'
+│   └── ✘ Missing environment variable 'AUREUM_TEST_ENV_VAR_WITH_PATH_TO_WATCH_DOES_NOT_EXIST'
 ├── :env_var_exists
 │   └── Program to run
 │       └── ✔ <absolute path to 'echo'>
@@ -72,16 +79,6 @@ expected_stderr = """
 📋 helpers/no_requirements.toml
 └── Program to run
     └── ✔ <absolute path to 'echo'>
-
-📋 helpers/watch_files.toml
-├── Watch files
-│   └── hello_world.txt
-├── :test1
-│   └── Program to run
-│       └── ✔ <absolute path to 'echo'>
-└── :test2
-    └── Program to run
-        └── ✔ <absolute path to 'echo'>
 
 warning: Some config files contain errors (See above)
 """

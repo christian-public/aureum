@@ -35,12 +35,12 @@ pub struct LoadedConfigFile {
     pub requirements: Requirements,
     pub test_entries: Vec<(TestId, TestEntry)>,
     pub watch_files: BTreeSet<String>,
-    pub validation_errors: BTreeSet<ValidationError>,
+    pub watch_file_errors: BTreeSet<ValidationError>,
 }
 
 impl LoadedConfigFile {
     pub fn has_validation_errors(&self) -> bool {
-        !self.validation_errors.is_empty()
+        !self.watch_file_errors.is_empty()
             || self
                 .test_entries
                 .iter()
@@ -108,7 +108,7 @@ fn load_config_file(
     let requirement_data =
         retrieve_requirement_data(&path_to_containing_dir.to_path(current_dir), &requirements);
 
-    let (watch_files, validation_errors) = aureum::resolve_watch_files(&config, &requirement_data);
+    let (watch_files, watch_file_errors) = aureum::resolve_watch_files(&config, &requirement_data);
 
     let test_entries = aureum::build_test_entries(
         config,
@@ -125,7 +125,7 @@ fn load_config_file(
         requirements,
         test_entries,
         watch_files,
-        validation_errors,
+        watch_file_errors,
     })
 }
 
