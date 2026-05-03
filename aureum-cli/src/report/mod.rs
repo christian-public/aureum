@@ -3,9 +3,8 @@ pub mod formats {
     pub mod tap;
 }
 pub mod init;
-mod label;
 pub mod list;
 pub mod run;
-mod symbol;
 pub mod test;
+mod theme;
 pub mod validate;

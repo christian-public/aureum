@@ -1,6 +1,5 @@
 use crate::load_config_file::ConfigFileError;
-use crate::report::label;
-use crate::report::symbol;
+use crate::report::theme;
 use crate::utils::file;
 use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
 use aureum::{
@@ -22,7 +21,7 @@ pub enum ReportValidateResult {
 }
 
 pub fn print_invalid_paths(paths: &[PathBuf]) {
-    eprintln!("{} Invalid paths to config files:", label::warning());
+    eprintln!("{} Invalid paths to config files:", theme::warning());
     for path in paths {
         eprintln!("- {}", path.display());
     }
@@ -32,7 +31,7 @@ pub fn print_invalid_paths(paths: &[PathBuf]) {
 pub fn print_no_config_files() {
     eprintln!(
         "{} No config files found for the given paths",
-        label::error()
+        theme::error()
     );
 }
 
@@ -64,9 +63,9 @@ pub fn print_validate_table(entries: &BTreeMap<RelativePathBuf, ReportValidateRe
 
         let is_valid = matches!(result, ReportValidateResult::Success(_));
         if is_valid {
-            println!("{} {line}", symbol::checkmark());
+            println!("{} {line}", theme::checkmark());
         } else {
-            println!("{} {}", symbol::cross(), line.red());
+            println!("{} {}", theme::cross(), line.red());
         }
     }
 }
@@ -142,10 +141,10 @@ pub fn print_config_details(
             // Program to run
             let program_to_run = match &test_entry.program_path {
                 ProgramPath::NotSpecified => {
-                    format!("{} {}", symbol::cross(), "Not specified".red())
+                    format!("{} {}", theme::cross(), "Not specified".red())
                 }
                 ProgramPath::MissingProgram { requested_program } => {
-                    format!("{} {}", symbol::cross(), requested_program.red())
+                    format!("{} {}", theme::cross(), requested_program.red())
                 }
                 ProgramPath::ResolvedPath {
                     requested_program: _,
@@ -156,7 +155,7 @@ pub fn print_config_details(
                     } else {
                         resolved_path.display().to_string()
                     };
-                    format!("{} {path}", symbol::checkmark())
+                    format!("{} {path}", theme::checkmark())
                 }
             };
 
@@ -247,7 +246,7 @@ pub fn print_config_file_error(config_file_path: &RelativePath, error: &ConfigFi
 fn format_toml_config_error(err: &TomlConfigError) -> Vec<Tree> {
     match err {
         TomlConfigError::InvalidTomlSyntax(e) => {
-            let label = format!("{} invalid TOML syntax", symbol::cross());
+            let label = format!("{} invalid TOML syntax", theme::cross());
             let options = string::TextBlockOptions {
                 top_line: string::TextBlockOptions::CORNER_TOP.dimmed().to_string(),
                 bottom_line: string::TextBlockOptions::CORNER_BOTTOM.dimmed().to_string(),
@@ -272,24 +271,24 @@ fn format_toml_config_error(err: &TomlConfigError) -> Vec<Tree> {
 }
 
 fn format_parse_error(error: &ParseError) -> String {
-    format!("{} {}", symbol::cross(), error.to_string().red())
+    format!("{} {}", theme::cross(), error.to_string().red())
 }
 
 pub fn print_config_files_contain_errors() {
     eprintln!(
         "{} Some config files contain errors (See above)",
-        label::warning()
+        theme::warning()
     );
 }
 
 pub fn print_run_single_program_only(test_entry_count: usize) {
     eprintln!(
         "{} `--format passthrough` supports only a single test, but found {test_entry_count} tests",
-        label::error(),
+        theme::error(),
     );
     eprintln!(
         "{} Use `--format toml` to run multiple tests, or run the `list` command to list all tests",
-        label::hint()
+        theme::hint()
     );
 }
 
@@ -311,9 +310,9 @@ fn requirements_map(requirements: &Requirements, requirement_data: &RequirementD
 
     let format_requirement = |is_present: bool, text: &str| {
         if is_present {
-            format!("{} {text}", symbol::checkmark())
+            format!("{} {text}", theme::checkmark())
         } else {
-            format!("{} {}", symbol::cross(), text.red())
+            format!("{} {}", theme::cross(), text.red())
         }
     };
 
@@ -369,7 +368,7 @@ fn format_validation_error(validation_error: &ValidationError) -> String {
         ),
     };
 
-    format!("{} {}", symbol::cross(), msg.red())
+    format!("{} {}", theme::cross(), msg.red())
 }
 
 fn str_to_tree(msg: &str) -> Tree {

@@ -1,7 +1,6 @@
 use crate::report::formats::summary;
 use crate::report::formats::tap;
-use crate::report::label;
-use crate::report::symbol;
+use crate::report::theme;
 use crate::vendor::ascii_tree::Tree::{Leaf, Node};
 use aureum::{RunError, RunResult, TestCase, TestResult};
 use colored::Colorize;
@@ -21,16 +20,16 @@ pub struct ReportConfig {
 
 pub fn print_watch_started(count: usize) {
     let paths = if count == 1 { "path" } else { "paths" };
-    eprintln!("{} watching {count} {paths} for changes...", label::watch());
+    eprintln!("{} watching {count} {paths} for changes...", theme::watch());
 }
 
 pub fn print_watch_detected_file_changes() {
     eprintln!();
-    eprintln!("{} changes detected", label::watch());
+    eprintln!("{} changes detected", theme::watch());
 }
 
 pub fn print_interactive_mode_requires_a_terminal_error() {
-    eprintln!("{} --interactive requires a terminal", label::error());
+    eprintln!("{} --interactive requires a terminal", theme::error());
 }
 
 pub fn print_test_cases_start(report_config: &ReportConfig) {
@@ -142,7 +141,7 @@ fn summary_print_result(run_result: &RunResult) {
     };
 
     if run_result.is_success() {
-        println!("{} {message}", symbol::checkmark());
+        println!("{} {message}", theme::checkmark());
     } else {
         let nodes = match &run_result.result {
             Ok(result) => summary::nodes_from_test_result(result),

@@ -1,23 +1,23 @@
-use crate::report::label;
+use crate::report::theme;
 use aureum::{ProgramOutput, TestCase};
 
 pub fn print_verbose_is_not_supported_in_passthrough() {
     eprintln!(
         "{} `--verbose` is not supported in passthrough mode",
-        label::error()
+        theme::error()
     );
     eprintln!(
         "{} You may want to use `--format toml` instead",
-        label::hint()
+        theme::hint()
     );
 }
 
 pub fn print_failed_to_run_program() {
-    eprintln!("{} Failed to run program", label::error());
+    eprintln!("{} Failed to run program", theme::error());
 }
 
 pub fn print_one_or_more_programs_failed_to_run() {
-    eprintln!("{} One or more programs failed to run", label::error());
+    eprintln!("{} One or more programs failed to run", theme::error());
 }
 
 pub fn print_test_case_id_as_toml_comment(test_case: &TestCase) {
