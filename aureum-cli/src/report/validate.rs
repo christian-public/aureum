@@ -4,7 +4,7 @@ use crate::utils::file;
 use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
 use aureum::{
     ParseError, ProgramPath, RequirementData, Requirements, TestEntry, TestId, TomlConfigError,
-    ValidationError, string,
+    ValidationError,
 };
 use colored::Colorize;
 use relative_path::{RelativePath, RelativePathBuf};
@@ -247,18 +247,7 @@ fn format_toml_config_error(err: &TomlConfigError) -> Vec<Tree> {
     match err {
         TomlConfigError::InvalidTomlSyntax(e) => {
             let label = format!("{} invalid TOML syntax", theme::cross());
-            let options = string::TextBlockOptions {
-                top_line: string::TextBlockOptions::CORNER_TOP.dimmed().to_string(),
-                bottom_line: string::TextBlockOptions::CORNER_BOTTOM.dimmed().to_string(),
-                format_line: |line| {
-                    if line.is_empty() {
-                        string::TextBlockOptions::BORDER.dimmed().to_string()
-                    } else {
-                        format!("{} {line}", string::TextBlockOptions::BORDER.dimmed())
-                    }
-                },
-            };
-            let block = string::text_block_with_options(e.to_string().trim_end(), &options);
+            let block = theme::dimmed_border_text_block(e.to_string().trim_end());
             let mut lines = vec![label];
             lines.extend(block.lines().map(str::to_owned));
             vec![Leaf(lines)]

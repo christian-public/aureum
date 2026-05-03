@@ -1,6 +1,6 @@
+use crate::report::theme;
 use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
 use aureum::string;
-use aureum::string::TextBlockOptions;
 use aureum::{TestResult, ValueComparison};
 use colored::Colorize;
 
@@ -108,34 +108,23 @@ fn format_string_diff(expected: &str, got: &str) -> Vec<Tree> {
         }
     };
 
-    let text_block_options = TextBlockOptions {
-        top_line: TextBlockOptions::CORNER_TOP.dimmed().to_string(),
-        bottom_line: TextBlockOptions::CORNER_BOTTOM.dimmed().to_string(),
-        format_line: |line| {
-            if line.is_empty() {
-                TextBlockOptions::BORDER.dimmed().to_string()
-            } else {
-                format!("{} {line}", TextBlockOptions::BORDER.dimmed())
-            }
-        },
-    };
-
-    let expected_output = string::text_block_with_options(
-        &string::prefix_text_with_line_numbers(expected, format_expected_line),
-        &text_block_options,
-    );
+    let expected_output = theme::dimmed_border_text_block(&string::prefix_text_with_line_numbers(
+        expected,
+        format_expected_line,
+    ));
     let expected_lines = string_to_lines(&format!("Expected\n{expected_output}"));
 
-    let got_output = string::text_block_with_options(
-        &string::prefix_text_with_line_numbers(got, format_got_line),
-        &text_block_options,
-    );
+    let got_output = theme::dimmed_border_text_block(&string::prefix_text_with_line_numbers(
+        got,
+        format_got_line,
+    ));
     let got_lines = string_to_lines(&format!("Got\n{got_output}"));
 
-    let diff_output = string::text_block_with_options(
-        &string::prefix_diff_with_line_numbers(expected, got, format_diff_line),
-        &text_block_options,
-    );
+    let diff_output = theme::dimmed_border_text_block(&string::prefix_diff_with_line_numbers(
+        expected,
+        got,
+        format_diff_line,
+    ));
     let diff_lines = string_to_lines(&format!("Diff\n{diff_output}"));
 
     vec![Leaf(expected_lines), Leaf(got_lines), Leaf(diff_lines)]
