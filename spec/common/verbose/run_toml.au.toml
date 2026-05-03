@@ -4,6 +4,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 [[tests]]
 id = "without_verbose"
 program_arguments = ["run", "--format", "toml", "helpers/*.toml"]
+
 expected_stdout = """
 # TEST: helpers/many_requirements.toml:env_var_exists
 expected_stdout = "Hello world"
@@ -59,6 +60,7 @@ program_arguments = [
     "--hide-absolute-paths",
     "helpers/*.toml",
 ]
+
 expected_stdout = """
 # TEST: helpers/many_requirements.toml:env_var_exists
 expected_stdout = "Hello world"

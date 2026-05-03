@@ -4,6 +4,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 [[tests]]
 id = "missing_config"
 program_arguments = ["test", "aureum_test_this_file_does_not_exist"]
+
 expected_stdout = ""
 expected_stderr = """
 warning: Invalid paths to config files:
@@ -17,6 +18,7 @@ expected_exit_code = 3
 [[tests]]
 id = "missing_config_with_test_id"
 program_arguments = ["test", "aureum_test_this_file_does_not_exist:sub1"]
+
 expected_stdout = ""
 expected_stderr = """
 warning: Invalid paths to config files:
@@ -30,6 +32,7 @@ expected_exit_code = 3
 [[tests]]
 id = "invalid_config"
 program_arguments = ["test", "helpers/invalid_config.toml"]
+
 expected_stdout = """
 🚀 Running 0 tests:
 
@@ -49,6 +52,7 @@ expected_exit_code = 3
 [[tests]]
 id = "empty_config"
 program_arguments = ["test", "helpers/empty_config.toml"]
+
 expected_stdout = """
 🚀 Running 0 tests:
 
@@ -70,6 +74,7 @@ expected_exit_code = 3
 [[tests]]
 id = "no_program_specified"
 program_arguments = ["test", "helpers/no_test_program.toml"]
+
 expected_stdout = """
 🚀 Running 0 tests:
 
@@ -90,6 +95,7 @@ expected_exit_code = 3
 [[tests]]
 id = "unknown_test_program"
 program_arguments = ["test", "helpers/unknown_test_program.toml"]
+
 expected_stdout = """
 🚀 Running 0 tests:
 
@@ -110,6 +116,7 @@ expected_exit_code = 3
 [[tests]]
 id = "no_expectations"
 program_arguments = ["test", "helpers/no_expectations.toml"]
+
 expected_stdout = """
 🚀 Running 0 tests:
 
@@ -130,6 +137,7 @@ expected_exit_code = 3
 [[tests]]
 id = "invalid_exit_code"
 program_arguments = ["test", "helpers/invalid_exit_code.toml"]
+
 expected_stdout = """
 🚀 Running 0 tests:
 
@@ -150,6 +158,7 @@ expected_exit_code = 3
 [[tests]]
 id = "missing_env_var"
 program_arguments = ["test", "helpers/missing_env_var.toml"]
+
 expected_stdout = """
 🚀 Running 0 tests:
 
@@ -170,6 +179,7 @@ expected_exit_code = 3
 [[tests]]
 id = "missing_external_file"
 program_arguments = ["test", "helpers/missing_external_file.toml"]
+
 expected_stdout = """
 🚀 Running 0 tests:
 

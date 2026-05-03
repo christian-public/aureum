@@ -9,6 +9,7 @@ program_arguments = [
     "passthrough",
     "helpers/echo_tests.toml:test1",
 ]
+
 expected_stdout = "Test 1"
 expected_stderr = ""
 expected_exit_code = 0
@@ -22,6 +23,7 @@ program_arguments = [
     "passthrough",
     "helpers/echo_tests.toml",
 ]
+
 expected_stdout = ""
 expected_stderr = """
 error: `--format passthrough` supports only a single test, but found 2 tests
@@ -38,6 +40,7 @@ program_arguments = [
     "passthrough",
     "helpers/missing_program_on_test1.toml",
 ]
+
 expected_stdout = ""
 expected_stderr = """
 error: `--format passthrough` supports only a single test, but found 2 tests
@@ -54,6 +57,7 @@ program_arguments = [
     "passthrough",
     "helpers/missing_program_on_test1.toml:test2",
 ]
+
 expected_stdout = "Test 2"
 expected_stderr = ""
 expected_exit_code = 0
@@ -67,6 +71,7 @@ program_arguments = [
     "passthrough",
     "helpers/missing_program_on_all_tests.toml",
 ]
+
 expected_stdout = ""
 expected_stderr = """
 error: `--format passthrough` supports only a single test, but found 2 tests

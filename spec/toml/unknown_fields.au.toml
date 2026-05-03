@@ -4,6 +4,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 [[tests]]
 id = "unknown_field_at_root"
 program_arguments = ["validate", "helpers/unknown_field_at_root.toml"]
+
 expected_stdout = """
 ✘ helpers/unknown_field_at_root.toml  Parse error
 """
@@ -20,6 +21,7 @@ expected_exit_code = 3
 [[tests]]
 id = "unknown_field_in_subtest"
 program_arguments = ["validate", "helpers/unknown_field_in_subtest.toml"]
+
 expected_stdout = """
 ✘ helpers/unknown_field_in_subtest.toml  Parse error
 """

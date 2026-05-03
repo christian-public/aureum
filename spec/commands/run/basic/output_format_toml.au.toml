@@ -9,6 +9,7 @@ program_arguments = [
     "toml",
     "helpers/echo_hello.toml",
 ]
+
 expected_stdout = """
 # TEST: helpers/echo_hello.toml
 expected_stdout = "Hello world"
@@ -27,6 +28,7 @@ program_arguments = [
     "toml",
     "helpers/echo_multiline.toml",
 ]
+
 expected_stdout = """
 # TEST: helpers/echo_multiline.toml
 expected_stdout = \"\"\"
@@ -47,6 +49,7 @@ program_arguments = [
     "toml",
     "helpers/bash_stderr_and_exit_code.toml",
 ]
+
 expected_stdout = """
 # TEST: helpers/bash_stderr_and_exit_code.toml
 expected_stdout = ""
@@ -60,6 +63,7 @@ expected_exit_code = 0
 [[tests]]
 id = "stdin"
 program_arguments = ["run", "--format", "toml", "helpers/cat_stdin.toml"]
+
 expected_stdout = """
 # TEST: helpers/cat_stdin.toml
 expected_stdout = "Hello world"

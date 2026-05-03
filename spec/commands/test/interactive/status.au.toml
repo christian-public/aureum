@@ -1,5 +1,6 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
+
 # Status area starts empty: no message shown when on a failing field that is undecided.
 [[tests]]
 id = "empty_when_on_failing_undecided_field"
@@ -10,8 +11,10 @@ program_arguments = [
     "helpers/failing_stdout_only.toml",
 ]
 stdin = "q\n"
+
 expected_stdout = { file = "snapshots/status_empty.txt" }
 expected_exit_code = 1
+
 
 # Switching to a non-failing output field (stderr is NotChecked) shows the navigation hint.
 [[tests]]
@@ -23,8 +26,10 @@ program_arguments = [
     "helpers/failing_stdout_only.toml",
 ]
 stdin = "e\nq\n"
+
 expected_stdout = { file = "snapshots/status_non_failing_field.txt" }
 expected_exit_code = 1
+
 
 # Switching to stdin shows the same navigation hint.
 [[tests]]
@@ -36,8 +41,10 @@ program_arguments = [
     "helpers/failing_stdout_only.toml",
 ]
 stdin = "i\nq\n"
+
 expected_stdout = { file = "snapshots/status_stdin_field.txt" }
 expected_exit_code = 1
+
 
 # Pressing Enter on a failing field without a decision shows the error message.
 [[tests]]
@@ -49,8 +56,10 @@ program_arguments = [
     "helpers/failing_stdout_only.toml",
 ]
 stdin = "enter\nq\n"
+
 expected_stdout = { file = "snapshots/status_enter_undecided.txt" }
 expected_exit_code = 1
+
 
 # With a pending decision that would resolve all fields, shows "go to the next test."
 [[tests]]
@@ -62,8 +71,10 @@ program_arguments = [
     "helpers/failing_stdout_only.toml",
 ]
 stdin = "a\nq\n"
+
 expected_stdout = { file = "snapshots/status_all_decided.txt" }
 expected_exit_code = 1
+
 
 # With a pending decision but other fields still undecided, shows "go to the next field."
 [[tests]]
@@ -75,8 +86,10 @@ program_arguments = [
     "helpers/failing_stdout_and_exit_code.toml",
 ]
 stdin = "a\nq\n"
+
 expected_stdout = { file = "snapshots/status_pending_next_field.txt" }
 expected_exit_code = 1
+
 
 # Pressing a then navigating to another field reverts the pending decision.
 [[tests]]
@@ -88,5 +101,6 @@ program_arguments = [
     "helpers/failing_stdout_only.toml",
 ]
 stdin = "a\ne\nq\n"
+
 expected_stdout = { file = "snapshots/status_pending_reverts.txt" }
 expected_exit_code = 1

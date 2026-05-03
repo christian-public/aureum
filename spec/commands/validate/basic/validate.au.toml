@@ -4,6 +4,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 [[tests]]
 id = "single_valid_file"
 program_arguments = ["validate", "helpers/passing_test.toml"]
+
 expected_stdout = """
 ✔ helpers/passing_test.toml  1 test
 """
@@ -18,6 +19,7 @@ program_arguments = [
     "helpers/passing_test.toml",
     "helpers/passing_test2.toml",
 ]
+
 expected_stdout = """
 ✔ helpers/passing_test.toml   1 test
 ✔ helpers/passing_test2.toml  1 test

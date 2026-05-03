@@ -7,6 +7,7 @@ expected_exit_code = 0
 [[tests]]
 id = "single_file"
 program_arguments = ["test", "helpers/dir1/test1.toml"]
+
 expected_stdout = """
 🚀 Running 1 test:
 .
@@ -18,6 +19,7 @@ Test result: OK (1 passed, 0 failed)
 [[tests]]
 id = "single_dir"
 program_arguments = ["test", "helpers/dir1/*.toml"]
+
 expected_stdout = """
 🚀 Running 2 tests:
 ..
@@ -34,6 +36,7 @@ program_arguments = [
   "helpers/dir2/*.toml",
   "helpers/dir1/*.toml", # This argument is redundant, but it tests that the paths are deduplicated.
 ]
+
 expected_stdout = """
 🚀 Running 4 tests:
 ....
@@ -49,6 +52,7 @@ program_arguments = [
   "helpers/dir1/test1.toml",
   "helpers/dir1/test2.toml",
 ]
+
 expected_stdout = """
 🚀 Running 2 tests:
 ..

@@ -1,5 +1,6 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
+
 # The initial TUI frame is emitted when using --record (no leading --- separator).
 [[tests]]
 id = "initial_frame"
@@ -10,8 +11,10 @@ program_arguments = [
     "helpers/failing_stdout_only.toml",
 ]
 stdin = "q\n"
+
 expected_stdout = { file = "snapshots/record_initial_frame.txt" }
 expected_exit_code = 1
+
 
 # Arguments containing spaces are single-quoted so the command can be pasted into a terminal.
 [[tests]]
@@ -23,8 +26,10 @@ program_arguments = [
     "helpers/failing_stdout_spaced_arg.toml",
 ]
 stdin = "q\n"
+
 expected_stdout = { file = "snapshots/record_spaced_arg.txt" }
 expected_exit_code = 1
+
 
 # Pressing a navigation key emits a --- separator followed by the new frame.
 [[tests]]
@@ -36,8 +41,10 @@ program_arguments = [
     "helpers/failing_stdout_only.toml",
 ]
 stdin = "1\nq\n"
+
 expected_stdout = { file = "snapshots/record_tab_switch_to_expected.txt" }
 expected_exit_code = 1
+
 
 # On an unconfigured field, pressing [1] Expected and [3] Diff in sequence are both no-ops.
 [[tests]]
@@ -49,8 +56,10 @@ program_arguments = [
     "helpers/failing_stdout_only.toml",
 ]
 stdin = "e\n1\n3\nq\n"
+
 expected_stdout = { file = "snapshots/record_stderr_not_checked_view_switch_disabled.txt" }
 expected_exit_code = 1
+
 
 # Pressing i switches to the stdin view, showing line numbers on the right (like Got view).
 [[tests]]
@@ -62,8 +71,10 @@ program_arguments = [
     "helpers/failing_cat_with_stdin.toml",
 ]
 stdin = "i\nq\n"
+
 expected_stdout = { file = "snapshots/record_stdin_view.txt" }
 expected_exit_code = 1
+
 
 # When two fields fail, Enter after deciding the first auto-navigates to the second undecided field.
 [[tests]]
@@ -75,8 +86,10 @@ program_arguments = [
     "helpers/failing_stdout_and_exit_code.toml",
 ]
 stdin = "s\nenter\ns\nenter\nq\n"
+
 expected_stdout = { file = "snapshots/record_multi_field_navigation.txt" }
 expected_exit_code = 1
+
 
 # Pressing l from the diff view opens the list with the current test highlighted.
 [[tests]]
@@ -88,8 +101,10 @@ program_arguments = [
     "helpers/two_failing_stdout_tests.toml",
 ]
 stdin = "l\nq\n"
+
 expected_stdout = { file = "snapshots/record_list_initial_frame.txt" }
 expected_exit_code = 1
+
 
 # Pressing Down in the list moves selection to the next test.
 [[tests]]
@@ -101,8 +116,10 @@ program_arguments = [
     "helpers/two_failing_stdout_tests.toml",
 ]
 stdin = "l\ndown\nq\n"
+
 expected_stdout = { file = "snapshots/record_list_navigate.txt" }
 expected_exit_code = 1
+
 
 # Pressing Enter on a test in the list opens its diff view.
 [[tests]]
@@ -114,8 +131,10 @@ program_arguments = [
     "helpers/two_failing_stdout_tests.toml",
 ]
 stdin = "l\ndown\nenter\nq\n"
+
 expected_stdout = { file = "snapshots/record_list_jump.txt" }
 expected_exit_code = 1
+
 
 # Decision indicators show [⊘] for skipped tests and [ ] for undecided.
 [[tests]]
@@ -127,8 +146,10 @@ program_arguments = [
     "helpers/two_failing_stdout_tests.toml",
 ]
 stdin = "s\nenter\nl\nq\n"
+
 expected_stdout = { file = "snapshots/record_list_decision_indicator.txt" }
 expected_exit_code = 1
+
 
 # Partial decisions (only one of two failing fields decided) show [ · ] in the list.
 [[tests]]
@@ -140,8 +161,10 @@ program_arguments = [
     "helpers/failing_stdout_and_exit_code.toml",
 ]
 stdin = "s\nl\nq\n"
+
 expected_stdout = { file = "snapshots/record_list_partial_decision.txt" }
 expected_exit_code = 1
+
 
 # Scrolling past the last content line is clamped so at least one line stays visible.
 [[tests]]
@@ -153,8 +176,10 @@ program_arguments = [
     "helpers/failing_stdout_only.toml",
 ]
 stdin = "down\ndown\ndown\ndown\ndown\nq\n"
+
 expected_stdout = { file = "snapshots/record_scroll_clamped.txt" }
 expected_exit_code = 1
+
 
 # After pressing Down past the last line, the first Up immediately scrolls back up by one.
 [[tests]]
@@ -166,8 +191,10 @@ program_arguments = [
     "helpers/failing_stdout_only.toml",
 ]
 stdin = "down\ndown\ndown\nup\nq\n"
+
 expected_stdout = { file = "snapshots/record_scroll_up_after_excess_down.txt" }
 expected_exit_code = 1
+
 
 # Pressing Esc in the list returns to the previously viewed test, ignoring any navigation done in the list.
 [[tests]]
@@ -179,8 +206,10 @@ program_arguments = [
     "helpers/two_failing_stdout_tests.toml",
 ]
 stdin = "l\ndown\nesc\nq\n"
+
 expected_stdout = { file = "snapshots/record_list_esc_goes_back.txt" }
 expected_exit_code = 1
+
 
 # Pressing p mid-way through a multi-field test preserves the decisions made so far.
 [[tests]]
@@ -192,8 +221,10 @@ program_arguments = [
     "helpers/failing_stdout_and_exit_code.toml",
 ]
 stdin = "s\nenter\np\nq\n"
+
 expected_stdout = { file = "snapshots/record_go_back_preserves_partial_decisions.txt" }
 expected_exit_code = 1
+
 
 # Pressing an unbound key after staging a skip does not clear the staged decision.
 [[tests]]
@@ -205,8 +236,10 @@ program_arguments = [
     "helpers/failing_stdout_only.toml",
 ]
 stdin = "s\nd\nq\n"
+
 expected_stdout = { file = "snapshots/record_skip_then_unbound.txt" }
 expected_exit_code = 1
+
 
 # Pressing p after advancing to the second test goes back to the first and restores its decision.
 [[tests]]
@@ -218,5 +251,6 @@ program_arguments = [
     "helpers/two_failing_stdout_tests.toml",
 ]
 stdin = "s\nenter\np\nq\n"
+
 expected_stdout = { file = "snapshots/record_go_back_restores_decision.txt" }
 expected_exit_code = 1

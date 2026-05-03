@@ -4,6 +4,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 [[tests]]
 id = "without_verbose"
 program_arguments = ["test", "helpers/*.toml"]
+
 expected_stdout = """
 🚀 Running 3 tests:
 ...
@@ -37,6 +38,7 @@ program_arguments = [
     "--hide-absolute-paths",
     "helpers/*.toml",
 ]
+
 expected_stdout = """
 🚀 Running 3 tests:
 ...

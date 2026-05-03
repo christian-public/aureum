@@ -1,12 +1,10 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
+
 [[tests]]
 id = "startup_message"
-program_arguments = [
-    "test",
-    "--watch",
-    "helpers/passing.toml",
-]
+program_arguments = ["test", "--watch", "helpers/passing.toml"]
+
 expected_stdout = """
 🚀 Running 1 test:
 .
@@ -18,14 +16,12 @@ watch: watching 2 paths for changes...
 """
 expected_exit_code = 0
 
+
 [[tests]]
 id = "file_change_reruns_tests"
-program_arguments = [
-    "test",
-    "--watch",
-    "helpers/passing.toml",
-]
+program_arguments = ["test", "--watch", "helpers/passing.toml"]
 stdin = "file-change\n"
+
 expected_stdout = """
 🚀 Running 1 test:
 .
@@ -43,6 +39,7 @@ watch: changes detected
 """
 expected_exit_code = 0
 
+
 [[tests]]
 id = "verbose"
 program_arguments = [
@@ -52,6 +49,7 @@ program_arguments = [
     "--hide-absolute-paths",
     "helpers/passing.toml",
 ]
+
 expected_stdout = """
 🚀 Running 1 test:
 .

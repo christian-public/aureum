@@ -4,6 +4,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 [[tests]]
 id = "without_verbose"
 program_arguments = ["test", "--format", "tap", "helpers/*.toml"]
+
 expected_stdout = """
 TAP version 14
 1..3
@@ -40,6 +41,7 @@ program_arguments = [
     "--hide-absolute-paths",
     "helpers/*.toml",
 ]
+
 expected_stdout = """
 TAP version 14
 1..3

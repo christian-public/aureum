@@ -4,6 +4,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 [[tests]]
 id = "missing_id"
 program_arguments = ["validate", "helpers/missing_id.toml"]
+
 expected_stdout = """
 ✘ helpers/missing_id.toml  Parse error
 """
@@ -20,6 +21,7 @@ expected_exit_code = 3
 [[tests]]
 id = "invalid_id"
 program_arguments = ["validate", "helpers/invalid_id.toml"]
+
 expected_stdout = """
 ✘ helpers/invalid_id.toml  Parse error
 """
@@ -37,6 +39,7 @@ expected_exit_code = 3
 [[tests]]
 id = "id_at_root"
 program_arguments = ["validate", "helpers/id_at_root.toml"]
+
 expected_stdout = """
 ✘ helpers/id_at_root.toml  Parse error
 """

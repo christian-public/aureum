@@ -4,6 +4,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 [[tests]]
 id = "without_verbose"
 program_arguments = ["run", "--format", "passthrough", "helpers/*.toml"]
+
 expected_stdout = """
 """
 expected_stderr = """
@@ -23,6 +24,7 @@ program_arguments = [
     "--hide-absolute-paths",
     "helpers/*.toml",
 ]
+
 expected_stdout = ""
 expected_stderr = """
 error: `--verbose` is not supported in passthrough mode

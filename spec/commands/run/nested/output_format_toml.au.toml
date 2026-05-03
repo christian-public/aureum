@@ -9,6 +9,7 @@ program_arguments = [
     "toml",
     "helpers/echo_tests.toml:test1",
 ]
+
 expected_stdout = """
 # TEST: helpers/echo_tests.toml:test1
 expected_stdout = "Test 1"
@@ -27,6 +28,7 @@ program_arguments = [
     "toml",
     "helpers/echo_tests.toml",
 ]
+
 expected_stdout = """
 # TEST: helpers/echo_tests.toml:test1
 expected_stdout = "Test 1"
@@ -50,6 +52,7 @@ program_arguments = [
     "toml",
     "helpers/missing_program_on_test1.toml",
 ]
+
 expected_stdout = """
 # TEST: helpers/missing_program_on_test1.toml:test2
 expected_stdout = "Test 2"
@@ -76,6 +79,7 @@ program_arguments = [
     "toml",
     "helpers/missing_program_on_test1.toml:test2",
 ]
+
 expected_stdout = """
 # TEST: helpers/missing_program_on_test1.toml:test2
 expected_stdout = "Test 2"
@@ -102,6 +106,7 @@ program_arguments = [
     "toml",
     "helpers/missing_program_on_all_tests.toml",
 ]
+
 expected_stdout = ""
 expected_stderr = """
 📋 helpers/missing_program_on_all_tests.toml
