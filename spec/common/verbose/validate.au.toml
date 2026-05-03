@@ -45,32 +45,27 @@ expected_stderr = """
 └── helpers/watch_files.toml
 
 📋 helpers/many_requirements.toml
+├── Requirements
+│   ├── Files
+│   │   ├── ✘ aureum_test_this_file_does_not_exist
+│   │   └── ✔ hello_world.txt
+│   └── Environment variables
+│       ├── ✘ AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST
+│       └── ✔ AUREUM_TEST_HELLO_WORLD
 ├── :env_var_exists
-│   ├── Program to run
-│   │   └── ✔ <absolute path to 'echo'>
-│   └── Requirements
-│       └── Environment variables
-│           └── ✔ AUREUM_TEST_HELLO_WORLD
+│   └── Program to run
+│       └── ✔ <absolute path to 'echo'>
 ├── :env_var_missing
 │   ├── Program to run
 │   │   └── ✔ <absolute path to 'echo'>
-│   ├── Requirements
-│   │   └── Environment variables
-│   │       └── ✘ AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST
 │   └── Validation errors
 │       └── ✘ Missing environment variable 'AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST'
 ├── :external_file_exists
-│   ├── Program to run
-│   │   └── ✔ <absolute path to 'echo'>
-│   └── Requirements
-│       └── Files
-│           └── ✔ hello_world.txt
+│   └── Program to run
+│       └── ✔ <absolute path to 'echo'>
 └── :external_file_missing
     ├── Program to run
     │   └── ✔ <absolute path to 'echo'>
-    ├── Requirements
-    │   └── Files
-    │       └── ✘ aureum_test_this_file_does_not_exist
     └── Validation errors
         └── ✘ Missing external file 'aureum_test_this_file_does_not_exist'
 

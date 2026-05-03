@@ -8,7 +8,7 @@ mod toml {
     pub use validate::{ProgramPath, RequirementData, TestEntry, ValidationError};
 
     pub use config::parse_toml_config;
-    pub use requirement::{get_requirements, get_test_requirements, resolve_watch_files};
+    pub use requirement::{get_requirements, resolve_watch_files};
     pub use validate::build_test_entries;
 }
 mod utils {
@@ -32,7 +32,4 @@ pub use toml::{ParseError, TomlConfigError, TomlConfigFile, TomlConfigTest};
 pub use toml::{ProgramPath, RequirementData, TestEntry, ValidationError};
 
 pub use test_runner::{run_program, run_program_passthrough, run_test_cases};
-pub use toml::{
-    build_test_entries, get_requirements, get_test_requirements, parse_toml_config,
-    resolve_watch_files,
-};
+pub use toml::{build_test_entries, get_requirements, parse_toml_config, resolve_watch_files};

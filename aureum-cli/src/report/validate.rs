@@ -122,10 +122,12 @@ fn format_watch_path(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn print_config_details(
     config_file_path: &RelativePath,
     test_entries: &[(TestId, TestEntry)],
     requirement_data: &RequirementData,
+    requirements: &Requirements,
     watch_files: &BTreeSet<String>,
     validation_errors: &BTreeSet<ValidationError>,
     verbose: bool,
@@ -162,13 +164,6 @@ pub fn print_config_details(
 
             let heading = String::from("Program to run");
             categories.push(Node(heading, nodes));
-
-            // Requirements
-            let requirements = requirements_map(&test_entry.requirements, requirement_data);
-            if !requirements.is_empty() {
-                let heading = String::from("Requirements");
-                categories.push(Node(heading, requirements));
-            }
         }
 
         // Validation errors
@@ -190,6 +185,13 @@ pub fn print_config_details(
     }
 
     let mut nodes = Vec::<Tree>::new();
+
+    if verbose {
+        let req_nodes = requirements_map(requirements, requirement_data);
+        if !req_nodes.is_empty() {
+            nodes.push(Node(String::from("Requirements"), req_nodes));
+        }
+    }
 
     if verbose && !watch_files.is_empty() {
         nodes.push(Node(

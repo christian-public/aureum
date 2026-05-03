@@ -57,12 +57,6 @@ pub fn resolve_watch_files(
     (files, errors)
 }
 
-pub fn get_test_requirements(config: &TomlConfigTest) -> Requirements {
-    let mut requirements = Requirements::default();
-    collect_requirements_from_toml_config_test(&mut requirements, config);
-    requirements
-}
-
 fn collect_requirements_from_toml_config_test(
     requirements: &mut Requirements,
     config: &TomlConfigTest,

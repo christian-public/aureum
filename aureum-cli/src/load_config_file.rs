@@ -1,7 +1,8 @@
 use crate::find_config_file::FindConfigFilesResult;
 use crate::utils::file;
-use aureum::Requirements;
-use aureum::{RequirementData, TestEntry, TestId, TestIdCoverageSet, ValidationError};
+use aureum::{
+    RequirementData, Requirements, TestEntry, TestId, TestIdCoverageSet, ValidationError,
+};
 use itertools::{Either, Itertools};
 use relative_path::RelativePathBuf;
 use std::collections::{BTreeMap, BTreeSet};
@@ -31,6 +32,7 @@ impl LoadConfigFilesResult {
 pub struct LoadedConfigFile {
     pub test_id_coverage_set: TestIdCoverageSet,
     pub requirement_data: RequirementData,
+    pub requirements: Requirements,
     pub test_entries: Vec<(TestId, TestEntry)>,
     pub watch_files: BTreeSet<String>,
     pub validation_errors: BTreeSet<ValidationError>,
@@ -104,7 +106,7 @@ fn load_config_file(
 
     let requirements = aureum::get_requirements(&config);
     let requirement_data =
-        retrieve_requirement_data(&path_to_containing_dir.to_path(current_dir), requirements);
+        retrieve_requirement_data(&path_to_containing_dir.to_path(current_dir), &requirements);
 
     let (watch_files, validation_errors) = aureum::resolve_watch_files(&config, &requirement_data);
 
@@ -120,30 +122,31 @@ fn load_config_file(
     Ok(LoadedConfigFile {
         test_id_coverage_set,
         requirement_data,
+        requirements,
         test_entries,
         watch_files,
         validation_errors,
     })
 }
 
-fn retrieve_requirement_data(current_dir: &Path, requirements: Requirements) -> RequirementData {
+fn retrieve_requirement_data(current_dir: &Path, requirements: &Requirements) -> RequirementData {
     let mut requirement_data = RequirementData::default();
 
-    for file in requirements.files {
-        let path = current_dir.join(&file);
+    for file in &requirements.files {
+        let path = current_dir.join(file);
         let Ok(value) = fs::read_to_string(path) else {
             continue;
         };
 
-        requirement_data.files.insert(file, value);
+        requirement_data.files.insert(file.clone(), value);
     }
 
-    for env_var in requirements.env_vars {
-        let Some(value) = env::var(&env_var).ok() else {
+    for env_var in &requirements.env_vars {
+        let Some(value) = env::var(env_var).ok() else {
             continue;
         };
 
-        requirement_data.env_vars.insert(env_var, value);
+        requirement_data.env_vars.insert(env_var.clone(), value);
     }
 
     requirement_data

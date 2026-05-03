@@ -1,7 +1,7 @@
 use crate::test_case::{TestCase, TestCaseExpectations, TestCaseWithExpectations};
 use crate::toml::config::ConfigValue;
 use crate::utils::string;
-use crate::{Requirements, TestId, TomlConfigFile, TomlConfigTest, get_test_requirements};
+use crate::{TestId, TomlConfigFile, TomlConfigTest};
 use relative_path::RelativePath;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -59,7 +59,6 @@ pub enum ValidationError {
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct TestEntry {
-    pub requirements: Requirements,
     pub program_path: ProgramPath,
     pub test_case: Result<TestCase, BTreeSet<ValidationError>>,
     pub expectations: Result<TestCaseExpectations, BTreeSet<ValidationError>>,
@@ -134,8 +133,6 @@ fn build_test_entry(
     current_dir: &Path,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> TestEntry {
-    let requirements = get_test_requirements(&config);
-
     let (program_path, test_case) = build_test_case(
         test_id,
         config.clone(),
@@ -148,7 +145,6 @@ fn build_test_entry(
     let expectations = build_test_case_expectations(config, requirement_data);
 
     TestEntry {
-        requirements,
         program_path,
         test_case,
         expectations,

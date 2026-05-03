@@ -687,6 +687,7 @@ fn print_config_details_if_needed(
                 config_file_path,
                 loaded_config_file.test_entries.as_slice(),
                 &loaded_config_file.requirement_data,
+                &loaded_config_file.requirements,
                 &loaded_config_file.watch_files,
                 &loaded_config_file.validation_errors,
                 verbose,
