@@ -67,8 +67,9 @@ expected_stderr = """
 └── helpers/passing.toml
 
 📋 helpers/passing.toml
-└── Program to run
-    └── ✔ <absolute path to 'echo'>
+└── Test
+    └── Program to run
+        └── ✔ <absolute path to 'echo'>
 
 watch: watching 2 paths for changes...
 """

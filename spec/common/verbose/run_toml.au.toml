@@ -123,8 +123,9 @@ expected_stderr = """
         └── ✘ Missing external file 'aureum_test_this_file_does_not_exist'
 
 📋 helpers/no_requirements.toml
-└── Program to run
-    └── ✔ <absolute path to 'echo'>
+└── Test
+    └── Program to run
+        └── ✔ <absolute path to 'echo'>
 
 warning: Some config files contain errors (See above)
 """

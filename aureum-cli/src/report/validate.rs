@@ -210,16 +210,17 @@ pub fn print_config_details(
         ));
     }
 
-    let is_root = tests.len() == 1 && tests[0].0.is_root();
-    if is_root {
-        nodes.extend(tests[0].1.clone())
-    } else {
-        nodes.extend(
-            tests
-                .into_iter()
-                .map(|(test_id, children)| Node(format!(":{test_id}"), children)),
-        )
-    }
+    nodes.extend(tests.into_iter().filter_map(|(test_id, children)| {
+        if test_id.is_root() {
+            if !children.is_empty() {
+                Some(Node(String::from("Test"), children))
+            } else {
+                None
+            }
+        } else {
+            Some(Node(format!(":{test_id}"), children))
+        }
+    }));
 
     let tree = Node(config_file_heading(config_file_path), nodes);
 
