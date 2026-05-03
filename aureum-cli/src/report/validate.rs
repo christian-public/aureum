@@ -127,6 +127,7 @@ pub fn print_config_details(
     test_entries: &[(TestId, TestEntry)],
     requirement_data: &RequirementData,
     watch_files: &BTreeSet<String>,
+    validation_errors: &BTreeSet<ValidationError>,
     verbose: bool,
     hide_absolute_paths: bool,
 ) {
@@ -194,6 +195,16 @@ pub fn print_config_details(
         nodes.push(Node(
             String::from("Watch files"),
             watch_files.iter().map(|f| str_to_tree(f)).collect(),
+        ));
+    }
+
+    if !validation_errors.is_empty() {
+        nodes.push(Node(
+            String::from("Validation errors"),
+            validation_errors
+                .iter()
+                .map(|e| str_to_tree(&format_validation_error(e)))
+                .collect(),
         ));
     }
 

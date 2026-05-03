@@ -1,7 +1,7 @@
 use crate::find_config_file::FindConfigFilesResult;
 use crate::utils::file;
 use aureum::Requirements;
-use aureum::{RequirementData, TestEntry, TestId, TestIdCoverageSet};
+use aureum::{RequirementData, TestEntry, TestId, TestIdCoverageSet, ValidationError};
 use itertools::{Either, Itertools};
 use relative_path::RelativePathBuf;
 use std::collections::{BTreeMap, BTreeSet};
@@ -33,13 +33,16 @@ pub struct LoadedConfigFile {
     pub requirement_data: RequirementData,
     pub test_entries: Vec<(TestId, TestEntry)>,
     pub watch_files: BTreeSet<String>,
+    pub validation_errors: BTreeSet<ValidationError>,
 }
 
 impl LoadedConfigFile {
     pub fn has_validation_errors(&self) -> bool {
-        self.test_entries
-            .iter()
-            .any(|(_, e)| e.has_validation_error())
+        !self.validation_errors.is_empty()
+            || self
+                .test_entries
+                .iter()
+                .any(|(_, e)| e.has_validation_error())
     }
 
     pub fn test_entries_in_coverage_set(&self) -> impl Iterator<Item = (&TestId, &TestEntry)> {
@@ -103,7 +106,7 @@ fn load_config_file(
     let requirement_data =
         retrieve_requirement_data(&path_to_containing_dir.to_path(current_dir), requirements);
 
-    let watch_files = aureum::resolve_watch_files(&config, &requirement_data);
+    let (watch_files, validation_errors) = aureum::resolve_watch_files(&config, &requirement_data);
 
     let test_entries = aureum::build_test_entries(
         config,
@@ -119,6 +122,7 @@ fn load_config_file(
         requirement_data,
         test_entries,
         watch_files,
+        validation_errors,
     })
 }
 

@@ -1,0 +1,33 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+
+[[tests]]
+id = "missing_file"
+program_arguments = ["validate", "helpers/watch_files_missing_file.toml"]
+expected_stdout = """
+✘ helpers/watch_files_missing_file.toml  1 test
+"""
+expected_stderr = """
+📋 helpers/watch_files_missing_file.toml
+└── Validation errors
+    └── ✘ Missing external file 'aureum_test_this_file_does_not_exist'
+
+warning: Some config files contain errors (See above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "missing_env_var"
+program_arguments = ["validate", "helpers/watch_files_missing_env_var.toml"]
+expected_stdout = """
+✘ helpers/watch_files_missing_env_var.toml  1 test
+"""
+expected_stderr = """
+📋 helpers/watch_files_missing_env_var.toml
+└── Validation errors
+    └── ✘ Missing environment variable 'AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST'
+
+warning: Some config files contain errors (See above)
+"""
+expected_exit_code = 3

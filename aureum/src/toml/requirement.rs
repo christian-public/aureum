@@ -1,5 +1,5 @@
 use crate::toml::config::{ConfigValue, TomlConfigFile, TomlConfigTest};
-use crate::toml::validate::RequirementData;
+use crate::toml::validate::{RequirementData, ValidationError};
 use std::collections::BTreeSet;
 
 #[derive(Default)]
@@ -26,16 +26,35 @@ pub fn get_requirements(config: &TomlConfigFile) -> Requirements {
 pub fn resolve_watch_files(
     config: &TomlConfigFile,
     requirement_data: &RequirementData,
-) -> BTreeSet<String> {
-    config
-        .watch_files
-        .iter()
-        .filter_map(|cv| match cv {
-            ConfigValue::Literal(s) => Some(s.clone()),
-            ConfigValue::ReadFromFile { file } => requirement_data.files.get(file).cloned(),
-            ConfigValue::FetchFromEnv { env } => requirement_data.env_vars.get(env).cloned(),
-        })
-        .collect()
+) -> (BTreeSet<String>, BTreeSet<ValidationError>) {
+    let mut files = BTreeSet::new();
+    let mut errors = BTreeSet::new();
+
+    for cv in &config.watch_files {
+        match cv {
+            ConfigValue::Literal(s) => {
+                files.insert(s.clone());
+            }
+            ConfigValue::ReadFromFile { file } => match requirement_data.files.get(file) {
+                Some(value) => {
+                    files.insert(value.clone());
+                }
+                None => {
+                    errors.insert(ValidationError::MissingExternalFile(file.clone()));
+                }
+            },
+            ConfigValue::FetchFromEnv { env } => match requirement_data.env_vars.get(env) {
+                Some(value) => {
+                    files.insert(value.clone());
+                }
+                None => {
+                    errors.insert(ValidationError::MissingEnvVar(env.clone()));
+                }
+            },
+        }
+    }
+
+    (files, errors)
 }
 
 pub fn get_test_requirements(config: &TomlConfigTest) -> Requirements {
@@ -126,8 +145,9 @@ mod tests {
     #[test]
     fn test_resolve_watch_files_literal() {
         let config = make_config(vec![ConfigValue::Literal("script.sh".to_owned())]);
-        let result = resolve_watch_files(&config, &RequirementData::default());
-        assert_eq!(result, BTreeSet::from(["script.sh".to_owned()]));
+        let (files, errors) = resolve_watch_files(&config, &RequirementData::default());
+        assert_eq!(files, BTreeSet::from(["script.sh".to_owned()]));
+        assert!(errors.is_empty());
     }
 
     #[test]
@@ -140,11 +160,12 @@ mod tests {
             "MY_SCRIPT".to_owned(),
             "/usr/local/bin/script.sh".to_owned(),
         );
-        let result = resolve_watch_files(&config, &requirement_data);
+        let (files, errors) = resolve_watch_files(&config, &requirement_data);
         assert_eq!(
-            result,
+            files,
             BTreeSet::from(["/usr/local/bin/script.sh".to_owned()])
         );
+        assert!(errors.is_empty());
     }
 
     #[test]
@@ -157,20 +178,40 @@ mod tests {
             "path_file".to_owned(),
             "/usr/local/bin/script.sh".to_owned(),
         );
-        let result = resolve_watch_files(&config, &requirement_data);
+        let (files, errors) = resolve_watch_files(&config, &requirement_data);
         assert_eq!(
-            result,
+            files,
             BTreeSet::from(["/usr/local/bin/script.sh".to_owned()])
+        );
+        assert!(errors.is_empty());
+    }
+
+    #[test]
+    fn test_resolve_watch_files_missing_env_var_returns_error() {
+        let config = make_config(vec![ConfigValue::FetchFromEnv {
+            env: "MISSING_VAR".to_owned(),
+        }]);
+        let (files, errors) = resolve_watch_files(&config, &RequirementData::default());
+        assert!(files.is_empty());
+        assert_eq!(
+            errors,
+            BTreeSet::from([ValidationError::MissingEnvVar("MISSING_VAR".to_owned())])
         );
     }
 
     #[test]
-    fn test_resolve_watch_files_missing_env_var_is_skipped() {
-        let config = make_config(vec![ConfigValue::FetchFromEnv {
-            env: "MISSING_VAR".to_owned(),
+    fn test_resolve_watch_files_missing_file_returns_error() {
+        let config = make_config(vec![ConfigValue::ReadFromFile {
+            file: "missing_file".to_owned(),
         }]);
-        let result = resolve_watch_files(&config, &RequirementData::default());
-        assert!(result.is_empty());
+        let (files, errors) = resolve_watch_files(&config, &RequirementData::default());
+        assert!(files.is_empty());
+        assert_eq!(
+            errors,
+            BTreeSet::from([ValidationError::MissingExternalFile(
+                "missing_file".to_owned()
+            )])
+        );
     }
 
     #[test]
@@ -179,8 +220,9 @@ mod tests {
             ConfigValue::Literal("script.sh".to_owned()),
             ConfigValue::Literal("script.sh".to_owned()),
         ]);
-        let result = resolve_watch_files(&config, &RequirementData::default());
-        assert_eq!(result.len(), 1);
+        let (files, errors) = resolve_watch_files(&config, &RequirementData::default());
+        assert_eq!(files.len(), 1);
+        assert!(errors.is_empty());
     }
 
     // TEST: get_requirements() - watch_files

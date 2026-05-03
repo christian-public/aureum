@@ -1,0 +1,6 @@
+watch_files = [{ env = "AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST" }]
+
+program = "echo"
+
+expected_stdout = "hello"
+program_arguments = ["-n", "hello"]
