@@ -115,7 +115,7 @@ fn apply_field_update(
         let subtest = get_subtest_section_mut(doc, &test_name).ok_or_else(|| {
             io::Error::new(
                 io::ErrorKind::NotFound,
-                format!("Subtest '{test_name}' not found"),
+                format!("Subtest `{test_name}` not found"),
             )
         })?;
         return apply_to_section(subtest, field, new_value, containing_dir);

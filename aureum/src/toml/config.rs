@@ -99,7 +99,7 @@ impl fmt::Display for ConfigValueType {
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ParseError::ErrorInField { field, error } => write!(f, "field '{field}': {error}"),
+            ParseError::ErrorInField { field, error } => write!(f, "field `{field}`: {error}"),
             ParseError::ErrorAtIndex { index, error } => write!(f, "[{index}]: {error}"),
             ParseError::InvalidType { expected, got } => {
                 write!(f, "expected {expected}, got {got}")
@@ -108,7 +108,7 @@ impl fmt::Display for ParseError {
                 conflicting_keys, ..
             } => write!(
                 f,
-                "cannot specify both '{}' and '{}'",
+                "cannot specify both `{}` and `{}`",
                 conflicting_keys[0], conflicting_keys[1]
             ),
             ParseError::InvalidSpecialForm {
@@ -117,22 +117,22 @@ impl fmt::Display for ParseError {
             } => match (error.as_deref(), unexpected_keys.as_slice()) {
                 (Some(e), []) => write!(f, "{e}"),
                 (Some(e), keys) => {
-                    let quoted = keys.iter().map(|k| format!("'{k}'")).collect::<Vec<_>>();
+                    let quoted = keys.iter().map(|k| format!("`{k}`")).collect::<Vec<_>>();
                     write!(f, "{e}; unexpected keys: {}", quoted.join(", "))
                 }
                 (None, keys) => {
-                    let quoted = keys.iter().map(|k| format!("'{k}'")).collect::<Vec<_>>();
+                    let quoted = keys.iter().map(|k| format!("`{k}`")).collect::<Vec<_>>();
                     write!(
                         f,
-                        "unknown keys: {}; expected 'file' or 'env'",
+                        "unknown keys: {}; expected `file` or `env`",
                         quoted.join(", ")
                     )
                 }
             },
-            ParseError::MissingId => write!(f, "missing required field 'id'"),
-            ParseError::InvalidId { id } => write!(f, "invalid id '{id}'"),
-            ParseError::IdForbiddenAtRoot => write!(f, "'id' is not allowed at the root level"),
-            ParseError::UnknownField { field } => write!(f, "unknown field '{field}'"),
+            ParseError::MissingId => write!(f, "missing required field `id`"),
+            ParseError::InvalidId { id } => write!(f, "invalid id `{id}`"),
+            ParseError::IdForbiddenAtRoot => write!(f, "`id` is not allowed at the root level"),
+            ParseError::UnknownField { field } => write!(f, "unknown field `{field}`"),
         }
     }
 }

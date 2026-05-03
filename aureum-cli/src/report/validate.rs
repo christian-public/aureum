@@ -349,15 +349,15 @@ fn requirements_map(requirements: &Requirements, requirement_data: &RequirementD
 fn format_validation_error(validation_error: &ValidationError) -> String {
     let msg = match validation_error {
         ValidationError::MissingExternalFile(file_path) => {
-            format!("Missing external file '{file_path}'")
+            format!("Missing external file `{file_path}`")
         }
         ValidationError::MissingEnvVar(var_name) => {
-            format!("Missing environment variable '{var_name}'")
+            format!("Missing environment variable `{var_name}`")
         }
         ValidationError::FailedToParseString => String::from("Failed to parse string"),
-        ValidationError::ProgramRequired => String::from("The field 'program' is required"),
+        ValidationError::ProgramRequired => String::from("The field `program` is required"),
         ValidationError::ProgramNotFound(program) => {
-            format!("The program '{program}' was not found")
+            format!("The program `{program}` was not found")
         }
         ValidationError::ExpectationRequired => {
             String::from("At least one expectation is required")

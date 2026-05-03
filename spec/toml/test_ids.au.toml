@@ -10,7 +10,7 @@ expected_stdout = """
 expected_stderr = """
 📋 helpers/missing_id.toml
 └── Parse errors
-    └── ✘ [0]: missing required field 'id'
+    └── ✘ [0]: missing required field `id`
 
 warning: Some config files contain errors (See above)
 """
@@ -26,8 +26,8 @@ expected_stdout = """
 expected_stderr = """
 📋 helpers/invalid_id.toml
 └── Parse errors
-    ├── ✘ [1]: field 'id': invalid id 'invalid id!'
-    └── ✘ [2]: field 'id': invalid id ''
+    ├── ✘ [1]: field `id`: invalid id `invalid id!`
+    └── ✘ [2]: field `id`: invalid id ``
 
 warning: Some config files contain errors (See above)
 """
@@ -43,7 +43,7 @@ expected_stdout = """
 expected_stderr = """
 📋 helpers/id_at_root.toml
 └── Parse errors
-    └── ✘ 'id' is not allowed at the root level
+    └── ✘ `id` is not allowed at the root level
 
 warning: Some config files contain errors (See above)
 """

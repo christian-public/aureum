@@ -33,16 +33,16 @@ expected_exit_code = 0
 expected_stderr = """
 📋 helpers/many_requirements.toml
 ├── Watch file errors
-│   ├── ✘ Missing external file 'AUREUM_TEST_FILE_WITH_PATH_TO_WATCH_DOES_NOT_EXIST'
-│   └── ✘ Missing environment variable 'AUREUM_TEST_ENV_VAR_WITH_PATH_TO_WATCH_DOES_NOT_EXIST'
+│   ├── ✘ Missing external file `AUREUM_TEST_FILE_WITH_PATH_TO_WATCH_DOES_NOT_EXIST`
+│   └── ✘ Missing environment variable `AUREUM_TEST_ENV_VAR_WITH_PATH_TO_WATCH_DOES_NOT_EXIST`
 ├── :env_var_exists
 ├── :env_var_missing
 │   └── Validation errors
-│       └── ✘ Missing environment variable 'AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST'
+│       └── ✘ Missing environment variable `AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST`
 ├── :external_file_exists
 └── :external_file_missing
     └── Validation errors
-        └── ✘ Missing external file 'aureum_test_this_file_does_not_exist'
+        └── ✘ Missing external file `aureum_test_this_file_does_not_exist`
 
 warning: Some config files contain errors (See above)
 """
@@ -103,8 +103,8 @@ expected_stderr = """
 ├── Watch files
 │   └── hello_world.txt
 ├── Watch file errors
-│   ├── ✘ Missing external file 'AUREUM_TEST_FILE_WITH_PATH_TO_WATCH_DOES_NOT_EXIST'
-│   └── ✘ Missing environment variable 'AUREUM_TEST_ENV_VAR_WITH_PATH_TO_WATCH_DOES_NOT_EXIST'
+│   ├── ✘ Missing external file `AUREUM_TEST_FILE_WITH_PATH_TO_WATCH_DOES_NOT_EXIST`
+│   └── ✘ Missing environment variable `AUREUM_TEST_ENV_VAR_WITH_PATH_TO_WATCH_DOES_NOT_EXIST`
 ├── :env_var_exists
 │   └── Program to run
 │       └── ✔ <absolute path to 'echo'>
@@ -112,7 +112,7 @@ expected_stderr = """
 │   ├── Program to run
 │   │   └── ✔ <absolute path to 'echo'>
 │   └── Validation errors
-│       └── ✘ Missing environment variable 'AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST'
+│       └── ✘ Missing environment variable `AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST`
 ├── :external_file_exists
 │   └── Program to run
 │       └── ✔ <absolute path to 'echo'>
@@ -120,7 +120,7 @@ expected_stderr = """
     ├── Program to run
     │   └── ✔ <absolute path to 'echo'>
     └── Validation errors
-        └── ✘ Missing external file 'aureum_test_this_file_does_not_exist'
+        └── ✘ Missing external file `aureum_test_this_file_does_not_exist`
 
 📋 helpers/no_requirements.toml
 └── Test

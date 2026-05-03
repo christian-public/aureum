@@ -39,7 +39,7 @@ Test result: OK (0 passed, 0 failed)
 expected_stderr = """
 📋 helpers/invalid_config.toml
 └── Parse errors
-    └── ✘ field 'program': expected string, got boolean
+    └── ✘ field `program`: expected string, got boolean
 
 warning: Some config files contain errors (See above)
 """
@@ -59,7 +59,7 @@ expected_stderr = """
 📋 helpers/empty_config.toml
 └── Test
     └── Validation errors
-        ├── ✘ The field 'program' is required
+        ├── ✘ The field `program` is required
         └── ✘ At least one expectation is required
 
 warning: Some config files contain errors (See above)
@@ -80,7 +80,7 @@ expected_stderr = """
 📋 helpers/no_test_program.toml
 └── Test
     └── Validation errors
-        └── ✘ The field 'program' is required
+        └── ✘ The field `program` is required
 
 warning: Some config files contain errors (See above)
 """
@@ -100,7 +100,7 @@ expected_stderr = """
 📋 helpers/unknown_test_program.toml
 └── Test
     └── Validation errors
-        └── ✘ The program 'aureum_test_this_program_does_not_exist' was not found
+        └── ✘ The program `aureum_test_this_program_does_not_exist` was not found
 
 warning: Some config files contain errors (See above)
 """
@@ -160,7 +160,7 @@ expected_stderr = """
 📋 helpers/missing_env_var.toml
 └── Test
     └── Validation errors
-        └── ✘ Missing environment variable 'AUREUM_TEST_THIS_ENV_VAR_DOES_NOT_EXIST'
+        └── ✘ Missing environment variable `AUREUM_TEST_THIS_ENV_VAR_DOES_NOT_EXIST`
 
 warning: Some config files contain errors (See above)
 """
@@ -180,7 +180,7 @@ expected_stderr = """
 📋 helpers/missing_external_file.toml
 └── Test
     └── Validation errors
-        └── ✘ Missing external file 'aureum_test_this_file_does_not_exist'
+        └── ✘ Missing external file `aureum_test_this_file_does_not_exist`
 
 warning: Some config files contain errors (See above)
 """
