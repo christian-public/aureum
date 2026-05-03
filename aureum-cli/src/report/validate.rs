@@ -9,7 +9,7 @@ use aureum::{
 };
 use colored::Colorize;
 use relative_path::{RelativePath, RelativePathBuf};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
 // VALIDATION
@@ -126,6 +126,7 @@ pub fn print_config_details(
     config_file_path: &RelativePath,
     test_entries: &[(TestId, TestEntry)],
     requirement_data: &RequirementData,
+    watch_files: &BTreeSet<String>,
     verbose: bool,
     hide_absolute_paths: bool,
 ) {
@@ -187,15 +188,25 @@ pub fn print_config_details(
         tests.push((test_id, categories))
     }
 
+    let mut nodes = Vec::<Tree>::new();
+
+    if verbose && !watch_files.is_empty() {
+        nodes.push(Node(
+            String::from("Watch files"),
+            watch_files.iter().map(|f| str_to_tree(f)).collect(),
+        ));
+    }
+
     let is_root = tests.len() == 1 && tests[0].0.is_root();
-    let nodes: Vec<Tree> = if is_root {
-        tests.into_iter().next().unwrap().1
+    if is_root {
+        nodes.extend(tests[0].1.clone())
     } else {
-        tests
-            .into_iter()
-            .map(|(test_id, children)| Node(format!(":{test_id}"), children))
-            .collect()
-    };
+        nodes.extend(
+            tests
+                .into_iter()
+                .map(|(test_id, children)| Node(format!(":{test_id}"), children)),
+        )
+    }
 
     let tree = Node(config_file_heading(config_file_path), nodes);
 

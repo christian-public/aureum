@@ -621,9 +621,9 @@ mod tests {
     #[test]
     fn test_parse_toml_config_tests_and_watch_files_not_unknown_at_root() {
         let str = r#"
+            watch_files = ["script.sh"]
             program = "echo"
             expected_stdout = "hello"
-            watch_files = ["script.sh"]
         "#;
         let result = parse_toml_config(str);
         assert!(result.is_ok());
@@ -656,9 +656,9 @@ mod tests {
     #[test]
     fn test_parse_toml_config_watch_files_literal() {
         let str = r#"
+            watch_files = ["script.sh"]
             program = "echo"
             expected_stdout = "hello"
-            watch_files = ["script.sh"]
         "#;
         let result = parse_toml_config(str);
         assert!(matches!(
@@ -671,9 +671,9 @@ mod tests {
     #[test]
     fn test_parse_toml_config_watch_files_env() {
         let str = r#"
+            watch_files = [{ env = "MY_SCRIPT" }]
             program = "echo"
             expected_stdout = "hello"
-            watch_files = [{ env = "MY_SCRIPT" }]
         "#;
         let result = parse_toml_config(str);
         assert!(matches!(
@@ -686,9 +686,9 @@ mod tests {
     #[test]
     fn test_parse_toml_config_watch_files_file() {
         let str = r#"
+            watch_files = [{ file = "path_to_script" }]
             program = "echo"
             expected_stdout = "hello"
-            watch_files = [{ file = "path_to_script" }]
         "#;
         let result = parse_toml_config(str);
         assert!(matches!(
@@ -701,9 +701,9 @@ mod tests {
     #[test]
     fn test_parse_toml_config_watch_files_invalid_type() {
         let str = r#"
+            watch_files = [false]
             program = "echo"
             expected_stdout = "hello"
-            watch_files = [false]
         "#;
         let result = parse_toml_config(str);
         assert!(matches!(result, Err(TomlConfigError::ParseErrors(_))));

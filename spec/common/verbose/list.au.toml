@@ -10,6 +10,8 @@ helpers/many_requirements.toml:env_var_missing
 helpers/many_requirements.toml:external_file_exists
 helpers/many_requirements.toml:external_file_missing
 helpers/no_requirements.toml
+helpers/watch_files.toml:test1
+helpers/watch_files.toml:test2
 """
 expected_stderr = """
 📋 helpers/many_requirements.toml
@@ -41,11 +43,14 @@ helpers/many_requirements.toml:env_var_missing
 helpers/many_requirements.toml:external_file_exists
 helpers/many_requirements.toml:external_file_missing
 helpers/no_requirements.toml
+helpers/watch_files.toml:test1
+helpers/watch_files.toml:test2
 """
 expected_stderr = """
-🔍 Found 2 config files
+🔍 Found 3 config files
 ├── helpers/many_requirements.toml
-└── helpers/no_requirements.toml
+├── helpers/no_requirements.toml
+└── helpers/watch_files.toml
 
 📋 helpers/many_requirements.toml
 ├── :env_var_exists
@@ -80,6 +85,16 @@ expected_stderr = """
 📋 helpers/no_requirements.toml
 └── Program to run
     └── ✔ <absolute path to 'echo'>
+
+📋 helpers/watch_files.toml
+├── Watch files
+│   └── hello_world.txt
+├── :test1
+│   └── Program to run
+│       └── ✔ <absolute path to 'echo'>
+└── :test2
+    └── Program to run
+        └── ✔ <absolute path to 'echo'>
 
 warning: Some config files contain errors (See above)
 """

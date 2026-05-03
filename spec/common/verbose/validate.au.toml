@@ -7,6 +7,7 @@ program_arguments = ["validate", "helpers/*.toml"]
 expected_stdout = """
 ✘ helpers/many_requirements.toml  4 tests
 ✔ helpers/no_requirements.toml    1 test
+✔ helpers/watch_files.toml        2 tests
 """
 expected_stderr = """
 📋 helpers/many_requirements.toml
@@ -35,11 +36,13 @@ program_arguments = [
 expected_stdout = """
 ✘ helpers/many_requirements.toml  4 tests
 ✔ helpers/no_requirements.toml    1 test
+✔ helpers/watch_files.toml        2 tests
 """
 expected_stderr = """
-🔍 Found 2 config files
+🔍 Found 3 config files
 ├── helpers/many_requirements.toml
-└── helpers/no_requirements.toml
+├── helpers/no_requirements.toml
+└── helpers/watch_files.toml
 
 📋 helpers/many_requirements.toml
 ├── :env_var_exists
@@ -74,6 +77,16 @@ expected_stderr = """
 📋 helpers/no_requirements.toml
 └── Program to run
     └── ✔ <absolute path to 'echo'>
+
+📋 helpers/watch_files.toml
+├── Watch files
+│   └── hello_world.txt
+├── :test1
+│   └── Program to run
+│       └── ✔ <absolute path to 'echo'>
+└── :test2
+    └── Program to run
+        └── ✔ <absolute path to 'echo'>
 
 warning: Some config files contain errors (See above)
 """
