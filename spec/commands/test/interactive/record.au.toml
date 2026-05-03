@@ -195,6 +195,19 @@ stdin = "s\nenter\np\nq\n"
 expected_stdout = { file = "snapshots/record_go_back_preserves_partial_decisions.txt" }
 expected_exit_code = 1
 
+# Pressing an unbound key after staging a skip does not clear the staged decision.
+[[tests]]
+id = "unbound_key_does_not_clear_staged_skip"
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "helpers/failing_stdout_only.toml",
+]
+stdin = "s\nd\nq\n"
+expected_stdout = { file = "snapshots/record_skip_then_unbound.txt" }
+expected_exit_code = 1
+
 # Pressing p after advancing to the second test goes back to the first and restores its decision.
 [[tests]]
 id = "go_back_restores_decision"

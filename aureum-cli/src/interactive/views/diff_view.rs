@@ -137,18 +137,13 @@ fn apply_key(
     }
     match key.code {
         KeyCode::Right => {
-            // Navigating to a different field discards any staged a/s decision.
-            state.staged_decision = FieldDecision::Undecided;
             if let Some(next) = state.active_field.next() {
-                state.active_field = next;
-                state.scroll = 0;
+                switch_field(state, next);
             }
         }
         KeyCode::Left => {
-            state.staged_decision = FieldDecision::Undecided;
             if let Some(prev) = state.active_field.prev() {
-                state.active_field = prev;
-                state.scroll = 0;
+                switch_field(state, prev);
             }
         }
         KeyCode::Up => {
@@ -169,49 +164,31 @@ fn apply_key(
             state.active_tab = Tab::Diff;
             state.scroll = 0;
         }
-        KeyCode::Char('i') => {
-            state.staged_decision = FieldDecision::Undecided;
-            state.active_field = Field::Stdin;
-            state.scroll = 0;
+        KeyCode::Char('i') => switch_field(state, Field::Stdin),
+        KeyCode::Char('o') => switch_field(state, Field::Stdout),
+        KeyCode::Char('e') => switch_field(state, Field::Stderr),
+        KeyCode::Char('x') => switch_field(state, Field::ExitCode),
+        KeyCode::Char('a')
+            if state.active_field.is_output() && state.failing.is_failing(state.active_field) =>
+        {
+            let committed = state.field_decisions.get(state.active_field);
+            state.staged_decision = if committed == FieldDecision::Accepted {
+                FieldDecision::Undecided
+            } else {
+                FieldDecision::Accepted
+            };
+            state.show_enter_error = false;
         }
-        KeyCode::Char('o') => {
-            state.staged_decision = FieldDecision::Undecided;
-            state.active_field = Field::Stdout;
-            state.scroll = 0;
-        }
-        KeyCode::Char('e') => {
-            state.staged_decision = FieldDecision::Undecided;
-            state.active_field = Field::Stderr;
-            state.scroll = 0;
-        }
-        KeyCode::Char('x') => {
-            state.staged_decision = FieldDecision::Undecided;
-            state.active_field = Field::ExitCode;
-            state.scroll = 0;
-        }
-        KeyCode::Char('a') => {
-            if state.active_field.is_output() && state.failing.is_failing(state.active_field) {
-                let committed = state.field_decisions.get(state.active_field);
-                state.staged_decision = if committed == FieldDecision::Accepted {
-                    FieldDecision::Undecided
-                } else {
-                    FieldDecision::Accepted
-                };
-                state.show_enter_error = false;
-            }
-            return KeyResult::Continue; // skip catch-all so staged is not cleared
-        }
-        KeyCode::Char('s') => {
-            if state.active_field.is_output() && state.failing.is_failing(state.active_field) {
-                let committed = state.field_decisions.get(state.active_field);
-                state.staged_decision = if committed == FieldDecision::Skipped {
-                    FieldDecision::Undecided
-                } else {
-                    FieldDecision::Skipped
-                };
-                state.show_enter_error = false;
-            }
-            return KeyResult::Continue;
+        KeyCode::Char('s')
+            if state.active_field.is_output() && state.failing.is_failing(state.active_field) =>
+        {
+            let committed = state.field_decisions.get(state.active_field);
+            state.staged_decision = if committed == FieldDecision::Skipped {
+                FieldDecision::Undecided
+            } else {
+                FieldDecision::Skipped
+            };
+            state.show_enter_error = false;
         }
         KeyCode::Enter => return KeyResult::TryProceed,
         KeyCode::Char('l') => return KeyResult::Exit(Action::ShowList(state.field_decisions)),
@@ -224,10 +201,15 @@ fn apply_key(
         }
         _ => {}
     }
-    // Field navigation and all other keys clear any staged a/s decision and enter-error.
-    state.show_enter_error = false;
-    state.staged_decision = FieldDecision::Undecided;
     KeyResult::Continue
+}
+
+/// Switches the active field, resetting staged decision, enter-error, and scroll.
+fn switch_field(state: &mut TuiState, field: Field) {
+    state.staged_decision = FieldDecision::Undecided;
+    state.show_enter_error = false;
+    state.active_field = field;
+    state.scroll = 0;
 }
 
 // ── Decision logic ───────────────────────────────────────────────────────────
