@@ -1,0 +1,17 @@
+program = { env = "AUREUM_TEST_EXEC" }
+program_arguments = ["format", "--help"]
+
+expected_stdout = """
+Format config files
+
+Usage: aureum format [OPTIONS] <PATHS>...
+
+Arguments:
+  <PATHS>...  Paths to config files
+
+Options:
+      --check  Check formatting without modifying files
+  -h, --help   Print help
+"""
+expected_stderr = ""
+expected_exit_code = 0

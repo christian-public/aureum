@@ -32,8 +32,22 @@ pub enum Command {
     Run(RunArgs),
     /// Run tests
     Test(TestArgs),
+    /// Format config files
+    Format(FormatArgs),
     /// Print version information
     Version,
+}
+
+#[derive(Args)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub struct FormatArgs {
+    /// Paths to config files
+    #[arg(required = true)]
+    pub paths: Vec<PathBuf>,
+
+    /// Check formatting without modifying files
+    #[arg(long)]
+    pub check: bool,
 }
 
 #[derive(Args)]

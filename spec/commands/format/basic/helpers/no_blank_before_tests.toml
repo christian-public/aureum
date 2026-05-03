@@ -1,0 +1,4 @@
+program = "echo"
+[[tests]]
+id = "t1"
+expected_stdout = "a"

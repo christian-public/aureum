@@ -1,0 +1,41 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+
+[[tests]]
+id = "already_formatted"
+program_arguments = ["format", "helpers/already_formatted.toml"]
+
+expected_stdout = ""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "check_already_formatted"
+program_arguments = ["format", "--check", "helpers/already_formatted.toml"]
+
+expected_stdout = ""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "check_needs_reformatting"
+program_arguments = ["format", "--check", "helpers/wrong_order.toml"]
+
+expected_stdout = ""
+expected_stderr = """
+helpers/wrong_order.toml
+"""
+expected_exit_code = 1
+
+
+[[tests]]
+id = "check_missing_blank_line_before_tests"
+program_arguments = ["format", "--check", "helpers/no_blank_before_tests.toml"]
+
+expected_stdout = ""
+expected_stderr = """
+helpers/no_blank_before_tests.toml
+"""
+expected_exit_code = 1

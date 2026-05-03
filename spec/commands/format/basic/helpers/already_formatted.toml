@@ -1,0 +1,5 @@
+program = "echo"
+program_arguments = ["-n", "Hello world"]
+
+expected_stdout = "Hello world"
+expected_exit_code = 0

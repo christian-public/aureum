@@ -112,6 +112,7 @@ dependencies = [
  "colored",
  "crossterm",
  "globset",
+ "indoc",
  "itertools",
  "notify-debouncer-mini",
  "os_str_bytes",
