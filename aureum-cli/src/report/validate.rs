@@ -5,7 +5,7 @@ use crate::utils::file;
 use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
 use aureum::{
     ParseError, ProgramPath, RequirementData, Requirements, TestEntry, TestId, TomlConfigError,
-    ValidationError,
+    ValidationError, string,
 };
 use colored::Colorize;
 use relative_path::{RelativePath, RelativePathBuf};
@@ -247,19 +247,21 @@ pub fn print_config_file_error(config_file_path: &RelativePath, error: &ConfigFi
 fn format_toml_config_error(err: &TomlConfigError) -> Vec<Tree> {
     match err {
         TomlConfigError::InvalidTomlSyntax(e) => {
-            let lines: Vec<String> = e
-                .to_string()
-                .trim_end()
-                .lines()
-                .enumerate()
-                .map(|(i, line)| {
-                    if i == 0 {
-                        format!("{} invalid TOML syntax: {}", symbol::cross(), line)
+            let label = format!("{} invalid TOML syntax", symbol::cross());
+            let options = string::TextBlockOptions {
+                top_line: string::TextBlockOptions::CORNER_TOP.dimmed().to_string(),
+                bottom_line: string::TextBlockOptions::CORNER_BOTTOM.dimmed().to_string(),
+                format_line: |line| {
+                    if line.is_empty() {
+                        string::TextBlockOptions::BORDER.dimmed().to_string()
                     } else {
-                        line.to_owned()
+                        format!("{} {line}", string::TextBlockOptions::BORDER.dimmed())
                     }
-                })
-                .collect();
+                },
+            };
+            let block = string::text_block_with_options(e.to_string().trim_end(), &options);
+            let mut lines = vec![label];
+            lines.extend(block.lines().map(str::to_owned));
             vec![Leaf(lines)]
         }
         TomlConfigError::ParseErrors(errors) => errors
