@@ -10,7 +10,7 @@ Arguments:
   [PATH]  Where to save the config file (Recommended file extension: .au.toml)
 
 Options:
-      --print  Print the config file template to stdout
+      --print  Print to stdout instead of writing to a file
   -h, --help   Print help
 """
 expected_stderr = ""

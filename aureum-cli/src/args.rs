@@ -57,7 +57,7 @@ pub struct InitArgs {
     /// Where to save the config file (Recommended file extension: .au.toml)
     pub path: Option<PathBuf>,
 
-    /// Print the config file template to stdout
+    /// Print to stdout instead of writing to a file
     #[arg(long, conflicts_with = "path")]
     pub print: bool,
 }
