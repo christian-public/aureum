@@ -45,7 +45,7 @@ expected_stderr = """
     └── Validation errors
         └── ✘ Missing external file `aureum_test_this_file_does_not_exist`
 
-warning: Some config files contain errors (See above)
+warning: some config files contain errors (see above)
 """
 expected_exit_code = 3
 
@@ -129,6 +129,6 @@ expected_stderr = """
     └── Program to run
         └── ✔ <absolute path to 'echo'>
 
-warning: Some config files contain errors (See above)
+warning: some config files contain errors (see above)
 """
 expected_exit_code = 3

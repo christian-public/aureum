@@ -7,6 +7,6 @@ program_arguments = [
 
 expected_stdout = ""
 expected_stderr = """
-error: --interactive requires a terminal
+error: `--interactive` requires a terminal
 """
 expected_exit_code = 2

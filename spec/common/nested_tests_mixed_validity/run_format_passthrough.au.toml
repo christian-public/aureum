@@ -8,7 +8,7 @@ program_arguments = ["run", "--format", "passthrough", "helpers/all_valid.toml"]
 expected_stdout = ""
 expected_stderr = """
 error: `--format passthrough` supports only a single test, but found 2 tests
-hint: Use `--format toml` to run multiple tests, or run the `list` command to list all tests
+hint: use `--format toml` to run multiple tests or run the `list` command to list all tests
 """
 expected_exit_code = 2
 
@@ -39,7 +39,7 @@ program_arguments = [
 expected_stdout = ""
 expected_stderr = """
 error: `--format passthrough` supports only a single test, but found 2 tests
-hint: Use `--format toml` to run multiple tests, or run the `list` command to list all tests
+hint: use `--format toml` to run multiple tests or run the `list` command to list all tests
 """
 expected_exit_code = 2
 
@@ -70,7 +70,7 @@ program_arguments = [
 expected_stdout = ""
 expected_stderr = """
 error: `--format passthrough` supports only a single test, but found 2 tests
-hint: Use `--format toml` to run multiple tests, or run the `list` command to list all tests
+hint: use `--format toml` to run multiple tests or run the `list` command to list all tests
 """
 expected_exit_code = 2
 
@@ -94,7 +94,7 @@ expected_stderr = """
     └── Validation errors
         └── ✘ The field `program` is required
 
-warning: Some config files contain errors (See above)
+warning: some config files contain errors (see above)
 """
 expected_exit_code = 3
 
@@ -106,6 +106,6 @@ program_arguments = ["run", "--format", "passthrough", "helpers/*.toml"]
 expected_stdout = ""
 expected_stderr = """
 error: `--format passthrough` supports only a single test, but found 6 tests
-hint: Use `--format toml` to run multiple tests, or run the `list` command to list all tests
+hint: use `--format toml` to run multiple tests or run the `list` command to list all tests
 """
 expected_exit_code = 2

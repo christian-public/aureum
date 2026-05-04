@@ -7,10 +7,10 @@ program_arguments = ["test", "aureum_test_this_file_does_not_exist"]
 
 expected_stdout = ""
 expected_stderr = """
-warning: Invalid paths to config files:
-- aureum_test_this_file_does_not_exist
+warning: invalid paths to config files:
+aureum_test_this_file_does_not_exist
 
-error: No config files found for the given paths
+error: no config files found for the given paths
 """
 expected_exit_code = 3
 
@@ -21,10 +21,10 @@ program_arguments = ["test", "aureum_test_this_file_does_not_exist:sub1"]
 
 expected_stdout = ""
 expected_stderr = """
-warning: Invalid paths to config files:
-- aureum_test_this_file_does_not_exist:sub1
+warning: invalid paths to config files:
+aureum_test_this_file_does_not_exist:sub1
 
-error: No config files found for the given paths
+error: no config files found for the given paths
 """
 expected_exit_code = 3
 
@@ -44,7 +44,7 @@ expected_stderr = """
 └── Parse errors
     └── ✘ field `program`: expected string, got boolean
 
-warning: Some config files contain errors (See above)
+warning: some config files contain errors (see above)
 """
 expected_exit_code = 3
 
@@ -66,7 +66,7 @@ expected_stderr = """
         ├── ✘ The field `program` is required
         └── ✘ At least one expectation is required
 
-warning: Some config files contain errors (See above)
+warning: some config files contain errors (see above)
 """
 expected_exit_code = 3
 
@@ -87,7 +87,7 @@ expected_stderr = """
     └── Validation errors
         └── ✘ The field `program` is required
 
-warning: Some config files contain errors (See above)
+warning: some config files contain errors (see above)
 """
 expected_exit_code = 3
 
@@ -108,7 +108,7 @@ expected_stderr = """
     └── Validation errors
         └── ✘ The program `aureum_test_this_program_does_not_exist` was not found
 
-warning: Some config files contain errors (See above)
+warning: some config files contain errors (see above)
 """
 expected_exit_code = 3
 
@@ -129,7 +129,7 @@ expected_stderr = """
     └── Validation errors
         └── ✘ At least one expectation is required
 
-warning: Some config files contain errors (See above)
+warning: some config files contain errors (see above)
 """
 expected_exit_code = 3
 
@@ -150,7 +150,7 @@ expected_stderr = """
     └── Validation errors
         └── ✘ Exit code must be a value between -2147483648 to 2147483647 (On POSIX/Unix/Linux: Between 0 and 255)
 
-warning: Some config files contain errors (See above)
+warning: some config files contain errors (see above)
 """
 expected_exit_code = 3
 
@@ -171,7 +171,7 @@ expected_stderr = """
     └── Validation errors
         └── ✘ Missing environment variable `AUREUM_TEST_THIS_ENV_VAR_DOES_NOT_EXIST`
 
-warning: Some config files contain errors (See above)
+warning: some config files contain errors (see above)
 """
 expected_exit_code = 3
 
@@ -192,6 +192,6 @@ expected_stderr = """
     └── Validation errors
         └── ✘ Missing external file `aureum_test_this_file_does_not_exist`
 
-warning: Some config files contain errors (See above)
+warning: some config files contain errors (see above)
 """
 expected_exit_code = 3

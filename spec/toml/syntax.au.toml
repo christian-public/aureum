@@ -16,6 +16,6 @@ expected_stderr = """
         │ string values must be quoted, expected literal string
         ╰
 
-warning: Some config files contain errors (See above)
+warning: some config files contain errors (see above)
 """
 expected_exit_code = 3

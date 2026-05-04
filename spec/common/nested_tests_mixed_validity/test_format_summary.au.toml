@@ -56,7 +56,7 @@ expected_stderr = """
     └── Validation errors
         └── ✘ The field `program` is required
 
-warning: Some config files contain errors (See above)
+warning: some config files contain errors (see above)
 """
 expected_exit_code = 3
 
@@ -83,7 +83,7 @@ expected_stderr = """
     └── Validation errors
         └── ✘ The field `program` is required
 
-warning: Some config files contain errors (See above)
+warning: some config files contain errors (see above)
 """
 expected_exit_code = 3
 
@@ -112,7 +112,7 @@ expected_stderr = """
     └── Validation errors
         └── ✘ The field `program` is required
 
-warning: Some config files contain errors (See above)
+warning: some config files contain errors (see above)
 """
 expected_exit_code = 3
 
@@ -141,7 +141,7 @@ expected_stderr = """
     └── Validation errors
         └── ✘ The field `program` is required
 
-warning: Some config files contain errors (See above)
+warning: some config files contain errors (see above)
 """
 expected_exit_code = 3
 
@@ -171,6 +171,6 @@ expected_stderr = """
     └── Validation errors
         └── ✘ The field `program` is required
 
-warning: Some config files contain errors (See above)
+warning: some config files contain errors (see above)
 """
 expected_exit_code = 3

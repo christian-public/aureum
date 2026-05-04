@@ -29,30 +29,33 @@ pub fn print_watch_detected_file_changes() {
 }
 
 pub fn print_interactive_mode_requires_a_terminal_error() {
-    eprintln!("{} --interactive requires a terminal", theme::error());
+    eprintln!("{} `--interactive` requires a terminal", theme::error());
 }
 
 pub fn print_interactive_watch_session_failed(error: &io::Error) {
     eprintln!(
-        "{} Interactive watch session failed: {error}",
+        "{} `--interactive` + `--watch` session failed: {error}",
         theme::error()
     );
 }
 
 pub fn print_interactive_session_failed(error: &io::Error) {
-    eprintln!("{} Interactive session failed: {error}", theme::error());
+    eprintln!("{} `--interactive` session failed: {error}", theme::error());
 }
 
 pub fn print_watch_record_session_failed(error: &io::Error) {
-    eprintln!("{} Watch+record session failed: {error}", theme::error());
+    eprintln!(
+        "{} `--watch` + `--record` session failed: {error}",
+        theme::error()
+    );
 }
 
 pub fn print_watch_session_failed(error: &io::Error) {
-    eprintln!("{} Watch session failed: {error}", theme::error());
+    eprintln!("{} `--watch` session failed: {error}", theme::error());
 }
 
 pub fn print_record_session_failed(error: &io::Error) {
-    eprintln!("{} Record session failed: {error}", theme::error());
+    eprintln!("{} `--record` session failed: {error}", theme::error());
 }
 
 pub fn print_test_cases_start(report_config: &ReportConfig) {

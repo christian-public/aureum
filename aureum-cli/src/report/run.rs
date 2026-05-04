@@ -8,17 +8,17 @@ pub fn print_verbose_is_not_supported_in_passthrough() {
         theme::error()
     );
     eprintln!(
-        "{} You may want to use `--format toml` instead",
+        "{} use `--format toml` for detailed output or remove `--verbose`",
         theme::hint()
     );
 }
 
 pub fn print_failed_to_run_program() {
-    eprintln!("{} Failed to run program", theme::error());
+    eprintln!("{} failed to run program", theme::error());
 }
 
 pub fn print_one_or_more_programs_failed_to_run() {
-    eprintln!("{} One or more programs failed to run", theme::error());
+    eprintln!("{} one or more programs failed to run", theme::error());
 }
 
 pub fn print_test_case_id_as_toml_comment(test_case: &TestCase) {

@@ -42,16 +42,16 @@ pub fn print_config_details_if_needed(
 }
 
 pub fn print_invalid_paths(paths: &[PathBuf]) {
-    eprintln!("{} Invalid paths to config files:", theme::warning());
+    eprintln!("{} invalid paths to config files:", theme::warning());
     for path in paths {
-        eprintln!("- {}", path.display());
+        eprintln!("{}", path.display());
     }
     eprintln!();
 }
 
 pub fn print_no_config_files() {
     eprintln!(
-        "{} No config files found for the given paths",
+        "{} no config files found for the given paths",
         theme::error()
     );
 }
@@ -286,7 +286,7 @@ fn format_parse_error(error: &ParseError) -> String {
 
 pub fn print_config_files_contain_errors() {
     eprintln!(
-        "{} Some config files contain errors (See above)",
+        "{} some config files contain errors (see above)",
         theme::warning()
     );
 }
@@ -297,7 +297,7 @@ pub fn print_run_single_program_only(test_entry_count: usize) {
         theme::error(),
     );
     eprintln!(
-        "{} Use `--format toml` to run multiple tests, or run the `list` command to list all tests",
+        "{} use `--format toml` to run multiple tests or run the `list` command to list all tests",
         theme::hint()
     );
 }

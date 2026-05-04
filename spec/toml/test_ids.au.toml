@@ -13,7 +13,7 @@ expected_stderr = """
 └── Parse errors
     └── ✘ [0]: missing required field `id`
 
-warning: Some config files contain errors (See above)
+warning: some config files contain errors (see above)
 """
 expected_exit_code = 3
 
@@ -31,7 +31,7 @@ expected_stderr = """
     ├── ✘ [1]: field `id`: invalid id `invalid id!`
     └── ✘ [2]: field `id`: invalid id ``
 
-warning: Some config files contain errors (See above)
+warning: some config files contain errors (see above)
 """
 expected_exit_code = 3
 
@@ -48,6 +48,6 @@ expected_stderr = """
 └── Parse errors
     └── ✘ `id` is not allowed at the root level
 
-warning: Some config files contain errors (See above)
+warning: some config files contain errors (see above)
 """
 expected_exit_code = 3

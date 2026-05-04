@@ -13,7 +13,7 @@ expected_stderr = """
 └── Watch file errors
     └── ✘ Missing external file `aureum_test_this_file_does_not_exist`
 
-warning: Some config files contain errors (See above)
+warning: some config files contain errors (see above)
 """
 expected_exit_code = 3
 
@@ -30,6 +30,6 @@ expected_stderr = """
 └── Watch file errors
     └── ✘ Missing environment variable `AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST`
 
-warning: Some config files contain errors (See above)
+warning: some config files contain errors (see above)
 """
 expected_exit_code = 3

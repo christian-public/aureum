@@ -9,7 +9,7 @@ expected_stdout = """
 """
 expected_stderr = """
 error: `--format passthrough` supports only a single test, but found 5 tests
-hint: Use `--format toml` to run multiple tests, or run the `list` command to list all tests
+hint: use `--format toml` to run multiple tests or run the `list` command to list all tests
 """
 expected_exit_code = 2
 
@@ -28,6 +28,6 @@ program_arguments = [
 expected_stdout = ""
 expected_stderr = """
 error: `--verbose` is not supported in passthrough mode
-hint: You may want to use `--format toml` instead
+hint: use `--format toml` for detailed output or remove `--verbose`
 """
 expected_exit_code = 2
