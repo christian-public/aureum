@@ -306,9 +306,100 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
         report::test::print_interactive_mode_requires_a_terminal_error();
         return ExitCode::InvalidUsage;
     }
+    if args.interactive && args.watch {
+        run_tests_interactive_watch(args, current_dir)
+    } else if args.interactive {
+        run_tests_interactive(args, current_dir)
+    } else if args.watch && args.record.is_some() {
+        run_tests_record_watch(args, current_dir)
+    } else if args.watch {
+        run_tests_watch(args, current_dir)
+    } else {
+        run_tests_once(args, current_dir)
+    }
+}
 
-    // Build a reload closure for watch modes before args.paths is consumed.
+fn exit_code_from_run_results(
+    run_results: &[aureum::RunResult],
+    has_config_errors: bool,
+) -> ExitCode {
+    if !run_results.iter().all(|t| t.is_success()) {
+        ExitCode::TestFailure
+    } else if has_config_errors {
+        ExitCode::InvalidConfig
+    } else {
+        ExitCode::Success
+    }
+}
+
+fn run_tests_interactive_watch(args: TestArgs, current_dir: &Path) -> ExitCode {
+    let reload_paths = args.paths.clone();
     let watch_input_paths = args.paths.clone();
+    let reload_dir = current_dir.to_path_buf();
+    let reload_fn = move || load_test_cases_for_watch(&reload_paths, &reload_dir);
+
+    let config_files = match prepare_config_files(args.paths, args.common.verbose, current_dir) {
+        Ok(result) => result,
+        Err(err) => return err,
+    };
+    let watch_paths = collect_watch_paths(&watch_input_paths, &config_files, current_dir);
+    if args.common.verbose {
+        report::validate::print_watch_files_verbose(
+            &watch_paths,
+            current_dir,
+            args.common.hide_absolute_paths,
+        );
+    }
+    report::validate::print_config_details_if_needed(
+        &config_files.loaded,
+        args.common.verbose,
+        args.common.hide_absolute_paths,
+    );
+
+    match interactive::run_with_progress_review_and_watch(
+        &reload_fn,
+        args.parallel,
+        current_dir,
+        &watch_paths,
+    ) {
+        Ok(run_results) => {
+            exit_code_from_run_results(&run_results, config_files.has_config_errors())
+        }
+        Err(e) => {
+            report::test::print_interactive_watch_session_failed(&e);
+            ExitCode::TestFailure
+        }
+    }
+}
+
+fn run_tests_interactive(args: TestArgs, current_dir: &Path) -> ExitCode {
+    let config_files = match prepare_config_files(args.paths, args.common.verbose, current_dir) {
+        Ok(result) => result,
+        Err(err) => return err,
+    };
+    let test_entries = config_files
+        .loaded
+        .values()
+        .flat_map(|x| x.test_entries_in_coverage_set())
+        .collect::<Vec<_>>();
+    let all_test_cases: Vec<TestCaseWithExpectations> = test_entries
+        .iter()
+        .flat_map(|(_, entry)| entry.test_case_with_expectations().ok())
+        .collect();
+
+    match interactive::run_with_progress_and_review(&all_test_cases, args.parallel, current_dir) {
+        Ok(run_results) => {
+            exit_code_from_run_results(&run_results, config_files.has_config_errors())
+        }
+        Err(e) => {
+            report::test::print_interactive_session_failed(&e);
+            ExitCode::TestFailure
+        }
+    }
+}
+
+fn run_tests_record_watch(args: TestArgs, current_dir: &Path) -> ExitCode {
+    let TerminalSize { width, height } = args.record.expect("called only when record is Some");
     let reload_paths = args.paths.clone();
     let reload_dir = current_dir.to_path_buf();
     let reload_fn = move || load_test_cases_for_watch(&reload_paths, &reload_dir);
@@ -318,34 +409,70 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
         Err(err) => return err,
     };
 
-    let test_entries_in_coverage_set = config_files
-        .loaded
-        .values()
-        .flat_map(|x| x.test_entries_in_coverage_set())
-        .collect::<Vec<_>>();
+    let stdin = io::stdin();
+    let stdout = io::stdout();
+    match interactive::run_interactive_updates_with_watch(
+        &reload_fn,
+        args.parallel,
+        current_dir,
+        &mut stdin.lock(),
+        &mut stdout.lock(),
+        width,
+        height,
+    ) {
+        Ok(run_results) => {
+            exit_code_from_run_results(&run_results, config_files.has_config_errors())
+        }
+        Err(e) => {
+            report::test::print_watch_record_session_failed(&e);
+            ExitCode::TestFailure
+        }
+    }
+}
 
-    let all_test_cases: Vec<TestCaseWithExpectations> = test_entries_in_coverage_set
-        .iter()
-        .flat_map(|(_test_id, test_entry)| test_entry.test_case_with_expectations().ok())
-        .collect();
+fn run_tests_watch(args: TestArgs, current_dir: &Path) -> ExitCode {
+    let reload_paths = args.paths.clone();
+    let watch_input_paths = args.paths.clone();
+    let reload_dir = current_dir.to_path_buf();
+    let reload_fn = move || load_test_cases_for_watch(&reload_paths, &reload_dir);
 
-    let has_config_errors = config_files.has_config_errors();
-
-    let watch_paths: BTreeSet<PathBuf> = if args.watch {
-        collect_watch_paths(&watch_input_paths, &config_files, current_dir)
-    } else {
-        BTreeSet::new()
+    let config_files = match prepare_config_files(args.paths, args.common.verbose, current_dir) {
+        Ok(result) => result,
+        Err(err) => return err,
     };
-
-    if args.watch && args.common.verbose {
+    let watch_paths = collect_watch_paths(&watch_input_paths, &config_files, current_dir);
+    if args.common.verbose {
         report::validate::print_watch_files_verbose(
             &watch_paths,
             current_dir,
             args.common.hide_absolute_paths,
         );
     }
+    report::validate::print_config_details_if_needed(
+        &config_files.loaded,
+        args.common.verbose,
+        args.common.hide_absolute_paths,
+    );
 
-    if args.watch {
+    match run_watch_loop(&reload_fn, args.parallel, current_dir, &watch_paths) {
+        Ok(run_results) => {
+            exit_code_from_run_results(&run_results, config_files.has_config_errors())
+        }
+        Err(e) => {
+            report::test::print_watch_session_failed(&e);
+            ExitCode::TestFailure
+        }
+    }
+}
+
+fn run_tests_once(args: TestArgs, current_dir: &Path) -> ExitCode {
+    let config_files = match prepare_config_files(args.paths, args.common.verbose, current_dir) {
+        Ok(result) => result,
+        Err(err) => return err,
+    };
+    let has_config_errors = config_files.has_config_errors();
+
+    if args.record.is_none() {
         report::validate::print_config_details_if_needed(
             &config_files.loaded,
             args.common.verbose,
@@ -353,118 +480,82 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
         );
     }
 
-    let run_results = if args.interactive && args.watch {
-        match interactive::run_with_progress_review_and_watch(
-            &reload_fn,
-            args.parallel,
-            current_dir,
-            &watch_paths,
-        ) {
-            Ok(r) => r,
-            Err(e) => {
-                report::test::print_interactive_watch_session_failed(&e);
-                return ExitCode::TestFailure;
+    let test_entries = config_files
+        .loaded
+        .values()
+        .flat_map(|x| x.test_entries_in_coverage_set())
+        .collect::<Vec<_>>();
+    let all_test_cases: Vec<TestCaseWithExpectations> = test_entries
+        .iter()
+        .flat_map(|(_, entry)| entry.test_case_with_expectations().ok())
+        .collect();
+
+    let run_results = run_test_report(
+        &all_test_cases,
+        args.parallel,
+        &args.format,
+        args.record,
+        has_config_errors,
+        current_dir,
+    );
+    exit_code_from_run_results(&run_results, has_config_errors)
+}
+
+fn run_test_report(
+    all_test_cases: &[TestCaseWithExpectations],
+    parallel: bool,
+    format: &TestOutputFormat,
+    record: Option<TerminalSize>,
+    has_config_errors: bool,
+    current_dir: &Path,
+) -> Vec<aureum::RunResult> {
+    // --record suppresses normal output; only TUI frames go to stdout.
+    let quiet = record.is_some();
+
+    let report_config = ReportConfig {
+        number_of_tests: all_test_cases.len(),
+        format: get_report_format(format),
+    };
+
+    if !quiet {
+        report::test::print_test_cases_start(&report_config);
+    }
+
+    let results = aureum::run_test_cases(
+        all_test_cases,
+        parallel,
+        current_dir,
+        &|index, test_case, result| {
+            if !quiet {
+                report::test::print_test_case(&report_config, index, test_case, result);
             }
-        }
-    } else if args.interactive {
-        match interactive::run_with_progress_and_review(&all_test_cases, args.parallel, current_dir)
-        {
-            Ok(r) => r,
-            Err(e) => {
-                report::test::print_interactive_session_failed(&e);
-                return ExitCode::TestFailure;
-            }
-        }
-    } else if let (true, Some(TerminalSize { width, height })) = (args.watch, args.record.clone()) {
+        },
+    );
+
+    if !quiet {
+        report::test::print_test_cases_end(&report_config, &results);
+    }
+
+    if has_config_errors && !quiet {
+        report::validate::print_config_files_contain_errors();
+    }
+
+    if let Some(TerminalSize { width, height }) = record {
         let stdin = io::stdin();
         let stdout = io::stdout();
-        match interactive::run_interactive_updates_with_watch(
-            &reload_fn,
-            args.parallel,
+        if let Err(e) = interactive::run_interactive_updates(
+            &results,
             current_dir,
             &mut stdin.lock(),
             &mut stdout.lock(),
             width,
             height,
         ) {
-            Ok(r) => r,
-            Err(e) => {
-                report::test::print_watch_record_session_failed(&e);
-                return ExitCode::TestFailure;
-            }
+            report::test::print_record_session_failed(&e);
         }
-    } else if args.watch {
-        match run_tests_with_watch(&reload_fn, args.parallel, current_dir, &watch_paths) {
-            Ok(r) => r,
-            Err(e) => {
-                report::test::print_watch_session_failed(&e);
-                return ExitCode::TestFailure;
-            }
-        }
-    } else {
-        // --record suppresses normal output; only TUI frames go to stdout.
-        let quiet = args.record.is_some();
-
-        let report_config = ReportConfig {
-            number_of_tests: all_test_cases.len(),
-            format: get_report_format(&args.format),
-        };
-
-        if !quiet {
-            report::validate::print_config_details_if_needed(
-                &config_files.loaded,
-                args.common.verbose,
-                args.common.hide_absolute_paths,
-            );
-            report::test::print_test_cases_start(&report_config);
-        }
-
-        let results = aureum::run_test_cases(
-            &all_test_cases,
-            args.parallel,
-            current_dir,
-            &|index, test_case, result| {
-                if !quiet {
-                    report::test::print_test_case(&report_config, index, test_case, result);
-                }
-            },
-        );
-
-        if !quiet {
-            report::test::print_test_cases_end(&report_config, &results);
-        }
-
-        if has_config_errors && !quiet {
-            report::validate::print_config_files_contain_errors();
-        }
-
-        if let Some(TerminalSize { width, height }) = args.record {
-            let stdin = io::stdin();
-            let stdout = io::stdout();
-            if let Err(e) = interactive::run_interactive_updates(
-                &results,
-                current_dir,
-                &mut stdin.lock(),
-                &mut stdout.lock(),
-                width,
-                height,
-            ) {
-                report::test::print_record_session_failed(&e);
-            }
-        }
-
-        results
-    };
-
-    let all_tests_passed = run_results.iter().all(|t| t.is_success());
-
-    if !all_tests_passed {
-        ExitCode::TestFailure
-    } else if has_config_errors {
-        ExitCode::InvalidConfig
-    } else {
-        ExitCode::Success
     }
+
+    results
 }
 
 /// Runs tests once, printing results to stdout. Returns the results.
@@ -488,7 +579,7 @@ fn run_test_batch(
 
 /// Non-interactive watch loop: run → print → wait for changes → repeat.
 /// Returns the last batch of results when the watcher channel closes (e.g. on process exit).
-fn run_tests_with_watch(
+fn run_watch_loop(
     load_test_cases: impl Fn() -> Vec<TestCaseWithExpectations>,
     parallel: bool,
     current_dir: &Path,
@@ -693,8 +784,7 @@ fn prepare_config_files(
 ) -> Result<LoadConfigFilesResult, ExitCode> {
     let find_config_files_result = find_config_file::find_config_files(paths, current_dir);
 
-    let had_find_errors = !find_config_files_result.errors.is_empty();
-    if had_find_errors {
+    if !find_config_files_result.errors.is_empty() {
         let paths = find_config_files_result
             .errors
             .keys()
