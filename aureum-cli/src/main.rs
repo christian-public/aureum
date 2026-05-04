@@ -26,8 +26,7 @@ use crate::report::test::{ReportConfig, ReportFormat};
 use crate::report::validate::ReportValidateResult;
 use crate::watch::start_watcher_for_paths;
 use aureum::{TestCase, TestCaseWithExpectations};
-use relative_path::RelativePathBuf;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use std::env;
 use std::fs;
 use std::io::{self, IsTerminal};
@@ -99,7 +98,7 @@ fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode {
         Err(err) => return err,
     };
 
-    print_config_details_if_needed(
+    report::validate::print_config_details_if_needed(
         &config_files.loaded,
         args.common.verbose,
         args.common.hide_absolute_paths,
@@ -153,7 +152,7 @@ fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
         Err(err) => return err,
     };
 
-    print_config_details_if_needed(
+    report::validate::print_config_details_if_needed(
         &config_files.loaded,
         args.common.verbose,
         args.common.hide_absolute_paths,
@@ -225,7 +224,7 @@ fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
             match &all_test_cases[..] {
                 [test_case] => run_program_as_passthrough(test_case, current_dir),
                 _ => {
-                    print_config_details_if_needed(
+                    report::validate::print_config_details_if_needed(
                         &config_files.loaded,
                         args.common.verbose,
                         args.common.hide_absolute_paths,
@@ -238,7 +237,7 @@ fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
             }
         }
         RunOutputFormat::Toml => {
-            print_config_details_if_needed(
+            report::validate::print_config_details_if_needed(
                 &config_files.loaded,
                 args.common.verbose,
                 args.common.hide_absolute_paths,
@@ -343,7 +342,7 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
     }
 
     if args.watch {
-        print_config_details_if_needed(
+        report::validate::print_config_details_if_needed(
             &config_files.loaded,
             args.common.verbose,
             args.common.hide_absolute_paths,
@@ -408,7 +407,7 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
         };
 
         if !quiet {
-            print_config_details_if_needed(
+            report::validate::print_config_details_if_needed(
                 &config_files.loaded,
                 args.common.verbose,
                 args.common.hide_absolute_paths,
@@ -722,27 +721,6 @@ fn prepare_config_files(
     }
 
     Ok(load_config_files_result)
-}
-
-fn print_config_details_if_needed(
-    loaded: &BTreeMap<RelativePathBuf, LoadedConfigFile>,
-    verbose: bool,
-    hide_absolute_paths: bool,
-) {
-    for (config_file_path, loaded_config_file) in loaded {
-        if loaded_config_file.has_validation_errors() || verbose {
-            report::validate::print_config_details(
-                config_file_path,
-                loaded_config_file.test_entries.as_slice(),
-                &loaded_config_file.requirement_data,
-                &loaded_config_file.requirements,
-                &loaded_config_file.watch_files,
-                &loaded_config_file.watch_file_errors,
-                verbose,
-                hide_absolute_paths,
-            );
-        }
-    }
 }
 
 fn get_report_format(format: &TestOutputFormat) -> ReportFormat {

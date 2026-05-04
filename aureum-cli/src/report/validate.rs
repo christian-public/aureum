@@ -1,4 +1,4 @@
-use crate::load_config_file::ConfigFileError;
+use crate::load_config_file::{ConfigFileError, LoadedConfigFile};
 use crate::report::theme;
 use crate::utils::file;
 use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
@@ -18,6 +18,27 @@ pub enum ReportValidateResult {
     ParseError,
     ValidationError(usize),
     Success(usize),
+}
+
+pub fn print_config_details_if_needed(
+    loaded: &BTreeMap<RelativePathBuf, LoadedConfigFile>,
+    verbose: bool,
+    hide_absolute_paths: bool,
+) {
+    for (config_file_path, loaded_config_file) in loaded {
+        if loaded_config_file.has_validation_errors() || verbose {
+            print_config_details(
+                config_file_path,
+                loaded_config_file.test_entries.as_slice(),
+                &loaded_config_file.requirement_data,
+                &loaded_config_file.requirements,
+                &loaded_config_file.watch_files,
+                &loaded_config_file.watch_file_errors,
+                verbose,
+                hide_absolute_paths,
+            );
+        }
+    }
 }
 
 pub fn print_invalid_paths(paths: &[PathBuf]) {
