@@ -60,6 +60,10 @@ pub struct InitArgs {
     /// Print to stdout instead of writing to a file
     #[arg(long, conflicts_with = "path")]
     pub print: bool,
+
+    /// Program and arguments to record output from
+    #[arg(last = true)]
+    pub command: Vec<String>,
 }
 
 #[derive(Args)]

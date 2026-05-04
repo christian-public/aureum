@@ -5,10 +5,11 @@ expected_stdout = ""
 expected_stderr = """
 Initialize a new config file
 
-Usage: aureum init [OPTIONS] [PATH]
+Usage: aureum init [OPTIONS] [PATH] [-- <COMMAND>...]
 
 Arguments:
-  [PATH]  Where to save the config file (Recommended file extension: .au.toml)
+  [PATH]        Where to save the config file (Recommended file extension: .au.toml)
+  [COMMAND]...  Program and arguments to record output from
 
 Options:
       --print  Print to stdout instead of writing to a file

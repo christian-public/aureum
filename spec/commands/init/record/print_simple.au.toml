@@ -1,0 +1,13 @@
+program = { env = "AUREUM_TEST_EXEC" }
+program_arguments = ["init", "--print", "--", "echo", "-n", "Hello world"]
+
+expected_stdout = """
+program = "echo"
+program_arguments = ["-n", "Hello world"]
+
+expected_stdout = "Hello world"
+expected_stderr = ""
+expected_exit_code = 0
+"""
+expected_stderr = ""
+expected_exit_code = 0

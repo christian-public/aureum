@@ -5,14 +5,15 @@ mod utils {
     pub mod glob;
     pub mod shell;
     pub mod time;
+    pub mod toml;
 }
 mod args;
 mod exit_code;
 mod find_config_file;
 mod format;
+mod init;
 mod interactive;
 mod load_config_file;
-mod template;
 mod watch;
 
 use crate::args::{
@@ -32,11 +33,6 @@ use std::fs;
 use std::io::{self, IsTerminal};
 use std::path::{Path, PathBuf};
 use std::process;
-
-const TEMPLATE_01_MINIMAL_TEST: &str = include_str!("../assets/01_minimal_test.au.toml");
-const TEMPLATE_02_NESTED_TESTS: &str = include_str!("../assets/02_nested_tests.au.toml");
-const TEMPLATE_03_ALL_SUPPORTED_FIELDS: &str =
-    include_str!("../assets/03_all_supported_fields.au.toml");
 
 fn main() {
     let current_dir = env::current_dir().expect("Current directory must be available");
@@ -61,38 +57,40 @@ fn main() {
 // COMMANDS
 
 fn init_config(args: InitArgs) -> ExitCode {
-    let t01 = template::format_template("Minimal test", TEMPLATE_01_MINIMAL_TEST);
-    let t02 = template::format_template("Nested tests", TEMPLATE_02_NESTED_TESTS);
-    let t03 = template::format_template("All supported fields", TEMPLATE_03_ALL_SUPPORTED_FIELDS);
+    if !args.print && args.path.is_none() {
+        report::init::print_no_output_destination();
+        return ExitCode::InvalidUsage;
+    }
 
-    let template = [
-        t01,
-        template::comment_lines(&t02),
-        template::comment_lines(&t03),
-    ]
-    .join("\n\n");
+    let content = match args.command.as_slice() {
+        [program, arguments @ ..] => match init::record_command(program, arguments) {
+            Ok(output) => init::generate_record_toml(program, arguments, &output),
+            Err(_) => {
+                report::init::print_failed_to_run_command();
+                return ExitCode::GeneralError;
+            }
+        },
+        _ => init::default_template(),
+    };
 
     match args.path {
-        None => {
-            print!("{}", template);
-
-            ExitCode::Success
-        }
         Some(path) => {
             if path.exists() {
                 report::init::print_file_already_exists(&path);
                 return ExitCode::GeneralError;
             }
 
-            let write_result = fs::write(&path, template);
-            if write_result.is_err() {
+            if fs::write(&path, content).is_err() {
                 report::init::print_failed_to_write_file(&path);
                 return ExitCode::GeneralError;
             }
-
-            ExitCode::Success
+        }
+        None => {
+            print!("{}", content);
         }
     }
+
+    ExitCode::Success
 }
 
 fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode {

@@ -1,4 +1,5 @@
 use crate::report::theme;
+use crate::utils::toml;
 use aureum::{ProgramOutput, TestCase};
 
 pub fn print_verbose_is_not_supported_in_passthrough() {
@@ -29,17 +30,13 @@ pub fn print_failed_to_run_program_as_toml() {
 }
 
 pub fn print_output_as_toml(output: &ProgramOutput) {
-    println!("expected_stdout = {}", format_toml_string(&output.stdout));
-    println!("expected_stderr = {}", format_toml_string(&output.stderr));
+    println!(
+        "expected_stdout = {}",
+        toml::string_to_toml_literal(&output.stdout)
+    );
+    println!(
+        "expected_stderr = {}",
+        toml::string_to_toml_literal(&output.stderr)
+    );
     println!("expected_exit_code = {}", output.exit_code);
-}
-
-fn format_toml_string(s: &str) -> String {
-    if s.contains('\n') {
-        let escaped = s.replace('\\', "\\\\").replace('"', "\\\"");
-        format!("\"\"\"\n{escaped}\"\"\"")
-    } else {
-        let escaped = s.replace('\\', "\\\\").replace('"', "\\\"");
-        format!("\"{escaped}\"")
-    }
 }

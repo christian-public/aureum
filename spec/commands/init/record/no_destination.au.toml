@@ -1,0 +1,9 @@
+program = { env = "AUREUM_TEST_EXEC" }
+program_arguments = ["init", "--", "echo", "hello"]
+
+expected_stdout = ""
+expected_stderr = """
+error: no output destination
+hint: provide a file path or use the `--print` option
+"""
+expected_exit_code = 2
