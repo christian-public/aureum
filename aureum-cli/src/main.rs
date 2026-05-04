@@ -362,7 +362,7 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
         ) {
             Ok(r) => r,
             Err(e) => {
-                eprintln!("error: Interactive watch session failed: {e}");
+                report::test::print_interactive_watch_session_failed(&e);
                 return ExitCode::TestFailure;
             }
         }
@@ -371,7 +371,7 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
         {
             Ok(r) => r,
             Err(e) => {
-                eprintln!("error: Interactive session failed: {e}");
+                report::test::print_interactive_session_failed(&e);
                 return ExitCode::TestFailure;
             }
         }
@@ -389,7 +389,7 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
         ) {
             Ok(r) => r,
             Err(e) => {
-                eprintln!("error: Watch+record session failed: {e}");
+                report::test::print_watch_record_session_failed(&e);
                 return ExitCode::TestFailure;
             }
         }
@@ -397,7 +397,7 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
         match run_tests_with_watch(&reload_fn, args.parallel, current_dir, &watch_paths) {
             Ok(r) => r,
             Err(e) => {
-                eprintln!("error: Watch session failed: {e}");
+                report::test::print_watch_session_failed(&e);
                 return ExitCode::TestFailure;
             }
         }
@@ -449,7 +449,7 @@ fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
                 width,
                 height,
             ) {
-                eprintln!("error: Record session failed: {e}");
+                report::test::print_record_session_failed(&e);
             }
         }
 
@@ -659,13 +659,13 @@ fn format_config_files(args: FormatArgs, current_dir: &Path) -> ExitCode {
             Ok((changed, _written)) => {
                 if changed {
                     if args.check {
-                        eprintln!("{}", config_path);
+                        report::format::print_would_change(config_path);
                     }
                     any_would_change = true;
                 }
             }
             Err(e) => {
-                eprintln!("error: {config_path}: {e}");
+                report::format::print_format_error(config_path, &e);
                 had_error = true;
             }
         }
