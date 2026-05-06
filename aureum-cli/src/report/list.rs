@@ -1,26 +1,26 @@
 use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
-use aureum::TestCase;
+use aureum::TestId;
+use relative_path::RelativePathBuf;
 use std::collections::BTreeMap;
 
-pub fn print_test_list_as_tree(test_cases: &[TestCase]) {
-    let tree = build_test_list_tree(test_cases);
+pub fn print_test_list_as_tree(items: &[(RelativePathBuf, &TestId)]) {
+    let tree = build_test_list_tree(items);
     let output = tree.to_string();
 
     print!("{}", output);
 }
 
-fn build_test_list_tree(test_cases: &[TestCase]) -> Tree {
+fn build_test_list_tree(items: &[(RelativePathBuf, &TestId)]) -> Tree {
     let mut by_file: BTreeMap<Vec<String>, Vec<String>> = BTreeMap::new();
 
-    for test_case in test_cases {
-        let segments: Vec<String> = test_case
-            .path_to_config_file()
+    for (file_path, test_id) in items {
+        let segments: Vec<String> = file_path
             .components()
             .map(|c| c.as_str().to_string())
             .collect();
         let subtests = by_file.entry(segments).or_default();
-        if !test_case.test_id.is_root() {
-            subtests.push(format!(":{}", test_case.test_id));
+        if !test_id.is_root() {
+            subtests.push(format!(":{}", test_id));
         }
     }
 

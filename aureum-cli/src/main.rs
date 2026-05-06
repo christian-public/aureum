@@ -25,7 +25,8 @@ use crate::load_config_file::{LoadConfigFilesResult, LoadedConfigFile};
 use crate::report::test::{ReportConfig, ReportFormat};
 use crate::report::validate::ReportValidateResult;
 use crate::watch::start_watcher_for_paths;
-use aureum::{TestCase, TestCaseWithExpectations};
+use aureum::{TestCase, TestCaseWithExpectations, TestId};
+use relative_path::RelativePathBuf;
 use std::collections::BTreeSet;
 use std::env;
 use std::fs;
@@ -158,24 +159,27 @@ fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
         args.common.hide_absolute_paths,
     );
 
-    let test_entries_in_coverage_set = config_files
+    let test_paths: Vec<(RelativePathBuf, &TestId)> = config_files
         .loaded
-        .values()
-        .flat_map(|x| x.test_entries_in_coverage_set())
-        .collect::<Vec<_>>();
-
-    let all_test_cases = test_entries_in_coverage_set
         .iter()
-        .flat_map(|(_test_id, test_entry)| test_entry.test_case.clone().ok())
-        .collect::<Vec<_>>();
+        .flat_map(|(file_path, loaded)| {
+            loaded
+                .test_entries_in_coverage_set()
+                .map(move |(test_id, _)| (file_path.clone(), test_id))
+        })
+        .collect();
 
     let has_config_errors = config_files.has_config_errors();
 
     if args.tree {
-        report::list::print_test_list_as_tree(&all_test_cases);
+        report::list::print_test_list_as_tree(&test_paths);
     } else {
-        for test_case in &all_test_cases {
-            println!("{}", test_case.id());
+        for (file_path, test_id) in &test_paths {
+            if test_id.is_root() {
+                println!("{file_path}");
+            } else {
+                println!("{file_path}:{test_id}");
+            }
         }
     }
 
