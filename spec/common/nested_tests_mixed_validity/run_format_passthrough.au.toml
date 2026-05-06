@@ -1,0 +1,111 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+
+[[tests]]
+id = "all_valid.all"
+program_arguments = ["run", "--format", "passthrough", "helpers/all_valid.toml"]
+
+expected_stdout = ""
+expected_stderr = """
+error: `--format passthrough` supports only a single test, but found 2 tests
+hint: Use `--format toml` to run multiple tests, or run the `list` command to list all tests
+"""
+expected_exit_code = 2
+
+
+[[tests]]
+id = "all_valid.specific_test_id"
+program_arguments = [
+    "run",
+    "--format",
+    "passthrough",
+    "helpers/all_valid.toml:test1",
+]
+
+expected_stdout = "Test 1"
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "missing_program_on_test2.all"
+program_arguments = [
+    "run",
+    "--format",
+    "passthrough",
+    "helpers/missing_program_on_test2.toml",
+]
+
+expected_stdout = ""
+expected_stderr = """
+error: `--format passthrough` supports only a single test, but found 2 tests
+hint: Use `--format toml` to run multiple tests, or run the `list` command to list all tests
+"""
+expected_exit_code = 2
+
+
+[[tests]]
+id = "missing_program_on_test2.specific_test_id"
+program_arguments = [
+    "run",
+    "--format",
+    "passthrough",
+    "helpers/missing_program_on_test2.toml:test1",
+]
+
+expected_stdout = "Test 1"
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "missing_program_on_all_tests"
+program_arguments = [
+    "run",
+    "--format",
+    "passthrough",
+    "helpers/missing_program_on_all_tests.toml",
+]
+
+expected_stdout = ""
+expected_stderr = """
+error: `--format passthrough` supports only a single test, but found 2 tests
+hint: Use `--format toml` to run multiple tests, or run the `list` command to list all tests
+"""
+expected_exit_code = 2
+
+
+[[tests]]
+id = "missing_program_on_all_tests.specific_test_id"
+program_arguments = [
+    "run",
+    "--format",
+    "passthrough",
+    "helpers/missing_program_on_all_tests.toml:test1",
+]
+
+expected_stdout = ""
+expected_stderr = """
+📋 helpers/missing_program_on_all_tests.toml
+├── :test1
+│   └── Validation errors
+│       └── ✘ The field `program` is required
+└── :test2
+    └── Validation errors
+        └── ✘ The field `program` is required
+
+warning: Some config files contain errors (See above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "all_files"
+program_arguments = ["run", "--format", "passthrough", "helpers/*.toml"]
+
+expected_stdout = ""
+expected_stderr = """
+error: `--format passthrough` supports only a single test, but found 6 tests
+hint: Use `--format toml` to run multiple tests, or run the `list` command to list all tests
+"""
+expected_exit_code = 2

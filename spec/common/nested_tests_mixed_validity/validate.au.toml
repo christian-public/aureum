@@ -2,40 +2,40 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 
 [[tests]]
-id = "specific_test_id"
-program_arguments = ["validate", "helpers/echo_tests.toml:test1"]
+id = "all_valid.all"
+program_arguments = ["validate", "helpers/all_valid.toml"]
 
 expected_stdout = """
-✔ helpers/echo_tests.toml  2 tests
+✔ helpers/all_valid.toml  2 tests
 """
 expected_stderr = ""
 expected_exit_code = 0
 
 
 [[tests]]
-id = "multiple_tests"
-program_arguments = ["validate", "helpers/echo_tests.toml"]
+id = "all_valid.specific_test_id"
+program_arguments = ["validate", "helpers/all_valid.toml:test1"]
 
 expected_stdout = """
-✔ helpers/echo_tests.toml  2 tests
+✔ helpers/all_valid.toml  2 tests
 """
 expected_stderr = ""
 expected_exit_code = 0
 
 
 [[tests]]
-id = "missing_program_on_test1"
-program_arguments = ["validate", "helpers/missing_program_on_test1.toml"]
+id = "missing_program_on_test2.all"
+program_arguments = ["validate", "helpers/missing_program_on_test2.toml"]
 
 expected_stdout = """
-✘ helpers/missing_program_on_test1.toml  2 tests
+✘ helpers/missing_program_on_test2.toml  2 tests
 """
 expected_stderr = """
-📋 helpers/missing_program_on_test1.toml
+📋 helpers/missing_program_on_test2.toml
 ├── :test1
-│   └── Validation errors
-│       └── ✘ The field `program` is required
 └── :test2
+    └── Validation errors
+        └── ✘ The field `program` is required
 
 warning: Some config files contain errors (See above)
 """
@@ -43,18 +43,18 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "missing_program_on_test1_validate_specific_test_id"
-program_arguments = ["validate", "helpers/missing_program_on_test1.toml:test2"]
+id = "missing_program_on_test2.specific_test_id"
+program_arguments = ["validate", "helpers/missing_program_on_test2.toml:test1"]
 
 expected_stdout = """
-✘ helpers/missing_program_on_test1.toml  2 tests
+✘ helpers/missing_program_on_test2.toml  2 tests
 """
 expected_stderr = """
-📋 helpers/missing_program_on_test1.toml
+📋 helpers/missing_program_on_test2.toml
 ├── :test1
-│   └── Validation errors
-│       └── ✘ The field `program` is required
 └── :test2
+    └── Validation errors
+        └── ✘ The field `program` is required
 
 warning: Some config files contain errors (See above)
 """
@@ -62,7 +62,7 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "missing_program_on_all_tests"
+id = "missing_program_on_all_tests.all"
 program_arguments = ["validate", "helpers/missing_program_on_all_tests.toml"]
 
 expected_stdout = """
@@ -83,18 +83,14 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "validate_all_files"
+id = "missing_program_on_all_tests.specific_test_id"
 program_arguments = [
     "validate",
-    "helpers/echo_tests.toml",
-    "helpers/missing_program_on_test1.toml",
-    "helpers/missing_program_on_all_tests.toml",
+    "helpers/missing_program_on_all_tests.toml:test1",
 ]
 
 expected_stdout = """
-✔ helpers/echo_tests.toml                    2 tests
 ✘ helpers/missing_program_on_all_tests.toml  2 tests
-✘ helpers/missing_program_on_test1.toml      2 tests
 """
 expected_stderr = """
 📋 helpers/missing_program_on_all_tests.toml
@@ -105,11 +101,34 @@ expected_stderr = """
     └── Validation errors
         └── ✘ The field `program` is required
 
-📋 helpers/missing_program_on_test1.toml
+warning: Some config files contain errors (See above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "all_files"
+program_arguments = ["validate", "helpers/*.toml"]
+
+expected_stdout = """
+✔ helpers/all_valid.toml                     2 tests
+✘ helpers/missing_program_on_all_tests.toml  2 tests
+✘ helpers/missing_program_on_test2.toml      2 tests
+"""
+expected_stderr = """
+📋 helpers/missing_program_on_all_tests.toml
 ├── :test1
 │   └── Validation errors
 │       └── ✘ The field `program` is required
 └── :test2
+    └── Validation errors
+        └── ✘ The field `program` is required
+
+📋 helpers/missing_program_on_test2.toml
+├── :test1
+└── :test2
+    └── Validation errors
+        └── ✘ The field `program` is required
 
 warning: Some config files contain errors (See above)
 """
