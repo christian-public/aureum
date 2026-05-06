@@ -1,0 +1,9 @@
+# Regression: child must be able to fill its stderr pipe buffer before any
+# stdout is produced. Earlier versions of `run_program` drained stdout to EOF
+# before reading stderr, which deadlocked when stderr exceeded the OS pipe
+# buffer (~64 KB on Linux).
+program = { env = "AUREUM_TEST_BASH" }
+program_arguments = ["-c", "yes 'a' | head -c 200000 >&2; echo done"]
+
+expected_stdout = "done\n"
+expected_exit_code = 0

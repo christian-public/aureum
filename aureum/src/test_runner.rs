@@ -2,9 +2,10 @@ use crate::test_case::{TestCase, TestCaseExpectations, TestCaseWithExpectations}
 use crate::test_result::{TestResult, ValueComparison};
 use crate::utils::string;
 use rayon::prelude::*;
-use std::io::{self, Read, Write};
+use std::io::{self, Write};
 use std::path::Path;
 use std::process::{Command, Stdio};
+use std::thread;
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct ProgramOutput {
@@ -85,29 +86,40 @@ pub fn run_program(test_case: &TestCase, current_dir: &Path) -> Result<ProgramOu
 
     let mut child = cmd.spawn().map_err(RunError::IOError)?;
 
-    if let Some(stdin_string) = &test_case.stdin {
-        write_stdin(&mut child, stdin_string)?;
-    } else {
-        // Close the write end of the stdin pipe so the child sees EOF immediately
-        // rather than blocking indefinitely waiting for input.
-        drop(child.stdin.take());
+    // Write stdin from a separate thread so a child that produces output before
+    // consuming all of stdin can't deadlock us against a full pipe buffer.
+    let stdin_thread = match test_case.stdin.clone() {
+        Some(stdin_string) => {
+            let mut stdin = child
+                .stdin
+                .take()
+                .expect("Stdin should be configured to pipe");
+            Some(thread::spawn(move || -> io::Result<()> {
+                stdin.write_all(stdin_string.as_bytes())
+            }))
+        }
+        None => {
+            // Close the write end so the child sees EOF rather than blocking on input.
+            drop(child.stdin.take());
+            None
+        }
+    };
+
+    let output = child.wait_with_output().map_err(RunError::IOError)?;
+
+    if let Some(handle) = stdin_thread {
+        let result = handle.join().expect("stdin writer thread panicked");
+        // BrokenPipe is expected when the child exits before consuming all input.
+        if let Err(e) = result
+            && e.kind() != io::ErrorKind::BrokenPipe
+        {
+            return Err(RunError::IOError(e));
+        }
     }
 
-    let stdout = read_pipe_to_string(
-        &mut child
-            .stdout
-            .take()
-            .expect("Stdout should be configured to pipe"),
-    )?;
-    let stderr = read_pipe_to_string(
-        &mut child
-            .stderr
-            .take()
-            .expect("Stderr should be configured to pipe"),
-    )?;
-
-    let exit_status = child.wait().map_err(RunError::IOError)?;
-    let exit_code = exit_status.code().ok_or(RunError::ProgramTerminated)?;
+    let stdout = String::from_utf8(output.stdout).map_err(RunError::FailedToDecodeUtf8)?;
+    let stderr = String::from_utf8(output.stderr).map_err(RunError::FailedToDecodeUtf8)?;
+    let exit_code = output.status.code().ok_or(RunError::ProgramTerminated)?;
 
     Ok(ProgramOutput {
         stdout: string::normalize_newlines(&stdout),
@@ -131,7 +143,13 @@ pub fn run_program_passthrough(test_case: &TestCase, current_dir: &Path) -> Resu
     let mut child = cmd.spawn().map_err(RunError::IOError)?;
 
     if let Some(stdin_string) = &test_case.stdin {
-        write_stdin(&mut child, stdin_string)?;
+        let mut stdin = child
+            .stdin
+            .take()
+            .expect("Stdin should be configured to pipe");
+        stdin
+            .write_all(stdin_string.as_bytes())
+            .map_err(RunError::IOError)?;
     }
 
     let exit_status = child.wait().map_err(RunError::IOError)?;
@@ -151,18 +169,6 @@ fn init_command(test_case: &TestCase, current_dir: &Path) -> Command {
     cmd
 }
 
-fn write_stdin(child: &mut std::process::Child, stdin_string: &str) -> Result<(), RunError> {
-    let mut stdin = child
-        .stdin
-        .take()
-        .expect("Stdin should be configured to pipe");
-    stdin
-        .write_all(stdin_string.as_bytes())
-        .map_err(RunError::IOError)?;
-
-    Ok(())
-}
-
 fn compare_result<T: Eq>(expected: Option<T>, got: T) -> ValueComparison<T> {
     if let Some(expected) = expected {
         if expected == got {
@@ -173,15 +179,4 @@ fn compare_result<T: Eq>(expected: Option<T>, got: T) -> ValueComparison<T> {
     } else {
         ValueComparison::NotChecked(got)
     }
-}
-
-fn read_pipe_to_string<T>(pipe: &mut T) -> Result<String, RunError>
-where
-    T: Read,
-{
-    let mut buf = Vec::<u8>::new();
-    pipe.read_to_end(&mut buf).map_err(RunError::IOError)?;
-    let content = String::from_utf8(buf).map_err(RunError::FailedToDecodeUtf8)?;
-
-    Ok(content)
 }
