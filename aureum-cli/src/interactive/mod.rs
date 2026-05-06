@@ -10,6 +10,7 @@ mod views;
 use crate::interactive::views::progress_view;
 use crate::interactive::views::watch_view::{self, IdleOutcome, WatchIdleContext, run_watch_idle};
 use crate::utils::time;
+use crate::watch;
 use accept::update_test_expectations;
 use field::{FieldDecision, FieldDecisions};
 use review_loop::{HeadlessDriver, LiveDriver, ReviewOutcome, run_review_loop};
@@ -229,7 +230,7 @@ pub fn run_with_progress_review_and_watch<'a>(
     current_dir: &Path,
     watch_paths: impl IntoIterator<Item = &'a PathBuf>,
 ) -> io::Result<Vec<RunResult>> {
-    let watch_handle = crate::watch::start_watcher_for_paths(watch_paths)?;
+    let watch_handle = watch::start_watcher_for_paths(watch_paths)?;
 
     crossterm::terminal::enable_raw_mode()?;
     let mut stdout = io::stdout();
