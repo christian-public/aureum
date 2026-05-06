@@ -55,13 +55,17 @@ impl LoadedConfigFile {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[derive(Debug, thiserror::Error)]
 #[allow(dead_code)]
 pub enum ConfigFileError {
+    #[error("config file path has no file name")]
     NoFileName,
+    #[error("config file path has no parent directory")]
     NoParentDirectory,
-    ReadFailed(io::Error),
-    ParseFailed(aureum::TomlConfigError),
+    #[error("failed to read config file: {0}")]
+    ReadFailed(#[from] io::Error),
+    #[error("failed to parse config file: {0}")]
+    ParseFailed(#[from] aureum::TomlConfigError),
 }
 
 pub fn load_config_files(

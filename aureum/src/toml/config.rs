@@ -31,45 +31,76 @@ pub enum ConfigValue<T> {
     FetchFromEnv { env: String },
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[derive(Debug, thiserror::Error)]
 pub enum TomlConfigError {
-    InvalidTomlSyntax(toml::de::Error),
+    #[error("invalid TOML syntax: {0}")]
+    InvalidTomlSyntax(#[from] toml::de::Error),
+    #[error("{} parse error(s)", .0.len())]
     ParseErrors(Vec<ParseError>),
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[derive(Debug, thiserror::Error)]
 pub enum ParseError {
+    #[error("field `{field}`: {error}")]
     ErrorInField {
         field: String,
+        #[source]
         error: Box<ParseError>,
     },
+    #[error("[{index}]: {error}")]
     ErrorAtIndex {
         index: usize,
+        #[source]
         error: Box<ParseError>,
     },
+    #[error("expected {expected}, got {got}")]
     InvalidType {
         expected: ConfigValueType,
         got: ConfigValueType,
     },
+    #[error("cannot specify both `{}` and `{}`", conflicting_keys[0], conflicting_keys[1])]
     AmbiguousSpecialForm {
         conflicting_keys: Vec<String>,
         unexpected_keys: Vec<String>,
     },
+    #[error(fmt = fmt_invalid_special_form)]
     InvalidSpecialForm {
         error: Option<Box<ParseError>>,
         unexpected_keys: Vec<String>,
     },
+    #[error("missing required field `id`")]
     MissingId,
-    InvalidId {
-        id: String,
-    },
+    #[error("invalid id `{id}`")]
+    InvalidId { id: String },
+    #[error("`id` is not allowed at the root level")]
     IdForbiddenAtRoot,
-    UnknownField {
-        field: String,
-    },
+    #[error("unknown field `{field}`")]
+    UnknownField { field: String },
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+fn fmt_invalid_special_form(
+    error: &Option<Box<ParseError>>,
+    unexpected_keys: &Vec<String>,
+    f: &mut fmt::Formatter,
+) -> fmt::Result {
+    match (error.as_deref(), unexpected_keys.as_slice()) {
+        (Some(e), []) => write!(f, "{e}"),
+        (Some(e), keys) => {
+            let quoted = keys.iter().map(|k| format!("`{k}`")).collect::<Vec<_>>();
+            write!(f, "{e}; unexpected keys: {}", quoted.join(", "))
+        }
+        (None, keys) => {
+            let quoted = keys.iter().map(|k| format!("`{k}`")).collect::<Vec<_>>();
+            write!(
+                f,
+                "unknown keys: {}; expected `file` or `env`",
+                quoted.join(", ")
+            )
+        }
+    }
+}
+
+#[derive(Debug)]
 pub enum ConfigValueType {
     String,
     Integer,
@@ -92,47 +123,6 @@ impl fmt::Display for ConfigValueType {
             ConfigValueType::Table(_) => "table",
         };
         write!(f, "{name}")
-    }
-}
-
-impl fmt::Display for ParseError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            ParseError::ErrorInField { field, error } => write!(f, "field `{field}`: {error}"),
-            ParseError::ErrorAtIndex { index, error } => write!(f, "[{index}]: {error}"),
-            ParseError::InvalidType { expected, got } => {
-                write!(f, "expected {expected}, got {got}")
-            }
-            ParseError::AmbiguousSpecialForm {
-                conflicting_keys, ..
-            } => write!(
-                f,
-                "cannot specify both `{}` and `{}`",
-                conflicting_keys[0], conflicting_keys[1]
-            ),
-            ParseError::InvalidSpecialForm {
-                error,
-                unexpected_keys,
-            } => match (error.as_deref(), unexpected_keys.as_slice()) {
-                (Some(e), []) => write!(f, "{e}"),
-                (Some(e), keys) => {
-                    let quoted = keys.iter().map(|k| format!("`{k}`")).collect::<Vec<_>>();
-                    write!(f, "{e}; unexpected keys: {}", quoted.join(", "))
-                }
-                (None, keys) => {
-                    let quoted = keys.iter().map(|k| format!("`{k}`")).collect::<Vec<_>>();
-                    write!(
-                        f,
-                        "unknown keys: {}; expected `file` or `env`",
-                        quoted.join(", ")
-                    )
-                }
-            },
-            ParseError::MissingId => write!(f, "missing required field `id`"),
-            ParseError::InvalidId { id } => write!(f, "invalid id `{id}`"),
-            ParseError::IdForbiddenAtRoot => write!(f, "`id` is not allowed at the root level"),
-            ParseError::UnknownField { field } => write!(f, "unknown field `{field}`"),
-        }
     }
 }
 

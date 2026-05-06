@@ -99,6 +99,7 @@ dependencies = [
  "indoc",
  "rayon",
  "relative-path",
+ "thiserror 2.0.18",
  "toml",
 ]
 
@@ -119,6 +120,7 @@ dependencies = [
  "pathdiff",
  "ratatui",
  "relative-path",
+ "thiserror 2.0.18",
  "toml_edit",
  "which",
  "yaml_serde",

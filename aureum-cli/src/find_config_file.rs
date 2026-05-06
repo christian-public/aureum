@@ -13,13 +13,19 @@ pub struct FindConfigFilesResult {
     pub errors: BTreeMap<PathBuf, PathError>,
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[derive(Debug, thiserror::Error)]
 pub enum PathError {
+    #[error("file not found")]
     FileNotFound,
+    #[error("test ID must be UTF-8")]
     TestIdMustBeUtf8,
+    #[error("invalid test ID")]
     InvalidTestId,
+    #[error("glob pattern must be UTF-8")]
     GlobPatternMustBeUtf8,
+    #[error("invalid glob entry")]
     InvalidGlobEntry,
+    #[error("failed to convert path to relative path")]
     FailedToConvertPathToRelativePath,
 }
 

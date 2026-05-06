@@ -30,11 +30,14 @@ impl RunResult {
     }
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[derive(Debug, thiserror::Error)]
 pub enum RunError {
-    FailedToDecodeUtf8(std::string::FromUtf8Error),
+    #[error("failed to decode UTF-8: {0}")]
+    FailedToDecodeUtf8(#[from] std::string::FromUtf8Error),
+    #[error("program terminated by signal")]
     ProgramTerminated,
-    IOError(io::Error),
+    #[error("I/O error: {0}")]
+    IOError(#[from] io::Error),
 }
 
 // RUN TEST CASES

@@ -45,15 +45,21 @@ impl ProgramPath {
     }
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone)]
-#[cfg_attr(debug_assertions, derive(Debug))]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, thiserror::Error)]
 pub enum ValidationError {
+    #[error("missing external file `{0}`")]
     MissingExternalFile(String),
+    #[error("missing environment variable `{0}`")]
     MissingEnvVar(String),
+    #[error("failed to parse string")]
     FailedToParseString,
+    #[error("`program` is required")]
     ProgramRequired,
+    #[error("program not found: `{0}`")]
     ProgramNotFound(String),
+    #[error("at least one expectation (stdout, stderr, or exit code) is required")]
     ExpectationRequired,
+    #[error("invalid exit code")]
     InvalidExitCode,
 }
 
