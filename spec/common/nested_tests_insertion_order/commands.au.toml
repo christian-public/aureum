@@ -13,7 +13,7 @@ expected_exit_code = 0
 
 
 [[tests]]
-id = "list"
+id = "list.default"
 program_arguments = ["list", "helpers/insertion_order_tests.toml"]
 
 expected_stdout = """
@@ -26,7 +26,23 @@ expected_exit_code = 0
 
 
 [[tests]]
-id = "run"
+id = "list.tree"
+program_arguments = ["list", "--tree", "helpers/insertion_order_tests.toml"]
+
+expected_stdout = """
+/
+└── helpers/
+    └── insertion_order_tests.toml
+        ├── :test_z
+        ├── :test_a
+        └── :test_m
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "run.format_toml"
 program_arguments = [
     "run",
     "--format",
@@ -55,7 +71,7 @@ expected_exit_code = 0
 
 
 [[tests]]
-id = "test"
+id = "test.format_tap"
 program_arguments = [
     "test",
     "--format",
