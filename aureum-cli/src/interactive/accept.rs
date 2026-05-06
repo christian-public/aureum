@@ -205,7 +205,6 @@ mod tests {
             path_to_containing_dir: RelativePathBuf::from(dir),
             file_name: file.to_string(),
             test_id: TestId::new(vec![name.to_string()]),
-            description: None,
             program_path: PathBuf::from("/bin/echo"),
             arguments: vec![],
             stdin: None,

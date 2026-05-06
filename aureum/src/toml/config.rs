@@ -15,7 +15,6 @@ pub struct TomlConfigFile {
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct TomlConfigTest {
     pub id: Option<TestId>,
-    pub description: Option<ConfigValue<String>>,
     pub program: Option<ConfigValue<String>>,
     pub program_arguments: Option<Vec<ConfigValue<String>>>,
     pub stdin: Option<ConfigValue<String>>,
@@ -141,7 +140,6 @@ impl fmt::Display for ParseError {
 
 static KNOWN_TEST_FIELDS: &[&str] = &[
     "id",
-    "description",
     "program",
     "program_arguments",
     "stdin",
@@ -225,7 +223,6 @@ fn parse_toml_config_from_table(table: &toml::Table) -> Result<TomlConfigTest, V
     let mut errors: Vec<ParseError> = vec![];
 
     let id = collect_error(&mut errors, get_test_id_from_table(table, "id"));
-    let description = collect_error(&mut errors, get_string_from_table(table, "description"));
     let program = collect_error(&mut errors, get_string_from_table(table, "program"));
 
     let program_arguments = collect_errors(
@@ -247,7 +244,6 @@ fn parse_toml_config_from_table(table: &toml::Table) -> Result<TomlConfigTest, V
     if errors.is_empty() {
         Ok(TomlConfigTest {
             id,
-            description,
             program,
             program_arguments,
             stdin,

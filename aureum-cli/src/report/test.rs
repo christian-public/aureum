@@ -132,13 +132,7 @@ fn summary_print_summary(number_of_tests: usize, run_results: &[RunResult]) {
 }
 
 fn summary_print_result(run_result: &RunResult) {
-    let test_id = run_result.test_case.id();
-
-    let message = if let Some(description) = &run_result.test_case.description {
-        format!("{test_id} - {description}")
-    } else {
-        test_id
-    };
+    let message = run_result.test_case.id();
 
     if run_result.is_success() {
         println!("{} {message}", theme::checkmark());
@@ -170,11 +164,7 @@ fn tap_print_test_case(
     result: &Result<TestResult, RunError>,
     indent_level: usize,
 ) {
-    let message: String = if let Some(description) = &test_case.description {
-        format!("{} # {description}", test_case.id())
-    } else {
-        test_case.id()
-    };
+    let message = test_case.id();
 
     match result {
         Ok(test_result) => {

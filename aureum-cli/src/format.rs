@@ -5,7 +5,6 @@ use toml_edit::DocumentMut;
 
 const ROOT_FIELD_ORDER: &[&str] = &[
     "watch_files",
-    "description",
     "program",
     "program_arguments",
     "stdin",
@@ -17,7 +16,6 @@ const ROOT_FIELD_ORDER: &[&str] = &[
 
 const TEST_FIELD_ORDER: &[&str] = &[
     "id",
-    "description",
     "program",
     "program_arguments",
     "stdin",
@@ -407,15 +405,15 @@ mod tests {
     }
 
     #[test]
-    fn description_comes_before_program() {
+    fn program_comes_before_program_arguments() {
         let input = indoc! {r#"
+            program_arguments = ["-n", "hi"]
             program = "echo"
-            description = "a test"
             expected_stdout = "hi"
         "#};
         let expected = indoc! {r#"
-            description = "a test"
             program = "echo"
+            program_arguments = ["-n", "hi"]
 
             expected_stdout = "hi"
         "#};

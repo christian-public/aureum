@@ -39,7 +39,6 @@ pub(crate) fn make_test_case_root(dir: &str, file: &str) -> aureum::TestCase {
         path_to_containing_dir: RelativePathBuf::from(dir),
         file_name: file.to_string(),
         test_id: TestId::root(),
-        description: None,
         program_path: PathBuf::from("/bin/echo"),
         arguments: vec![],
         stdin: None,

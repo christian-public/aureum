@@ -61,10 +61,6 @@ fn collect_requirements_from_toml_config_test(
     requirements: &mut Requirements,
     config: &TomlConfigTest,
 ) {
-    if let Some(value) = &config.description {
-        collect_requirements_from_config_value(requirements, value);
-    }
-
     if let Some(value) = &config.program {
         collect_requirements_from_config_value(requirements, value);
     }
@@ -116,7 +112,6 @@ mod tests {
     fn empty_test() -> TomlConfigTest {
         TomlConfigTest {
             id: None,
-            description: None,
             program: None,
             program_arguments: None,
             stdin: None,

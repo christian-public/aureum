@@ -1,5 +1,0 @@
-description = "My description"
-program = "echo"
-program_arguments = ["-n", "Hello world"]
-
-expected_stdout = "Hello world"

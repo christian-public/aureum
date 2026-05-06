@@ -186,9 +186,6 @@ fn build_test_case(
         }
     }
 
-    let description = collect_error(&mut errors, config.description, requirement_data)
-        .map(|s| string::normalize_newlines(&s));
-
     let mut arguments = vec![];
     for config_value in config.program_arguments.unwrap_or_default() {
         match read_from_config_value(config_value, requirement_data) {
@@ -209,7 +206,6 @@ fn build_test_case(
             path_to_containing_dir: path_to_config_dir.to_relative_path_buf(),
             file_name: file_name.to_owned(),
             test_id,
-            description,
             program_path: resolved_path,
             arguments,
             stdin,
@@ -353,7 +349,6 @@ fn merge_toml_configs(
 ) -> TomlConfigTest {
     TomlConfigTest {
         id: override_config.id.or(base_config.id),
-        description: override_config.description.or(base_config.description),
         program: override_config.program.or(base_config.program),
         program_arguments: override_config
             .program_arguments

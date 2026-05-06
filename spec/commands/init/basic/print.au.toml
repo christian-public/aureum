@@ -28,7 +28,6 @@ expected_stdout = "Hello world"
 
 
 # # ---[ EXAMPLE: All supported fields ]---
-# description = "Test `cat` using stdin"
 # program = "cat"
 # program_arguments = []
 # stdin = \"\"\"
