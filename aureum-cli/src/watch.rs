@@ -1,8 +1,13 @@
+use crate::find_config_file;
+use crate::load_config_file;
+use crate::load_config_file::LoadConfigFilesResult;
+use crate::utils;
+use aureum::TestCaseWithExpectations;
 use notify_debouncer_mini::notify::{RecommendedWatcher, RecursiveMode};
 use notify_debouncer_mini::{DebounceEventResult, Debouncer, new_debouncer};
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 use std::io;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Receiver};
 use std::time::Duration;
 
@@ -72,4 +77,72 @@ pub fn start_watcher_for_paths<'a>(
         watched_path_count,
         _debouncer: debouncer,
     })
+}
+
+pub fn load_test_cases_for_watch(
+    paths: &[PathBuf],
+    current_dir: &Path,
+) -> Vec<TestCaseWithExpectations> {
+    let find_result = find_config_file::find_config_files(paths.to_vec(), current_dir);
+    if find_result.found.is_empty() {
+        return vec![];
+    }
+    let load_result = load_config_file::load_config_files(find_result, current_dir);
+    load_result
+        .loaded
+        .values()
+        .flat_map(|x| x.test_entries_in_coverage_set())
+        .flat_map(|(_, entry)| entry.test_case_with_expectations().ok())
+        .collect()
+}
+
+pub fn collect_watch_paths(
+    user_paths: &[PathBuf],
+    config_files: &LoadConfigFilesResult,
+    current_dir: &Path,
+) -> BTreeSet<PathBuf> {
+    let user_watch_paths: BTreeSet<PathBuf> = user_paths
+        .iter()
+        .map(|path| {
+            let watchable = if utils::glob::is_glob(path) {
+                utils::glob::base_dir_from_pattern(path)
+            } else {
+                path.to_path_buf()
+            };
+            current_dir.join(watchable)
+        })
+        .collect();
+
+    let mut all_paths = user_watch_paths.clone();
+
+    for (config_file_path, loaded) in &config_files.loaded {
+        let containing_dir = config_file_path
+            .parent()
+            .map(|p| p.to_path(current_dir))
+            .unwrap_or_else(|| current_dir.to_path_buf());
+
+        let mut discovered = vec![config_file_path.to_path(current_dir)];
+
+        for file_key in loaded.requirement_data.files.keys() {
+            discovered.push(containing_dir.join(file_key));
+        }
+
+        for (_, entry) in &loaded.test_entries {
+            if let Ok(test_case) = &entry.test_case {
+                discovered.push(test_case.program_path.clone());
+            }
+        }
+
+        for file in &loaded.watch_files {
+            discovered.push(containing_dir.join(file));
+        }
+
+        for file in discovered {
+            if !user_watch_paths.iter().any(|wp| file.starts_with(wp)) {
+                all_paths.insert(file);
+            }
+        }
+    }
+
+    all_paths
 }
