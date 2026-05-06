@@ -1,5 +1,6 @@
 mod toml {
     mod config;
+    mod parse;
     mod requirement;
     mod validate;
 
@@ -7,11 +8,12 @@ mod toml {
     pub use requirement::Requirements;
     pub use validate::{ProgramPath, RequirementData, TestEntry, ValidationError};
 
-    pub use config::parse_toml_config;
+    pub use parse::parse_toml_config;
     pub use requirement::{get_requirements, resolve_watch_files};
     pub use validate::build_test_entries;
 }
 mod utils {
+    pub mod diff;
     pub mod string;
 }
 mod test_case;
@@ -20,6 +22,7 @@ mod test_id_coverage_set;
 mod test_result;
 mod test_runner;
 
+pub use utils::diff;
 pub use utils::string;
 
 pub use test_case::{TestCase, TestCaseExpectations, TestCaseWithExpectations};

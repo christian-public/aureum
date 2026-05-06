@@ -1,4 +1,4 @@
-use aureum::{TestResult, ValueComparison, string};
+use aureum::{TestResult, ValueComparison, diff, string};
 use ratatui::style::{Color, Style};
 use ratatui::text::{Line, Span};
 
@@ -74,7 +74,7 @@ fn build_text_view(side: Side, comparison: &ValueComparison<String>) -> Vec<Line
     match side {
         Side::Expected => match comparison {
             ValueComparison::Diff { expected, got } => {
-                styled_lines_left(expected, string::diff_column_width(expected, got))
+                styled_lines_left(expected, diff::diff_column_width(expected, got))
             }
             ValueComparison::Matches(value) => {
                 styled_lines_left(value, string::displayed_line_count(value).to_string().len())
@@ -85,7 +85,7 @@ fn build_text_view(side: Side, comparison: &ValueComparison<String>) -> Vec<Line
         },
         Side::Got => match comparison {
             ValueComparison::Diff { expected, got } => {
-                styled_lines_right(got, string::diff_column_width(expected, got))
+                styled_lines_right(got, diff::diff_column_width(expected, got))
             }
             ValueComparison::Matches(got) | ValueComparison::NotChecked(got) => {
                 styled_lines_right(got, string::displayed_line_count(got).to_string().len())
@@ -149,12 +149,12 @@ fn format_stdin_content(stdin: Option<&str>) -> Vec<Line<'static>> {
 }
 
 fn diff_lines_colored(expected: &str, got: &str) -> Vec<Line<'static>> {
-    let width = string::diff_column_width(expected, got);
+    let width = diff::diff_column_width(expected, got);
     let blank = " ".repeat(width);
     let mut result: Vec<Line<'static>> = Vec::new();
 
-    string::for_each_diff_line(expected, got, |kind, left_num, right_num, line| {
-        use aureum::string::DiffLineType::*;
+    diff::for_each_diff_line(expected, got, |kind, left_num, right_num, line| {
+        use aureum::diff::DiffLineType::*;
         match kind {
             Removed => {
                 let trimmed_len = line.trim_end().len();

@@ -1,7 +1,6 @@
 use crate::report::theme;
 use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
-use aureum::string;
-use aureum::{TestResult, ValueComparison};
+use aureum::{TestResult, ValueComparison, diff, string};
 use colored::Colorize;
 
 // ERROR FORMATTING
@@ -120,7 +119,7 @@ fn format_string_diff(expected: &str, got: &str) -> Vec<Tree> {
     ));
     let got_lines = string_to_lines(&format!("Got\n{got_output}"));
 
-    let diff_output = theme::dimmed_border_text_block(&string::prefix_diff_with_line_numbers(
+    let diff_output = theme::dimmed_border_text_block(&diff::prefix_diff_with_line_numbers(
         expected,
         got,
         format_diff_line,
