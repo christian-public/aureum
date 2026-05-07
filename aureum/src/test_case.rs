@@ -1,4 +1,4 @@
-use crate::test_id::TestId;
+use crate::test_id::{self, TestId};
 use relative_path::RelativePathBuf;
 use std::path::PathBuf;
 
@@ -15,13 +15,7 @@ pub struct TestCase {
 
 impl TestCase {
     pub fn id(&self) -> String {
-        let path = self.path_to_config_file();
-
-        if self.test_id.is_root() {
-            path.to_string()
-        } else {
-            format!("{path}:{}", self.test_id)
-        }
+        test_id::format_test_id(self.path_to_config_file(), &self.test_id)
     }
 
     pub fn path_to_config_file(&self) -> RelativePathBuf {

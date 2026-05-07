@@ -34,5 +34,6 @@ pub use toml::Requirements;
 pub use toml::{ParseError, TomlConfigError, TomlConfigFile, TomlConfigTest};
 pub use toml::{ProgramPath, RequirementData, TestEntry, ValidationError};
 
+pub use test_id::format_test_id;
 pub use test_runner::{run_program, run_program_passthrough, run_test_cases};
 pub use toml::{build_test_entries, get_requirements, parse_toml_config, resolve_watch_files};
