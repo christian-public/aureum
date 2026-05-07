@@ -171,3 +171,21 @@ expected_stderr = """
 warning: some config files contain errors (see above)
 """
 expected_exit_code = 3
+
+
+[[tests]]
+id = "skip.no_reason"
+program_arguments = ["validate", "helpers/skip_no_reason.toml"]
+
+expected_stdout = """
+✘ helpers/skip_no_reason.toml  1 test
+"""
+expected_stderr = """
+📋 helpers/skip_no_reason.toml
+└── Test
+    └── Validation errors
+        └── ✘ field `skip`: must contain a reason
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3

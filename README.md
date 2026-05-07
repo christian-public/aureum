@@ -79,6 +79,7 @@ Test result: OK (1 passed)
 The following fields are supported in an Aureum config file:
 
 ```toml
+skip = "Reason"         # String
 program = ""            # String (Required field)
 program_arguments = []  # List of strings
 stdin = ""              # String

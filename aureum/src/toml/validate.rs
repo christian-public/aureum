@@ -82,11 +82,14 @@ pub enum ValidationError {
     InvalidExitCode,
     #[error("must be 0 or greater")]
     TimeoutMustBeNonNegative,
+    #[error("must contain a reason")]
+    SkipMustNotBeEmpty,
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct TestEntry {
     pub id: TestCaseId,
+    pub skip_reason: Option<String>,
     pub program_path: ProgramPath,
     pub test_case: Result<TestCase, BTreeSet<ValidationError>>,
     pub expectations: Result<TestCaseExpectations, BTreeSet<ValidationError>>,
@@ -159,7 +162,7 @@ fn build_test_entry(
     default_timeout: u64,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> TestEntry {
-    let (program_path, test_case) = build_test_case(
+    let (skip_reason, program_path, test_case) = build_test_case(
         id.clone(),
         config.clone(),
         requirement_data,
@@ -171,6 +174,7 @@ fn build_test_entry(
 
     TestEntry {
         id,
+        skip_reason,
         program_path,
         test_case,
         expectations,
@@ -184,8 +188,24 @@ fn build_test_case(
     current_dir: &Path,
     default_timeout: u64,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
-) -> (ProgramPath, Result<TestCase, BTreeSet<ValidationError>>) {
+) -> (
+    Option<String>,
+    ProgramPath,
+    Result<TestCase, BTreeSet<ValidationError>>,
+) {
     let mut errors = BTreeSet::new();
+
+    let skip_reason = config.skip.and_then(|reason| {
+        if !reason.trim().is_empty() {
+            Some(reason)
+        } else {
+            errors.insert(ValidationError::InField {
+                field: "skip".to_owned(),
+                error: Box::new(ValidationError::SkipMustNotBeEmpty),
+            });
+            None
+        }
+    });
 
     let program = collect_error(&mut errors, config.program, requirement_data, "program")
         .map(|s| string::normalize_newlines(&s));
@@ -259,7 +279,7 @@ fn build_test_case(
         _ => Err(errors),
     };
 
-    (program_path, test_case)
+    (skip_reason, program_path, test_case)
 }
 
 fn build_test_case_expectations(
@@ -419,6 +439,7 @@ fn merge_toml_configs(
 ) -> TomlConfigTest {
     TomlConfigTest {
         id: override_config.id.or(base_config.id),
+        skip: override_config.skip.or(base_config.skip),
         program: override_config.program.or(base_config.program),
         program_arguments: override_config
             .program_arguments

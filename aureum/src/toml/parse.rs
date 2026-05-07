@@ -7,6 +7,7 @@ use std::convert::TryFrom;
 
 static KNOWN_TEST_FIELDS: &[&str] = &[
     "id",
+    "skip",
     "program",
     "program_arguments",
     "stdin",
@@ -91,6 +92,7 @@ fn parse_toml_config_from_table(table: &toml::Table) -> Result<TomlConfigTest, V
     let mut errors: Vec<ParseError> = vec![];
 
     let id = collect_error(&mut errors, get_test_id_from_table(table, "id"));
+    let skip = collect_error(&mut errors, get_plain_string_from_table(table, "skip"));
     let program = collect_error(&mut errors, get_string_from_table(table, "program"));
 
     let program_arguments = collect_errors(
@@ -117,6 +119,7 @@ fn parse_toml_config_from_table(table: &toml::Table) -> Result<TomlConfigTest, V
     if errors.is_empty() {
         Ok(TomlConfigTest {
             id,
+            skip,
             program,
             program_arguments,
             stdin,
@@ -144,6 +147,25 @@ fn get_test_id_from_table(table: &toml::Table, key: &str) -> Result<Option<TestI
                     error: Box::new(ParseError::InvalidId { id: s.clone() }),
                 })
         }
+        _ => Err(ParseError::InField {
+            field: key.to_owned(),
+            error: Box::new(ParseError::InvalidType {
+                expected: ConfigValueType::String,
+                got: type_from_value(value),
+            }),
+        }),
+    }
+}
+
+fn get_plain_string_from_table(
+    table: &toml::Table,
+    key: &str,
+) -> Result<Option<String>, ParseError> {
+    let Some(value) = table.get(key) else {
+        return Ok(None);
+    };
+    match value {
+        toml::Value::String(s) => Ok(Some(s.clone())),
         _ => Err(ParseError::InField {
             field: key.to_owned(),
             error: Box::new(ParseError::InvalidType {

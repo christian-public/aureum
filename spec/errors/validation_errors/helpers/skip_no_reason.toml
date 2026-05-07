@@ -1,0 +1,4 @@
+skip = ""
+program = "echo"
+
+expected_stdout = "hello"

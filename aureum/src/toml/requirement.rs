@@ -112,6 +112,7 @@ mod tests {
     fn empty_test() -> TomlConfigTest {
         TomlConfigTest {
             id: None,
+            skip: None,
             program: None,
             program_arguments: None,
             stdin: None,
