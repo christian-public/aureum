@@ -90,6 +90,10 @@ pub struct ListArgs {
     #[arg(long)]
     pub tree: bool,
 
+    /// Options: all, runnable, or skipped
+    #[arg(long, value_name = "WHICH", default_value = "all")]
+    pub show: ListShowFilter,
+
     #[command(flatten)]
     pub common: CommonArgs,
 }
@@ -166,6 +170,27 @@ pub struct CommonArgs {
 impl CommonArgs {
     pub fn stable_output(&self) -> Option<StableOutput> {
         self.stable_output.then(StableOutput::default)
+    }
+}
+
+#[derive(Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub enum ListShowFilter {
+    All,
+    Runnable,
+    Skipped,
+}
+
+impl str::FromStr for ListShowFilter {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "all" => Ok(Self::All),
+            "runnable" => Ok(Self::Runnable),
+            "skipped" => Ok(Self::Skipped),
+            _ => Err("valid options: all, runnable, skipped"),
+        }
     }
 }
 

@@ -1,0 +1,48 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+
+[[tests]]
+id = "all"
+program_arguments = ["list", "--tree", "--show", "all", "helpers/*.toml"]
+
+expected_stdout = """
+/
+└── helpers/
+    ├── mixed.toml
+    │   ├── :runs
+    │   └── :nope
+    ├── runnable.toml
+    └── skipped.toml
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "runnable"
+program_arguments = ["list", "--tree", "--show", "runnable", "helpers/*.toml"]
+
+expected_stdout = """
+/
+└── helpers/
+    ├── mixed.toml
+    │   └── :runs
+    └── runnable.toml
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "skipped"
+program_arguments = ["list", "--tree", "--show", "skipped", "helpers/*.toml"]
+
+expected_stdout = """
+/
+└── helpers/
+    ├── mixed.toml
+    │   └── :nope
+    └── skipped.toml
+"""
+expected_stderr = ""
+expected_exit_code = 0

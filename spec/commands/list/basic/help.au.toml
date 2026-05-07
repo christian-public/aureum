@@ -10,9 +10,10 @@ Arguments:
   <PATHS>...  Paths to config files
 
 Options:
-      --tree     Display tests as a tree
-      --verbose  Print extra information about config files
-  -h, --help     Print help
+      --tree          Display tests as a tree
+      --show <WHICH>  Options: all, runnable, or skipped [default: all]
+      --verbose       Print extra information about config files
+  -h, --help          Print help
 """
 expected_stderr = ""
 expected_exit_code = 0

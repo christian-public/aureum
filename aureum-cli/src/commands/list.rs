@@ -1,4 +1,4 @@
-use crate::args::ListArgs;
+use crate::args::{ListArgs, ListShowFilter};
 use crate::commands::common;
 use crate::exit_code::ExitCode;
 use crate::report;
@@ -25,6 +25,11 @@ pub fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
         .loaded
         .values()
         .flat_map(|loaded| loaded.test_entries_in_coverage_set())
+        .filter(|entry| match args.show {
+            ListShowFilter::All => true,
+            ListShowFilter::Runnable => entry.is_runnable_if_no_validation_errors(),
+            ListShowFilter::Skipped => entry.is_skipped(),
+        })
         .map(|entry| entry.id.clone())
         .collect::<Vec<_>>();
 

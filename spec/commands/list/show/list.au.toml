@@ -1,0 +1,52 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+
+[[tests]]
+id = "all"
+program_arguments = ["list", "--show", "all", "helpers/*.toml"]
+
+expected_stdout = """
+helpers/mixed.toml:runs
+helpers/mixed.toml:nope
+helpers/runnable.toml
+helpers/skipped.toml
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "runnable"
+program_arguments = ["list", "--show", "runnable", "helpers/*.toml"]
+
+expected_stdout = """
+helpers/mixed.toml:runs
+helpers/runnable.toml
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "skipped"
+program_arguments = ["list", "--show", "skipped", "helpers/*.toml"]
+
+expected_stdout = """
+helpers/mixed.toml:nope
+helpers/skipped.toml
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "unknown"
+program_arguments = ["list", "--show", "UNKNOWN", "helpers/*.toml"]
+
+expected_stdout = ""
+expected_stderr = """
+error: invalid value 'UNKNOWN' for '--show <WHICH>': valid options: all, runnable, skipped
+
+For more information, try '--help'.
+"""
+expected_exit_code = 2
