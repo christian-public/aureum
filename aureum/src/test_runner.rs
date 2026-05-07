@@ -2,10 +2,12 @@ use crate::test_case::{TestCase, TestCaseExpectations, TestCaseWithExpectations}
 use crate::test_result::{TestResult, ValueComparison};
 use crate::utils::string;
 use rayon::prelude::*;
-use std::io::{self, Write};
+use std::io::{self, Read, Write};
 use std::path::Path;
 use std::process::{Command, Stdio};
+use std::sync::mpsc;
 use std::thread;
+use std::time::Duration;
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct ProgramOutput {
@@ -38,6 +40,8 @@ pub enum RunError {
     ProgramTerminated,
     #[error("I/O error: {0}")]
     IOError(#[from] io::Error),
+    #[error("timed out")]
+    TimedOut,
 }
 
 // RUN TEST CASES
@@ -87,7 +91,16 @@ pub fn run_program(test_case: &TestCase, current_dir: &Path) -> Result<ProgramOu
     cmd.stdout(Stdio::piped());
     cmd.stderr(Stdio::piped());
 
+    // Spawn the child in its own process group so that on timeout we can kill
+    // the entire group (child + any grandchildren it spawned).
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::CommandExt;
+        cmd.process_group(0);
+    }
+
     let mut child = cmd.spawn().map_err(RunError::IOError)?;
+    let child_id = child.id();
 
     // Write stdin from a separate thread so a child that produces output before
     // consuming all of stdin can't deadlock us against a full pipe buffer.
@@ -108,7 +121,53 @@ pub fn run_program(test_case: &TestCase, current_dir: &Path) -> Result<ProgramOu
         }
     };
 
-    let output = child.wait_with_output().map_err(RunError::IOError)?;
+    // Read stdout and stderr from separate threads so that neither pipe can fill
+    // up and deadlock the child while we wait for it to exit.
+    let stdout_thread = {
+        let mut pipe = child.stdout.take().expect("stdout should be piped");
+        thread::spawn(move || -> io::Result<Vec<u8>> {
+            let mut buf = Vec::new();
+            pipe.read_to_end(&mut buf)?;
+            Ok(buf)
+        })
+    };
+    let stderr_thread = {
+        let mut pipe = child.stderr.take().expect("stderr should be piped");
+        thread::spawn(move || -> io::Result<Vec<u8>> {
+            let mut buf = Vec::new();
+            pipe.read_to_end(&mut buf)?;
+            Ok(buf)
+        })
+    };
+
+    // If a timeout is configured, start a killer thread.  It waits on a channel
+    // for the process to finish; if the timeout elapses first it kills the
+    // process and returns true.  This way the thread exits promptly when the
+    // process completes naturally rather than sleeping for the full duration.
+    let killer_join = test_case.timeout_seconds.map(|timeout_secs| {
+        let (done_tx, done_rx) = mpsc::channel::<()>();
+        let handle = thread::spawn(move || -> bool {
+            let timed_out = done_rx.recv_timeout(Duration::from_secs(timeout_secs))
+                == Err(mpsc::RecvTimeoutError::Timeout);
+            if timed_out {
+                kill_timed_out_process(child_id);
+            }
+            timed_out
+        });
+        (handle, done_tx)
+    });
+
+    let status = child.wait().map_err(RunError::IOError)?;
+
+    let timed_out = if let Some((handle, done_tx)) = killer_join {
+        let _ = done_tx.send(()); // signal the killer thread to exit
+        handle.join().expect("killer thread panicked")
+    } else {
+        false
+    };
+    if timed_out {
+        return Err(RunError::TimedOut);
+    }
 
     if let Some(handle) = stdin_thread {
         let result = handle.join().expect("stdin writer thread panicked");
@@ -120,9 +179,18 @@ pub fn run_program(test_case: &TestCase, current_dir: &Path) -> Result<ProgramOu
         }
     }
 
-    let stdout = String::from_utf8(output.stdout).map_err(RunError::FailedToDecodeUtf8)?;
-    let stderr = String::from_utf8(output.stderr).map_err(RunError::FailedToDecodeUtf8)?;
-    let exit_code = output.status.code().ok_or(RunError::ProgramTerminated)?;
+    let stdout_bytes = stdout_thread
+        .join()
+        .expect("stdout reader thread panicked")
+        .map_err(RunError::IOError)?;
+    let stderr_bytes = stderr_thread
+        .join()
+        .expect("stderr reader thread panicked")
+        .map_err(RunError::IOError)?;
+
+    let stdout = String::from_utf8(stdout_bytes).map_err(RunError::FailedToDecodeUtf8)?;
+    let stderr = String::from_utf8(stderr_bytes).map_err(RunError::FailedToDecodeUtf8)?;
+    let exit_code = status.code().ok_or(RunError::ProgramTerminated)?;
 
     Ok(ProgramOutput {
         stdout: string::normalize_newlines(&stdout),
@@ -183,3 +251,25 @@ fn compare_result<T: Eq>(expected: Option<T>, got: T) -> ValueComparison<T> {
         ValueComparison::NotChecked(got)
     }
 }
+
+// KILL HELPERS
+
+#[cfg(unix)]
+fn kill_timed_out_process(child_id: u32) {
+    // The child was spawned with process_group(0), so its pgid == its own pid.
+    // killpg kills the entire group, including any grandchildren.
+    unsafe {
+        libc::killpg(child_id as libc::pid_t, libc::SIGKILL);
+    }
+}
+
+#[cfg(windows)]
+fn kill_timed_out_process(child_id: u32) {
+    // taskkill /T kills the process tree (child + all descendants).
+    let _ = Command::new("taskkill")
+        .args(["/F", "/T", "/PID", &child_id.to_string()])
+        .output();
+}
+
+#[cfg(not(any(unix, windows)))]
+fn kill_timed_out_process(_child_id: u32) {}

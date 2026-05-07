@@ -61,6 +61,8 @@ pub enum ValidationError {
     ExpectationRequired,
     #[error("invalid exit code")]
     InvalidExitCode,
+    #[error("timeout_seconds must be 0 or greater")]
+    TimeoutMustBeNonNegative,
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -207,6 +209,16 @@ fn build_test_case(
     let stdin = collect_error(&mut errors, config.stdin, requirement_data)
         .map(|s| string::normalize_newlines(&s));
 
+    let timeout_seconds = collect_error(&mut errors, config.timeout_seconds, requirement_data)
+        .and_then(|v| {
+            if v < 0 {
+                errors.insert(ValidationError::TimeoutMustBeNonNegative);
+                None
+            } else {
+                Some(v as u64)
+            }
+        });
+
     let test_case = match (program_path.get_resolved_path(), errors.is_empty()) {
         (Some(resolved_path), true) => Ok(TestCase {
             path_to_containing_dir: path_to_config_dir.to_relative_path_buf(),
@@ -215,6 +227,7 @@ fn build_test_case(
             program_path: resolved_path,
             arguments,
             stdin,
+            timeout_seconds,
         }),
         _ => Err(errors),
     };
@@ -369,5 +382,8 @@ fn merge_toml_configs(
         expected_exit_code: override_config
             .expected_exit_code
             .or(base_config.expected_exit_code),
+        timeout_seconds: override_config
+            .timeout_seconds
+            .or(base_config.timeout_seconds),
     }
 }

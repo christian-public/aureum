@@ -118,6 +118,7 @@ mod tests {
             expected_stdout: None,
             expected_stderr: None,
             expected_exit_code: None,
+            timeout_seconds: None,
         }
     }
 

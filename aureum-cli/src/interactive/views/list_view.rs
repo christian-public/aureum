@@ -1,4 +1,4 @@
-use aureum::{RunResult, TestResult};
+use aureum::RunResult;
 use crossterm::event::{Event, KeyCode, KeyEventKind};
 use ratatui::backend::{CrosstermBackend, TestBackend};
 use ratatui::layout::{Constraint, Direction, Layout};
@@ -14,7 +14,7 @@ use crate::interactive::theme;
 use crate::interactive::views::diff_view;
 
 pub(crate) struct ListViewContext<'a> {
-    pub failed: &'a [(&'a RunResult, &'a TestResult)],
+    pub failed: &'a [&'a RunResult],
     pub past_decisions: &'a [Option<FieldDecisions>],
     pub passed_count: usize,
     pub total_count: usize,
@@ -108,12 +108,10 @@ fn render_list(frame: &mut Frame, ctx: &ListViewContext<'_>, selection: usize, s
 
     // List content
     let mut lines: Vec<Line<'static>> = Vec::new();
-    for (i, (run_result, test_result)) in ctx.failed.iter().enumerate() {
+    for (i, run_result) in ctx.failed.iter().enumerate() {
         let is_selected = i == selection;
         let test_id = run_result.test_case.id().to_string();
         let dec = ctx.past_decisions.get(i).and_then(|d| d.as_ref());
-        let failing = FailingFields::of(test_result);
-        let [b1, sp1, icon, sp2, b2] = decision_indicator_spans(dec, failing);
         let id_style = if is_selected {
             Style::default()
                 .add_modifier(Modifier::BOLD)
@@ -126,18 +124,32 @@ fn render_list(frame: &mut Frame, ctx: &ListViewContext<'_>, selection: usize, s
         } else {
             Span::raw(" ")
         };
-        lines.push(Line::from(vec![
-            Span::raw("  "),
-            arrow_span,
-            Span::raw(" "),
-            b1,
-            sp1,
-            icon,
-            sp2,
-            b2,
-            Span::raw(" "),
-            Span::styled(test_id, id_style),
-        ]));
+        let mut spans = vec![Span::raw("  "), arrow_span, Span::raw(" ")];
+        match run_result.result.as_ref() {
+            Ok(test_result) => {
+                let failing = FailingFields::of(test_result);
+                let [b1, sp1, icon, sp2, b2] = decision_indicator_spans(dec, failing);
+                spans.extend([b1, sp1, icon, sp2, b2]);
+            }
+            Err(error) => {
+                // Non-reviewable error entry — show [ ! ] in red
+                spans.extend([
+                    Span::styled("[", theme::dim()),
+                    Span::raw(" "),
+                    Span::styled("!", Style::default().fg(Color::Red)),
+                    Span::raw(" "),
+                    Span::styled("]", theme::dim()),
+                ]);
+                spans.push(Span::raw(" "));
+                spans.push(Span::styled(test_id, id_style));
+                spans.push(Span::styled(format!(" — {error}"), theme::dim()));
+                lines.push(Line::from(spans));
+                continue;
+            }
+        }
+        spans.push(Span::raw(" "));
+        spans.push(Span::styled(test_id, id_style));
+        lines.push(Line::from(spans));
     }
 
     frame.render_widget(

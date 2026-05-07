@@ -97,6 +97,7 @@ version = "0.1.0"
 dependencies = [
  "diff",
  "indoc",
+ "libc",
  "rayon",
  "relative-path",
  "thiserror 2.0.18",

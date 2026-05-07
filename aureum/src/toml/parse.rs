@@ -13,6 +13,7 @@ static KNOWN_TEST_FIELDS: &[&str] = &[
     "expected_stdout",
     "expected_stderr",
     "expected_exit_code",
+    "timeout_seconds",
 ];
 
 static KNOWN_ROOT_ONLY_FIELDS: &[&str] = &["tests", "watch_files"];
@@ -108,6 +109,11 @@ fn parse_toml_config_from_table(table: &toml::Table) -> Result<TomlConfigTest, V
         get_integer_from_table(table, "expected_exit_code"),
     );
 
+    let timeout_seconds = collect_error(
+        &mut errors,
+        get_integer_from_table(table, "timeout_seconds"),
+    );
+
     if errors.is_empty() {
         Ok(TomlConfigTest {
             id,
@@ -117,6 +123,7 @@ fn parse_toml_config_from_table(table: &toml::Table) -> Result<TomlConfigTest, V
             expected_stdout,
             expected_stderr,
             expected_exit_code,
+            timeout_seconds,
         })
     } else {
         Err(errors)

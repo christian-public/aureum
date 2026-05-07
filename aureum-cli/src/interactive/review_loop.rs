@@ -1,4 +1,4 @@
-use aureum::{RunResult, TestResult};
+use aureum::RunResult;
 use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
 use std::io::{self, BufRead, Write};
@@ -6,6 +6,7 @@ use std::io::{self, BufRead, Write};
 use crate::interactive::action::{Action, ListAction};
 use crate::interactive::field::FieldDecisions;
 use crate::interactive::views::diff_view::{self, DiffViewContext};
+use crate::interactive::views::error_view::{self, ErrorViewContext};
 use crate::interactive::views::list_view::{self, ListViewContext};
 
 /// Outcome returned by `run_review_loop`.
@@ -28,16 +29,18 @@ pub(super) trait ReviewDriver {
         initial_decisions: Option<FieldDecisions>,
     ) -> io::Result<Action>;
 
+    fn show_error(&mut self, ctx: &ErrorViewContext<'_>) -> io::Result<Action>;
+
     fn show_list(&mut self, ctx: &ListViewContext<'_>, selection: usize) -> io::Result<ListAction>;
 
     fn watch_mode(&self) -> bool;
 }
 
 /// Core navigation loop shared by headless-record and live-terminal review sessions.
-/// Steps through `failed` tests, calling `driver` for each diff and list view, and records
+/// Steps through `failed` tests, calling `driver` for each diff/error and list view, and records
 /// per-test decisions in `past_decisions`.
 pub(super) fn run_review_loop(
-    failed: &[(&RunResult, &TestResult)],
+    failed: &[&RunResult],
     past_decisions: &mut Vec<Option<FieldDecisions>>,
     passed_count: usize,
     total_count: usize,
@@ -46,17 +49,33 @@ pub(super) fn run_review_loop(
     let total = failed.len();
     let mut i = 0usize;
     while i < total {
-        let (run_result, test_result) = failed[i];
-        let ctx = DiffViewContext {
-            index: i + 1,
-            total,
-            run_result,
-            test_result,
-            passed_count,
-            total_count,
-            watch_mode: driver.watch_mode(),
+        let run_result = failed[i];
+        let action = match &run_result.result {
+            Ok(test_result) => {
+                let ctx = DiffViewContext {
+                    index: i + 1,
+                    total,
+                    run_result,
+                    test_result,
+                    passed_count,
+                    total_count,
+                    watch_mode: driver.watch_mode(),
+                };
+                driver.show_diff(&ctx, past_decisions[i])?
+            }
+            Err(_) => {
+                let ctx = ErrorViewContext {
+                    index: i + 1,
+                    total,
+                    run_result,
+                    passed_count,
+                    total_count,
+                    watch_mode: driver.watch_mode(),
+                };
+                driver.show_error(&ctx)?
+            }
         };
-        match driver.show_diff(&ctx, past_decisions[i])? {
+        match action {
             Action::Proceed(decisions) => {
                 past_decisions[i] = Some(decisions);
                 i += 1;
@@ -129,6 +148,19 @@ impl<R: BufRead, W: Write> ReviewDriver for HeadlessDriver<'_, R, W> {
         Ok(result)
     }
 
+    fn show_error(&mut self, ctx: &ErrorViewContext<'_>) -> io::Result<Action> {
+        let result = error_view::record_error_view(
+            ctx,
+            self.width,
+            self.height,
+            self.reader,
+            self.writer,
+            self.emit_separator,
+        )?;
+        self.emit_separator = true;
+        Ok(result)
+    }
+
     fn show_list(&mut self, ctx: &ListViewContext<'_>, selection: usize) -> io::Result<ListAction> {
         list_view::record_list_view(
             ctx,
@@ -157,6 +189,10 @@ impl ReviewDriver for LiveDriver<'_> {
         initial_decisions: Option<FieldDecisions>,
     ) -> io::Result<Action> {
         diff_view::run_tui_loop(self.terminal, ctx, initial_decisions)
+    }
+
+    fn show_error(&mut self, ctx: &ErrorViewContext<'_>) -> io::Result<Action> {
+        error_view::run_tui_error(self.terminal, ctx)
     }
 
     fn show_list(&mut self, ctx: &ListViewContext<'_>, selection: usize) -> io::Result<ListAction> {

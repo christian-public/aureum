@@ -254,3 +254,18 @@ stdin = "s\nenter\np\nq\n"
 
 expected_stdout = { file = "snapshots/record_go_back_restores_decision.txt" }
 expected_exit_code = 1
+
+
+# A timed-out test shows a non-interactive error view instead of the diff view.
+[[tests]]
+id = "timed_out_test_shows_error_view"
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "helpers/timed_out.toml",
+]
+stdin = "l\nq\n"
+
+expected_stdout = { file = "snapshots/record_error_view.txt" }
+expected_exit_code = 1

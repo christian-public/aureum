@@ -376,6 +376,9 @@ fn format_validation_error(validation_error: &ValidationError) -> String {
         ValidationError::InvalidExitCode => String::from(
             "Exit code must be a value between -2147483648 to 2147483647 (On POSIX/Unix/Linux: Between 0 and 255)",
         ),
+        ValidationError::TimeoutMustBeNonNegative => {
+            String::from("`timeout_seconds` must be 0 or greater")
+        }
     };
 
     format!("{} {}", theme::cross(), msg.red())

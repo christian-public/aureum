@@ -20,6 +20,7 @@ pub struct TomlConfigTest {
     pub expected_stdout: Option<ConfigValue<String>>,
     pub expected_stderr: Option<ConfigValue<String>>,
     pub expected_exit_code: Option<ConfigValue<i64>>,
+    pub timeout_seconds: Option<ConfigValue<i64>>,
 }
 
 #[derive(Clone)]

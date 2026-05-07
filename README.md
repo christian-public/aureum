@@ -87,6 +87,7 @@ stdin = ""              # String
 expected_stdout = ""    # String
 expected_stderr = ""    # String
 expected_exit_code = 0  # Integer
+timeout_seconds = 30    # Integer (Must be 0 or greater)
 ```
 
 In addition to the literal values mentioned above, the following special forms are available:

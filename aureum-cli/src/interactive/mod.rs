@@ -12,7 +12,7 @@ use crate::interactive::views::watch_view::{self, IdleOutcome, WatchIdleContext}
 use crate::utils::time;
 use crate::watch;
 use accept::update_test_expectations;
-use aureum::{self, RunResult, TestCaseWithExpectations, TestResult};
+use aureum::{self, RunResult, TestCaseWithExpectations};
 use chrono::Local;
 use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
 use field::{FieldDecision, FieldDecisions};
@@ -41,13 +41,7 @@ where
     R: BufRead,
     W: Write,
 {
-    let failed: Vec<(&RunResult, &TestResult)> = run_results
-        .iter()
-        .filter_map(|r| match &r.result {
-            Ok(t) if !t.is_success() => Some((r, t)),
-            _ => None,
-        })
-        .collect();
+    let failed: Vec<&RunResult> = run_results.iter().filter(|r| !r.is_success()).collect();
 
     let total = failed.len();
     if total == 0 {
@@ -75,7 +69,7 @@ where
     )?;
     // Non-watch session: BackToWatch never occurs; past_decisions already populated.
 
-    let accepted: Vec<(&RunResult, &TestResult, FieldDecisions)> = past_decisions
+    let accepted: Vec<(&RunResult, FieldDecisions)> = past_decisions
         .iter()
         .enumerate()
         .filter_map(|(idx, dec_opt)| {
@@ -83,14 +77,16 @@ where
             if !decisions.any_accepted() {
                 return None;
             }
-            let (rr, tr) = failed[idx];
-            Some((rr, tr, decisions))
+            Some((failed[idx], decisions))
         })
         .collect();
 
     if !accepted.is_empty() {
         writeln!(writer)?;
-        for (run_result, test_result, decisions) in &accepted {
+        for (run_result, decisions) in &accepted {
+            let Ok(test_result) = &run_result.result else {
+                continue;
+            };
             update_test_expectations(&run_result.test_case, test_result, current_dir, decisions)?;
             writeln!(
                 writer,
@@ -147,12 +143,15 @@ where
                 IdleOutcome::Review => {
                     let total_count = run_results.len();
                     let passed_count = run_results.iter().filter(|r| r.is_success()).count();
-                    let failed_results: Vec<(usize, &RunResult, &TestResult)> = run_results
+                    let failed_results: Vec<(usize, &RunResult)> = run_results
                         .iter()
                         .enumerate()
-                        .filter_map(|(idx, rr)| match &rr.result {
-                            Ok(tr) if !tr.is_success() => Some((idx, rr, tr)),
-                            _ => None,
+                        .filter_map(|(idx, rr)| {
+                            if rr.is_success() {
+                                None
+                            } else {
+                                Some((idx, rr))
+                            }
                         })
                         .collect();
 
@@ -160,10 +159,8 @@ where
                         continue;
                     }
 
-                    let failed_pairs: Vec<(&RunResult, &TestResult)> = failed_results
-                        .iter()
-                        .map(|(_, rr, tr)| (*rr, *tr))
-                        .collect();
+                    let failed_pairs: Vec<&RunResult> =
+                        failed_results.iter().map(|(_, rr)| *rr).collect();
                     let mut past_decisions = vec![None; failed_pairs.len()];
                     let mut driver = HeadlessDriver {
                         width,
@@ -312,18 +309,14 @@ fn run_watch_review(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
     run_results: &[RunResult],
 ) -> io::Result<Option<Vec<(usize, FieldDecisions)>>> {
-    let failed_results: Vec<(usize, &RunResult, &TestResult)> = run_results
+    let failed_results: Vec<(usize, &RunResult)> = run_results
         .iter()
         .enumerate()
         .filter_map(|(idx, rr)| {
-            if let Ok(tr) = &rr.result {
-                if !tr.is_success() {
-                    Some((idx, rr, tr))
-                } else {
-                    None
-                }
-            } else {
+            if rr.is_success() {
                 None
+            } else {
+                Some((idx, rr))
             }
         })
         .collect();
@@ -334,10 +327,7 @@ fn run_watch_review(
 
     let total_count = run_results.len();
     let passed_count = run_results.iter().filter(|r| r.is_success()).count();
-    let failed_pairs: Vec<(&RunResult, &TestResult)> = failed_results
-        .iter()
-        .map(|(_, rr, tr)| (*rr, *tr))
-        .collect();
+    let failed_pairs: Vec<&RunResult> = failed_results.iter().map(|(_, rr)| *rr).collect();
 
     let mut past_decisions: Vec<Option<FieldDecisions>> = vec![None; failed_pairs.len()];
     let mut driver = LiveDriver {
@@ -431,27 +421,20 @@ fn run_tui_session(
     let total_count = test_cases.len();
     let passed_count = run_results.iter().filter(|r| r.is_success()).count();
 
-    let failed_results: Vec<(usize, &RunResult, &TestResult)> = run_results
+    let failed_results: Vec<(usize, &RunResult)> = run_results
         .iter()
         .enumerate()
         .filter_map(|(idx, rr)| {
-            if let Ok(tr) = &rr.result {
-                if !tr.is_success() {
-                    Some((idx, rr, tr))
-                } else {
-                    None
-                }
-            } else {
+            if rr.is_success() {
                 None
+            } else {
+                Some((idx, rr))
             }
         })
         .collect();
     let total_failed = failed_results.len();
 
-    let failed_pairs: Vec<(&RunResult, &TestResult)> = failed_results
-        .iter()
-        .map(|(_, rr, tr)| (*rr, *tr))
-        .collect();
+    let failed_pairs: Vec<&RunResult> = failed_results.iter().map(|(_, rr)| *rr).collect();
 
     let mut past_decisions: Vec<Option<FieldDecisions>> = vec![None; total_failed];
     let mut driver = LiveDriver {
@@ -500,7 +483,7 @@ fn accepted_field_names(decisions: &FieldDecisions) -> String {
 mod tests {
     use super::utils::test_helpers::{TempDir, make_test_case_root};
     use super::*;
-    use aureum::{TestCase, TestCaseExpectations, ValueComparison};
+    use aureum::{TestCase, TestCaseExpectations, TestResult, ValueComparison};
     use std::io::Cursor;
 
     fn failing_run_result_stdout(
