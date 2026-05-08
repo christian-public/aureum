@@ -118,6 +118,10 @@ pub struct TestArgs {
     #[arg(long, default_value = "summary")]
     pub format: TestOutputFormat,
 
+    /// Fallback timeout for tests without a timeout
+    #[arg(long, value_name = "SECONDS", default_value = "5")]
+    pub default_timeout: u64,
+
     /// Run tests in parallel
     #[arg(long)]
     pub parallel: bool,

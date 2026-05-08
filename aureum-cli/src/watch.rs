@@ -82,6 +82,7 @@ pub fn start_watcher_for_paths<'a>(
 pub fn load_test_cases_for_watch(
     paths: &[PathBuf],
     current_dir: &Path,
+    default_timeout: u64,
 ) -> Vec<TestCaseWithExpectations> {
     let find_result = find_config_file::find_config_files(paths.to_vec(), current_dir);
     if find_result.found.is_empty() {
@@ -92,7 +93,15 @@ pub fn load_test_cases_for_watch(
         .loaded
         .values()
         .flat_map(|x| x.test_entries_in_coverage_set())
-        .flat_map(|(_, entry)| entry.test_case_with_expectations().ok())
+        .flat_map(|(_, entry)| {
+            if let Ok(mut tc) = entry.test_case_with_expectations() {
+                tc.test_case.timeout_seconds =
+                    tc.test_case.timeout_seconds.or(Some(default_timeout));
+                Some(tc)
+            } else {
+                None
+            }
+        })
         .collect()
 }
 

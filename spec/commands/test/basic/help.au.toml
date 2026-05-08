@@ -10,12 +10,13 @@ Arguments:
   <PATHS>...  Paths to config files
 
 Options:
-      --format <FORMAT>  Options: summary, tap [default: summary]
-      --parallel         Run tests in parallel
-      --watch            Re-run tests when config or watched files change
-      --interactive      Interactively review and accept new test expectations
-      --verbose          Print extra information about config files
-  -h, --help             Print help
+      --format <FORMAT>            Options: summary, tap [default: summary]
+      --default-timeout <SECONDS>  Fallback timeout for tests without a timeout [default: 5]
+      --parallel                   Run tests in parallel
+      --watch                      Re-run tests when config or watched files change
+      --interactive                Interactively review and accept new test expectations
+      --verbose                    Print extra information about config files
+  -h, --help                       Print help
 """
 expected_stderr = ""
 expected_exit_code = 0

@@ -43,7 +43,9 @@ fn run_tests_interactive_watch(args: TestArgs, current_dir: &Path) -> ExitCode {
     let reload_paths = args.paths.clone();
     let watch_input_paths = args.paths.clone();
     let reload_dir = current_dir.to_path_buf();
-    let reload_fn = move || watch::load_test_cases_for_watch(&reload_paths, &reload_dir);
+    let default_timeout = args.default_timeout;
+    let reload_fn =
+        move || watch::load_test_cases_for_watch(&reload_paths, &reload_dir, default_timeout);
 
     let config_files =
         match common::prepare_config_files(args.paths, args.common.verbose, current_dir) {
@@ -111,7 +113,9 @@ fn run_tests_record_watch(args: TestArgs, current_dir: &Path) -> ExitCode {
     let TerminalSize { width, height } = args.record.expect("called only when record is Some");
     let reload_paths = args.paths.clone();
     let reload_dir = current_dir.to_path_buf();
-    let reload_fn = move || watch::load_test_cases_for_watch(&reload_paths, &reload_dir);
+    let default_timeout = args.default_timeout;
+    let reload_fn =
+        move || watch::load_test_cases_for_watch(&reload_paths, &reload_dir, default_timeout);
 
     let config_files =
         match common::prepare_config_files(args.paths, args.common.verbose, current_dir) {
@@ -144,7 +148,9 @@ fn run_tests_watch(args: TestArgs, current_dir: &Path) -> ExitCode {
     let reload_paths = args.paths.clone();
     let watch_input_paths = args.paths.clone();
     let reload_dir = current_dir.to_path_buf();
-    let reload_fn = move || watch::load_test_cases_for_watch(&reload_paths, &reload_dir);
+    let default_timeout = args.default_timeout;
+    let reload_fn =
+        move || watch::load_test_cases_for_watch(&reload_paths, &reload_dir, default_timeout);
 
     let config_files =
         match common::prepare_config_files(args.paths, args.common.verbose, current_dir) {
@@ -199,7 +205,15 @@ fn run_tests_once(args: TestArgs, current_dir: &Path) -> ExitCode {
         .collect::<Vec<_>>();
     let all_test_cases: Vec<TestCaseWithExpectations> = test_entries
         .iter()
-        .flat_map(|(_, entry)| entry.test_case_with_expectations().ok())
+        .flat_map(|(_, entry)| {
+            if let Ok(mut tc) = entry.test_case_with_expectations() {
+                tc.test_case.timeout_seconds =
+                    tc.test_case.timeout_seconds.or(Some(args.default_timeout));
+                Some(tc)
+            } else {
+                None
+            }
+        })
         .collect();
 
     let run_results = run_test_report(
