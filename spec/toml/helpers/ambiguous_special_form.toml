@@ -1,2 +1,3 @@
 program = "echo"
+
 expected_stdout = { file = "out.txt", env = "MY_VAR" }

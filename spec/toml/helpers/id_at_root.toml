@@ -1,3 +1,5 @@
-id = "should_not_be_here"
 program = "echo"
+
 expected_stdout = "hello"
+
+id = "should_not_be_here"

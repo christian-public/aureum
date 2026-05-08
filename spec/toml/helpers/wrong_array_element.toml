@@ -1,3 +1,4 @@
 program = "echo"
 program_arguments = ["-n", 42, false]
+
 expected_stdout = "hello"

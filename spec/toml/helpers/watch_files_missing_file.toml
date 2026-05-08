@@ -1,5 +1,6 @@
-program = "echo"
 watch_files = [{ file = "aureum_test_this_file_does_not_exist" }]
 
-expected_stdout = "hello"
+program = "echo"
 program_arguments = ["-n", "hello"]
+
+expected_stdout = "hello"
