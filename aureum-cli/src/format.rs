@@ -159,6 +159,15 @@ fn insert_group_spacing(content: &str) -> String {
             insert_blanks_before_comment_block(&mut result, 1);
         }
 
+        // One blank line before the first unrecognized field following the expected_* group.
+        if is_field_start(line)
+            && !is_expected_field(line)
+            && last_field_was_expected
+            && !result.is_empty()
+        {
+            insert_blanks_before_comment_block(&mut result, 1);
+        }
+
         if line.starts_with("[[") {
             last_field_was_expected = false;
         } else if is_field_start(line) {
@@ -439,7 +448,7 @@ mod tests {
     }
 
     #[test]
-    fn unknown_fields_are_sorted_to_end() {
+    fn unknown_fields_are_sorted_to_end_with_blank_line() {
         let input = indoc! {r#"
             custom_field = "x"
             program = "echo"
@@ -449,7 +458,27 @@ mod tests {
             program = "echo"
 
             expected_stdout = "hi"
+
             custom_field = "x"
+        "#};
+        assert_eq!(format_content(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn multiple_unknown_fields_are_grouped_together() {
+        let input = indoc! {r#"
+            z_field = "z"
+            a_field = "a"
+            program = "echo"
+            expected_stdout = "hi"
+        "#};
+        let expected = indoc! {r#"
+            program = "echo"
+
+            expected_stdout = "hi"
+
+            z_field = "z"
+            a_field = "a"
         "#};
         assert_eq!(format_content(input).unwrap(), expected);
     }
