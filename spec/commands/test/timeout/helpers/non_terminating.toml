@@ -1,5 +1,3 @@
 program = "yes"
 
 expected_exit_code = 0
-
-timeout_seconds = 0

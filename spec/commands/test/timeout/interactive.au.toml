@@ -1,0 +1,31 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+
+[[tests]]
+id = "timeout_seconds_field"
+program_arguments = [
+  "test",
+  "--record",
+  "100x20",
+  "helpers/non_terminating_with_timeout.toml",
+]
+stdin = "l\nq\n"
+
+expected_stdout = { file = "snapshots/timeout_seconds_field.txt" }
+expected_exit_code = 1
+
+
+[[tests]]
+id = "default_timeout_option"
+program_arguments = [
+  "test",
+  "--default-timeout",
+  "0",
+  "--record",
+  "100x20",
+  "helpers/non_terminating.toml",
+]
+stdin = "l\nq\n"
+
+expected_stdout = { file = "snapshots/default_timeout_option.txt" }
+expected_exit_code = 1
