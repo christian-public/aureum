@@ -122,13 +122,13 @@ pub struct TestArgs {
     #[arg(long)]
     pub parallel: bool,
 
-    /// Interactively review and accept new expectations for each failed test
-    #[arg(long)]
-    pub interactive: bool,
-
-    /// Watch files for changes and re-run tests
+    /// Re-run tests when config or watched files change
     #[arg(long)]
     pub watch: bool,
+
+    /// Interactively review and accept new test expectations
+    #[arg(long)]
+    pub interactive: bool,
 
     /// Record TUI frames to stdout using a headless terminal of the given size (format: WxH).
     /// Reads key names from stdin (one per line). Implies --interactive.

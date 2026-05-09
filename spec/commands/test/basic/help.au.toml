@@ -12,8 +12,8 @@ Arguments:
 Options:
       --format <FORMAT>  Options: summary, tap [default: summary]
       --parallel         Run tests in parallel
-      --interactive      Interactively review and accept new expectations for each failed test
-      --watch            Watch files for changes and re-run tests
+      --watch            Re-run tests when config or watched files change
+      --interactive      Interactively review and accept new test expectations
       --verbose          Print extra information about config files
   -h, --help             Print help
 """
