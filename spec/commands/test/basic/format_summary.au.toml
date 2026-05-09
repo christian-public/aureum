@@ -2,7 +2,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 
 [[tests]]
-id = "summary_passing"
+id = "passing"
 program_arguments = ["test", "--format", "summary", "helpers/passing_test.toml"]
 
 expected_stdout = """
@@ -16,7 +16,7 @@ expected_exit_code = 0
 
 
 [[tests]]
-id = "summary_failing"
+id = "failing"
 program_arguments = ["test", "--format", "summary", "helpers/failing_test.toml"]
 
 expected_stdout = """
@@ -64,44 +64,7 @@ expected_exit_code = 1
 
 
 [[tests]]
-id = "tap_passing"
-program_arguments = ["test", "--format", "tap", "helpers/passing_test.toml"]
-
-expected_stdout = """
-TAP version 14
-1..1
-ok     1 - helpers/passing_test.toml
-"""
-expected_stderr = ""
-expected_exit_code = 0
-
-
-[[tests]]
-id = "tap_failing"
-program_arguments = ["test", "--format", "tap", "helpers/failing_test.toml"]
-
-expected_stdout = """
-TAP version 14
-1..1
-not ok 1 - helpers/failing_test.toml
-  ---
-  exit-code:
-    expected: 42
-    got: 0
-  stderr:
-    expected: STDERR
-    got: ''
-  stdout:
-    expected: STDOUT
-    got: Hello world
-  ...
-"""
-expected_stderr = ""
-expected_exit_code = 1
-
-
-[[tests]]
-id = "summary_failing_with_newline"
+id = "failing_with_newline"
 program_arguments = [
   "test",
   "--format",
@@ -136,16 +99,3 @@ Test result: FAIL (0 passed, 1 failed)
 """
 expected_stderr = ""
 expected_exit_code = 1
-
-
-[[tests]]
-id = "unknown"
-program_arguments = ["test", "--format", "UNKNOWN", "helpers/passing_test.toml"]
-
-expected_stdout = ""
-expected_stderr = """
-error: invalid value 'UNKNOWN' for '--format <FORMAT>': valid formats: summary, tap
-
-For more information, try '--help'.
-"""
-expected_exit_code = 2

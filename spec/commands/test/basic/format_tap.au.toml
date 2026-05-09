@@ -1,0 +1,63 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+
+[[tests]]
+id = "passing"
+program_arguments = ["test", "--format", "tap", "helpers/passing_test.toml"]
+
+expected_stdout = """
+TAP version 14
+1..1
+ok     1 - helpers/passing_test.toml
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "failing"
+program_arguments = ["test", "--format", "tap", "helpers/failing_test.toml"]
+
+expected_stdout = """
+TAP version 14
+1..1
+not ok 1 - helpers/failing_test.toml
+  ---
+  exit-code:
+    expected: 42
+    got: 0
+  stderr:
+    expected: STDERR
+    got: ''
+  stdout:
+    expected: STDOUT
+    got: Hello world
+  ...
+"""
+expected_stderr = ""
+expected_exit_code = 1
+
+
+[[tests]]
+id = "failing_with_newline"
+program_arguments = [
+  "test",
+  "--format",
+  "tap",
+  "helpers/failing_test_newline.toml",
+]
+
+expected_stdout = """
+TAP version 14
+1..1
+not ok 1 - helpers/failing_test_newline.toml
+  ---
+  stdout:
+    expected: |
+      Hello world
+    got: |
+      Hello
+  ...
+"""
+expected_stderr = ""
+expected_exit_code = 1
