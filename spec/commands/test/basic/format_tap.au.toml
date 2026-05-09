@@ -23,15 +23,15 @@ TAP version 14
 1..1
 not ok 1 - helpers/failing_test.toml
   ---
-  exit-code:
-    expected: 42
-    got: 0
-  stderr:
-    expected: STDERR
-    got: ''
   stdout:
     expected: STDOUT
     got: Hello world
+  stderr:
+    expected: STDERR
+    got: ''
+  exit-code:
+    expected: 42
+    got: 0
   ...
 """
 expected_stderr = ""

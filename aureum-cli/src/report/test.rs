@@ -188,21 +188,29 @@ fn tap_print_test_case(
     test_number: usize,
     test_case: &TestCase,
     result: &Result<TestResult, RunError>,
-    indent_level: usize,
+    max_width: usize,
 ) {
     let message = test_case.id();
 
     match result {
         Ok(test_result) => {
             if test_result.is_success() {
-                tap::print_ok(test_number, &message, indent_level)
+                tap::print_ok(test_number, max_width, &message)
             } else {
-                tap::print_not_ok(test_number, &message, test_result, indent_level)
+                tap::print_not_ok(
+                    test_number,
+                    max_width,
+                    &message,
+                    Some(&tap::test_result_diagnostic(test_result)),
+                )
             }
         }
-        Err(_) => {
-            tap::print_not_ok_diagnostics(test_number, &message, "Failed to run test", indent_level)
-        }
+        Err(error) => tap::print_not_ok(
+            test_number,
+            max_width,
+            &message,
+            Some(&tap::message_diagnostic(&error.to_string())),
+        ),
     }
 }
 
