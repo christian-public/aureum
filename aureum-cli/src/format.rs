@@ -26,24 +26,80 @@ const TEST_FIELD_ORDER: &[&str] = &[
 
 /// Formats a file in-place. Returns `true` if the file was modified.
 pub fn format_file(path: &Path) -> io::Result<bool> {
-    let content = fs::read_to_string(path)?;
+    let bytes = fs::read(path)?;
+    let line_ending = LineEnding::detect(&bytes);
+    let content = lf_content(&bytes)?;
     let formatted = format_content(&content)
         .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e.to_string()))?;
+    let output = line_ending.apply(&formatted);
 
-    if formatted == content {
+    if output == bytes {
         return Ok(false);
     }
 
-    fs::write(path, &formatted)?;
+    fs::write(path, output)?;
     Ok(true)
 }
 
 /// Checks if a file needs formatting without writing. Returns `true` if the file would change.
 pub fn check_file(path: &Path) -> io::Result<bool> {
-    let content = fs::read_to_string(path)?;
+    let bytes = fs::read(path)?;
+    let line_ending = LineEnding::detect(&bytes);
+    let content = lf_content(&bytes)?;
     let formatted = format_content(&content)
         .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e.to_string()))?;
-    Ok(formatted != content)
+    let output = line_ending.apply(&formatted);
+    Ok(output != bytes)
+}
+
+#[derive(Clone, Copy)]
+enum LineEnding {
+    Lf,
+    CrLf,
+    Cr,
+}
+
+impl LineEnding {
+    fn detect(bytes: &[u8]) -> Self {
+        let mut crlf = 0usize;
+        let mut lf = 0usize;
+        let mut cr = 0usize;
+        let mut i = 0;
+        while i < bytes.len() {
+            match bytes[i] {
+                b'\r' if i + 1 < bytes.len() && bytes[i + 1] == b'\n' => {
+                    crlf += 1;
+                    i += 2;
+                    continue;
+                }
+                b'\r' => cr += 1,
+                b'\n' => lf += 1,
+                _ => {}
+            }
+            i += 1;
+        }
+        if crlf >= lf && crlf >= cr && crlf > 0 {
+            Self::CrLf
+        } else if cr > lf {
+            Self::Cr
+        } else {
+            Self::Lf
+        }
+    }
+
+    fn apply(self, content: &str) -> Vec<u8> {
+        match self {
+            Self::Lf => content.as_bytes().to_vec(),
+            Self::CrLf => content.replace('\n', "\r\n").into_bytes(),
+            Self::Cr => content.replace('\n', "\r").into_bytes(),
+        }
+    }
+}
+
+fn lf_content(bytes: &[u8]) -> io::Result<String> {
+    let s = String::from_utf8(bytes.to_vec())
+        .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+    Ok(s.replace("\r\n", "\n").replace('\r', "\n"))
 }
 
 pub fn format_content(content: &str) -> Result<String, toml_edit::TomlError> {
@@ -610,5 +666,63 @@ mod tests {
         let once = format_content(input).unwrap();
         let twice = format_content(&once).unwrap();
         assert_eq!(once, twice);
+    }
+
+    #[test]
+    fn line_ending_detect_lf() {
+        assert!(matches!(LineEnding::detect(b"a\nb\n"), LineEnding::Lf));
+    }
+
+    #[test]
+    fn line_ending_detect_crlf() {
+        assert!(matches!(
+            LineEnding::detect(b"a\r\nb\r\n"),
+            LineEnding::CrLf
+        ));
+    }
+
+    #[test]
+    fn line_ending_detect_cr() {
+        assert!(matches!(LineEnding::detect(b"a\rb\r"), LineEnding::Cr));
+    }
+
+    #[test]
+    fn line_ending_detect_no_newlines_defaults_to_lf() {
+        assert!(matches!(LineEnding::detect(b"abc"), LineEnding::Lf));
+    }
+
+    #[test]
+    fn line_ending_detect_mixed_prefers_dominant() {
+        // 2 CRLF, 1 LF → CRLF wins
+        assert!(matches!(
+            LineEnding::detect(b"a\r\nb\r\nc\n"),
+            LineEnding::CrLf
+        ));
+        // 2 LF, 1 CRLF → LF wins
+        assert!(matches!(LineEnding::detect(b"a\nb\nc\r\n"), LineEnding::Lf));
+    }
+
+    #[test]
+    fn crlf_file_round_trips() {
+        let crlf_input = "program = \"echo\"\r\n\r\nexpected_stdout = \"hi\"\r\n";
+        let bytes = crlf_input.as_bytes();
+        let line_ending = LineEnding::detect(bytes);
+        let content = lf_content(bytes).unwrap();
+        let formatted = format_content(&content).unwrap();
+        let output = line_ending.apply(&formatted);
+        assert_eq!(output, bytes);
+    }
+
+    #[test]
+    fn crlf_file_is_reformatted_with_crlf_endings() {
+        // Fields out of order — formatter should fix order and preserve CRLF
+        let input = "expected_stdout = \"hi\"\r\nprogram = \"echo\"\r\n";
+        let expected = "program = \"echo\"\r\n\r\nexpected_stdout = \"hi\"\r\n";
+        let bytes = input.as_bytes();
+        let line_ending = LineEnding::detect(bytes);
+        let content = lf_content(bytes).unwrap();
+        let formatted = format_content(&content).unwrap();
+        let output = line_ending.apply(&formatted);
+        assert_eq!(output, expected.as_bytes());
     }
 }
