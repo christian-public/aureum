@@ -8,18 +8,17 @@ mod utils;
 mod views;
 
 use crate::interactive::views::progress_view;
-use crate::interactive::views::watch_view::{self, IdleOutcome, WatchIdleContext, run_watch_idle};
+use crate::interactive::views::watch_view::{self, IdleOutcome, WatchIdleContext};
 use crate::utils::time;
 use crate::watch;
 use accept::update_test_expectations;
-use field::{FieldDecision, FieldDecisions};
-use review_loop::{HeadlessDriver, LiveDriver, ReviewOutcome, run_review_loop};
-
 use aureum::{self, RunResult, TestCaseWithExpectations, TestResult};
 use chrono::Local;
 use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
+use field::{FieldDecision, FieldDecisions};
 use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
+use review_loop::{HeadlessDriver, LiveDriver, ReviewOutcome};
 use std::io::{self, BufRead, Write};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::Receiver;
@@ -67,7 +66,7 @@ where
         emit_separator: false,
         watch_mode: false,
     };
-    run_review_loop(
+    review_loop::run_review_loop(
         &failed,
         &mut past_decisions,
         passed_count,
@@ -175,7 +174,7 @@ where
                         watch_mode: true,
                     };
 
-                    let outcome = run_review_loop(
+                    let outcome = review_loop::run_review_loop(
                         &failed_pairs,
                         &mut past_decisions,
                         passed_count,
@@ -279,7 +278,7 @@ fn run_watch_interactive_loop(
                 finished_at: &finished_at,
                 duration: &duration,
             };
-            match run_watch_idle(terminal, &idle_ctx, change_rx)? {
+            match watch_view::run_watch_idle(terminal, &idle_ctx, change_rx)? {
                 IdleOutcome::Rerun => continue 'rerun,
                 IdleOutcome::Quit => return Ok(Some(last_results)),
                 IdleOutcome::Review => {
@@ -346,7 +345,7 @@ fn run_watch_review(
         watch_mode: true,
     };
 
-    let outcome = run_review_loop(
+    let outcome = review_loop::run_review_loop(
         &failed_pairs,
         &mut past_decisions,
         passed_count,
@@ -459,7 +458,7 @@ fn run_tui_session(
         terminal,
         watch_mode: false,
     };
-    run_review_loop(
+    review_loop::run_review_loop(
         &failed_pairs,
         &mut past_decisions,
         passed_count,
