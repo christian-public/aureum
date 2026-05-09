@@ -67,7 +67,6 @@ impl Default for TextBlockOptions {
     }
 }
 
-#[allow(dead_code)]
 pub fn text_block(content: &str) -> String {
     text_block_with_options(content, &TextBlockOptions::default())
 }

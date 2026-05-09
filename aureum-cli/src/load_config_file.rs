@@ -56,7 +56,6 @@ impl LoadedConfigFile {
 }
 
 #[derive(Debug, thiserror::Error)]
-#[allow(dead_code)]
 pub enum ConfigFileError {
     #[error("config file path has no file name")]
     NoFileName,
