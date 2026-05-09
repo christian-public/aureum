@@ -61,10 +61,10 @@ pub fn print_record_session_failed(error: &io::Error) {
 pub fn print_test_cases_start(report_config: &ReportConfig) {
     match report_config.format {
         ReportFormat::Summary => {
-            summary_print_start(report_config.number_of_tests);
+            summary_print_test_cases_start(report_config.number_of_tests);
         }
         ReportFormat::Tap => {
-            tap_print_start(report_config.number_of_tests);
+            tap_print_test_cases_start(report_config.number_of_tests);
         }
     }
 }
@@ -89,17 +89,17 @@ pub fn print_test_case(
 pub fn print_test_cases_end(report_config: &ReportConfig, run_results: &[RunResult]) {
     match report_config.format {
         ReportFormat::Summary => {
-            summary_print_summary(report_config.number_of_tests, run_results);
+            summary_print_test_cases_end(report_config.number_of_tests, run_results);
         }
         ReportFormat::Tap => {
-            tap_print_summary();
+            tap_print_test_cases_end();
         }
     }
 }
 
 // SUMMARY HELPERS
 
-fn summary_print_start(number_of_tests: usize) {
+fn summary_print_test_cases_start(number_of_tests: usize) {
     let label = if number_of_tests == 1 {
         "test"
     } else {
@@ -125,7 +125,7 @@ fn summary_print_test_case(result: &Result<TestResult, RunError>) {
     let _ = io::Write::flush(&mut io::stdout());
 }
 
-fn summary_print_summary(number_of_tests: usize, run_results: &[RunResult]) {
+fn summary_print_test_cases_end(number_of_tests: usize, run_results: &[RunResult]) {
     println!(); // Add newline to dots
 
     let mut is_any_test_cases_printed = false;
@@ -179,7 +179,7 @@ fn summary_print_result(run_result: &RunResult) {
 
 // TAP HELPERS
 
-fn tap_print_start(number_of_tests: usize) {
+fn tap_print_test_cases_start(number_of_tests: usize) {
     tap::print_version();
     tap::print_plan(1, number_of_tests);
 }
@@ -214,6 +214,6 @@ fn tap_print_test_case(
     }
 }
 
-fn tap_print_summary() {
+fn tap_print_test_cases_end() {
     // Do nothing
 }
