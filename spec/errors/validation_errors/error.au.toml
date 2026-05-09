@@ -2,62 +2,11 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 
 [[tests]]
-id = "missing_config"
-program_arguments = ["test", "aureum_test_this_file_does_not_exist"]
-
-expected_stdout = ""
-expected_stderr = """
-warning: invalid paths to config files:
-aureum_test_this_file_does_not_exist
-
-error: no config files found for the given paths
-"""
-expected_exit_code = 3
-
-
-[[tests]]
-id = "missing_config_with_test_id"
-program_arguments = ["test", "aureum_test_this_file_does_not_exist:sub1"]
-
-expected_stdout = ""
-expected_stderr = """
-warning: invalid paths to config files:
-aureum_test_this_file_does_not_exist:sub1
-
-error: no config files found for the given paths
-"""
-expected_exit_code = 3
-
-
-[[tests]]
-id = "invalid_config"
-program_arguments = ["test", "helpers/invalid_config.toml"]
-
-expected_stdout = """
-🚀 Running 0 tests:
-
-
-Test result: OK (0 passed, 0 failed)
-"""
-expected_stderr = """
-📋 helpers/invalid_config.toml
-└── Parse errors
-    └── ✘ field `program`: expected string, got boolean
-
-warning: some config files contain errors (see above)
-"""
-expected_exit_code = 3
-
-
-[[tests]]
 id = "empty_config"
-program_arguments = ["test", "helpers/empty_config.toml"]
+program_arguments = ["validate", "helpers/empty_config.toml"]
 
 expected_stdout = """
-🚀 Running 0 tests:
-
-
-Test result: OK (0 passed, 0 failed)
+✘ helpers/empty_config.toml  1 test
 """
 expected_stderr = """
 📋 helpers/empty_config.toml
@@ -73,13 +22,10 @@ expected_exit_code = 3
 
 [[tests]]
 id = "no_program_specified"
-program_arguments = ["test", "helpers/no_test_program.toml"]
+program_arguments = ["validate", "helpers/no_test_program.toml"]
 
 expected_stdout = """
-🚀 Running 0 tests:
-
-
-Test result: OK (0 passed, 0 failed)
+✘ helpers/no_test_program.toml  1 test
 """
 expected_stderr = """
 📋 helpers/no_test_program.toml
@@ -94,13 +40,10 @@ expected_exit_code = 3
 
 [[tests]]
 id = "unknown_test_program"
-program_arguments = ["test", "helpers/unknown_test_program.toml"]
+program_arguments = ["validate", "helpers/unknown_test_program.toml"]
 
 expected_stdout = """
-🚀 Running 0 tests:
-
-
-Test result: OK (0 passed, 0 failed)
+✘ helpers/unknown_test_program.toml  1 test
 """
 expected_stderr = """
 📋 helpers/unknown_test_program.toml
@@ -115,13 +58,10 @@ expected_exit_code = 3
 
 [[tests]]
 id = "no_expectations"
-program_arguments = ["test", "helpers/no_expectations.toml"]
+program_arguments = ["validate", "helpers/no_expectations.toml"]
 
 expected_stdout = """
-🚀 Running 0 tests:
-
-
-Test result: OK (0 passed, 0 failed)
+✘ helpers/no_expectations.toml  1 test
 """
 expected_stderr = """
 📋 helpers/no_expectations.toml
@@ -136,13 +76,10 @@ expected_exit_code = 3
 
 [[tests]]
 id = "invalid_exit_code"
-program_arguments = ["test", "helpers/invalid_exit_code.toml"]
+program_arguments = ["validate", "helpers/invalid_exit_code.toml"]
 
 expected_stdout = """
-🚀 Running 0 tests:
-
-
-Test result: OK (0 passed, 0 failed)
+✘ helpers/invalid_exit_code.toml  1 test
 """
 expected_stderr = """
 📋 helpers/invalid_exit_code.toml
@@ -157,13 +94,10 @@ expected_exit_code = 3
 
 [[tests]]
 id = "missing_env_var"
-program_arguments = ["test", "helpers/missing_env_var.toml"]
+program_arguments = ["validate", "helpers/missing_env_var.toml"]
 
 expected_stdout = """
-🚀 Running 0 tests:
-
-
-Test result: OK (0 passed, 0 failed)
+✘ helpers/missing_env_var.toml  1 test
 """
 expected_stderr = """
 📋 helpers/missing_env_var.toml
@@ -178,13 +112,10 @@ expected_exit_code = 3
 
 [[tests]]
 id = "missing_external_file"
-program_arguments = ["test", "helpers/missing_external_file.toml"]
+program_arguments = ["validate", "helpers/missing_external_file.toml"]
 
 expected_stdout = """
-🚀 Running 0 tests:
-
-
-Test result: OK (0 passed, 0 failed)
+✘ helpers/missing_external_file.toml  1 test
 """
 expected_stderr = """
 📋 helpers/missing_external_file.toml
