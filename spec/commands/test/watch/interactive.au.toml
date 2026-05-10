@@ -5,15 +5,15 @@ program = { env = "AUREUM_TEST_EXEC" }
 [[tests]]
 id = "initial_frame"
 program_arguments = [
-    "test",
-    "--watch",
-    "--record",
-    "100x20",
-    "helpers/failing_stdout_only.toml",
+  "test",
+  "--watch",
+  "--record",
+  "100x20",
+  "helpers/failing_stdout_only.toml",
 ]
 stdin = "q\n"
 
-expected_stdout = { file = "snapshots/record_watch_idle_initial.txt" }
+expected_stdout = { file = "snapshots/initial_frame.txt" }
 expected_exit_code = 1
 
 
@@ -22,15 +22,15 @@ expected_exit_code = 1
 [[tests]]
 id = "file_change_reruns_tests"
 program_arguments = [
-    "test",
-    "--watch",
-    "--record",
-    "100x20",
-    "helpers/failing_stdout_only.toml",
+  "test",
+  "--watch",
+  "--record",
+  "100x20",
+  "helpers/failing_stdout_only.toml",
 ]
 stdin = "file-change\nq\n"
 
-expected_stdout = { file = "snapshots/record_watch_file_change.txt" }
+expected_stdout = { file = "snapshots/file_change_reruns_tests.txt" }
 expected_exit_code = 1
 
 
@@ -38,15 +38,15 @@ expected_exit_code = 1
 [[tests]]
 id = "review_and_back_to_idle"
 program_arguments = [
-    "test",
-    "--watch",
-    "--record",
-    "100x20",
-    "helpers/failing_stdout_only.toml",
+  "test",
+  "--watch",
+  "--record",
+  "100x20",
+  "helpers/failing_stdout_only.toml",
 ]
 stdin = "r\nesc\nq\n"
 
-expected_stdout = { file = "snapshots/record_watch_review_and_back.txt" }
+expected_stdout = { file = "snapshots/review_and_back_to_idle.txt" }
 expected_exit_code = 1
 
 
@@ -54,15 +54,15 @@ expected_exit_code = 1
 [[tests]]
 id = "t_reruns_tests"
 program_arguments = [
-    "test",
-    "--watch",
-    "--record",
-    "100x20",
-    "helpers/failing_stdout_only.toml",
+  "test",
+  "--watch",
+  "--record",
+  "100x20",
+  "helpers/failing_stdout_only.toml",
 ]
 stdin = "t\nq\n"
 
-expected_stdout = { file = "snapshots/record_watch_t_rerun.txt" }
+expected_stdout = { file = "snapshots/t_rerun_tests.txt" }
 expected_exit_code = 1
 
 
@@ -70,13 +70,13 @@ expected_exit_code = 1
 [[tests]]
 id = "list_esc_returns_to_diff"
 program_arguments = [
-    "test",
-    "--watch",
-    "--record",
-    "100x20",
-    "helpers/failing_stdout_only.toml",
+  "test",
+  "--watch",
+  "--record",
+  "100x20",
+  "helpers/failing_stdout_only.toml",
 ]
 stdin = "r\nl\nesc\nq\n"
 
-expected_stdout = { file = "snapshots/record_watch_list_esc_to_diff.txt" }
+expected_stdout = { file = "snapshots/list_esc_to_diff.txt" }
 expected_exit_code = 1
