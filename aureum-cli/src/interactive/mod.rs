@@ -7,6 +7,7 @@ mod theme;
 mod utils;
 mod views;
 
+use crate::counts::TestCounts;
 use crate::interactive::views::progress_view;
 use crate::interactive::views::watch_view::{self, IdleOutcome, WatchIdleContext};
 use crate::utils::time;
@@ -48,8 +49,7 @@ where
         return Ok(());
     }
 
-    let total_count = run_results.len();
-    let passed_count = run_results.iter().filter(|r| r.is_success()).count();
+    let counts = TestCounts::from_results(run_results);
 
     let mut past_decisions: Vec<Option<FieldDecisions>> = vec![None; total];
     let mut driver = HeadlessDriver {
@@ -60,13 +60,7 @@ where
         emit_separator: false,
         watch_mode: false,
     };
-    review_loop::run_review_loop(
-        &failed,
-        &mut past_decisions,
-        passed_count,
-        total_count,
-        &mut driver,
-    )?;
+    review_loop::run_review_loop(&failed, &mut past_decisions, counts, &mut driver)?;
     // Non-watch session: BackToWatch never occurs; past_decisions already populated.
 
     let accepted: Vec<(&RunResult, FieldDecisions)> = past_decisions
@@ -141,8 +135,7 @@ where
                 IdleOutcome::Rerun => continue 'rerun,
                 IdleOutcome::Quit => return Ok(run_results),
                 IdleOutcome::Review => {
-                    let total_count = run_results.len();
-                    let passed_count = run_results.iter().filter(|r| r.is_success()).count();
+                    let counts = TestCounts::from_results(&run_results);
                     let failed_results: Vec<(usize, &RunResult)> = run_results
                         .iter()
                         .enumerate()
@@ -174,8 +167,7 @@ where
                     let outcome = review_loop::run_review_loop(
                         &failed_pairs,
                         &mut past_decisions,
-                        passed_count,
-                        total_count,
+                        counts,
                         &mut driver,
                     )?;
                     emit_separator = driver.emit_separator;
@@ -325,8 +317,7 @@ fn run_watch_review(
         return Ok(Some(vec![]));
     }
 
-    let total_count = run_results.len();
-    let passed_count = run_results.iter().filter(|r| r.is_success()).count();
+    let counts = TestCounts::from_results(run_results);
     let failed_pairs: Vec<&RunResult> = failed_results.iter().map(|(_, rr)| *rr).collect();
 
     let mut past_decisions: Vec<Option<FieldDecisions>> = vec![None; failed_pairs.len()];
@@ -335,13 +326,8 @@ fn run_watch_review(
         watch_mode: true,
     };
 
-    let outcome = review_loop::run_review_loop(
-        &failed_pairs,
-        &mut past_decisions,
-        passed_count,
-        total_count,
-        &mut driver,
-    )?;
+    let outcome =
+        review_loop::run_review_loop(&failed_pairs, &mut past_decisions, counts, &mut driver)?;
 
     // Map from failed-array index to run_results index, collecting accepted decisions.
     let map_decisions = |pairs: &[(usize, FieldDecisions)]| -> Vec<(usize, FieldDecisions)> {
@@ -418,8 +404,7 @@ fn run_tui_session(
         return Ok(None); // user quit; background thread detached
     };
 
-    let total_count = test_cases.len();
-    let passed_count = run_results.iter().filter(|r| r.is_success()).count();
+    let counts = TestCounts::from_results(&run_results);
 
     let failed_results: Vec<(usize, &RunResult)> = run_results
         .iter()
@@ -441,13 +426,7 @@ fn run_tui_session(
         terminal,
         watch_mode: false,
     };
-    review_loop::run_review_loop(
-        &failed_pairs,
-        &mut past_decisions,
-        passed_count,
-        total_count,
-        &mut driver,
-    )?;
+    review_loop::run_review_loop(&failed_pairs, &mut past_decisions, counts, &mut driver)?;
     // Non-watch session: BackToWatch/Quit both just proceed to collect decisions.
 
     let accepted_result_indices: Vec<(usize, FieldDecisions)> = past_decisions

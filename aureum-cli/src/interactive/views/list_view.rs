@@ -8,16 +8,17 @@ use ratatui::widgets::{Block, Borders, Paragraph};
 use ratatui::{Frame, Terminal};
 use std::io::{self, BufRead, Write};
 
+use crate::counts::TestCounts;
 use crate::interactive::action::ListAction;
 use crate::interactive::field::{FailingFields, FieldDecision, FieldDecisions, OUTPUT_FIELDS};
 use crate::interactive::theme;
+use crate::interactive::utils::widgets;
 use crate::interactive::views::diff_view;
 
 pub(crate) struct ListViewContext<'a> {
     pub failed: &'a [&'a RunResult],
     pub past_decisions: &'a [Option<FieldDecisions>],
-    pub passed_count: usize,
-    pub total_count: usize,
+    pub counts: TestCounts,
 }
 
 /// Returns styled spans for the decision indicator box: dim `[`, space, icon, space, dim `]`.
@@ -77,23 +78,13 @@ fn render_list(frame: &mut Frame, ctx: &ListViewContext<'_>, selection: usize, s
     let w = inner_area.width as usize;
 
     // Stats row — matches diff view style
-    let failed_count = ctx.total_count - ctx.passed_count;
-    let left = "  Failed tests";
-    let passed_str = format!("{} passed", ctx.passed_count);
-    let failed_str = format!("{} failed", failed_count);
-    let right_len = passed_str.len() + 2 + failed_str.len() + 2;
-    let gap = w.saturating_sub(left.len() + right_len).max(1);
-    frame.render_widget(
-        Paragraph::new(Line::from(vec![
-            Span::raw(left),
-            Span::raw(" ".repeat(gap)),
-            Span::styled(passed_str, Style::default().fg(Color::Green)),
-            Span::raw("  "),
-            Span::styled(failed_str, Style::default().fg(Color::Red)),
-            Span::raw("  "),
-        ])),
-        inner_chunks[0],
-    );
+    let summary = widgets::TestSummary(ctx.counts);
+    let stats_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Min(1), Constraint::Length(summary.width())])
+        .split(inner_chunks[0]);
+    frame.render_widget(Paragraph::new("  Failed tests"), stats_chunks[0]);
+    frame.render_widget(summary, stats_chunks[1]);
 
     // Divider
     frame.render_widget(

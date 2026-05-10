@@ -8,10 +8,12 @@ use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Borders, Paragraph};
 use std::io::{self, BufRead, Write};
 
+use crate::counts::TestCounts;
 use crate::interactive::action::Action;
 use crate::interactive::field::FieldDecisions;
 use crate::interactive::keys;
 use crate::interactive::theme;
+use crate::interactive::utils::widgets;
 use crate::interactive::views::diff_view;
 use crate::utils::shell;
 
@@ -19,8 +21,7 @@ pub(crate) struct ErrorViewContext<'a> {
     pub index: usize,
     pub total: usize,
     pub run_result: &'a RunResult,
-    pub passed_count: usize,
-    pub total_count: usize,
+    pub counts: TestCounts,
     pub watch_mode: bool,
 }
 
@@ -52,23 +53,14 @@ fn render_error(frame: &mut ratatui::Frame, ctx: &ErrorViewContext<'_>) {
     let w = inner_area.width as usize;
 
     // Stats row — same layout as diff view
-    let failed_count = ctx.total_count - ctx.passed_count;
     let left = format!("  Failed test {} of {}", ctx.index, ctx.total);
-    let passed_str = format!("{} passed", ctx.passed_count);
-    let failed_str = format!("{} failed", failed_count);
-    let right_len = passed_str.len() + 2 + failed_str.len() + 2;
-    let gap = w.saturating_sub(left.len() + right_len).max(1);
-    frame.render_widget(
-        Paragraph::new(Line::from(vec![
-            Span::raw(left),
-            Span::raw(" ".repeat(gap)),
-            Span::styled(passed_str, Style::default().fg(Color::Green)),
-            Span::raw("  "),
-            Span::styled(failed_str, Style::default().fg(Color::Red)),
-            Span::raw("  "),
-        ])),
-        inner_chunks[0],
-    );
+    let summary = widgets::TestSummary(ctx.counts);
+    let stats_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Min(1), Constraint::Length(summary.width())])
+        .split(inner_chunks[0]);
+    frame.render_widget(Paragraph::new(left), stats_chunks[0]);
+    frame.render_widget(summary, stats_chunks[1]);
 
     // Dividers
     let render_divider = |frame: &mut ratatui::Frame, slot: Rect| {

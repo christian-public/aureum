@@ -9,6 +9,7 @@ use crate::interactive::field::{
     FailingFields, Field, FieldDecision, FieldDecisions, OUTPUT_FIELDS,
 };
 use crate::interactive::theme;
+use crate::interactive::utils::widgets;
 use crate::interactive::views::diff_content;
 use crate::interactive::views::diff_view::{self, DiffViewContext, EnterOutcome, Tab, TuiState};
 use crate::utils::shell;
@@ -140,8 +141,14 @@ pub(super) fn render_tui(
     let w = inner_area.width as usize;
 
     // Stats row — index/total on the left, passed/failed on the right
-    let stats_line = build_stats_line(ctx, w);
-    frame.render_widget(Paragraph::new(stats_line), inner_chunks[0]);
+    let left = format!("  Failed test {} of {}", ctx.index, ctx.total);
+    let summary = widgets::TestSummary(ctx.counts);
+    let chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Min(1), Constraint::Length(summary.width())])
+        .split(inner_chunks[0]);
+    frame.render_widget(Paragraph::new(left), chunks[0]);
+    frame.render_widget(summary, chunks[1]);
 
     // Title row — test path
     let title_line = build_title_line(ctx);
@@ -270,25 +277,6 @@ pub(super) fn render_tui(
 }
 
 // ── Row builders ─────────────────────────────────────────────────────────────
-
-/// Stats row: index/total on the left, pass/fail counts right-aligned.
-fn build_stats_line(ctx: &DiffViewContext<'_>, width: usize) -> Line<'static> {
-    let failed_count = ctx.total_count - ctx.passed_count;
-    let left = format!("  Failed test {} of {}", ctx.index, ctx.total);
-    let passed_str = format!("{} passed", ctx.passed_count);
-    let failed_str = format!("{} failed", failed_count);
-    let right_len = passed_str.len() + 2 + failed_str.len() + 2;
-    let gap = width.saturating_sub(left.len() + right_len).max(1);
-
-    Line::from(vec![
-        Span::raw(left),
-        Span::raw(" ".repeat(gap)),
-        Span::styled(passed_str, Style::default().fg(Color::Green)),
-        Span::raw("  "),
-        Span::styled(failed_str, Style::default().fg(Color::Red)),
-        Span::raw("  "),
-    ])
-}
 
 /// Title row: test path.
 fn build_title_line(ctx: &DiffViewContext<'_>) -> Line<'static> {

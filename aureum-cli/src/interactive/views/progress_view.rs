@@ -1,5 +1,7 @@
+use crate::counts::TestCounts;
 use crate::interactive::keys;
 use crate::interactive::theme;
+use crate::interactive::utils::widgets;
 use crate::utils::time;
 use aureum::{RunResult, TestCaseWithExpectations, run_test_cases};
 use crossterm::event::{Event, KeyEventKind};
@@ -131,19 +133,13 @@ fn render_progress(
     // Header row
     let label = if total == 1 { "test" } else { "tests" };
     let left = format!("  Running {} {label}", total);
-    let passed_str = format!("{} passed", passed);
-    let failed_str = format!("{} failed", failed);
-    let right_len = passed_str.len() + 2 + failed_str.len() + 2;
-    let gap = w.saturating_sub(left.len() + right_len).max(1);
-    let header_line = Line::from(vec![
-        Span::raw(left),
-        Span::raw(" ".repeat(gap)),
-        Span::styled(passed_str, Style::default().fg(Color::Green)),
-        Span::raw("  "),
-        Span::styled(failed_str, Style::default().fg(Color::Red)),
-        Span::raw("  "),
-    ]);
-    frame.render_widget(Paragraph::new(header_line), inner_chunks[0]);
+    let summary = widgets::TestSummary(TestCounts { passed, failed });
+    let header_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Min(1), Constraint::Length(summary.width())])
+        .split(inner_chunks[0]);
+    frame.render_widget(Paragraph::new(left), header_chunks[0]);
+    frame.render_widget(summary, header_chunks[1]);
 
     // Divider with T-junction chars
     frame.render_widget(

@@ -3,6 +3,7 @@ use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
 use std::io::{self, BufRead, Write};
 
+use crate::counts::TestCounts;
 use crate::interactive::action::{Action, ListAction};
 use crate::interactive::field::FieldDecisions;
 use crate::interactive::views::diff_view::{self, DiffViewContext};
@@ -42,8 +43,7 @@ pub(super) trait ReviewDriver {
 pub(super) fn run_review_loop(
     failed: &[&RunResult],
     past_decisions: &mut Vec<Option<FieldDecisions>>,
-    passed_count: usize,
-    total_count: usize,
+    counts: TestCounts,
     driver: &mut dyn ReviewDriver,
 ) -> io::Result<ReviewOutcome> {
     let total = failed.len();
@@ -57,8 +57,7 @@ pub(super) fn run_review_loop(
                     total,
                     run_result,
                     test_result,
-                    passed_count,
-                    total_count,
+                    counts,
                     watch_mode: driver.watch_mode(),
                 };
                 driver.show_diff(&ctx, past_decisions[i])?
@@ -68,8 +67,7 @@ pub(super) fn run_review_loop(
                     index: i + 1,
                     total,
                     run_result,
-                    passed_count,
-                    total_count,
+                    counts,
                     watch_mode: driver.watch_mode(),
                 };
                 driver.show_error(&ctx)?
@@ -89,8 +87,7 @@ pub(super) fn run_review_loop(
                 let list_ctx = ListViewContext {
                     failed,
                     past_decisions: past_decisions.as_slice(),
-                    passed_count,
-                    total_count,
+                    counts,
                 };
                 match driver.show_list(&list_ctx, i)? {
                     ListAction::JumpTo(idx) => {

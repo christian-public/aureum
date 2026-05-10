@@ -1,5 +1,7 @@
+use crate::counts::TestCounts;
 use crate::interactive::keys;
 use crate::interactive::theme;
+use crate::interactive::utils::widgets;
 use crate::interactive::views::diff_view;
 use aureum::RunResult;
 use crossterm::event::{Event, KeyCode, KeyEventKind};
@@ -108,22 +110,13 @@ fn render_idle(frame: &mut Frame, passed: usize, total: usize, finished_at: &str
         .split(inner_area);
 
     // Stats header
-    let left = "  Watching for changes";
-    let passed_str = format!("{} passed", passed);
-    let failed_str = format!("{} failed", failed);
-    let right_len = passed_str.len() + 2 + failed_str.len() + 2;
-    let gap = w.saturating_sub(left.len() + right_len).max(1);
-    frame.render_widget(
-        Paragraph::new(Line::from(vec![
-            Span::raw(left),
-            Span::raw(" ".repeat(gap)),
-            Span::styled(passed_str, Style::default().fg(Color::Green)),
-            Span::raw("  "),
-            Span::styled(failed_str, Style::default().fg(Color::Red)),
-            Span::raw("  "),
-        ])),
-        inner_chunks[0],
-    );
+    let summary = widgets::TestSummary(TestCounts { passed, failed });
+    let stats_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Min(1), Constraint::Length(summary.width())])
+        .split(inner_chunks[0]);
+    frame.render_widget(Paragraph::new("  Watching for changes"), stats_chunks[0]);
+    frame.render_widget(summary, stats_chunks[1]);
 
     // Divider
     frame.render_widget(

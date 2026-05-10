@@ -5,6 +5,7 @@ use ratatui::backend::{CrosstermBackend, TestBackend};
 use ratatui::text::Line;
 use std::io::{self, BufRead, Write};
 
+use crate::counts::TestCounts;
 use crate::interactive::action::Action;
 use crate::interactive::field::{
     FailingFields, Field, FieldDecision, FieldDecisions, OUTPUT_FIELDS,
@@ -30,8 +31,7 @@ pub(crate) struct DiffViewContext<'a> {
     pub total: usize,
     pub run_result: &'a RunResult,
     pub test_result: &'a TestResult,
-    pub passed_count: usize,
-    pub total_count: usize,
+    pub counts: TestCounts,
     /// True when running under `--watch`; enables Esc → back-to-watch.
     pub watch_mode: bool,
 }

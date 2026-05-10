@@ -1,3 +1,4 @@
+use crate::counts::TestCounts;
 use crate::report::formats::summary;
 use crate::report::formats::tap;
 use crate::report::theme;
@@ -89,7 +90,7 @@ pub fn print_test_case(
 pub fn print_test_cases_end(report_config: &ReportConfig, run_results: &[RunResult]) {
     match report_config.format {
         ReportFormat::Summary => {
-            summary_print_test_cases_end(report_config.number_of_tests, run_results);
+            summary_print_test_cases_end(run_results);
         }
         ReportFormat::Tap => {
             tap_print_test_cases_end();
@@ -125,7 +126,7 @@ fn summary_print_test_case(result: &Result<TestResult, RunError>) {
     let _ = io::Write::flush(&mut io::stdout());
 }
 
-fn summary_print_test_cases_end(number_of_tests: usize, run_results: &[RunResult]) {
+fn summary_print_test_cases_end(run_results: &[RunResult]) {
     println!(); // Add newline to dots
 
     let mut is_any_test_cases_printed = false;
@@ -142,19 +143,10 @@ fn summary_print_test_cases_end(number_of_tests: usize, run_results: &[RunResult
         }
     }
 
-    let number_of_passed_tests = run_results.iter().filter(|t| t.is_success()).count();
-    let number_of_failed_tests = number_of_tests - number_of_passed_tests;
-
-    let status = if number_of_failed_tests == 0 {
-        "OK".green().bold()
-    } else {
-        "FAIL".red().bold()
-    };
+    let counts = TestCounts::from_results(run_results);
 
     println!();
-    println!(
-        "Test result: {status} ({number_of_passed_tests} passed, {number_of_failed_tests} failed)",
-    );
+    println!("{}", format_summary_line(counts));
 }
 
 fn summary_print_result(run_result: &RunResult) {
@@ -175,6 +167,19 @@ fn summary_print_result(run_result: &RunResult) {
         let content = tree.to_string();
         print!("{content}"); // Already contains newline
     }
+}
+
+fn format_summary_line(counts: TestCounts) -> String {
+    let status = if counts.failed == 0 {
+        "OK".green().bold()
+    } else {
+        "FAIL".red().bold()
+    };
+
+    format!(
+        "Test result: {status} ({} passed, {} failed)",
+        counts.passed, counts.failed
+    )
 }
 
 // TAP HELPERS

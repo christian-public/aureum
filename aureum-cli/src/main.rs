@@ -1,3 +1,4 @@
+mod counts;
 mod report;
 mod vendor;
 mod utils {
