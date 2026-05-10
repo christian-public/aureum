@@ -8,7 +8,7 @@ expected_stderr = """
 📋 helpers/negative_timeout.toml
 └── Test
     └── Validation errors
-        └── ✘ `timeout_seconds` must be 0 or greater
+        └── ✘ The field `timeout_seconds` must be 0 or greater
 
 warning: some config files contain errors (see above)
 """
