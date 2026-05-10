@@ -44,7 +44,7 @@ impl LoadedConfigFile {
             || self
                 .test_entries
                 .iter()
-                .any(|(_, e)| e.has_validation_error())
+                .any(|(_, entry)| entry.has_validation_errors())
     }
 
     pub fn test_entries_in_coverage_set(&self) -> impl Iterator<Item = (&TestId, &TestEntry)> {

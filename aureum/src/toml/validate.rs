@@ -73,12 +73,12 @@ pub struct TestEntry {
 }
 
 impl TestEntry {
-    pub fn is_testable(&self) -> bool {
-        self.test_case.is_ok() && self.expectations.is_ok()
+    pub fn is_runnable(&self) -> bool {
+        self.test_case_with_expectations().is_ok()
     }
 
-    pub fn has_validation_error(&self) -> bool {
-        !self.is_testable()
+    pub fn has_validation_errors(&self) -> bool {
+        self.test_case_with_expectations().is_err()
     }
 
     pub fn test_case_with_expectations(
