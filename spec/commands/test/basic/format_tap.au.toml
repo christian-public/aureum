@@ -61,3 +61,16 @@ not ok 1 - helpers/failing_test_newline.toml
 """
 expected_stderr = ""
 expected_exit_code = 1
+
+
+[[tests]]
+id = "passing_with_hash_in_filename"
+program_arguments = ["test", "--format", "tap", "helpers/test_with_#_sign.toml"]
+
+expected_stdout = """
+TAP version 14
+1..1
+ok     1 - helpers/test_with_\\#_sign.toml
+"""
+expected_stderr = ""
+expected_exit_code = 0
