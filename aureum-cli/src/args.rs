@@ -1,3 +1,4 @@
+use clap::builder::ArgPredicate;
 use clap::{Args, Parser, Subcommand};
 use std::path::PathBuf;
 use std::str;
@@ -131,7 +132,7 @@ pub struct TestArgs {
     pub watch: bool,
 
     /// Interactively review and accept new test expectations
-    #[arg(long)]
+    #[arg(long, default_value_if("record", ArgPredicate::IsPresent, "true"))]
     pub interactive: bool,
 
     /// Record TUI frames to stdout using a headless terminal of the given size (format: WxH).

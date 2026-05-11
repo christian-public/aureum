@@ -9,7 +9,7 @@ use aureum::{
 use colored::Colorize;
 use relative_path::{RelativePath, RelativePathBuf};
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 // VALIDATION
 
@@ -106,7 +106,7 @@ pub fn print_config_files_found(config_file_paths: &[RelativePathBuf]) {
 
 pub fn print_watch_files_verbose<'a>(
     watch_paths: impl IntoIterator<Item = &'a PathBuf>,
-    current_dir: &std::path::Path,
+    current_dir: &Path,
     hide_absolute_paths: bool,
 ) {
     let mut display_paths: Vec<String> = watch_paths
@@ -124,11 +124,7 @@ pub fn print_watch_files_verbose<'a>(
     print_tree(tree);
 }
 
-fn format_watch_path(
-    path: &std::path::Path,
-    current_dir: &std::path::Path,
-    hide_absolute_paths: bool,
-) -> String {
+fn format_watch_path(path: &Path, current_dir: &Path, hide_absolute_paths: bool) -> String {
     // Prefer showing a path relative to current_dir; fall back to absolute.
     if let Ok(rel) = path.strip_prefix(current_dir)
         && let Ok(relative) = RelativePathBuf::from_path(rel)
