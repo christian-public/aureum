@@ -23,8 +23,6 @@ pub fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode
         args.common.hide_absolute_paths,
     );
 
-    let has_config_errors = config_files.has_config_errors();
-
     let table_entries =
         config_files
             .loaded
@@ -56,7 +54,7 @@ pub fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode
 
     report::validate::print_validate_table(&table_entries);
 
-    if has_config_errors {
+    if config_files.has_config_errors() {
         report::validate::print_config_files_contain_errors();
 
         ExitCode::InvalidConfig

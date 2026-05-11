@@ -33,8 +33,6 @@ pub fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
         })
         .collect();
 
-    let has_config_errors = config_files.has_config_errors();
-
     if args.tree {
         report::list::print_test_list_as_tree(&test_paths);
     } else {
@@ -47,7 +45,7 @@ pub fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
         }
     }
 
-    if has_config_errors {
+    if config_files.has_config_errors() {
         report::validate::print_config_files_contain_errors();
 
         ExitCode::InvalidConfig

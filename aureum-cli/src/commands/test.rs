@@ -157,7 +157,6 @@ fn run_tests_record(args: TestArgs, width: u16, height: u16, current_dir: &Path)
         Ok(result) => result,
         Err(err) => return err,
     };
-    let has_config_errors = config_files.has_config_errors();
     let all_test_cases = collect_test_cases(&config_files);
 
     let run_results =
@@ -176,7 +175,7 @@ fn run_tests_record(args: TestArgs, width: u16, height: u16, current_dir: &Path)
         report::test::print_record_session_failed(&e);
     }
 
-    exit_code_from_run_results(&run_results, has_config_errors)
+    exit_code_from_run_results(&run_results, config_files.has_config_errors())
 }
 
 fn run_tests_noninteractive_watch(args: TestArgs, current_dir: &Path) -> ExitCode {
@@ -237,7 +236,6 @@ fn run_tests_noninteractive(args: TestArgs, current_dir: &Path) -> ExitCode {
         Ok(result) => result,
         Err(err) => return err,
     };
-    let has_config_errors = config_files.has_config_errors();
 
     report::validate::print_config_details_if_needed(
         &config_files.loaded,
@@ -255,6 +253,7 @@ fn run_tests_noninteractive(args: TestArgs, current_dir: &Path) -> ExitCode {
         args.common.verbose,
     );
 
+    let has_config_errors = config_files.has_config_errors();
     if has_config_errors {
         report::validate::print_config_files_contain_errors();
     }
