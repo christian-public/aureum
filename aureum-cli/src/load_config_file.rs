@@ -70,11 +70,16 @@ pub enum ConfigFileError {
 pub fn load_config_files(
     find_config_files_result: FindConfigFilesResult,
     current_dir: &Path,
+    default_timeout: u64,
 ) -> LoadConfigFilesResult {
     let (loaded, invalid) = find_config_files_result.found.into_iter().partition_map(
         |(config_file_path, test_id_coverage_set)| {
-            let result =
-                load_config_file(config_file_path.clone(), test_id_coverage_set, current_dir);
+            let result = load_config_file(
+                config_file_path.clone(),
+                test_id_coverage_set,
+                current_dir,
+                default_timeout,
+            );
             match result {
                 Ok(loaded) => Either::Left((config_file_path, loaded)),
                 Err(err) => Either::Right((config_file_path, err)),
@@ -93,6 +98,7 @@ fn load_config_file(
     config_file_path: RelativePathBuf,
     test_id_coverage_set: TestIdCoverageSet,
     current_dir: &Path,
+    default_timeout: u64,
 ) -> Result<LoadedConfigFile, ConfigFileError> {
     let file_name = config_file_path
         .file_name()
@@ -119,6 +125,7 @@ fn load_config_file(
         file_name,
         &requirement_data,
         current_dir,
+        default_timeout,
         &|name, dir| file::find_executable_path(name, dir).ok(),
     );
 

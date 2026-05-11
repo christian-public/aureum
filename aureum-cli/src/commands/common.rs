@@ -7,8 +7,9 @@ use std::path::{Path, PathBuf};
 
 pub fn prepare_config_files(
     paths: Vec<PathBuf>,
-    verbose: bool,
     current_dir: &Path,
+    default_timeout: u64,
+    verbose: bool,
 ) -> Result<LoadConfigFilesResult, ExitCode> {
     let find_config_files_result = find_config_file::find_config_files(paths, current_dir);
 
@@ -36,7 +37,7 @@ pub fn prepare_config_files(
     }
 
     let load_config_files_result =
-        load_config_file::load_config_files(find_config_files_result, current_dir);
+        load_config_file::load_config_files(find_config_files_result, current_dir, default_timeout);
 
     for (config_file_path, config_file_error) in &load_config_files_result.invalid {
         report::validate::print_config_file_error(config_file_path, config_file_error);

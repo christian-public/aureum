@@ -140,31 +140,25 @@ pub fn run_program(test_case: &TestCase, current_dir: &Path) -> Result<ProgramOu
         })
     };
 
-    // If a timeout is configured, start a killer thread.  It waits on a channel
-    // for the process to finish; if the timeout elapses first it kills the
-    // process and returns true.  This way the thread exits promptly when the
-    // process completes naturally rather than sleeping for the full duration.
-    let killer_join = test_case.timeout_seconds.map(|timeout_secs| {
-        let (done_tx, done_rx) = mpsc::channel::<()>();
-        let handle = thread::spawn(move || -> bool {
-            let timed_out = done_rx.recv_timeout(Duration::from_secs(timeout_secs))
-                == Err(mpsc::RecvTimeoutError::Timeout);
-            if timed_out {
-                kill_timed_out_process(child_id);
-            }
-            timed_out
-        });
-        (handle, done_tx)
+    // Start a killer thread. It waits on a channel for the process to finish;
+    // if the timeout elapses first it kills the process and returns true.
+    // This way the thread exits promptly when the process completes naturally
+    // rather than sleeping for the full duration.
+    let timeout_secs = test_case.timeout_seconds;
+    let (done_tx, done_rx) = mpsc::channel::<()>();
+    let killer_handle = thread::spawn(move || -> bool {
+        let timed_out = done_rx.recv_timeout(Duration::from_secs(timeout_secs))
+            == Err(mpsc::RecvTimeoutError::Timeout);
+        if timed_out {
+            kill_timed_out_process(child_id);
+        }
+        timed_out
     });
 
     let status = child.wait().map_err(RunError::IOError)?;
 
-    let timed_out = if let Some((handle, done_tx)) = killer_join {
-        let _ = done_tx.send(()); // signal the killer thread to exit
-        handle.join().expect("killer thread panicked")
-    } else {
-        false
-    };
+    let _ = done_tx.send(()); // signal the killer thread to exit
+    let timed_out = killer_handle.join().expect("killer thread panicked");
     if timed_out {
         return Err(RunError::TimedOut);
     }

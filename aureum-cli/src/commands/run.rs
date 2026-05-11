@@ -13,11 +13,15 @@ pub fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
         return ExitCode::InvalidUsage;
     }
 
-    let config_files =
-        match common::prepare_config_files(args.paths, args.common.verbose, current_dir) {
-            Ok(result) => result,
-            Err(err) => return err,
-        };
+    let config_files = match common::prepare_config_files(
+        args.paths,
+        current_dir,
+        u64::MAX,
+        args.common.verbose,
+    ) {
+        Ok(result) => result,
+        Err(err) => return err,
+    };
 
     let test_entries_in_coverage_set = config_files
         .loaded

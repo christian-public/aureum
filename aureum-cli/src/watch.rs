@@ -88,20 +88,13 @@ pub fn load_test_cases_for_watch(
     if find_result.found.is_empty() {
         return vec![];
     }
-    let load_result = load_config_file::load_config_files(find_result, current_dir);
+    let load_result =
+        load_config_file::load_config_files(find_result, current_dir, default_timeout);
     load_result
         .loaded
         .values()
         .flat_map(|x| x.test_entries_in_coverage_set())
-        .flat_map(|(_, entry)| {
-            if let Ok(mut tc) = entry.test_case_with_expectations() {
-                tc.test_case.timeout_seconds =
-                    tc.test_case.timeout_seconds.or(Some(default_timeout));
-                Some(tc)
-            } else {
-                None
-            }
-        })
+        .filter_map(|(_, entry)| entry.test_case_with_expectations().ok())
         .collect()
 }
 

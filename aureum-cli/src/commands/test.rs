@@ -43,11 +43,15 @@ fn run_tests_interactive_watch(args: TestArgs, current_dir: &Path) -> ExitCode {
     let reload_dir = current_dir.to_path_buf();
     let default_timeout = args.default_timeout;
 
-    let config_files =
-        match common::prepare_config_files(args.paths.clone(), args.common.verbose, current_dir) {
-            Ok(result) => result,
-            Err(err) => return err,
-        };
+    let config_files = match common::prepare_config_files(
+        args.paths.clone(),
+        current_dir,
+        args.default_timeout,
+        args.common.verbose,
+    ) {
+        Ok(result) => result,
+        Err(err) => return err,
+    };
     let watch_paths = watch::collect_watch_paths(&args.paths, &config_files, current_dir);
     if args.common.verbose {
         report::validate::print_watch_files_verbose(
@@ -83,12 +87,16 @@ fn run_tests_interactive_watch(args: TestArgs, current_dir: &Path) -> ExitCode {
 }
 
 fn run_tests_interactive(args: TestArgs, current_dir: &Path) -> ExitCode {
-    let config_files =
-        match common::prepare_config_files(args.paths, args.common.verbose, current_dir) {
-            Ok(result) => result,
-            Err(err) => return err,
-        };
-    let all_test_cases = collect_test_cases(&config_files, args.default_timeout);
+    let config_files = match common::prepare_config_files(
+        args.paths,
+        current_dir,
+        args.default_timeout,
+        args.common.verbose,
+    ) {
+        Ok(result) => result,
+        Err(err) => return err,
+    };
+    let all_test_cases = collect_test_cases(&config_files);
 
     match interactive::run_with_progress_and_review(&all_test_cases, args.parallel, current_dir) {
         Ok(run_results) => {
@@ -108,11 +116,15 @@ fn run_tests_record_watch(args: TestArgs, width: u16, height: u16, current_dir: 
     let reload_fn =
         move || watch::load_test_cases_for_watch(&reload_paths, &reload_dir, default_timeout);
 
-    let config_files =
-        match common::prepare_config_files(args.paths, args.common.verbose, current_dir) {
-            Ok(result) => result,
-            Err(err) => return err,
-        };
+    let config_files = match common::prepare_config_files(
+        args.paths,
+        current_dir,
+        args.default_timeout,
+        args.common.verbose,
+    ) {
+        Ok(result) => result,
+        Err(err) => return err,
+    };
 
     let stdin = io::stdin();
     let stdout = io::stdout();
@@ -136,13 +148,17 @@ fn run_tests_record_watch(args: TestArgs, width: u16, height: u16, current_dir: 
 }
 
 fn run_tests_record(args: TestArgs, width: u16, height: u16, current_dir: &Path) -> ExitCode {
-    let config_files =
-        match common::prepare_config_files(args.paths, args.common.verbose, current_dir) {
-            Ok(result) => result,
-            Err(err) => return err,
-        };
+    let config_files = match common::prepare_config_files(
+        args.paths,
+        current_dir,
+        args.default_timeout,
+        args.common.verbose,
+    ) {
+        Ok(result) => result,
+        Err(err) => return err,
+    };
     let has_config_errors = config_files.has_config_errors();
-    let all_test_cases = collect_test_cases(&config_files, args.default_timeout);
+    let all_test_cases = collect_test_cases(&config_files);
 
     let run_results =
         aureum::run_test_cases(&all_test_cases, args.parallel, current_dir, &|_, _, _| {});
@@ -167,11 +183,15 @@ fn run_tests_noninteractive_watch(args: TestArgs, current_dir: &Path) -> ExitCod
     let reload_dir = current_dir.to_path_buf();
     let default_timeout = args.default_timeout;
 
-    let config_files =
-        match common::prepare_config_files(args.paths.clone(), args.common.verbose, current_dir) {
-            Ok(result) => result,
-            Err(err) => return err,
-        };
+    let config_files = match common::prepare_config_files(
+        args.paths.clone(),
+        current_dir,
+        args.default_timeout,
+        args.common.verbose,
+    ) {
+        Ok(result) => result,
+        Err(err) => return err,
+    };
     let watch_paths = watch::collect_watch_paths(&args.paths, &config_files, current_dir);
     if args.common.verbose {
         report::validate::print_watch_files_verbose(
@@ -202,11 +222,15 @@ fn run_tests_noninteractive_watch(args: TestArgs, current_dir: &Path) -> ExitCod
 }
 
 fn run_tests_noninteractive(args: TestArgs, current_dir: &Path) -> ExitCode {
-    let config_files =
-        match common::prepare_config_files(args.paths, args.common.verbose, current_dir) {
-            Ok(result) => result,
-            Err(err) => return err,
-        };
+    let config_files = match common::prepare_config_files(
+        args.paths,
+        current_dir,
+        args.default_timeout,
+        args.common.verbose,
+    ) {
+        Ok(result) => result,
+        Err(err) => return err,
+    };
     let has_config_errors = config_files.has_config_errors();
 
     report::validate::print_config_details_if_needed(
@@ -215,7 +239,7 @@ fn run_tests_noninteractive(args: TestArgs, current_dir: &Path) -> ExitCode {
         args.common.hide_absolute_paths,
     );
 
-    let all_test_cases = collect_test_cases(&config_files, args.default_timeout);
+    let all_test_cases = collect_test_cases(&config_files);
 
     let run_results =
         run_test_cases_noninteractive(&all_test_cases, args.parallel, current_dir, &args.format);
@@ -320,23 +344,12 @@ fn run_watch_loop(
     Ok(last_run_results)
 }
 
-fn collect_test_cases(
-    config_files: &LoadConfigFilesResult,
-    default_timeout: u64,
-) -> Vec<TestCaseWithExpectations> {
+fn collect_test_cases(config_files: &LoadConfigFilesResult) -> Vec<TestCaseWithExpectations> {
     config_files
         .loaded
         .values()
         .flat_map(|x| x.test_entries_in_coverage_set())
-        .flat_map(|(_, entry)| {
-            if let Ok(mut tc) = entry.test_case_with_expectations() {
-                tc.test_case.timeout_seconds =
-                    tc.test_case.timeout_seconds.or(Some(default_timeout));
-                Some(tc)
-            } else {
-                None
-            }
-        })
+        .filter_map(|(_, entry)| entry.test_case_with_expectations().ok())
         .collect()
 }
 

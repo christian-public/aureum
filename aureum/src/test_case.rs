@@ -11,7 +11,7 @@ pub struct TestCase {
     pub program_path: PathBuf, // Expects an absolute path
     pub arguments: Vec<String>,
     pub stdin: Option<String>,
-    pub timeout_seconds: Option<u64>,
+    pub timeout_seconds: u64,
 }
 
 impl TestCase {

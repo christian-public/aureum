@@ -208,7 +208,7 @@ mod tests {
             program_path: PathBuf::from("/bin/echo"),
             arguments: vec![],
             stdin: None,
-            timeout_seconds: None,
+            timeout_seconds: u64::MAX,
         }
     }
 

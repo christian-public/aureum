@@ -109,6 +109,7 @@ pub fn build_test_entries(
     file_name: &str,
     requirement_data: &RequirementData,
     current_dir: &Path,
+    default_timeout: u64,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> Vec<(TestId, TestEntry)> {
     split_toml_config(config)
@@ -125,6 +126,7 @@ pub fn build_test_entries(
                     file_name,
                     requirement_data,
                     current_dir,
+                    default_timeout,
                     find_executable_path,
                 ),
             )
@@ -132,6 +134,7 @@ pub fn build_test_entries(
         .collect()
 }
 
+#[allow(clippy::too_many_arguments)]
 fn build_test_entry(
     test_id: TestId,
     config: TomlConfigTest,
@@ -139,6 +142,7 @@ fn build_test_entry(
     file_name: &str,
     requirement_data: &RequirementData,
     current_dir: &Path,
+    default_timeout: u64,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> TestEntry {
     let (program_path, test_case) = build_test_case(
@@ -148,6 +152,7 @@ fn build_test_entry(
         file_name,
         requirement_data,
         current_dir,
+        default_timeout,
         find_executable_path,
     );
     let expectations = build_test_case_expectations(config, requirement_data);
@@ -159,6 +164,7 @@ fn build_test_entry(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn build_test_case(
     test_id: TestId,
     config: TomlConfigTest,
@@ -166,6 +172,7 @@ fn build_test_case(
     file_name: &str,
     requirement_data: &RequirementData,
     current_dir: &Path,
+    default_timeout: u64,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> (ProgramPath, Result<TestCase, BTreeSet<ValidationError>>) {
     let mut errors = BTreeSet::new();
@@ -217,7 +224,8 @@ fn build_test_case(
             } else {
                 Some(v as u64)
             }
-        });
+        })
+        .unwrap_or(default_timeout);
 
     let test_case = match (program_path.get_resolved_path(), errors.is_empty()) {
         (Some(resolved_path), true) => Ok(TestCase {
