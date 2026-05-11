@@ -1,3 +1,4 @@
+use crate::counts::ConfigStats;
 use crate::find_config_file;
 use crate::load_config_file;
 use crate::load_config_file::LoadConfigFilesResult;
@@ -83,19 +84,21 @@ pub fn load_test_cases_for_watch(
     paths: &[PathBuf],
     current_dir: &Path,
     default_timeout: u64,
-) -> Vec<TestCaseWithExpectations> {
+) -> (Vec<TestCaseWithExpectations>, ConfigStats) {
     let find_result = find_config_file::find_config_files(paths.to_vec(), current_dir);
     if find_result.found.is_empty() {
-        return vec![];
+        return (vec![], ConfigStats::default());
     }
     let load_result =
         load_config_file::load_config_files(find_result, current_dir, default_timeout);
-    load_result
+    let config_stats = load_result.config_stats();
+    let test_cases = load_result
         .loaded
         .values()
         .flat_map(|x| x.test_entries_in_coverage_set())
         .filter_map(|(_, entry)| entry.test_case_with_expectations().ok())
-        .collect()
+        .collect();
+    (test_cases, config_stats)
 }
 
 pub fn collect_watch_paths(

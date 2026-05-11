@@ -1,3 +1,4 @@
+use crate::counts::ConfigStats;
 use crate::find_config_file::FindConfigFilesResult;
 use crate::utils::file;
 use aureum::{
@@ -13,18 +14,25 @@ use std::path::Path;
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct LoadConfigFilesResult {
+    pub find_config_error_count: usize,
     pub loaded: BTreeMap<RelativePathBuf, LoadedConfigFile>,
     pub invalid: BTreeMap<RelativePathBuf, ConfigFileError>,
-    pub had_find_errors: bool,
 }
 
 impl LoadConfigFilesResult {
-    pub fn has_validation_errors(&self) -> bool {
-        self.loaded.values().any(|x| x.has_validation_errors())
+    pub fn has_config_errors(&self) -> bool {
+        self.config_stats().config_errors > 0
     }
 
-    pub fn has_config_errors(&self) -> bool {
-        self.had_find_errors || !self.invalid.is_empty() || self.has_validation_errors()
+    pub fn config_stats(&self) -> ConfigStats {
+        let config_errors = self.find_config_error_count
+            + self.invalid.len()
+            + self
+                .loaded
+                .values()
+                .map(|f| f.config_error_count())
+                .sum::<usize>();
+        ConfigStats { config_errors }
     }
 }
 
@@ -39,19 +47,29 @@ pub struct LoadedConfigFile {
 }
 
 impl LoadedConfigFile {
-    pub fn has_validation_errors(&self) -> bool {
-        !self.watch_file_errors.is_empty()
-            || self
-                .test_entries
-                .iter()
-                .any(|(_, entry)| entry.has_validation_errors())
-    }
-
     pub fn test_entries_in_coverage_set(&self) -> impl Iterator<Item = (&TestId, &TestEntry)> {
         self.test_entries
             .iter()
             .filter(|(test_id, _)| self.test_id_coverage_set.contains(test_id))
             .map(|(id, entry)| (id, entry))
+    }
+
+    pub fn has_config_errors(&self) -> bool {
+        self.config_error_count() > 0
+    }
+
+    fn config_error_count(&self) -> usize {
+        let watch_file_error_count = if self.watch_file_errors.is_empty() {
+            0
+        } else {
+            1
+        };
+        let test_error_count = self
+            .test_entries
+            .iter()
+            .filter(|(_, entry)| entry.has_validation_errors())
+            .count();
+        watch_file_error_count + test_error_count
     }
 }
 
@@ -88,9 +106,9 @@ pub fn load_config_files(
     );
 
     LoadConfigFilesResult {
+        find_config_error_count: find_config_files_result.errors.len(),
         loaded,
         invalid,
-        had_find_errors: !find_config_files_result.errors.is_empty(),
     }
 }
 

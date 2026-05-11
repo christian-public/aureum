@@ -1,4 +1,4 @@
-use crate::counts::TestCounts;
+use crate::counts::{ConfigStats, TestCounts};
 use crate::interactive::keys;
 use crate::interactive::theme;
 use crate::interactive::utils::widgets;
@@ -29,6 +29,7 @@ pub(crate) struct WatchIdleContext<'a> {
     pub run_results: &'a [RunResult],
     pub finished_at: &'a str,
     pub duration: &'a str,
+    pub config_stats: ConfigStats,
 }
 
 /// Shows the idle/watching screen until a file change arrives, the user presses `r`
@@ -44,7 +45,16 @@ pub(crate) fn run_watch_idle(
 
     loop {
         terminal
-            .draw(|frame| render_idle(frame, passed, total, ctx.finished_at, ctx.duration))
+            .draw(|frame| {
+                render_idle(
+                    frame,
+                    passed,
+                    total,
+                    ctx.finished_at,
+                    ctx.duration,
+                    ctx.config_stats,
+                )
+            })
             .map_err(io::Error::other)?;
 
         // Poll for key events with a short timeout so we can also check the channel.
@@ -85,7 +95,14 @@ pub(crate) fn run_watch_idle(
     }
 }
 
-fn render_idle(frame: &mut Frame, passed: usize, total: usize, finished_at: &str, duration: &str) {
+fn render_idle(
+    frame: &mut Frame,
+    passed: usize,
+    total: usize,
+    finished_at: &str,
+    duration: &str,
+    config_stats: ConfigStats,
+) {
     let failed = total - passed;
     let area = frame.area();
 
@@ -110,7 +127,11 @@ fn render_idle(frame: &mut Frame, passed: usize, total: usize, finished_at: &str
         .split(inner_area);
 
     // Stats header
-    let summary = widgets::TestSummary(TestCounts { passed, failed });
+    let summary = widgets::TestSummary(TestCounts {
+        config_stats,
+        passed,
+        failed,
+    });
     let stats_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Min(1), Constraint::Length(summary.width())])
@@ -266,6 +287,7 @@ pub(crate) fn record_watch_idle<R: BufRead, W: Write>(
     emit_separator: bool,
     finished_at: &str,
     duration: &str,
+    config_stats: ConfigStats,
 ) -> io::Result<IdleOutcome> {
     let passed = run_results.iter().filter(|r| r.is_success()).count();
     let total = run_results.len();
@@ -275,7 +297,7 @@ pub(crate) fn record_watch_idle<R: BufRead, W: Write>(
     let mut terminal = Terminal::new(backend).map_err(io::Error::other)?;
 
     terminal
-        .draw(|frame| render_idle(frame, passed, total, finished_at, duration))
+        .draw(|frame| render_idle(frame, passed, total, finished_at, duration, config_stats))
         .map_err(io::Error::other)?;
     diff_view::write_frame(terminal.backend(), width, height, writer, emit_separator)?;
 
@@ -300,7 +322,9 @@ pub(crate) fn record_watch_idle<R: BufRead, W: Write>(
                 _ => {}
             }
             terminal
-                .draw(|frame| render_idle(frame, passed, total, finished_at, duration))
+                .draw(|frame| {
+                    render_idle(frame, passed, total, finished_at, duration, config_stats)
+                })
                 .map_err(io::Error::other)?;
             diff_view::write_frame(terminal.backend(), width, height, writer, true)?;
         }

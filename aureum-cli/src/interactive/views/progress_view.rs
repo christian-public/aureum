@@ -1,4 +1,4 @@
-use crate::counts::TestCounts;
+use crate::counts::{ConfigStats, TestCounts};
 use crate::interactive::keys;
 use crate::interactive::theme;
 use crate::interactive::utils::widgets;
@@ -24,6 +24,7 @@ pub(crate) fn run_tests_with_progress(
     test_cases: &[TestCaseWithExpectations],
     parallel: bool,
     current_dir: &Path,
+    config_stats: ConfigStats,
 ) -> io::Result<Option<Vec<RunResult>>> {
     let total = test_cases.len();
     let (progress_tx, progress_rx) = mpsc::channel::<bool>();
@@ -67,7 +68,17 @@ pub(crate) fn run_tests_with_progress(
             }
         }
         terminal
-            .draw(|frame| render_progress(frame, total, passed, failed, start.elapsed(), false))
+            .draw(|frame| {
+                render_progress(
+                    frame,
+                    total,
+                    passed,
+                    failed,
+                    start.elapsed(),
+                    false,
+                    config_stats,
+                )
+            })
             .map_err(io::Error::other)?;
         if all_done || passed + failed >= total {
             break;
@@ -81,7 +92,15 @@ pub(crate) fn run_tests_with_progress(
                     // Show "Stopping..." and return immediately; _handle is detached on drop.
                     terminal
                         .draw(|frame| {
-                            render_progress(frame, total, passed, failed, start.elapsed(), true)
+                            render_progress(
+                                frame,
+                                total,
+                                passed,
+                                failed,
+                                start.elapsed(),
+                                true,
+                                config_stats,
+                            )
                         })
                         .map_err(io::Error::other)?;
                     return Ok(None);
@@ -106,6 +125,7 @@ fn render_progress(
     failed: usize,
     elapsed: Duration,
     stopping: bool,
+    config_stats: ConfigStats,
 ) {
     let area = frame.area();
 
@@ -133,7 +153,11 @@ fn render_progress(
     // Header row
     let label = if total == 1 { "test" } else { "tests" };
     let left = format!("  Running {} {label}", total);
-    let summary = widgets::TestSummary(TestCounts { passed, failed });
+    let summary = widgets::TestSummary(TestCounts {
+        config_stats,
+        passed,
+        failed,
+    });
     let header_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Min(1), Constraint::Length(summary.width())])
@@ -239,7 +263,17 @@ mod tests {
         let backend = TestBackend::new(width, height);
         let mut terminal = Terminal::new(backend).unwrap();
         terminal
-            .draw(|frame| render_progress(frame, total, passed, failed, elapsed, stopping))
+            .draw(|frame| {
+                render_progress(
+                    frame,
+                    total,
+                    passed,
+                    failed,
+                    elapsed,
+                    stopping,
+                    ConfigStats::default(),
+                )
+            })
             .unwrap();
         let buffer = terminal.backend().buffer().clone();
         let content = buffer.content();

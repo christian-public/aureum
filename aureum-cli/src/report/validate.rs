@@ -26,7 +26,7 @@ pub fn print_config_details_if_needed(
     hide_absolute_paths: bool,
 ) {
     for (config_file_path, loaded_config_file) in loaded {
-        if loaded_config_file.has_validation_errors() || verbose {
+        if loaded_config_file.has_config_errors() || verbose {
             print_config_details(
                 config_file_path,
                 loaded_config_file.test_entries.as_slice(),

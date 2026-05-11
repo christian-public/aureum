@@ -7,7 +7,7 @@ mod theme;
 mod utils;
 mod views;
 
-use crate::counts::TestCounts;
+use crate::counts::{ConfigStats, TestCounts};
 use crate::interactive::views::progress_view;
 use crate::interactive::views::watch_view::{self, IdleOutcome, WatchIdleContext};
 use crate::utils::time;
@@ -37,6 +37,7 @@ pub fn run_interactive_updates<R, W>(
     writer: &mut W,
     width: u16,
     height: u16,
+    config_stats: ConfigStats,
 ) -> io::Result<()>
 where
     R: BufRead,
@@ -49,7 +50,7 @@ where
         return Ok(());
     }
 
-    let counts = TestCounts::from_results(run_results);
+    let counts = TestCounts::from_results(run_results, config_stats);
 
     let mut past_decisions: Vec<Option<FieldDecisions>> = vec![None; total];
     let mut driver = HeadlessDriver {
@@ -100,7 +101,7 @@ where
 /// idle or review views. Frames are written to `writer` separated by `---`.
 #[allow(clippy::too_many_arguments)]
 pub fn run_interactive_updates_with_watch<R, W>(
-    load_test_cases: &dyn Fn() -> Vec<TestCaseWithExpectations>,
+    load_test_cases: &dyn Fn() -> (Vec<TestCaseWithExpectations>, ConfigStats),
     parallel: bool,
     current_dir: &Path,
     reader: &mut R,
@@ -115,7 +116,7 @@ where
     let mut emit_separator = false;
 
     'rerun: loop {
-        let test_cases = load_test_cases();
+        let (test_cases, config_stats) = load_test_cases();
         let run_results = aureum::run_test_cases(&test_cases, parallel, current_dir, &|_, _, _| {});
 
         loop {
@@ -128,6 +129,7 @@ where
                 emit_separator,
                 "12:00:00",
                 "0.5s",
+                config_stats,
             )?;
             emit_separator = true;
 
@@ -135,7 +137,7 @@ where
                 IdleOutcome::Rerun => continue 'rerun,
                 IdleOutcome::Quit => return Ok(run_results),
                 IdleOutcome::Review => {
-                    let counts = TestCounts::from_results(&run_results);
+                    let counts = TestCounts::from_results(&run_results, config_stats);
                     let failed_results: Vec<(usize, &RunResult)> = run_results
                         .iter()
                         .enumerate()
@@ -213,7 +215,7 @@ where
 /// Full interactive watch session: runs tests, shows idle screen, lets the user review and
 /// accept failures, and re-runs on file changes. Always returns the last run's results.
 pub fn run_with_progress_review_and_watch<'a>(
-    load_test_cases: &dyn Fn() -> Vec<TestCaseWithExpectations>,
+    load_test_cases: &dyn Fn() -> (Vec<TestCaseWithExpectations>, ConfigStats),
     parallel: bool,
     current_dir: &Path,
     watch_paths: impl IntoIterator<Item = &'a PathBuf>,
@@ -243,17 +245,22 @@ pub fn run_with_progress_review_and_watch<'a>(
 
 fn run_watch_interactive_loop(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
-    load_test_cases: &dyn Fn() -> Vec<TestCaseWithExpectations>,
+    load_test_cases: &dyn Fn() -> (Vec<TestCaseWithExpectations>, ConfigStats),
     parallel: bool,
     current_dir: &Path,
     change_rx: &Receiver<usize>,
 ) -> io::Result<Option<Vec<RunResult>>> {
     'rerun: loop {
-        let test_cases = load_test_cases();
+        let (test_cases, config_stats) = load_test_cases();
         let run_start = Instant::now();
         // Run tests with live progress view.
-        let Some(last_results) =
-            progress_view::run_tests_with_progress(terminal, &test_cases, parallel, current_dir)?
+        let Some(last_results) = progress_view::run_tests_with_progress(
+            terminal,
+            &test_cases,
+            parallel,
+            current_dir,
+            config_stats,
+        )?
         else {
             return Ok(None); // user pressed q during progress
         };
@@ -266,13 +273,15 @@ fn run_watch_interactive_loop(
                 run_results: &last_results,
                 finished_at: &finished_at,
                 duration: &duration,
+                config_stats,
             };
             match watch_view::run_watch_idle(terminal, &idle_ctx, change_rx)? {
                 IdleOutcome::Rerun => continue 'rerun,
                 IdleOutcome::Quit => return Ok(Some(last_results)),
                 IdleOutcome::Review => {
                     // Enter review loop (watch mode = true so Esc returns here).
-                    let Some(accepted) = run_watch_review(terminal, &last_results)? else {
+                    let Some(accepted) = run_watch_review(terminal, &last_results, config_stats)?
+                    else {
                         return Ok(Some(last_results)); // user pressed q
                     };
                     for (idx, decisions) in &accepted {
@@ -300,6 +309,7 @@ fn run_watch_interactive_loop(
 fn run_watch_review(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
     run_results: &[RunResult],
+    config_stats: ConfigStats,
 ) -> io::Result<Option<Vec<(usize, FieldDecisions)>>> {
     let failed_results: Vec<(usize, &RunResult)> = run_results
         .iter()
@@ -317,7 +327,7 @@ fn run_watch_review(
         return Ok(Some(vec![]));
     }
 
-    let counts = TestCounts::from_results(run_results);
+    let counts = TestCounts::from_results(run_results, config_stats);
     let failed_pairs: Vec<&RunResult> = failed_results.iter().map(|(_, rr)| *rr).collect();
 
     let mut past_decisions: Vec<Option<FieldDecisions>> = vec![None; failed_pairs.len()];
@@ -364,6 +374,7 @@ pub fn run_with_progress_and_review(
     test_cases: &[TestCaseWithExpectations],
     parallel: bool,
     current_dir: &Path,
+    config_stats: ConfigStats,
 ) -> io::Result<Vec<RunResult>> {
     crossterm::terminal::enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -371,7 +382,13 @@ pub fn run_with_progress_and_review(
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend).map_err(io::Error::other)?;
 
-    let result = run_tui_session(&mut terminal, test_cases, parallel, current_dir);
+    let result = run_tui_session(
+        &mut terminal,
+        test_cases,
+        parallel,
+        current_dir,
+        config_stats,
+    );
 
     let _ = crossterm::terminal::disable_raw_mode();
     let _ = crossterm::execute!(terminal.backend_mut(), LeaveAlternateScreen);
@@ -397,14 +414,20 @@ fn run_tui_session(
     test_cases: &[TestCaseWithExpectations],
     parallel: bool,
     current_dir: &Path,
+    config_stats: ConfigStats,
 ) -> io::Result<Option<TuiSessionResult>> {
-    let Some(run_results) =
-        progress_view::run_tests_with_progress(terminal, test_cases, parallel, current_dir)?
+    let Some(run_results) = progress_view::run_tests_with_progress(
+        terminal,
+        test_cases,
+        parallel,
+        current_dir,
+        config_stats,
+    )?
     else {
         return Ok(None); // user quit; background thread detached
     };
 
-    let counts = TestCounts::from_results(&run_results);
+    let counts = TestCounts::from_results(&run_results, config_stats);
 
     let failed_results: Vec<(usize, &RunResult)> = run_results
         .iter()
@@ -510,7 +533,16 @@ mod tests {
         let mut input = Cursor::new(b"a\nenter\n");
         let mut output = Vec::<u8>::new();
 
-        run_interactive_updates(&results, tmp.path(), &mut input, &mut output, 80, 20).unwrap();
+        run_interactive_updates(
+            &results,
+            tmp.path(),
+            &mut input,
+            &mut output,
+            80,
+            20,
+            ConfigStats::default(),
+        )
+        .unwrap();
 
         assert_eq!(tmp.read("expected_stdout.txt"), "actual\n");
         assert!(String::from_utf8_lossy(&output).contains("Updated test.toml (stdout)"));

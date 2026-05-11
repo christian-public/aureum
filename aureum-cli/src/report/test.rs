@@ -1,4 +1,4 @@
-use crate::counts::TestCounts;
+use crate::counts::{ConfigStats, TestCounts};
 use crate::report::formats::summary;
 use crate::report::formats::tap;
 use crate::report::theme;
@@ -88,10 +88,14 @@ pub fn print_test_case(
     }
 }
 
-pub fn print_test_cases_end(report_config: &ReportConfig, run_results: &[RunResult]) {
+pub fn print_test_cases_end(
+    report_config: &ReportConfig,
+    run_results: &[RunResult],
+    config_stats: ConfigStats,
+) {
     match report_config.format {
         ReportFormat::Summary => {
-            summary_print_test_cases_end(run_results, report_config.verbose);
+            summary_print_test_cases_end(run_results, report_config.verbose, config_stats);
         }
         ReportFormat::Tap => {
             tap_print_test_cases_end();
@@ -127,7 +131,11 @@ fn summary_print_test_case(result: &Result<TestResult, RunError>) {
     let _ = io::Write::flush(&mut io::stdout());
 }
 
-fn summary_print_test_cases_end(run_results: &[RunResult], verbose: bool) {
+fn summary_print_test_cases_end(
+    run_results: &[RunResult],
+    verbose: bool,
+    config_stats: ConfigStats,
+) {
     println!(); // Print newline after dots
 
     let (passed_tests, failed_tests): (Vec<_>, Vec<_>) =
@@ -149,7 +157,7 @@ fn summary_print_test_cases_end(run_results: &[RunResult], verbose: bool) {
         );
     }
 
-    let counts = TestCounts::from_results(run_results);
+    let counts = TestCounts::from_results(run_results, config_stats);
 
     println!();
     println!("{}", format_summary_line(counts));
@@ -173,13 +181,31 @@ fn format_test_failure(test_case: &TestCase, result: &Result<TestResult, RunErro
 }
 
 fn format_summary_line(counts: TestCounts) -> String {
+    let config_error_count = counts.config_stats.config_errors;
+
     let status = if counts.failed == 0 {
-        "OK".green().bold()
+        if config_error_count == 0 {
+            "OK".green().bold()
+        } else {
+            "OK*".yellow().bold()
+        }
     } else {
         "FAIL".red().bold()
     };
 
-    let mut count_components = vec![format!("{} passed", counts.passed)];
+    let mut count_components = vec![];
+
+    if counts.config_stats.config_errors > 0 {
+        let errors = if config_error_count == 1 {
+            "error"
+        } else {
+            "errors"
+        };
+        count_components.push(format!("{config_error_count} config {errors}"));
+    }
+
+    count_components.push(format!("{} passed", counts.passed));
+
     if counts.failed > 0 {
         count_components.push(format!("{} failed", counts.failed));
     }

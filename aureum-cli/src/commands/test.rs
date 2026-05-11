@@ -1,5 +1,6 @@
 use crate::args::{TerminalSize, TestArgs, TestOutputFormat};
 use crate::commands::common;
+use crate::counts::ConfigStats;
 use crate::exit_code::ExitCode;
 use crate::interactive;
 use crate::load_config_file::LoadConfigFilesResult;
@@ -96,9 +97,15 @@ fn run_tests_interactive(args: TestArgs, current_dir: &Path) -> ExitCode {
         Ok(result) => result,
         Err(err) => return err,
     };
+    let config_stats = config_files.config_stats();
     let all_test_cases = collect_test_cases(&config_files);
 
-    match interactive::run_with_progress_and_review(&all_test_cases, args.parallel, current_dir) {
+    match interactive::run_with_progress_and_review(
+        &all_test_cases,
+        args.parallel,
+        current_dir,
+        config_stats,
+    ) {
         Ok(run_results) => {
             exit_code_from_run_results(&run_results, config_files.has_config_errors())
         }
@@ -162,6 +169,8 @@ fn run_tests_record(args: TestArgs, width: u16, height: u16, current_dir: &Path)
     let run_results =
         aureum::run_test_cases(&all_test_cases, args.parallel, current_dir, &|_, _, _| {});
 
+    let config_stats = config_files.config_stats();
+
     let stdin = io::stdin();
     let stdout = io::stdout();
     if let Err(e) = interactive::run_interactive_updates(
@@ -171,6 +180,7 @@ fn run_tests_record(args: TestArgs, width: u16, height: u16, current_dir: &Path)
         &mut stdout.lock(),
         width,
         height,
+        config_stats,
     ) {
         report::test::print_record_session_failed(&e);
     }
@@ -251,6 +261,7 @@ fn run_tests_noninteractive(args: TestArgs, current_dir: &Path) -> ExitCode {
         current_dir,
         &args.format,
         args.common.verbose,
+        config_files.config_stats(),
     );
 
     let has_config_errors = config_files.has_config_errors();
@@ -269,6 +280,7 @@ fn run_test_cases_noninteractive(
     current_dir: &Path,
     format: &TestOutputFormat,
     verbose: bool,
+    config_stats: ConfigStats,
 ) -> Vec<RunResult> {
     let report_config = ReportConfig {
         number_of_tests: test_cases.len(),
@@ -287,13 +299,13 @@ fn run_test_cases_noninteractive(
         },
     );
 
-    report::test::print_test_cases_end(&report_config, &run_results);
+    report::test::print_test_cases_end(&report_config, &run_results, config_stats);
 
     run_results
 }
 
 fn run_watch_loop(
-    load_test_cases: impl Fn() -> Vec<TestCaseWithExpectations>,
+    load_test_cases: impl Fn() -> (Vec<TestCaseWithExpectations>, ConfigStats),
     parallel: bool,
     current_dir: &Path,
     watch_paths: &BTreeSet<PathBuf>,
@@ -306,8 +318,15 @@ fn run_watch_loop(
     } = watch::start_watcher_for_paths(watch_paths)?;
     report::test::print_watch_started(watched_path_count);
     let format = TestOutputFormat::Summary;
-    let mut last_run_results =
-        run_test_cases_noninteractive(&load_test_cases(), parallel, current_dir, &format, verbose);
+    let (initial_cases, initial_config_stats) = load_test_cases();
+    let mut last_run_results = run_test_cases_noninteractive(
+        &initial_cases,
+        parallel,
+        current_dir,
+        &format,
+        verbose,
+        initial_config_stats,
+    );
 
     let (trigger_tx, trigger_rx) = mpsc::channel::<bool>();
 
@@ -347,12 +366,14 @@ fn run_watch_loop(
             }
         }
         report::test::print_watch_detected_file_changes();
+        let (cases, config_stats) = load_test_cases();
         last_run_results = run_test_cases_noninteractive(
-            &load_test_cases(),
+            &cases,
             parallel,
             current_dir,
             &format,
             verbose,
+            config_stats,
         );
         if quit_pending {
             break;
