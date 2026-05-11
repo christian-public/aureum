@@ -15,7 +15,7 @@ expected_stdout = """
 F
 
 ❌ helpers/non_terminating_with_timeout.toml
-└── Failed to run test
+└── Run error: timed out
 
 Test result: FAIL (0 passed, 1 failed)
 """
@@ -38,7 +38,7 @@ expected_stdout = """
 F
 
 ❌ helpers/non_terminating.toml
-└── Failed to run test
+└── Run error: timed out
 
 Test result: FAIL (0 passed, 1 failed)
 """

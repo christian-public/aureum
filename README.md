@@ -68,10 +68,10 @@ expected_stdout = "Hello world"
 Running the command `aureum test hello.au.toml` will output the following:
 
 ```
-🚀 Running 1 tests:
+🚀 Running 1 test:
 .
 
-Test result: OK (1 passed, 0 failed)
+Test result: OK (1 passed)
 ```
 
 ## Aureum configuration format
@@ -83,7 +83,7 @@ program = ""            # String (Required field)
 program_arguments = []  # List of strings
 stdin = ""              # String
 
-# At least one of the following fields are required
+# At least one of the `expected_` fields are required
 expected_stdout = ""    # String
 expected_stderr = ""    # String
 expected_exit_code = 0  # Integer
@@ -127,7 +127,7 @@ Running the command `aureum test multiple_tests.au.toml` will output the followi
 🚀 Running 2 tests:
 ..
 
-Test result: OK (2 passed, 0 failed)
+Test result: OK (2 passed)
 ```
 
 ## AI usage

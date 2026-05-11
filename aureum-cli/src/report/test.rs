@@ -127,19 +127,16 @@ fn summary_print_test_case(result: &Result<TestResult, RunError>) {
 }
 
 fn summary_print_test_cases_end(run_results: &[RunResult]) {
-    println!(); // Add newline to dots
-
-    let mut is_any_test_cases_printed = false;
+    println!(); // Print newline after dots
 
     for run_result in run_results {
         let test_failed = !run_result.is_success();
         if test_failed {
-            if !is_any_test_cases_printed {
-                println!();
-                is_any_test_cases_printed = true;
-            }
-
-            summary_print_result(run_result);
+            println!(); // Print newline before each failed test
+            println!(
+                "{}",
+                format_test_failure(&run_result.test_case, &run_result.result)
+            );
         }
     }
 
@@ -149,24 +146,17 @@ fn summary_print_test_cases_end(run_results: &[RunResult]) {
     println!("{}", format_summary_line(counts));
 }
 
-fn summary_print_result(run_result: &RunResult) {
-    let message = run_result.test_case.id();
+fn format_test_failure(test_case: &TestCase, result: &Result<TestResult, RunError>) -> String {
+    let nodes = match result {
+        Ok(result) => summary::nodes_from_test_result(result),
+        Err(error) => {
+            vec![Leaf(vec![format!("Run error: {error}")])]
+        }
+    };
 
-    if run_result.is_success() {
-        println!("{} {message}", theme::checkmark());
-    } else {
-        let nodes = match &run_result.result {
-            Ok(result) => summary::nodes_from_test_result(result),
-            Err(_) => {
-                vec![Leaf(vec![String::from("Failed to run test")])]
-            }
-        };
-
-        let test_heading = format!("❌ {message}");
-        let tree = Node(test_heading, nodes);
-        let content = tree.to_string();
-        print!("{content}"); // Already contains newline
-    }
+    let heading = format!("❌ {}", test_case.id());
+    let tree = Node(heading, nodes);
+    tree.to_string().trim_end().to_owned()
 }
 
 fn format_summary_line(counts: TestCounts) -> String {
@@ -176,10 +166,12 @@ fn format_summary_line(counts: TestCounts) -> String {
         "FAIL".red().bold()
     };
 
-    format!(
-        "Test result: {status} ({} passed, {} failed)",
-        counts.passed, counts.failed
-    )
+    let mut count_components = vec![format!("{} passed", counts.passed)];
+    if counts.failed > 0 {
+        count_components.push(format!("{} failed", counts.failed));
+    }
+
+    format!("Test result: {status} ({})", count_components.join(", "))
 }
 
 // TAP HELPERS

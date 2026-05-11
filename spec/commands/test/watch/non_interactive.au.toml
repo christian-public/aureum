@@ -9,7 +9,7 @@ expected_stdout = """
 🚀 Running 1 test:
 .
 
-Test result: OK (1 passed, 0 failed)
+Test result: OK (1 passed)
 """
 expected_stderr = """
 watch: watching 2 paths for changes...
@@ -26,11 +26,11 @@ expected_stdout = """
 🚀 Running 1 test:
 .
 
-Test result: OK (1 passed, 0 failed)
+Test result: OK (1 passed)
 🚀 Running 1 test:
 .
 
-Test result: OK (1 passed, 0 failed)
+Test result: OK (1 passed)
 """
 expected_stderr = """
 watch: watching 2 paths for changes...
@@ -54,7 +54,7 @@ expected_stdout = """
 🚀 Running 1 test:
 .
 
-Test result: OK (1 passed, 0 failed)
+Test result: OK (1 passed)
 """
 expected_stderr = """
 🔍 Found 1 config files

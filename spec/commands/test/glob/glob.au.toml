@@ -12,7 +12,7 @@ expected_stdout = """
 🚀 Running 1 test:
 .
 
-Test result: OK (1 passed, 0 failed)
+Test result: OK (1 passed)
 """
 
 
@@ -24,7 +24,7 @@ expected_stdout = """
 🚀 Running 2 tests:
 ..
 
-Test result: OK (2 passed, 0 failed)
+Test result: OK (2 passed)
 """
 
 
@@ -41,7 +41,7 @@ expected_stdout = """
 🚀 Running 4 tests:
 ....
 
-Test result: OK (4 passed, 0 failed)
+Test result: OK (4 passed)
 """
 
 
@@ -57,5 +57,5 @@ expected_stdout = """
 🚀 Running 2 tests:
 ..
 
-Test result: OK (2 passed, 0 failed)
+Test result: OK (2 passed)
 """

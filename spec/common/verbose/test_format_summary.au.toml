@@ -9,7 +9,7 @@ expected_stdout = """
 🚀 Running 3 tests:
 ...
 
-Test result: OK (3 passed, 0 failed)
+Test result: OK (3 passed)
 """
 expected_stderr = """
 📋 helpers/many_requirements.toml
@@ -43,7 +43,7 @@ expected_stdout = """
 🚀 Running 3 tests:
 ...
 
-Test result: OK (3 passed, 0 failed)
+Test result: OK (3 passed)
 """
 expected_stderr = """
 🔍 Found 2 config files

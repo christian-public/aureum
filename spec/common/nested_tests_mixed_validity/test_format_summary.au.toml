@@ -9,7 +9,7 @@ expected_stdout = """
 🚀 Running 2 tests:
 ..
 
-Test result: OK (2 passed, 0 failed)
+Test result: OK (2 passed)
 """
 expected_stderr = ""
 expected_exit_code = 0
@@ -28,7 +28,7 @@ expected_stdout = """
 🚀 Running 1 test:
 .
 
-Test result: OK (1 passed, 0 failed)
+Test result: OK (1 passed)
 """
 expected_stderr = ""
 expected_exit_code = 0
@@ -47,7 +47,7 @@ expected_stdout = """
 🚀 Running 1 test:
 .
 
-Test result: OK (1 passed, 0 failed)
+Test result: OK (1 passed)
 """
 expected_stderr = """
 📋 helpers/missing_program_on_test2.toml
@@ -74,7 +74,7 @@ expected_stdout = """
 🚀 Running 1 test:
 .
 
-Test result: OK (1 passed, 0 failed)
+Test result: OK (1 passed)
 """
 expected_stderr = """
 📋 helpers/missing_program_on_test2.toml
@@ -101,7 +101,7 @@ expected_stdout = """
 🚀 Running 0 tests:
 
 
-Test result: OK (0 passed, 0 failed)
+Test result: OK (0 passed)
 """
 expected_stderr = """
 📋 helpers/missing_program_on_all_tests.toml
@@ -130,7 +130,7 @@ expected_stdout = """
 🚀 Running 0 tests:
 
 
-Test result: OK (0 passed, 0 failed)
+Test result: OK (0 passed)
 """
 expected_stderr = """
 📋 helpers/missing_program_on_all_tests.toml
@@ -154,7 +154,7 @@ expected_stdout = """
 🚀 Running 3 tests:
 ...
 
-Test result: OK (3 passed, 0 failed)
+Test result: OK (3 passed)
 """
 expected_stderr = """
 📋 helpers/missing_program_on_all_tests.toml

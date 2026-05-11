@@ -10,7 +10,7 @@ expected_stdout = """
 🚀 Running 2 tests:
 ..
 
-Test result: OK (2 passed, 0 failed)
+Test result: OK (2 passed)
 """
 expected_stderr = ""
 expected_exit_code = 0
