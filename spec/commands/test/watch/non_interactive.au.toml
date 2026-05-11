@@ -54,6 +54,8 @@ expected_stdout = """
 🚀 Running 1 test:
 .
 
+✔ helpers/passing.toml
+
 Test result: OK (1 passed)
 """
 expected_stderr = """

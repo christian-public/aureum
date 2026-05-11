@@ -210,7 +210,13 @@ fn run_tests_noninteractive_watch(args: TestArgs, current_dir: &Path) -> ExitCod
     let reload_fn =
         move || watch::load_test_cases_for_watch(&reload_paths, &reload_dir, default_timeout);
 
-    match run_watch_loop(&reload_fn, args.parallel, current_dir, &watch_paths) {
+    match run_watch_loop(
+        &reload_fn,
+        args.parallel,
+        current_dir,
+        &watch_paths,
+        args.common.verbose,
+    ) {
         Ok(run_results) => {
             exit_code_from_run_results(&run_results, config_files.has_config_errors())
         }
@@ -241,8 +247,13 @@ fn run_tests_noninteractive(args: TestArgs, current_dir: &Path) -> ExitCode {
 
     let all_test_cases = collect_test_cases(&config_files);
 
-    let run_results =
-        run_test_cases_noninteractive(&all_test_cases, args.parallel, current_dir, &args.format);
+    let run_results = run_test_cases_noninteractive(
+        &all_test_cases,
+        args.parallel,
+        current_dir,
+        &args.format,
+        args.common.verbose,
+    );
 
     if has_config_errors {
         report::validate::print_config_files_contain_errors();
@@ -258,10 +269,12 @@ fn run_test_cases_noninteractive(
     parallel: bool,
     current_dir: &Path,
     format: &TestOutputFormat,
+    verbose: bool,
 ) -> Vec<RunResult> {
     let report_config = ReportConfig {
         number_of_tests: test_cases.len(),
         format: get_report_format(format),
+        verbose,
     };
 
     report::test::print_test_cases_start(&report_config);
@@ -285,6 +298,7 @@ fn run_watch_loop(
     parallel: bool,
     current_dir: &Path,
     watch_paths: &BTreeSet<PathBuf>,
+    verbose: bool,
 ) -> io::Result<Vec<RunResult>> {
     let watch::WatchHandle {
         receiver: watch_rx,
@@ -294,7 +308,7 @@ fn run_watch_loop(
     report::test::print_watch_started(watched_path_count);
     let format = TestOutputFormat::Summary;
     let mut last_run_results =
-        run_test_cases_noninteractive(&load_test_cases(), parallel, current_dir, &format);
+        run_test_cases_noninteractive(&load_test_cases(), parallel, current_dir, &format, verbose);
 
     let (trigger_tx, trigger_rx) = mpsc::channel::<bool>();
 
@@ -334,8 +348,13 @@ fn run_watch_loop(
             }
         }
         report::test::print_watch_detected_file_changes();
-        last_run_results =
-            run_test_cases_noninteractive(&load_test_cases(), parallel, current_dir, &format);
+        last_run_results = run_test_cases_noninteractive(
+            &load_test_cases(),
+            parallel,
+            current_dir,
+            &format,
+            verbose,
+        );
         if quit_pending {
             break;
         }

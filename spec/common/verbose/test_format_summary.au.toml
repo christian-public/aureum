@@ -43,6 +43,10 @@ expected_stdout = """
 🚀 Running 3 tests:
 ...
 
+✔ helpers/many_requirements.toml:env_var_exists
+✔ helpers/many_requirements.toml:external_file_exists
+✔ helpers/no_requirements.toml
+
 Test result: OK (3 passed)
 """
 expected_stderr = """

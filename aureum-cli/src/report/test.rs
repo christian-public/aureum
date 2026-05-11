@@ -17,6 +17,7 @@ pub enum ReportFormat {
 pub struct ReportConfig {
     pub number_of_tests: usize,
     pub format: ReportFormat,
+    pub verbose: bool,
 }
 
 pub fn print_watch_started(count: usize) {
@@ -90,7 +91,7 @@ pub fn print_test_case(
 pub fn print_test_cases_end(report_config: &ReportConfig, run_results: &[RunResult]) {
     match report_config.format {
         ReportFormat::Summary => {
-            summary_print_test_cases_end(run_results);
+            summary_print_test_cases_end(run_results, report_config.verbose);
         }
         ReportFormat::Tap => {
             tap_print_test_cases_end();
@@ -126,24 +127,36 @@ fn summary_print_test_case(result: &Result<TestResult, RunError>) {
     let _ = io::Write::flush(&mut io::stdout());
 }
 
-fn summary_print_test_cases_end(run_results: &[RunResult]) {
+fn summary_print_test_cases_end(run_results: &[RunResult], verbose: bool) {
     println!(); // Print newline after dots
 
-    for run_result in run_results {
-        let test_failed = !run_result.is_success();
-        if test_failed {
-            println!(); // Print newline before each failed test
-            println!(
-                "{}",
-                format_test_failure(&run_result.test_case, &run_result.result)
-            );
+    let (passed_tests, failed_tests): (Vec<_>, Vec<_>) =
+        run_results.iter().partition(|x| x.is_success());
+
+    if verbose && !passed_tests.is_empty() {
+        println!(); // Print newline before all the tests
+
+        for passed_test in passed_tests {
+            println!("{}", format_test_success(&passed_test.test_case));
         }
+    }
+
+    for failed_test in failed_tests {
+        println!(); // Print newline before each failed test
+        println!(
+            "{}",
+            format_test_failure(&failed_test.test_case, &failed_test.result)
+        );
     }
 
     let counts = TestCounts::from_results(run_results);
 
     println!();
     println!("{}", format_summary_line(counts));
+}
+
+fn format_test_success(test_case: &TestCase) -> String {
+    format!("{} {}", theme::checkmark(), test_case.id())
 }
 
 fn format_test_failure(test_case: &TestCase, result: &Result<TestResult, RunError>) -> String {
