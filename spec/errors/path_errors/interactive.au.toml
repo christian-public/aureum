@@ -1,0 +1,39 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+
+[[tests]]
+id = "missing_config"
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "aureum_test_this_file_does_not_exist",
+]
+
+expected_stdout = ""
+expected_stderr = """
+warning: invalid paths to config files:
+aureum_test_this_file_does_not_exist
+
+error: no config files found for the given paths
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "missing_config_with_test_id"
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "aureum_test_this_file_does_not_exist:sub1",
+]
+
+expected_stdout = ""
+expected_stderr = """
+warning: invalid paths to config files:
+aureum_test_this_file_does_not_exist:sub1
+
+error: no config files found for the given paths
+"""
+expected_exit_code = 3
