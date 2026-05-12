@@ -21,7 +21,7 @@ program_arguments = [
     "--format",
     "passthrough",
     "--verbose",
-    "--hide-absolute-paths",
+    "--stable-output",
     "helpers/*.toml",
 ]
 

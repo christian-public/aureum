@@ -38,7 +38,7 @@ program_arguments = [
     "--format",
     "tap",
     "--verbose",
-    "--hide-absolute-paths",
+    "--stable-output",
     "helpers/*.toml",
 ]
 

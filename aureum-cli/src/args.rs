@@ -136,7 +136,7 @@ pub struct TestArgs {
     pub interactive: bool,
 
     /// Record TUI frames to stdout using a headless terminal of the given size (format: WxH).
-    /// Reads key names from stdin (one per line). Implies --interactive.
+    /// Reads key names from stdin (one per line). Implies `--interactive` and `--stable-output`.
     #[arg(long, value_name = "WxH", hide = true)]
     pub record: Option<TerminalSize>,
 
@@ -151,9 +151,14 @@ pub struct CommonArgs {
     #[arg(long)]
     pub verbose: bool,
 
-    /// Replace absolute paths with a platform-independent placeholder
-    #[arg(long, hide = true)]
-    pub hide_absolute_paths: bool,
+    /// Make all output deterministic by:
+    /// - Replacing absolute paths with a platform-independent placeholder.
+    #[arg(
+        long,
+        default_value_if("record", ArgPredicate::IsPresent, "true"),
+        hide = true
+    )]
+    pub stable_output: bool,
 }
 
 #[derive(Clone)]

@@ -58,13 +58,13 @@ fn run_tests_interactive_watch(args: TestArgs, current_dir: &Path) -> ExitCode {
         report::validate::print_watch_files_verbose(
             &watch_paths,
             current_dir,
-            args.common.hide_absolute_paths,
+            args.common.stable_output,
         );
     }
     report::validate::print_config_details_if_needed(
         &config_files.loaded,
         args.common.verbose,
-        args.common.hide_absolute_paths,
+        args.common.stable_output,
     );
 
     let reload_paths = args.paths;
@@ -206,13 +206,13 @@ fn run_tests_noninteractive_watch(args: TestArgs, current_dir: &Path) -> ExitCod
         report::validate::print_watch_files_verbose(
             &watch_paths,
             current_dir,
-            args.common.hide_absolute_paths,
+            args.common.stable_output,
         );
     }
     report::validate::print_config_details_if_needed(
         &config_files.loaded,
         args.common.verbose,
-        args.common.hide_absolute_paths,
+        args.common.stable_output,
     );
 
     let reload_paths = args.paths;
@@ -250,7 +250,7 @@ fn run_tests_noninteractive(args: TestArgs, current_dir: &Path) -> ExitCode {
     report::validate::print_config_details_if_needed(
         &config_files.loaded,
         args.common.verbose,
-        args.common.hide_absolute_paths,
+        args.common.stable_output,
     );
 
     let all_test_cases = collect_test_cases(&config_files);

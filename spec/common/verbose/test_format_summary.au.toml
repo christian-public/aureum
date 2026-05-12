@@ -32,12 +32,7 @@ expected_exit_code = 3
 
 [[tests]]
 id = "with_verbose"
-program_arguments = [
-    "test",
-    "--verbose",
-    "--hide-absolute-paths",
-    "helpers/*.toml",
-]
+program_arguments = ["test", "--verbose", "--stable-output", "helpers/*.toml"]
 
 expected_stdout = """
 🚀 Running 3 tests:

@@ -33,7 +33,7 @@ id = "with_verbose"
 program_arguments = [
     "validate",
     "--verbose",
-    "--hide-absolute-paths",
+    "--stable-output",
     "helpers/*.toml",
 ]
 

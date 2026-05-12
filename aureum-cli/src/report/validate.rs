@@ -23,7 +23,7 @@ pub enum ReportValidateResult {
 pub fn print_config_details_if_needed(
     loaded: &BTreeMap<RelativePathBuf, LoadedConfigFile>,
     verbose: bool,
-    hide_absolute_paths: bool,
+    stable_paths: bool,
 ) {
     for (config_file_path, loaded_config_file) in loaded {
         if loaded_config_file.has_config_errors() || verbose {
@@ -35,7 +35,7 @@ pub fn print_config_details_if_needed(
                 &loaded_config_file.watch_files,
                 &loaded_config_file.watch_file_errors,
                 verbose,
-                hide_absolute_paths,
+                stable_paths,
             );
         }
     }
@@ -107,11 +107,11 @@ pub fn print_config_files_found(config_file_paths: &[RelativePathBuf]) {
 pub fn print_watch_files_verbose<'a>(
     watch_paths: impl IntoIterator<Item = &'a PathBuf>,
     current_dir: &Path,
-    hide_absolute_paths: bool,
+    stable_paths: bool,
 ) {
     let mut display_paths: Vec<String> = watch_paths
         .into_iter()
-        .map(|p| format_watch_path(p, current_dir, hide_absolute_paths))
+        .map(|p| format_watch_path(p, current_dir, stable_paths))
         .collect();
     display_paths.sort();
     let n = display_paths.len();
@@ -124,14 +124,14 @@ pub fn print_watch_files_verbose<'a>(
     print_tree(tree);
 }
 
-fn format_watch_path(path: &Path, current_dir: &Path, hide_absolute_paths: bool) -> String {
+fn format_watch_path(path: &Path, current_dir: &Path, stable_paths: bool) -> String {
     // Prefer showing a path relative to current_dir; fall back to absolute.
     if let Ok(rel) = path.strip_prefix(current_dir)
         && let Ok(relative) = RelativePathBuf::from_path(rel)
     {
         return relative.to_string();
     }
-    if hide_absolute_paths {
+    if stable_paths {
         file::display_path(path)
     } else {
         path.display().to_string()
@@ -147,7 +147,7 @@ pub fn print_config_details(
     watch_files: &BTreeSet<String>,
     watch_file_errors: &BTreeSet<ValidationError>,
     verbose: bool,
-    hide_absolute_paths: bool,
+    stable_paths: bool,
 ) {
     let mut tests = vec![];
 
@@ -167,7 +167,7 @@ pub fn print_config_details(
                     requested_program: _,
                     resolved_path,
                 } => {
-                    let path = if hide_absolute_paths {
+                    let path = if stable_paths {
                         file::display_path(resolved_path)
                     } else {
                         resolved_path.display().to_string()

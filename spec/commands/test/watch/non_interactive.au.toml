@@ -46,7 +46,7 @@ program_arguments = [
     "test",
     "--watch",
     "--verbose",
-    "--hide-absolute-paths",
+    "--stable-output",
     "helpers/passing.toml",
 ]
 

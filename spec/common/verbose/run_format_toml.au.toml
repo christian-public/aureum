@@ -57,7 +57,7 @@ program_arguments = [
     "--format",
     "toml",
     "--verbose",
-    "--hide-absolute-paths",
+    "--stable-output",
     "helpers/*.toml",
 ]
 

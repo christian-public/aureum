@@ -49,7 +49,7 @@ pub fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
                     report::validate::print_config_details_if_needed(
                         &config_files.loaded,
                         args.common.verbose,
-                        args.common.hide_absolute_paths,
+                        args.common.stable_output,
                     );
 
                     report::validate::print_config_files_contain_errors();
@@ -62,7 +62,7 @@ pub fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
             report::validate::print_config_details_if_needed(
                 &config_files.loaded,
                 args.common.verbose,
-                args.common.hide_absolute_paths,
+                args.common.stable_output,
             );
 
             let any_programs_failed_to_run =

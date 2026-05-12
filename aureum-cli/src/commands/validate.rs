@@ -20,7 +20,7 @@ pub fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode
     report::validate::print_config_details_if_needed(
         &config_files.loaded,
         args.common.verbose,
-        args.common.hide_absolute_paths,
+        args.common.stable_output,
     );
 
     let table_entries =
