@@ -5,6 +5,7 @@ use toml_edit::DocumentMut;
 
 const ROOT_FIELD_ORDER: &[&str] = &[
     "watch_files",
+    "skip",
     "program",
     "program_arguments",
     "stdin",
@@ -16,6 +17,7 @@ const ROOT_FIELD_ORDER: &[&str] = &[
 
 const TEST_FIELD_ORDER: &[&str] = &[
     "id",
+    "skip",
     "program",
     "program_arguments",
     "stdin",
@@ -497,6 +499,46 @@ mod tests {
             watch_files = ["src/*.rs"]
 
             program = "echo"
+
+            expected_stdout = "hello"
+        "#};
+        assert_eq!(format_content(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn skip_field_is_ordered_before_program() {
+        let input = indoc! {r#"
+            program = "echo"
+            expected_stdout = "hello"
+            skip = "not ready"
+        "#};
+        let expected = indoc! {r#"
+            skip = "not ready"
+            program = "echo"
+
+            expected_stdout = "hello"
+        "#};
+        assert_eq!(format_content(input).unwrap(), expected);
+    }
+
+    #[test]
+    fn skip_field_in_subtest_is_ordered_after_id() {
+        let input = indoc! {r#"
+            program = "echo"
+
+
+            [[tests]]
+            expected_stdout = "hello"
+            skip = "not ready"
+            id = "t1"
+        "#};
+        let expected = indoc! {r#"
+            program = "echo"
+
+
+            [[tests]]
+            id = "t1"
+            skip = "not ready"
 
             expected_stdout = "hello"
         "#};
