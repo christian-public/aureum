@@ -27,9 +27,11 @@ use std::time::{Duration, Instant};
 
 type TuiSessionResult = (Vec<RunResult>, Vec<(usize, FieldDecisions)>);
 
-/// Headless TUI review session used by `--record`. Renders each failing test's diff view
-/// into a `TestBackend` of size `width × height`. Key names are read from `reader` (one per
-/// line) and the resulting frames are written to `writer`, separated by `---`.
+/// Headless TUI review session used by `--record`. Renders the final progress frame followed
+/// by each failing test's diff view into a `TestBackend` of size `width × height`. Key names
+/// are read from `reader` (one per line) and the resulting frames are written to `writer`,
+/// separated by `---`.
+#[allow(clippy::too_many_arguments)]
 pub fn run_interactive_updates<R, W>(
     run_results: &[RunResult],
     current_dir: &Path,
@@ -38,11 +40,22 @@ pub fn run_interactive_updates<R, W>(
     width: u16,
     height: u16,
     config_stats: ConfigStats,
+    stable_duration: Duration,
 ) -> io::Result<()>
 where
     R: BufRead,
     W: Write,
 {
+    progress_view::record_final_progress_frame(
+        run_results,
+        config_stats,
+        width,
+        height,
+        stable_duration,
+        writer,
+        false,
+    )?;
+
     let failed: Vec<&RunResult> = run_results.iter().filter(|r| !r.is_success()).collect();
 
     let total = failed.len();
@@ -58,7 +71,7 @@ where
         height,
         reader,
         writer,
-        emit_separator: false,
+        emit_separator: true,
         watch_mode: false,
     };
     review_loop::run_review_loop(&failed, &mut past_decisions, counts, &mut driver)?;
@@ -549,6 +562,7 @@ mod tests {
             80,
             20,
             ConfigStats::default(),
+            std::time::Duration::ZERO,
         )
         .unwrap();
 

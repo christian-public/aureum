@@ -5,17 +5,56 @@ use crate::interactive::utils::widgets;
 use crate::utils::time;
 use aureum::{RunResult, TestCaseWithExpectations, run_test_cases};
 use crossterm::event::{Event, KeyEventKind};
-use ratatui::backend::CrosstermBackend;
+use ratatui::backend::{CrosstermBackend, TestBackend};
 use ratatui::layout::{Alignment, Constraint, Direction, Layout};
 use ratatui::style::{Color, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph};
 use ratatui::{Frame, Terminal};
-use std::io;
+use std::io::{self, Write};
 use std::path::Path;
 use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
+
+/// Renders the completed progress frame to a `TestBackend` and writes it to `writer`.
+/// Used in `--record` mode to capture the final progress state before the review session.
+pub(crate) fn record_final_progress_frame<W: Write>(
+    run_results: &[RunResult],
+    config_stats: ConfigStats,
+    width: u16,
+    height: u16,
+    elapsed: Duration,
+    writer: &mut W,
+    separator: bool,
+) -> io::Result<()> {
+    let total = run_results.len();
+    let passed = run_results.iter().filter(|r| r.is_success()).count();
+    let failed = total - passed;
+
+    let backend = TestBackend::new(width, height);
+    let mut terminal = Terminal::new(backend).map_err(io::Error::other)?;
+    terminal
+        .draw(|frame| render_progress(frame, total, passed, failed, elapsed, false, config_stats))
+        .map_err(io::Error::other)?;
+
+    let buffer = terminal.backend().buffer().clone();
+    let content = buffer.content();
+    let w = width as usize;
+    let mut lines = Vec::with_capacity(height as usize);
+    for y in 0..height as usize {
+        let mut line = String::with_capacity(w);
+        for x in 0..w {
+            line.push_str(content[y * w + x].symbol());
+        }
+        lines.push(line.trim_end().to_string());
+    }
+
+    if separator {
+        writeln!(writer, "---")?;
+    }
+    writeln!(writer, "{}", lines.join("\n"))
+}
 
 /// Returns `Some(results)` when all tests complete, or `None` if the user pressed q.
 /// On quit the background thread is detached; the caller should `process::exit` after cleanup.

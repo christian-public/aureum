@@ -183,6 +183,10 @@ fn run_tests_record(args: TestArgs, width: u16, height: u16, current_dir: &Path)
         width,
         height,
         config_stats,
+        args.common
+            .stable_output()
+            .map(|s| s.duration)
+            .unwrap_or_default(),
     ) {
         report::test::print_record_session_failed(&e);
     }
