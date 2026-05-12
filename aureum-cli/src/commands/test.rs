@@ -76,6 +76,7 @@ fn run_tests_interactive_watch(args: TestArgs, current_dir: &Path) -> ExitCode {
         args.parallel,
         current_dir,
         &watch_paths,
+        args.common.stable_output().map(|s| s.duration),
     ) {
         Ok(run_results) => {
             exit_code_from_run_results(&run_results, config_files.has_config_errors())
@@ -105,6 +106,7 @@ fn run_tests_interactive(args: TestArgs, current_dir: &Path) -> ExitCode {
         args.parallel,
         current_dir,
         config_stats,
+        args.common.stable_output().map(|s| s.duration),
     ) {
         Ok(run_results) => {
             exit_code_from_run_results(&run_results, config_files.has_config_errors())

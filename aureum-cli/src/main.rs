@@ -16,6 +16,7 @@ mod format;
 mod init;
 mod interactive;
 mod load_config_file;
+mod stable_output;
 mod watch;
 
 use crate::args::{CLI_BINARY_NAME, Command};

@@ -1,3 +1,4 @@
+use crate::stable_output::StableOutput;
 use clap::builder::ArgPredicate;
 use clap::{Args, Parser, Subcommand};
 use std::path::PathBuf;
@@ -153,12 +154,19 @@ pub struct CommonArgs {
 
     /// Make all output deterministic by:
     /// - Replacing absolute paths with a platform-independent placeholder.
+    /// - Replacing durations with a specific value.
     #[arg(
         long,
         default_value_if("record", ArgPredicate::IsPresent, "true"),
         hide = true
     )]
     pub stable_output: bool,
+}
+
+impl CommonArgs {
+    pub fn stable_output(&self) -> Option<StableOutput> {
+        self.stable_output.then(StableOutput::default)
+    }
 }
 
 #[derive(Clone)]

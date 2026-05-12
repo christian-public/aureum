@@ -23,7 +23,7 @@ use review_loop::{HeadlessDriver, LiveDriver, ReviewOutcome};
 use std::io::{self, BufRead, Write};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::Receiver;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 type TuiSessionResult = (Vec<RunResult>, Vec<(usize, FieldDecisions)>);
 
@@ -219,6 +219,7 @@ pub fn run_with_progress_review_and_watch<'a>(
     parallel: bool,
     current_dir: &Path,
     watch_paths: impl IntoIterator<Item = &'a PathBuf>,
+    stable_duration: Option<Duration>,
 ) -> io::Result<Vec<RunResult>> {
     let watch_handle = watch::start_watcher_for_paths(watch_paths)?;
 
@@ -234,6 +235,7 @@ pub fn run_with_progress_review_and_watch<'a>(
         parallel,
         current_dir,
         &watch_handle.receiver,
+        stable_duration,
     );
 
     let _ = crossterm::terminal::disable_raw_mode();
@@ -249,6 +251,7 @@ fn run_watch_interactive_loop(
     parallel: bool,
     current_dir: &Path,
     change_rx: &Receiver<usize>,
+    stable_duration: Option<Duration>,
 ) -> io::Result<Option<Vec<RunResult>>> {
     'rerun: loop {
         let (test_cases, config_stats) = load_test_cases();
@@ -260,6 +263,7 @@ fn run_watch_interactive_loop(
             parallel,
             current_dir,
             config_stats,
+            stable_duration,
         )?
         else {
             return Ok(None); // user pressed q during progress
@@ -375,6 +379,7 @@ pub fn run_with_progress_and_review(
     parallel: bool,
     current_dir: &Path,
     config_stats: ConfigStats,
+    stable_duration: Option<Duration>,
 ) -> io::Result<Vec<RunResult>> {
     crossterm::terminal::enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -388,6 +393,7 @@ pub fn run_with_progress_and_review(
         parallel,
         current_dir,
         config_stats,
+        stable_duration,
     );
 
     let _ = crossterm::terminal::disable_raw_mode();
@@ -415,6 +421,7 @@ fn run_tui_session(
     parallel: bool,
     current_dir: &Path,
     config_stats: ConfigStats,
+    stable_duration: Option<Duration>,
 ) -> io::Result<Option<TuiSessionResult>> {
     let Some(run_results) = progress_view::run_tests_with_progress(
         terminal,
@@ -422,6 +429,7 @@ fn run_tui_session(
         parallel,
         current_dir,
         config_stats,
+        stable_duration,
     )?
     else {
         return Ok(None); // user quit; background thread detached

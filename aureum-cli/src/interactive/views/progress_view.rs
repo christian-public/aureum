@@ -25,6 +25,7 @@ pub(crate) fn run_tests_with_progress(
     parallel: bool,
     current_dir: &Path,
     config_stats: ConfigStats,
+    stable_duration: Option<Duration>,
 ) -> io::Result<Option<Vec<RunResult>>> {
     let total = test_cases.len();
     let (progress_tx, progress_rx) = mpsc::channel::<bool>();
@@ -74,7 +75,7 @@ pub(crate) fn run_tests_with_progress(
                     total,
                     passed,
                     failed,
-                    start.elapsed(),
+                    stable_duration.unwrap_or_else(|| start.elapsed()),
                     false,
                     config_stats,
                 )
@@ -97,7 +98,7 @@ pub(crate) fn run_tests_with_progress(
                                 total,
                                 passed,
                                 failed,
-                                start.elapsed(),
+                                stable_duration.unwrap_or_else(|| start.elapsed()),
                                 true,
                                 config_stats,
                             )
