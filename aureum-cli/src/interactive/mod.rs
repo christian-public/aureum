@@ -506,18 +506,12 @@ fn accepted_field_names(decisions: &FieldDecisions) -> String {
 mod tests {
     use super::utils::test_helpers::{TempDir, make_test_case_root};
     use super::*;
-    use aureum::{TestCase, TestCaseExpectations, TestResult, ValueComparison};
+    use aureum::{TestCase, TestResult, ValueComparison};
     use std::io::Cursor;
 
-    fn failing_run_result_stdout(
-        test_case: TestCase,
-        expectations: TestCaseExpectations,
-        expected: &str,
-        got: &str,
-    ) -> RunResult {
+    fn failing_run_result_stdout(test_case: TestCase, expected: &str, got: &str) -> RunResult {
         RunResult {
             test_case,
-            expectations,
             result: Ok(TestResult {
                 stdout: ValueComparison::Diff {
                     expected: expected.to_string(),
@@ -539,17 +533,7 @@ mod tests {
         );
 
         let tc = make_test_case_root("", "test.toml");
-        let expectations = TestCaseExpectations {
-            stdout: Some("expected".to_string()),
-            stderr: None,
-            exit_code: None,
-        };
-        let results = vec![failing_run_result_stdout(
-            tc,
-            expectations,
-            "wrong\n",
-            "actual\n",
-        )];
+        let results = vec![failing_run_result_stdout(tc, "wrong\n", "actual\n")];
 
         let mut input = Cursor::new(b"a\nenter\n");
         let mut output = Vec::<u8>::new();

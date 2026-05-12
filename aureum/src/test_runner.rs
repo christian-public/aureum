@@ -1,4 +1,4 @@
-use crate::test_case::{TestCase, TestCaseExpectations, TestCaseWithExpectations};
+use crate::test_case::{TestCase, TestCaseWithExpectations};
 use crate::test_result::{TestResult, ValueComparison};
 use crate::utils::string;
 use rayon::prelude::*;
@@ -19,7 +19,6 @@ pub struct ProgramOutput {
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct RunResult {
     pub test_case: TestCase,
-    pub expectations: TestCaseExpectations,
     pub result: Result<TestResult, RunError>,
 }
 
@@ -59,7 +58,6 @@ pub fn run_test_cases(
 
         RunResult {
             test_case: entry.test_case.clone(),
-            expectations: entry.expectations.clone(),
             result,
         }
     };
