@@ -1,4 +1,4 @@
-use aureum::{TestResult, ValueComparison, diff, string};
+use aureum::{FieldOutcome, TestOutcome, diff, string};
 use ratatui::style::{Color, Style};
 use ratatui::text::{Line, Span};
 
@@ -13,11 +13,11 @@ pub(super) enum Side {
 }
 
 /// True when the given field has an expected value configured in the test.
-pub(super) fn is_field_configured(test_result: &TestResult, field: Field) -> bool {
+pub(super) fn is_field_configured(test_outcome: &TestOutcome, field: Field) -> bool {
     match field {
-        Field::Stdout => !matches!(test_result.stdout, ValueComparison::NotChecked(_)),
-        Field::Stderr => !matches!(test_result.stderr, ValueComparison::NotChecked(_)),
-        Field::ExitCode => !matches!(test_result.exit_code, ValueComparison::NotChecked(_)),
+        Field::Stdout => !matches!(test_outcome.stdout, FieldOutcome::NotChecked(_)),
+        Field::Stderr => !matches!(test_outcome.stderr, FieldOutcome::NotChecked(_)),
+        Field::ExitCode => !matches!(test_outcome.exit_code, FieldOutcome::NotChecked(_)),
         Field::Stdin => false,
     }
 }
@@ -25,95 +25,95 @@ pub(super) fn is_field_configured(test_result: &TestResult, field: Field) -> boo
 /// Dispatches to the Expected/Got or Diff content builder based on `active_tab`.
 /// When the field is unconfigured, always uses the Got view regardless of `active_tab`.
 pub(super) fn build_content(
-    test_result: &TestResult,
+    test_outcome: &TestOutcome,
     active_field: Field,
     stdin: Option<&str>,
     active_tab: Tab,
 ) -> Vec<Line<'static>> {
-    let effective_tab = if !is_field_configured(test_result, active_field) {
+    let effective_tab = if !is_field_configured(test_outcome, active_field) {
         Tab::Got
     } else {
         active_tab
     };
     match effective_tab {
         Tab::Expected => {
-            build_expected_or_got_content(test_result, active_field, stdin, Side::Expected)
+            build_expected_or_got_content(test_outcome, active_field, stdin, Side::Expected)
         }
-        Tab::Got => build_expected_or_got_content(test_result, active_field, stdin, Side::Got),
-        Tab::Diff => build_diff_content(test_result, active_field),
+        Tab::Got => build_expected_or_got_content(test_outcome, active_field, stdin, Side::Got),
+        Tab::Diff => build_diff_content(test_outcome, active_field),
     }
 }
 
 fn build_expected_or_got_content(
-    test_result: &TestResult,
+    test_outcome: &TestOutcome,
     active_field: Field,
     stdin: Option<&str>,
     side: Side,
 ) -> Vec<Line<'static>> {
     match active_field {
-        Field::Stdout => build_text_view(side, &test_result.stdout),
-        Field::Stderr => build_text_view(side, &test_result.stderr),
+        Field::Stdout => build_text_view(side, &test_outcome.stdout),
+        Field::Stderr => build_text_view(side, &test_outcome.stderr),
         Field::ExitCode => match side {
-            Side::Expected => match &test_result.exit_code {
-                ValueComparison::Diff { expected, .. } | ValueComparison::Matches(expected) => {
+            Side::Expected => match &test_outcome.exit_code {
+                FieldOutcome::Diff { expected, .. } | FieldOutcome::Matches(expected) => {
                     vec![Line::from(format!("  {expected}"))]
                 }
-                ValueComparison::NotChecked(_) => {
+                FieldOutcome::NotChecked(_) => {
                     unreachable!("Expected view is only shown for configured fields")
                 }
             },
-            Side::Got => vec![Line::from(format!("  {}", test_result.exit_code.got()))],
+            Side::Got => vec![Line::from(format!("  {}", test_outcome.exit_code.got()))],
         },
         Field::Stdin => format_stdin_content(stdin),
     }
 }
 
-/// Renders a string `ValueComparison` as Expected (left-column line numbers) or Got
+/// Renders a `FieldOutcome<String>` as Expected (left-column line numbers) or Got
 /// (right-column line numbers). Exit code and stdin are handled by the caller.
-fn build_text_view(side: Side, comparison: &ValueComparison<String>) -> Vec<Line<'static>> {
+fn build_text_view(side: Side, field_outcome: &FieldOutcome<String>) -> Vec<Line<'static>> {
     match side {
-        Side::Expected => match comparison {
-            ValueComparison::Diff { expected, got } => {
+        Side::Expected => match field_outcome {
+            FieldOutcome::Diff { expected, got } => {
                 styled_lines_left(expected, diff::diff_column_width(expected, got))
             }
-            ValueComparison::Matches(value) => {
+            FieldOutcome::Matches(value) => {
                 styled_lines_left(value, string::displayed_line_count(value).to_string().len())
             }
-            ValueComparison::NotChecked(_) => {
+            FieldOutcome::NotChecked(_) => {
                 unreachable!("Expected view is only shown for configured fields")
             }
         },
-        Side::Got => match comparison {
-            ValueComparison::Diff { expected, got } => {
+        Side::Got => match field_outcome {
+            FieldOutcome::Diff { expected, got } => {
                 styled_lines_right(got, diff::diff_column_width(expected, got))
             }
-            ValueComparison::Matches(got) | ValueComparison::NotChecked(got) => {
+            FieldOutcome::Matches(got) | FieldOutcome::NotChecked(got) => {
                 styled_lines_right(got, string::displayed_line_count(got).to_string().len())
             }
         },
     }
 }
 
-fn build_text_diff(comparison: &ValueComparison<String>) -> Vec<Line<'static>> {
-    match comparison {
-        ValueComparison::Diff { expected, got } => diff_lines_colored(expected, got),
-        ValueComparison::Matches(_) => vec![Line::from(vec![
+fn build_text_diff(field_outcome: &FieldOutcome<String>) -> Vec<Line<'static>> {
+    match field_outcome {
+        FieldOutcome::Diff { expected, got } => diff_lines_colored(expected, got),
+        FieldOutcome::Matches(_) => vec![Line::from(vec![
             Span::raw("  "),
             theme::success_span(),
             Span::raw(" No difference"),
         ])],
-        ValueComparison::NotChecked(_) => {
+        FieldOutcome::NotChecked(_) => {
             unreachable!("Diff view is only shown for configured fields")
         }
     }
 }
 
-fn build_diff_content(test_result: &TestResult, active_field: Field) -> Vec<Line<'static>> {
+fn build_diff_content(test_outcome: &TestOutcome, active_field: Field) -> Vec<Line<'static>> {
     match active_field {
-        Field::Stdout => build_text_diff(&test_result.stdout),
-        Field::Stderr => build_text_diff(&test_result.stderr),
-        Field::ExitCode => match &test_result.exit_code {
-            ValueComparison::Diff { expected, got } => {
+        Field::Stdout => build_text_diff(&test_outcome.stdout),
+        Field::Stderr => build_text_diff(&test_outcome.stderr),
+        Field::ExitCode => match &test_outcome.exit_code {
+            FieldOutcome::Diff { expected, got } => {
                 vec![
                     Line::from(vec![
                         Span::styled("  Expected: ", theme::dim()),
@@ -125,12 +125,12 @@ fn build_diff_content(test_result: &TestResult, active_field: Field) -> Vec<Line
                     ]),
                 ]
             }
-            ValueComparison::Matches(_) => vec![Line::from(vec![
+            FieldOutcome::Matches(_) => vec![Line::from(vec![
                 Span::raw("  "),
                 theme::success_span(),
                 Span::raw(" No difference"),
             ])],
-            ValueComparison::NotChecked(_) => {
+            FieldOutcome::NotChecked(_) => {
                 unreachable!("Diff view is only shown for configured fields")
             }
         },

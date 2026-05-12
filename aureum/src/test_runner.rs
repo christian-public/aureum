@@ -1,5 +1,5 @@
 use crate::test_case::{TestCase, TestCaseWithExpectations};
-use crate::test_result::{TestResult, ValueComparison};
+use crate::test_outcome::{FieldOutcome, TestOutcome};
 use crate::utils::string;
 use rayon::prelude::*;
 use std::io::{self, Read, Write};
@@ -19,13 +19,13 @@ pub struct ProgramOutput {
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct RunResult {
     pub test_case: TestCase,
-    pub result: Result<TestResult, RunError>,
+    pub result: Result<TestOutcome, RunError>,
 }
 
 impl RunResult {
     pub fn is_success(&self) -> bool {
         match &self.result {
-            Ok(test_result) => test_result.is_success(),
+            Ok(test_outcome) => test_outcome.is_success(),
             Err(_) => false,
         }
     }
@@ -49,7 +49,7 @@ pub fn run_test_cases(
     test_cases: &[TestCaseWithExpectations],
     run_in_parallel: bool,
     current_dir: &Path,
-    report_test_case: &(impl Fn(usize, &TestCase, &Result<TestResult, RunError>) + Sync),
+    report_test_case: &(impl Fn(usize, &TestCase, &Result<TestOutcome, RunError>) + Sync),
 ) -> Vec<RunResult> {
     let run = |(i, entry): (usize, &TestCaseWithExpectations)| -> RunResult {
         let result = run_test_case(entry, current_dir);
@@ -72,10 +72,10 @@ pub fn run_test_cases(
 pub fn run_test_case(
     entry: &TestCaseWithExpectations,
     current_dir: &Path,
-) -> Result<TestResult, RunError> {
+) -> Result<TestOutcome, RunError> {
     let output = run_program(&entry.test_case, current_dir)?;
 
-    Ok(TestResult {
+    Ok(TestOutcome {
         stdout: compare_result(entry.expectations.stdout.clone(), output.stdout),
         stderr: compare_result(entry.expectations.stderr.clone(), output.stderr),
         exit_code: compare_result(entry.expectations.exit_code, output.exit_code),
@@ -232,15 +232,15 @@ fn init_command(test_case: &TestCase, current_dir: &Path) -> Command {
     cmd
 }
 
-fn compare_result<T: Eq>(expected: Option<T>, got: T) -> ValueComparison<T> {
+fn compare_result<T: Eq>(expected: Option<T>, got: T) -> FieldOutcome<T> {
     if let Some(expected) = expected {
         if expected == got {
-            ValueComparison::Matches(got)
+            FieldOutcome::Matches(got)
         } else {
-            ValueComparison::Diff { expected, got }
+            FieldOutcome::Diff { expected, got }
         }
     } else {
-        ValueComparison::NotChecked(got)
+        FieldOutcome::NotChecked(got)
     }
 }
 

@@ -51,12 +51,12 @@ pub(super) fn run_review_loop(
     while i < total {
         let run_result = failed[i];
         let action = match &run_result.result {
-            Ok(test_result) => {
+            Ok(test_outcome) => {
                 let ctx = DiffViewContext {
                     index: i + 1,
                     total,
                     run_result,
-                    test_result,
+                    test_outcome,
                     counts,
                     watch_mode: driver.watch_mode(),
                 };

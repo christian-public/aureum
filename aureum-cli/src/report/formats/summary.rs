@@ -1,28 +1,28 @@
 use crate::report::theme;
 use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
-use aureum::{TestResult, ValueComparison, diff, string};
+use aureum::{FieldOutcome, TestOutcome, diff, string};
 use colored::Colorize;
 
 // ERROR FORMATTING
 
-pub fn nodes_from_test_result(test_result: &TestResult) -> Vec<Tree> {
+pub fn nodes_from_test_outcome(test_outcome: &TestOutcome) -> Vec<Tree> {
     let mut categories = vec![];
 
-    if let ValueComparison::Diff { expected, got } = &test_result.stdout {
+    if let FieldOutcome::Diff { expected, got } = &test_outcome.stdout {
         categories.push(Node(
             String::from("Standard output"),
             format_string_diff(expected, got),
         ));
     }
 
-    if let ValueComparison::Diff { expected, got } = &test_result.stderr {
+    if let FieldOutcome::Diff { expected, got } = &test_outcome.stderr {
         categories.push(Node(
             String::from("Standard error"),
             format_string_diff(expected, got),
         ));
     }
 
-    if let ValueComparison::Diff { expected, got } = test_result.exit_code {
+    if let FieldOutcome::Diff { expected, got } = test_outcome.exit_code {
         categories.push(Node(
             String::from("Exit code"),
             format_i32_diff(expected, got),

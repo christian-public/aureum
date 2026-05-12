@@ -1,4 +1,4 @@
-use aureum::{TestCase, TestId, TestResult, ValueComparison};
+use aureum::{FieldOutcome, TestCase, TestId, TestOutcome};
 use std::fs;
 use std::io;
 use std::path::Path;
@@ -10,7 +10,7 @@ use crate::interactive::field::{FieldDecision, FieldDecisions};
 /// A field is updated only when the decision is `Some(true)` AND the field has a diff.
 pub(crate) fn update_test_expectations(
     test_case: &TestCase,
-    test_result: &TestResult,
+    test_outcome: &TestOutcome,
     current_dir: &Path,
     decisions: &FieldDecisions,
 ) -> io::Result<()> {
@@ -25,7 +25,7 @@ pub(crate) fn update_test_expectations(
     let mut doc_modified = false;
 
     if decisions.stdout == FieldDecision::Accepted
-        && let ValueComparison::Diff { got, .. } = &test_result.stdout
+        && let FieldOutcome::Diff { got, .. } = &test_outcome.stdout
         && apply_field_update(
             &mut doc,
             &test_case.test_id,
@@ -38,7 +38,7 @@ pub(crate) fn update_test_expectations(
     }
 
     if decisions.stderr == FieldDecision::Accepted
-        && let ValueComparison::Diff { got, .. } = &test_result.stderr
+        && let FieldOutcome::Diff { got, .. } = &test_outcome.stderr
         && apply_field_update(
             &mut doc,
             &test_case.test_id,
@@ -51,7 +51,7 @@ pub(crate) fn update_test_expectations(
     }
 
     if decisions.exit_code == FieldDecision::Accepted
-        && let ValueComparison::Diff { got, .. } = &test_result.exit_code
+        && let FieldOutcome::Diff { got, .. } = &test_outcome.exit_code
         && apply_field_update(
             &mut doc,
             &test_case.test_id,
@@ -299,16 +299,16 @@ mod tests {
         );
 
         let tc = make_test_case_root("", "test.toml");
-        let result = TestResult {
-            stdout: ValueComparison::Diff {
+        let test_outcome = TestOutcome {
+            stdout: FieldOutcome::Diff {
                 expected: "WRONG".to_string(),
                 got: "actual".to_string(),
             },
-            stderr: ValueComparison::NotChecked("".to_string()),
-            exit_code: ValueComparison::NotChecked(0),
+            stderr: FieldOutcome::NotChecked("".to_string()),
+            exit_code: FieldOutcome::NotChecked(0),
         };
 
-        update_test_expectations(&tc, &result, tmp.path(), &ACCEPT_ALL).unwrap();
+        update_test_expectations(&tc, &test_outcome, tmp.path(), &ACCEPT_ALL).unwrap();
 
         assert!(
             tmp.read("test.toml")
@@ -325,22 +325,22 @@ mod tests {
         );
 
         let tc = make_test_case_root("", "test.toml");
-        let result = TestResult {
-            stdout: ValueComparison::Diff {
+        let test_outcome = TestOutcome {
+            stdout: FieldOutcome::Diff {
                 expected: "WRONG_OUT".to_string(),
                 got: "out".to_string(),
             },
-            stderr: ValueComparison::Diff {
+            stderr: FieldOutcome::Diff {
                 expected: "WRONG_ERR".to_string(),
                 got: "err".to_string(),
             },
-            exit_code: ValueComparison::Diff {
+            exit_code: FieldOutcome::Diff {
                 expected: 99,
                 got: 0,
             },
         };
 
-        update_test_expectations(&tc, &result, tmp.path(), &ACCEPT_ALL).unwrap();
+        update_test_expectations(&tc, &test_outcome, tmp.path(), &ACCEPT_ALL).unwrap();
 
         let updated = tmp.read("test.toml");
         assert!(updated.contains("expected_stdout = \"out\""));
@@ -357,16 +357,16 @@ mod tests {
         );
 
         let tc = make_test_case_subtest("", "test.toml", "t1");
-        let result = TestResult {
-            stdout: ValueComparison::Diff {
+        let test_outcome = TestOutcome {
+            stdout: FieldOutcome::Diff {
                 expected: "WRONG".to_string(),
                 got: "actual".to_string(),
             },
-            stderr: ValueComparison::NotChecked("".to_string()),
-            exit_code: ValueComparison::NotChecked(0),
+            stderr: FieldOutcome::NotChecked("".to_string()),
+            exit_code: FieldOutcome::NotChecked(0),
         };
 
-        update_test_expectations(&tc, &result, tmp.path(), &ACCEPT_ALL).unwrap();
+        update_test_expectations(&tc, &test_outcome, tmp.path(), &ACCEPT_ALL).unwrap();
 
         let updated = tmp.read("test.toml");
         assert!(updated.contains("expected_stdout = \"actual\""));
@@ -382,16 +382,16 @@ mod tests {
         );
 
         let tc = make_test_case_subtest("", "test.toml", "t1");
-        let result = TestResult {
-            stdout: ValueComparison::NotChecked("".to_string()),
-            stderr: ValueComparison::NotChecked("".to_string()),
-            exit_code: ValueComparison::Diff {
+        let test_outcome = TestOutcome {
+            stdout: FieldOutcome::NotChecked("".to_string()),
+            stderr: FieldOutcome::NotChecked("".to_string()),
+            exit_code: FieldOutcome::Diff {
                 expected: 99,
                 got: 0,
             },
         };
 
-        update_test_expectations(&tc, &result, tmp.path(), &ACCEPT_ALL).unwrap();
+        update_test_expectations(&tc, &test_outcome, tmp.path(), &ACCEPT_ALL).unwrap();
 
         let updated = tmp.read("test.toml");
         assert!(updated.contains("expected_exit_code = 0"));
@@ -407,16 +407,16 @@ mod tests {
         );
 
         let tc = make_test_case_root("", "test.toml");
-        let result = TestResult {
-            stdout: ValueComparison::Diff {
+        let test_outcome = TestOutcome {
+            stdout: FieldOutcome::Diff {
                 expected: "old content".to_string(),
                 got: "new content".to_string(),
             },
-            stderr: ValueComparison::NotChecked("".to_string()),
-            exit_code: ValueComparison::NotChecked(0),
+            stderr: FieldOutcome::NotChecked("".to_string()),
+            exit_code: FieldOutcome::NotChecked(0),
         };
 
-        update_test_expectations(&tc, &result, tmp.path(), &ACCEPT_ALL).unwrap();
+        update_test_expectations(&tc, &test_outcome, tmp.path(), &ACCEPT_ALL).unwrap();
 
         assert_eq!(tmp.read("expected_out.txt"), "new content");
         assert!(
@@ -432,13 +432,13 @@ mod tests {
         tmp.write("test.toml", original);
 
         let tc = make_test_case_root("", "test.toml");
-        let result = TestResult {
-            stdout: ValueComparison::Matches("ok".to_string()),
-            stderr: ValueComparison::NotChecked("".to_string()),
-            exit_code: ValueComparison::NotChecked(0),
+        let test_outcome = TestOutcome {
+            stdout: FieldOutcome::Matches("ok".to_string()),
+            stderr: FieldOutcome::NotChecked("".to_string()),
+            exit_code: FieldOutcome::NotChecked(0),
         };
 
-        update_test_expectations(&tc, &result, tmp.path(), &ACCEPT_ALL).unwrap();
+        update_test_expectations(&tc, &test_outcome, tmp.path(), &ACCEPT_ALL).unwrap();
 
         assert_eq!(tmp.read("test.toml"), original);
     }
@@ -452,16 +452,16 @@ mod tests {
         );
 
         let tc = make_test_case_root("", "test.toml");
-        let result = TestResult {
-            stdout: ValueComparison::Diff {
+        let test_outcome = TestOutcome {
+            stdout: FieldOutcome::Diff {
                 expected: "WRONG".to_string(),
                 got: "Hello".to_string(),
             },
-            stderr: ValueComparison::NotChecked("".to_string()),
-            exit_code: ValueComparison::Matches(0),
+            stderr: FieldOutcome::NotChecked("".to_string()),
+            exit_code: FieldOutcome::Matches(0),
         };
 
-        update_test_expectations(&tc, &result, tmp.path(), &ACCEPT_ALL).unwrap();
+        update_test_expectations(&tc, &test_outcome, tmp.path(), &ACCEPT_ALL).unwrap();
 
         let updated = tmp.read("test.toml");
         assert!(updated.contains("program = \"echo\""));

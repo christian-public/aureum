@@ -1,4 +1,4 @@
-use aureum::{TestCase, TestResult, ValueComparison};
+use aureum::{FieldOutcome, TestCase, TestOutcome};
 use ratatui::Frame;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
@@ -80,7 +80,7 @@ const DECISIONS_TRAILING_GAP: usize =
 pub(super) fn render_tui(
     frame: &mut Frame,
     ctx: &DiffViewContext<'_>,
-    test_result: &TestResult,
+    test_outcome: &TestOutcome,
     state: &TuiState,
     content: &[Line<'static>],
 ) {
@@ -191,7 +191,7 @@ pub(super) fn render_tui(
         },
     );
 
-    let is_field_configured = diff_content::is_field_configured(test_result, active_field);
+    let is_field_configured = diff_content::is_field_configured(test_outcome, active_field);
 
     // Tabs row — hidden when Stdin is selected (tabs are not relevant for stdin content)
     if active_field != Field::Stdin {
@@ -202,7 +202,7 @@ pub(super) fn render_tui(
     // Field selector row
     let field_line = build_field_line(
         active_field,
-        test_result,
+        test_outcome,
         ctx.run_result.test_case.stdin.is_some(),
     );
     frame.render_widget(Paragraph::new(field_line), inner_chunks[9]);
@@ -369,7 +369,7 @@ fn build_decisions_line(decisions: FieldDecisions, failing: FailingFields) -> Li
 /// with a status area to the right separated by a dimmed `│`.
 fn build_field_line(
     active_field: Field,
-    test_result: &TestResult,
+    test_outcome: &TestOutcome,
     stdin_present: bool,
 ) -> Line<'static> {
     // (before_key, key_char, after_key, field, status)
@@ -380,10 +380,10 @@ fn build_field_line(
             STDOUT_KEY,
             STDOUT_POST,
             Field::Stdout,
-            match &test_result.stdout {
-                ValueComparison::Diff { .. } => Some(true),
-                ValueComparison::Matches(_) => Some(false),
-                ValueComparison::NotChecked(_) => None,
+            match &test_outcome.stdout {
+                FieldOutcome::Diff { .. } => Some(true),
+                FieldOutcome::Matches(_) => Some(false),
+                FieldOutcome::NotChecked(_) => None,
             },
         ),
         (
@@ -391,10 +391,10 @@ fn build_field_line(
             STDERR_KEY,
             STDERR_POST,
             Field::Stderr,
-            match &test_result.stderr {
-                ValueComparison::Diff { .. } => Some(true),
-                ValueComparison::Matches(_) => Some(false),
-                ValueComparison::NotChecked(_) => None,
+            match &test_outcome.stderr {
+                FieldOutcome::Diff { .. } => Some(true),
+                FieldOutcome::Matches(_) => Some(false),
+                FieldOutcome::NotChecked(_) => None,
             },
         ),
         (
@@ -402,10 +402,10 @@ fn build_field_line(
             EXIT_CODE_KEY,
             EXIT_CODE_POST,
             Field::ExitCode,
-            match &test_result.exit_code {
-                ValueComparison::Diff { .. } => Some(true),
-                ValueComparison::Matches(_) => Some(false),
-                ValueComparison::NotChecked(_) => None,
+            match &test_outcome.exit_code {
+                FieldOutcome::Diff { .. } => Some(true),
+                FieldOutcome::Matches(_) => Some(false),
+                FieldOutcome::NotChecked(_) => None,
             },
         ),
     ];

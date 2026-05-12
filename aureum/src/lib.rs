@@ -11,7 +11,7 @@ mod utils {
 mod test_case;
 mod test_id;
 mod test_id_coverage_set;
-mod test_result;
+mod test_outcome;
 mod test_runner;
 
 pub use utils::diff;
@@ -20,7 +20,7 @@ pub use utils::string;
 pub use test_case::{TestCase, TestCaseExpectations, TestCaseWithExpectations};
 pub use test_id::TestId;
 pub use test_id_coverage_set::TestIdCoverageSet;
-pub use test_result::{TestResult, ValueComparison};
+pub use test_outcome::{FieldOutcome, TestOutcome};
 pub use test_runner::{ProgramOutput, RunError, RunResult};
 pub use toml::config::{ParseError, TomlConfigError, TomlConfigFile, TomlConfigTest};
 pub use toml::requirement::Requirements;

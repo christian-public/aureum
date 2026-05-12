@@ -1,4 +1,4 @@
-use aureum::{TestResult, ValueComparison};
+use aureum::{FieldOutcome, TestOutcome};
 
 // ── Field ─────────────────────────────────────────────────────────────────────
 
@@ -51,11 +51,11 @@ pub(super) struct FailingFields {
 
 impl FailingFields {
     /// Constructs `FailingFields` from a `TestResult`.
-    pub(super) fn of(test_result: &TestResult) -> Self {
+    pub(super) fn of(test_outcome: &TestOutcome) -> Self {
         FailingFields {
-            stdout: matches!(test_result.stdout, ValueComparison::Diff { .. }),
-            stderr: matches!(test_result.stderr, ValueComparison::Diff { .. }),
-            exit_code: matches!(test_result.exit_code, ValueComparison::Diff { .. }),
+            stdout: matches!(test_outcome.stdout, FieldOutcome::Diff { .. }),
+            stderr: matches!(test_outcome.stderr, FieldOutcome::Diff { .. }),
+            exit_code: matches!(test_outcome.exit_code, FieldOutcome::Diff { .. }),
         }
     }
 

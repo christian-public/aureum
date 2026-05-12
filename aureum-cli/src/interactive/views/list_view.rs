@@ -117,8 +117,8 @@ fn render_list(frame: &mut Frame, ctx: &ListViewContext<'_>, selection: usize, s
         };
         let mut spans = vec![Span::raw("  "), arrow_span, Span::raw(" ")];
         match run_result.result.as_ref() {
-            Ok(test_result) => {
-                let failing = FailingFields::of(test_result);
+            Ok(test_outcome) => {
+                let failing = FailingFields::of(test_outcome);
                 let [b1, sp1, icon, sp2, b2] = decision_indicator_spans(dec, failing);
                 spans.extend([b1, sp1, icon, sp2, b2]);
             }

@@ -92,10 +92,10 @@ where
     if !accepted.is_empty() {
         writeln!(writer)?;
         for (run_result, decisions) in &accepted {
-            let Ok(test_result) = &run_result.result else {
+            let Ok(test_outcome) = &run_result.result else {
                 continue;
             };
-            update_test_expectations(&run_result.test_case, test_result, current_dir, decisions)?;
+            update_test_expectations(&run_result.test_case, test_outcome, current_dir, decisions)?;
             writeln!(
                 writer,
                 "Updated {} ({})",
@@ -209,12 +209,12 @@ where
 
                     for (idx, decisions) in &decisions {
                         let run_result = &run_results[*idx];
-                        let Ok(test_result) = &run_result.result else {
+                        let Ok(test_outcome) = &run_result.result else {
                             continue;
                         };
                         update_test_expectations(
                             &run_result.test_case,
-                            test_result,
+                            test_outcome,
                             current_dir,
                             decisions,
                         )?;
@@ -303,12 +303,12 @@ fn run_watch_interactive_loop(
                     };
                     for (idx, decisions) in &accepted {
                         let run_result = &last_results[*idx];
-                        let Ok(test_result) = &run_result.result else {
+                        let Ok(test_outcome) = &run_result.result else {
                             continue;
                         };
                         update_test_expectations(
                             &run_result.test_case,
-                            test_result,
+                            test_outcome,
                             current_dir,
                             decisions,
                         )?;
@@ -419,10 +419,10 @@ pub fn run_with_progress_and_review(
 
     for &(idx, decisions) in &accepted_result_indices {
         let run_result = &run_results[idx];
-        let Ok(test_result) = &run_result.result else {
+        let Ok(test_outcome) = &run_result.result else {
             continue;
         };
-        update_test_expectations(&run_result.test_case, test_result, current_dir, &decisions)?;
+        update_test_expectations(&run_result.test_case, test_outcome, current_dir, &decisions)?;
     }
 
     Ok(run_results)
@@ -506,19 +506,19 @@ fn accepted_field_names(decisions: &FieldDecisions) -> String {
 mod tests {
     use super::utils::test_helpers::{TempDir, make_test_case_root};
     use super::*;
-    use aureum::{TestCase, TestResult, ValueComparison};
+    use aureum::{FieldOutcome, TestCase, TestOutcome};
     use std::io::Cursor;
 
     fn failing_run_result_stdout(test_case: TestCase, expected: &str, got: &str) -> RunResult {
         RunResult {
             test_case,
-            result: Ok(TestResult {
-                stdout: ValueComparison::Diff {
+            result: Ok(TestOutcome {
+                stdout: FieldOutcome::Diff {
                     expected: expected.to_string(),
                     got: got.to_string(),
                 },
-                stderr: ValueComparison::NotChecked("".to_string()),
-                exit_code: ValueComparison::NotChecked(0),
+                stderr: FieldOutcome::NotChecked("".to_string()),
+                exit_code: FieldOutcome::NotChecked(0),
             }),
         }
     }

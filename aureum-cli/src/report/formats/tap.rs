@@ -1,5 +1,5 @@
 use aureum::string;
-use aureum::{TestResult, ValueComparison};
+use aureum::{FieldOutcome, TestOutcome};
 use yaml_serde::{Mapping, Number, Value};
 
 pub fn print_version() {
@@ -31,24 +31,24 @@ pub fn print_not_ok(
 
 // DIAGNOSTIC
 
-pub fn test_result_diagnostic(test_result: &TestResult) -> Value {
+pub fn test_outcome_diagnostic(test_outcome: &TestOutcome) -> Value {
     let mut map = Mapping::new();
 
-    if let ValueComparison::Diff { expected, got } = &test_result.stdout {
+    if let FieldOutcome::Diff { expected, got } = &test_outcome.stdout {
         map.insert(
             Value::String(String::from("stdout")),
             string_diff_diagnostic(expected, got),
         );
     }
 
-    if let ValueComparison::Diff { expected, got } = &test_result.stderr {
+    if let FieldOutcome::Diff { expected, got } = &test_outcome.stderr {
         map.insert(
             Value::String(String::from("stderr")),
             string_diff_diagnostic(expected, got),
         );
     }
 
-    if let ValueComparison::Diff { expected, got } = test_result.exit_code {
+    if let FieldOutcome::Diff { expected, got } = test_outcome.exit_code {
         map.insert(
             Value::String(String::from("exit-code")),
             i32_diff_diagnostic(expected, got),

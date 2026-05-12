@@ -1,4 +1,4 @@
-use aureum::{RunResult, TestResult};
+use aureum::{RunResult, TestOutcome};
 use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use ratatui::Terminal;
 use ratatui::backend::{CrosstermBackend, TestBackend};
@@ -30,7 +30,7 @@ pub(crate) struct DiffViewContext<'a> {
     pub index: usize,
     pub total: usize,
     pub run_result: &'a RunResult,
-    pub test_result: &'a TestResult,
+    pub test_outcome: &'a TestOutcome,
     pub counts: TestCounts,
     /// True when running under `--watch`; enables Esc → back-to-watch.
     pub watch_mode: bool,
@@ -101,8 +101,8 @@ pub(super) struct TuiState {
 }
 
 impl TuiState {
-    fn new(test_result: &TestResult, initial_decisions: FieldDecisions) -> Self {
-        let failing = FailingFields::of(test_result);
+    fn new(test_outcome: &TestOutcome, initial_decisions: FieldDecisions) -> Self {
+        let failing = FailingFields::of(test_outcome);
         TuiState {
             active_tab: Tab::Diff,
             active_field: failing.first(),
@@ -308,7 +308,7 @@ trait DiffIo {
     fn render(
         &mut self,
         ctx: &DiffViewContext<'_>,
-        test_result: &TestResult,
+        test_outcome: &TestOutcome,
         state: &TuiState,
         content: &[Line<'static>],
     ) -> io::Result<()>;
@@ -327,12 +327,12 @@ impl DiffIo for LiveDiffIo<'_> {
     fn render(
         &mut self,
         ctx: &DiffViewContext<'_>,
-        test_result: &TestResult,
+        test_outcome: &TestOutcome,
         state: &TuiState,
         content: &[Line<'static>],
     ) -> io::Result<()> {
         self.terminal
-            .draw(|frame| diff_render::render_tui(frame, ctx, test_result, state, content))
+            .draw(|frame| diff_render::render_tui(frame, ctx, test_outcome, state, content))
             .map_err(io::Error::other)?;
         Ok(())
     }
@@ -365,12 +365,12 @@ impl<R: BufRead, W: Write> DiffIo for HeadlessDiffIo<'_, R, W> {
     fn render(
         &mut self,
         ctx: &DiffViewContext<'_>,
-        test_result: &TestResult,
+        test_outcome: &TestOutcome,
         state: &TuiState,
         content: &[Line<'static>],
     ) -> io::Result<()> {
         self.terminal
-            .draw(|frame| diff_render::render_tui(frame, ctx, test_result, state, content))
+            .draw(|frame| diff_render::render_tui(frame, ctx, test_outcome, state, content))
             .map_err(io::Error::other)?;
         let sep = self.pending_separator.take().unwrap_or(true);
         write_frame(
@@ -407,21 +407,21 @@ fn run_diff_view(
     ctx: &DiffViewContext<'_>,
     initial_decisions: Option<FieldDecisions>,
 ) -> io::Result<Action> {
-    let test_result = ctx.test_result;
+    let test_outcome = ctx.test_outcome;
     let is_last = ctx.index == ctx.total;
-    let mut state = TuiState::new(test_result, initial_decisions.unwrap_or_default());
+    let mut state = TuiState::new(test_outcome, initial_decisions.unwrap_or_default());
     let stdin = ctx.run_result.test_case.stdin.as_deref();
 
     let content =
-        diff_content::build_content(test_result, state.active_field, stdin, state.active_tab);
-    io.render(ctx, test_result, &state, &content)?;
+        diff_content::build_content(test_outcome, state.active_field, stdin, state.active_tab);
+    io.render(ctx, test_outcome, &state, &content)?;
 
     loop {
         let Some(key) = io.next_key()? else {
             return Ok(Action::Quit);
         };
         let is_field_configured =
-            diff_content::is_field_configured(test_result, state.active_field);
+            diff_content::is_field_configured(test_outcome, state.active_field);
         match apply_key(
             &mut state,
             key,
@@ -438,9 +438,9 @@ fn run_diff_view(
             KeyResult::Exit(action) => return Ok(action),
         }
         let content =
-            diff_content::build_content(test_result, state.active_field, stdin, state.active_tab);
+            diff_content::build_content(test_outcome, state.active_field, stdin, state.active_tab);
         state.scroll = state.scroll.min(content.len().saturating_sub(1) as u16);
-        io.render(ctx, test_result, &state, &content)?;
+        io.render(ctx, test_outcome, &state, &content)?;
     }
 }
 

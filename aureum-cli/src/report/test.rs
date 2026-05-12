@@ -3,7 +3,7 @@ use crate::report::formats::summary;
 use crate::report::formats::tap;
 use crate::report::theme;
 use crate::vendor::ascii_tree::Tree::{Leaf, Node};
-use aureum::{RunError, RunResult, TestCase, TestResult};
+use aureum::{RunError, RunResult, TestCase, TestOutcome};
 use colored::Colorize;
 use std::io;
 
@@ -75,7 +75,7 @@ pub fn print_test_case(
     report_config: &ReportConfig,
     index: usize,
     test_case: &TestCase,
-    result: &Result<TestResult, RunError>,
+    result: &Result<TestOutcome, RunError>,
 ) {
     match report_config.format {
         ReportFormat::Summary => {
@@ -114,10 +114,10 @@ fn summary_print_test_cases_start(number_of_tests: usize) {
     println!("🚀 Running {number_of_tests} {label}:")
 }
 
-fn summary_print_test_case(result: &Result<TestResult, RunError>) {
+fn summary_print_test_case(result: &Result<TestOutcome, RunError>) {
     match result {
-        Ok(test_result) => {
-            if test_result.is_success() {
+        Ok(test_outcome) => {
+            if test_outcome.is_success() {
                 print!(".");
             } else {
                 print!("F");
@@ -167,9 +167,9 @@ fn format_test_success(test_case: &TestCase) -> String {
     format!("{} {}", theme::checkmark(), test_case.id())
 }
 
-fn format_test_failure(test_case: &TestCase, result: &Result<TestResult, RunError>) -> String {
+fn format_test_failure(test_case: &TestCase, result: &Result<TestOutcome, RunError>) -> String {
     let nodes = match result {
-        Ok(result) => summary::nodes_from_test_result(result),
+        Ok(test_outcome) => summary::nodes_from_test_outcome(test_outcome),
         Err(error) => {
             vec![Leaf(vec![format!("Run error: {error}")])]
         }
@@ -223,21 +223,21 @@ fn tap_print_test_cases_start(number_of_tests: usize) {
 fn tap_print_test_case(
     test_number: usize,
     test_case: &TestCase,
-    result: &Result<TestResult, RunError>,
+    result: &Result<TestOutcome, RunError>,
     max_width: usize,
 ) {
     let message = test_case.id();
 
     match result {
-        Ok(test_result) => {
-            if test_result.is_success() {
+        Ok(test_outcome) => {
+            if test_outcome.is_success() {
                 tap::print_ok(test_number, max_width, &message)
             } else {
                 tap::print_not_ok(
                     test_number,
                     max_width,
                     &message,
-                    Some(&tap::test_result_diagnostic(test_result)),
+                    Some(&tap::test_outcome_diagnostic(test_outcome)),
                 )
             }
         }
