@@ -34,7 +34,9 @@ pub struct TestCaseExpectations {
 
 #[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
-pub struct TestCaseWithExpectations {
-    pub test_case: TestCase,
-    pub expectations: TestCaseExpectations,
+pub enum PendingTestCase {
+    Run {
+        test_case: TestCase,
+        expectations: TestCaseExpectations,
+    },
 }

@@ -101,7 +101,8 @@ fn render_list(frame: &mut Frame, ctx: &ListViewContext<'_>, selection: usize, s
     let mut lines: Vec<Line<'static>> = Vec::new();
     for (i, run_result) in ctx.failed.iter().enumerate() {
         let is_selected = i == selection;
-        let test_id = run_result.test_case.id().to_string();
+        let RunResult::Ran { test_case, result } = *run_result;
+        let test_case_id = test_case.id().to_string();
         let dec = ctx.past_decisions.get(i).and_then(|d| d.as_ref());
         let id_style = if is_selected {
             Style::default()
@@ -116,7 +117,7 @@ fn render_list(frame: &mut Frame, ctx: &ListViewContext<'_>, selection: usize, s
             Span::raw(" ")
         };
         let mut spans = vec![Span::raw("  "), arrow_span, Span::raw(" ")];
-        match run_result.result.as_ref() {
+        match result.as_ref() {
             Ok(test_outcome) => {
                 let failing = FailingFields::of(test_outcome);
                 let [b1, sp1, icon, sp2, b2] = decision_indicator_spans(dec, failing);
@@ -132,14 +133,14 @@ fn render_list(frame: &mut Frame, ctx: &ListViewContext<'_>, selection: usize, s
                     Span::styled("]", theme::dim()),
                 ]);
                 spans.push(Span::raw(" "));
-                spans.push(Span::styled(test_id, id_style));
+                spans.push(Span::styled(test_case_id, id_style));
                 spans.push(Span::styled(format!(" — {error}"), theme::dim()));
                 lines.push(Line::from(spans));
                 continue;
             }
         }
         spans.push(Span::raw(" "));
-        spans.push(Span::styled(test_id, id_style));
+        spans.push(Span::styled(test_case_id, id_style));
         lines.push(Line::from(spans));
     }
 

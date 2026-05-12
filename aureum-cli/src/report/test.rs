@@ -145,16 +145,15 @@ fn summary_print_test_cases_end(
         println!(); // Print newline before all the tests
 
         for passed_test in passed_tests {
-            println!("{}", format_test_success(&passed_test.test_case));
+            let RunResult::Ran { test_case, .. } = passed_test;
+            println!("{}", format_test_success(test_case));
         }
     }
 
     for failed_test in failed_tests {
+        let RunResult::Ran { test_case, result } = failed_test;
         println!(); // Print newline before each failed test
-        println!(
-            "{}",
-            format_test_failure(&failed_test.test_case, &failed_test.result)
-        );
+        println!("{}", format_test_failure(test_case, result));
     }
 
     let counts = TestCounts::from_results(run_results, config_stats);

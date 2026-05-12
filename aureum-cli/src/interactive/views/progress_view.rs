@@ -3,7 +3,7 @@ use crate::interactive::keys;
 use crate::interactive::theme;
 use crate::interactive::utils::widgets;
 use crate::utils::time;
-use aureum::{RunResult, TestCaseWithExpectations, run_test_cases};
+use aureum::{PendingTestCase, RunResult, run_test_cases};
 use crossterm::event::{Event, KeyEventKind};
 use ratatui::backend::{CrosstermBackend, TestBackend};
 use ratatui::layout::{Alignment, Constraint, Direction, Layout};
@@ -60,7 +60,7 @@ pub(crate) fn record_final_progress_frame<W: Write>(
 /// On quit the background thread is detached; the caller should `process::exit` after cleanup.
 pub(crate) fn run_tests_with_progress(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
-    test_cases: &[TestCaseWithExpectations],
+    test_cases: &[PendingTestCase],
     parallel: bool,
     current_dir: &Path,
     config_stats: ConfigStats,

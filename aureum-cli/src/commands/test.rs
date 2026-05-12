@@ -7,7 +7,7 @@ use crate::load_config_file::LoadConfigFilesResult;
 use crate::report;
 use crate::report::test::{ReportConfig, ReportFormat};
 use crate::watch;
-use aureum::{RunResult, TestCaseWithExpectations};
+use aureum::{PendingTestCase, RunResult};
 use std::collections::BTreeSet;
 use std::io::{self, BufRead, IsTerminal};
 use std::path::{Path, PathBuf};
@@ -281,7 +281,7 @@ fn run_tests_noninteractive(args: TestArgs, current_dir: &Path) -> ExitCode {
 // HELPERS
 
 fn run_test_cases_noninteractive(
-    test_cases: &[TestCaseWithExpectations],
+    test_cases: &[PendingTestCase],
     parallel: bool,
     current_dir: &Path,
     format: &TestOutputFormat,
@@ -311,7 +311,7 @@ fn run_test_cases_noninteractive(
 }
 
 fn run_watch_loop(
-    load_test_cases: impl Fn() -> (Vec<TestCaseWithExpectations>, ConfigStats),
+    load_test_cases: impl Fn() -> (Vec<PendingTestCase>, ConfigStats),
     parallel: bool,
     current_dir: &Path,
     watch_paths: &BTreeSet<PathBuf>,
@@ -389,12 +389,12 @@ fn run_watch_loop(
     Ok(last_run_results)
 }
 
-fn collect_test_cases(config_files: &LoadConfigFilesResult) -> Vec<TestCaseWithExpectations> {
+fn collect_test_cases(config_files: &LoadConfigFilesResult) -> Vec<PendingTestCase> {
     config_files
         .loaded
         .values()
         .flat_map(|x| x.test_entries_in_coverage_set())
-        .filter_map(|(_, entry)| entry.test_case_with_expectations().ok())
+        .filter_map(|(_, entry)| entry.pending_test_case().ok())
         .collect()
 }
 

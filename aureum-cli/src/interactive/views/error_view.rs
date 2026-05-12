@@ -77,12 +77,14 @@ fn render_error(frame: &mut ratatui::Frame, ctx: &ErrorViewContext<'_>) {
     render_divider(frame, inner_chunks[1]);
     render_divider(frame, inner_chunks[4]);
 
+    let RunResult::Ran { test_case, result } = ctx.run_result;
+
     // Title row
-    let path = ctx.run_result.test_case.id().to_string();
+    let test_case_id = test_case.id().to_owned();
     frame.render_widget(
         Paragraph::new(Line::from(vec![
             Span::raw("  "),
-            Span::styled(path, Style::default().add_modifier(Modifier::BOLD)),
+            Span::styled(test_case_id, Style::default().add_modifier(Modifier::BOLD)),
         ])),
         inner_chunks[2],
     );
@@ -99,7 +101,7 @@ fn render_error(frame: &mut ratatui::Frame, ctx: &ErrorViewContext<'_>) {
     );
 
     // Content: error message
-    let error_text = match &ctx.run_result.result {
+    let error_text = match result {
         Err(e) => e.to_string(),
         Ok(_) => String::new(),
     };
@@ -147,7 +149,7 @@ fn render_error(frame: &mut ratatui::Frame, ctx: &ErrorViewContext<'_>) {
 }
 
 fn build_program_display(run_result: &RunResult) -> String {
-    let test_case = &run_result.test_case;
+    let RunResult::Ran { test_case, .. } = run_result;
     let path = &test_case.program_path;
     let is_exe = path
         .extension()

@@ -13,7 +13,7 @@ use crate::interactive::views::watch_view::{self, IdleOutcome, WatchIdleContext}
 use crate::utils::time;
 use crate::watch;
 use accept::update_test_expectations;
-use aureum::{self, RunResult, TestCaseWithExpectations};
+use aureum::{self, PendingTestCase, RunResult};
 use chrono::Local;
 use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
 use field::{FieldDecision, FieldDecisions};
@@ -92,14 +92,15 @@ where
     if !accepted.is_empty() {
         writeln!(writer)?;
         for (run_result, decisions) in &accepted {
-            let Ok(test_outcome) = &run_result.result else {
+            let RunResult::Ran { test_case, result } = *run_result;
+            let Ok(test_outcome) = result else {
                 continue;
             };
-            update_test_expectations(&run_result.test_case, test_outcome, current_dir, decisions)?;
+            update_test_expectations(test_case, test_outcome, current_dir, decisions)?;
             writeln!(
                 writer,
                 "Updated {} ({})",
-                run_result.test_case.id(),
+                test_case.id(),
                 accepted_field_names(decisions)
             )?;
         }
@@ -114,7 +115,7 @@ where
 /// idle or review views. Frames are written to `writer` separated by `---`.
 #[allow(clippy::too_many_arguments)]
 pub fn run_interactive_updates_with_watch<R, W>(
-    load_test_cases: &dyn Fn() -> (Vec<TestCaseWithExpectations>, ConfigStats),
+    load_test_cases: &dyn Fn() -> (Vec<PendingTestCase>, ConfigStats),
     parallel: bool,
     current_dir: &Path,
     reader: &mut R,
@@ -209,15 +210,11 @@ where
 
                     for (idx, decisions) in &decisions {
                         let run_result = &run_results[*idx];
-                        let Ok(test_outcome) = &run_result.result else {
+                        let RunResult::Ran { test_case, result } = run_result;
+                        let Ok(test_outcome) = result else {
                             continue;
                         };
-                        update_test_expectations(
-                            &run_result.test_case,
-                            test_outcome,
-                            current_dir,
-                            decisions,
-                        )?;
+                        update_test_expectations(test_case, test_outcome, current_dir, decisions)?;
                     }
                 }
             }
@@ -228,7 +225,7 @@ where
 /// Full interactive watch session: runs tests, shows idle screen, lets the user review and
 /// accept failures, and re-runs on file changes. Always returns the last run's results.
 pub fn run_with_progress_review_and_watch<'a>(
-    load_test_cases: &dyn Fn() -> (Vec<TestCaseWithExpectations>, ConfigStats),
+    load_test_cases: &dyn Fn() -> (Vec<PendingTestCase>, ConfigStats),
     parallel: bool,
     current_dir: &Path,
     watch_paths: impl IntoIterator<Item = &'a PathBuf>,
@@ -260,7 +257,7 @@ pub fn run_with_progress_review_and_watch<'a>(
 
 fn run_watch_interactive_loop(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
-    load_test_cases: &dyn Fn() -> (Vec<TestCaseWithExpectations>, ConfigStats),
+    load_test_cases: &dyn Fn() -> (Vec<PendingTestCase>, ConfigStats),
     parallel: bool,
     current_dir: &Path,
     change_rx: &Receiver<usize>,
@@ -303,15 +300,11 @@ fn run_watch_interactive_loop(
                     };
                     for (idx, decisions) in &accepted {
                         let run_result = &last_results[*idx];
-                        let Ok(test_outcome) = &run_result.result else {
+                        let RunResult::Ran { test_case, result } = run_result;
+                        let Ok(test_outcome) = result else {
                             continue;
                         };
-                        update_test_expectations(
-                            &run_result.test_case,
-                            test_outcome,
-                            current_dir,
-                            decisions,
-                        )?;
+                        update_test_expectations(test_case, test_outcome, current_dir, decisions)?;
                     }
                     // Back to idle screen after review.
                 }
@@ -388,7 +381,7 @@ fn run_watch_review(
 /// Full interactive session for a real terminal: shows live test progress, then lets the user
 /// review and accept failures one by one. Enters/leaves alternate screen internally.
 pub fn run_with_progress_and_review(
-    test_cases: &[TestCaseWithExpectations],
+    test_cases: &[PendingTestCase],
     parallel: bool,
     current_dir: &Path,
     config_stats: ConfigStats,
@@ -419,10 +412,11 @@ pub fn run_with_progress_and_review(
 
     for &(idx, decisions) in &accepted_result_indices {
         let run_result = &run_results[idx];
-        let Ok(test_outcome) = &run_result.result else {
+        let RunResult::Ran { test_case, result } = run_result;
+        let Ok(test_outcome) = result else {
             continue;
         };
-        update_test_expectations(&run_result.test_case, test_outcome, current_dir, &decisions)?;
+        update_test_expectations(test_case, test_outcome, current_dir, &decisions)?;
     }
 
     Ok(run_results)
@@ -430,7 +424,7 @@ pub fn run_with_progress_and_review(
 
 fn run_tui_session(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
-    test_cases: &[TestCaseWithExpectations],
+    test_cases: &[PendingTestCase],
     parallel: bool,
     current_dir: &Path,
     config_stats: ConfigStats,
@@ -510,7 +504,7 @@ mod tests {
     use std::io::Cursor;
 
     fn failing_run_result_stdout(test_case: TestCase, expected: &str, got: &str) -> RunResult {
-        RunResult {
+        RunResult::Ran {
             test_case,
             result: Ok(TestOutcome {
                 stdout: FieldOutcome::Diff {

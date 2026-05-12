@@ -50,7 +50,8 @@ pub(super) fn run_review_loop(
     let mut i = 0usize;
     while i < total {
         let run_result = failed[i];
-        let action = match &run_result.result {
+        let RunResult::Ran { result, .. } = run_result;
+        let action = match result {
             Ok(test_outcome) => {
                 let ctx = DiffViewContext {
                     index: i + 1,

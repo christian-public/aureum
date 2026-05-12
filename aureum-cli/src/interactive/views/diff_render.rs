@@ -1,4 +1,4 @@
-use aureum::{FieldOutcome, TestCase, TestOutcome};
+use aureum::{FieldOutcome, RunResult, TestCase, TestOutcome};
 use ratatui::Frame;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
@@ -154,8 +154,10 @@ pub(super) fn render_tui(
     let title_line = build_title_line(ctx);
     frame.render_widget(Paragraph::new(title_line), inner_chunks[2]);
 
+    let RunResult::Ran { test_case, .. } = ctx.run_result;
+
     // Program row — program name on the left, Stdin tab on the right (if present)
-    let program = build_program_display(&ctx.run_result.test_case);
+    let program = build_program_display(test_case);
     let program_line = build_program_line(&program);
     frame.render_widget(Paragraph::new(program_line), inner_chunks[3]);
 
@@ -200,11 +202,7 @@ pub(super) fn render_tui(
     }
 
     // Field selector row
-    let field_line = build_field_line(
-        active_field,
-        test_outcome,
-        ctx.run_result.test_case.stdin.is_some(),
-    );
+    let field_line = build_field_line(active_field, test_outcome, test_case.stdin.is_some());
     frame.render_widget(Paragraph::new(field_line), inner_chunks[9]);
 
     // Overlay the staged decision for display before it is committed.
@@ -280,10 +278,11 @@ pub(super) fn render_tui(
 
 /// Title row: test path.
 fn build_title_line(ctx: &DiffViewContext<'_>) -> Line<'static> {
-    let path = ctx.run_result.test_case.id().to_string();
+    let RunResult::Ran { test_case, .. } = ctx.run_result;
+    let test_case_id = test_case.id().to_owned();
     Line::from(vec![
         Span::raw("  "),
-        Span::styled(path, Style::default().add_modifier(Modifier::BOLD)),
+        Span::styled(test_case_id, Style::default().add_modifier(Modifier::BOLD)),
     ])
 }
 

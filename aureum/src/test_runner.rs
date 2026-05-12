@@ -1,4 +1,4 @@
-use crate::test_case::{TestCase, TestCaseWithExpectations};
+use crate::test_case::{PendingTestCase, TestCase};
 use crate::test_outcome::{FieldOutcome, TestOutcome};
 use crate::utils::string;
 use rayon::prelude::*;
@@ -17,14 +17,17 @@ pub struct ProgramOutput {
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
-pub struct RunResult {
-    pub test_case: TestCase,
-    pub result: Result<TestOutcome, RunError>,
+pub enum RunResult {
+    Ran {
+        test_case: TestCase,
+        result: Result<TestOutcome, RunError>,
+    },
 }
 
 impl RunResult {
     pub fn is_success(&self) -> bool {
-        match &self.result {
+        let RunResult::Ran { result, .. } = self;
+        match result {
             Ok(test_outcome) => test_outcome.is_success(),
             Err(_) => false,
         }
@@ -46,18 +49,17 @@ pub enum RunError {
 // RUN TEST CASES
 
 pub fn run_test_cases(
-    test_cases: &[TestCaseWithExpectations],
+    test_cases: &[PendingTestCase],
     run_in_parallel: bool,
     current_dir: &Path,
     report_test_case: &(impl Fn(usize, &TestCase, &Result<TestOutcome, RunError>) + Sync),
 ) -> Vec<RunResult> {
-    let run = |(i, entry): (usize, &TestCaseWithExpectations)| -> RunResult {
+    let run = |(i, entry): (usize, &PendingTestCase)| -> RunResult {
         let result = run_test_case(entry, current_dir);
-
-        report_test_case(i, &entry.test_case, &result);
-
-        RunResult {
-            test_case: entry.test_case.clone(),
+        let PendingTestCase::Run { test_case, .. } = entry;
+        report_test_case(i, test_case, &result);
+        RunResult::Ran {
+            test_case: test_case.clone(),
             result,
         }
     };
@@ -69,16 +71,17 @@ pub fn run_test_cases(
     }
 }
 
-pub fn run_test_case(
-    entry: &TestCaseWithExpectations,
-    current_dir: &Path,
-) -> Result<TestOutcome, RunError> {
-    let output = run_program(&entry.test_case, current_dir)?;
+pub fn run_test_case(entry: &PendingTestCase, current_dir: &Path) -> Result<TestOutcome, RunError> {
+    let PendingTestCase::Run {
+        test_case,
+        expectations,
+    } = entry;
+    let output = run_program(test_case, current_dir)?;
 
     Ok(TestOutcome {
-        stdout: compare_result(entry.expectations.stdout.clone(), output.stdout),
-        stderr: compare_result(entry.expectations.stderr.clone(), output.stderr),
-        exit_code: compare_result(entry.expectations.exit_code, output.exit_code),
+        stdout: compare_result(expectations.stdout.clone(), output.stdout),
+        stderr: compare_result(expectations.stderr.clone(), output.stderr),
+        exit_code: compare_result(expectations.exit_code, output.exit_code),
     })
 }
 

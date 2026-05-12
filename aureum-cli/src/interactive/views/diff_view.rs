@@ -410,7 +410,8 @@ fn run_diff_view(
     let test_outcome = ctx.test_outcome;
     let is_last = ctx.index == ctx.total;
     let mut state = TuiState::new(test_outcome, initial_decisions.unwrap_or_default());
-    let stdin = ctx.run_result.test_case.stdin.as_deref();
+    let RunResult::Ran { test_case, .. } = ctx.run_result;
+    let stdin = test_case.stdin.as_deref();
 
     let content =
         diff_content::build_content(test_outcome, state.active_field, stdin, state.active_tab);

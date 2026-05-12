@@ -1,4 +1,4 @@
-use crate::test_case::{TestCase, TestCaseExpectations, TestCaseWithExpectations};
+use crate::test_case::{PendingTestCase, TestCase, TestCaseExpectations};
 use crate::toml::config::ConfigValue;
 use crate::utils::string;
 use crate::{TestId, TomlConfigFile, TomlConfigTest};
@@ -92,18 +92,16 @@ pub struct TestEntry {
 
 impl TestEntry {
     pub fn is_runnable(&self) -> bool {
-        self.test_case_with_expectations().is_ok()
+        self.pending_test_case().is_ok()
     }
 
     pub fn has_validation_errors(&self) -> bool {
-        self.test_case_with_expectations().is_err()
+        self.pending_test_case().is_err()
     }
 
-    pub fn test_case_with_expectations(
-        &self,
-    ) -> Result<TestCaseWithExpectations, BTreeSet<ValidationError>> {
+    pub fn pending_test_case(&self) -> Result<PendingTestCase, BTreeSet<ValidationError>> {
         match (&self.test_case, &self.expectations) {
-            (Ok(tc), Ok(exp)) => Ok(TestCaseWithExpectations {
+            (Ok(tc), Ok(exp)) => Ok(PendingTestCase::Run {
                 test_case: tc.clone(),
                 expectations: exp.clone(),
             }),
