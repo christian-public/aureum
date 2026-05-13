@@ -37,11 +37,7 @@ pub fn list_tests(args: ListArgs, current_dir: &Path) -> ExitCode {
         report::list::print_test_list_as_tree(&test_paths);
     } else {
         for (file_path, test_id) in &test_paths {
-            if test_id.is_root() {
-                println!("{file_path}");
-            } else {
-                println!("{file_path}:{test_id}");
-            }
+            println!("{}", aureum::format_test_id(file_path, test_id));
         }
     }
 
