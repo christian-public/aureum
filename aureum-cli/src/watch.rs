@@ -121,7 +121,7 @@ pub fn collect_watch_paths(
     let mut all_paths = user_watch_paths.clone();
 
     for (config_file_path, loaded) in &config_files.loaded {
-        let containing_dir = config_file_path
+        let config_dir_path = config_file_path
             .parent()
             .map(|p| p.to_path(current_dir))
             .unwrap_or_else(|| current_dir.to_path_buf());
@@ -129,7 +129,7 @@ pub fn collect_watch_paths(
         let mut discovered = vec![config_file_path.to_path(current_dir)];
 
         for file_key in loaded.requirement_data.files.keys() {
-            discovered.push(containing_dir.join(file_key));
+            discovered.push(config_dir_path.join(file_key));
         }
 
         for entry in &loaded.test_entries {
@@ -139,7 +139,7 @@ pub fn collect_watch_paths(
         }
 
         for file in &loaded.watch_files {
-            discovered.push(containing_dir.join(file));
+            discovered.push(config_dir_path.join(file));
         }
 
         for file in discovered {

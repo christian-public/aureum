@@ -14,10 +14,10 @@ pub(crate) fn update_test_expectations(
     current_dir: &Path,
     decisions: &FieldDecisions,
 ) -> io::Result<()> {
-    let config_path = test_case.id.config_file_path().to_path(current_dir);
-    let containing_dir = test_case.id.config_dir_path.to_path(current_dir);
+    let config_file_path = test_case.id.config_file_path().to_path(current_dir);
+    let config_dir_path = test_case.id.config_dir_path.to_path(current_dir);
 
-    let content = fs::read_to_string(&config_path)?;
+    let content = fs::read_to_string(&config_file_path)?;
     let mut doc: DocumentMut = content
         .parse()
         .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("{e}")))?;
@@ -31,7 +31,7 @@ pub(crate) fn update_test_expectations(
             &test_case.id.test_id,
             "expected_stdout",
             &FieldValue::Str(got),
-            &containing_dir,
+            &config_dir_path,
         )?
     {
         doc_modified = true;
@@ -44,7 +44,7 @@ pub(crate) fn update_test_expectations(
             &test_case.id.test_id,
             "expected_stderr",
             &FieldValue::Str(got),
-            &containing_dir,
+            &config_dir_path,
         )?
     {
         doc_modified = true;
@@ -57,14 +57,14 @@ pub(crate) fn update_test_expectations(
             &test_case.id.test_id,
             "expected_exit_code",
             &FieldValue::Int(*got as i64),
-            &containing_dir,
+            &config_dir_path,
         )?
     {
         doc_modified = true;
     }
 
     if doc_modified {
-        fs::write(&config_path, doc.to_string())?;
+        fs::write(&config_file_path, doc.to_string())?;
     }
 
     Ok(())
@@ -98,10 +98,10 @@ fn apply_field_update(
     test_id: &TestId,
     field: &str,
     new_value: &FieldValue<'_>,
-    containing_dir: &Path,
+    config_dir_path: &Path,
 ) -> io::Result<bool> {
     if test_id.is_root() {
-        return apply_to_section(doc.as_table_mut(), field, new_value, containing_dir);
+        return apply_to_section(doc.as_table_mut(), field, new_value, config_dir_path);
     }
 
     let test_name = test_id.to_string();
@@ -118,11 +118,11 @@ fn apply_field_update(
                 format!("Subtest `{test_name}` not found"),
             )
         })?;
-        return apply_to_section(subtest, field, new_value, containing_dir);
+        return apply_to_section(subtest, field, new_value, config_dir_path);
     }
 
     // Field is inherited from root or not present anywhere; update or insert at root.
-    apply_to_section(doc.as_table_mut(), field, new_value, containing_dir)
+    apply_to_section(doc.as_table_mut(), field, new_value, config_dir_path)
 }
 
 /// Applies the update to a single TOML table section.
@@ -135,7 +135,7 @@ fn apply_to_section(
     section: &mut toml_edit::Table,
     field: &str,
     new_value: &FieldValue<'_>,
-    containing_dir: &Path,
+    config_dir_path: &Path,
 ) -> io::Result<bool> {
     // Check for special forms ({ file = "..." } or { env = "..." }).
     if let Some(item) = section.get(field)
@@ -144,7 +144,7 @@ fn apply_to_section(
         if let Some(file_val) = table.get("file")
             && let Some(file_path) = file_val.as_str()
         {
-            let external_path = containing_dir.join(file_path);
+            let external_path = config_dir_path.join(file_path);
             fs::write(external_path, new_value.to_string_content())?;
             return Ok(false);
         }

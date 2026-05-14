@@ -119,7 +119,7 @@ fn load_config_file(
         .file_name()
         .ok_or(ConfigFileError::NoFileName)?;
 
-    let path_to_containing_dir = config_file_path
+    let config_dir_path = config_file_path
         .parent()
         .ok_or(ConfigFileError::NoParentDirectory)?;
 
@@ -130,13 +130,13 @@ fn load_config_file(
 
     let requirements = aureum::get_requirements(&config);
     let requirement_data =
-        retrieve_requirement_data(&path_to_containing_dir.to_path(current_dir), &requirements);
+        retrieve_requirement_data(&config_dir_path.to_path(current_dir), &requirements);
 
     let (watch_files, watch_file_errors) = aureum::resolve_watch_files(&config, &requirement_data);
 
     let test_entries = aureum::build_test_entries(
         config,
-        path_to_containing_dir,
+        config_dir_path,
         file_name,
         &requirement_data,
         current_dir,
