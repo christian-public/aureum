@@ -145,7 +145,7 @@ expected_stderr = """
 📋 helpers/expected_exit_code_failed_to_parse.toml
 └── Test
     └── Validation errors
-        └── ✘ field `expected_exit_code`: invalid digit found in string
+        └── ✘ field `expected_exit_code`: in external file `not_a_number.txt`: invalid digit found in string
 
 warning: some config files contain errors (see above)
 """

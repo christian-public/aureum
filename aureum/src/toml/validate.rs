@@ -53,6 +53,16 @@ pub enum ValidationError {
         field: String,
         error: Box<ValidationError>,
     },
+    #[error("in external file `{file}`: {error}")]
+    InExternalFile {
+        file: String,
+        error: Box<ValidationError>,
+    },
+    #[error("in environment variable `{env_var}`: {error}")]
+    InEnvVar {
+        env_var: String,
+        error: Box<ValidationError>,
+    },
     #[error("missing external file `{0}`")]
     MissingExternalFile(String),
     #[error("missing environment variable `{0}`")]
@@ -374,20 +384,21 @@ where
         ConfigValue::Literal(value) => Ok(value),
         ConfigValue::ReadFromFile { file: file_path } => {
             if let Some(str) = requirement_data.get_file(&file_path) {
-                let value = str
-                    .parse::<T>()
-                    .map_err(|err| ValidationError::ParseError(err.to_string()))?;
-                Ok(value)
+                str.parse::<T>()
+                    .map_err(|err| ValidationError::InExternalFile {
+                        file: file_path,
+                        error: Box::new(ValidationError::ParseError(err.to_string())),
+                    })
             } else {
                 Err(ValidationError::MissingExternalFile(file_path))
             }
         }
         ConfigValue::FetchFromEnv { env: var_name } => {
             if let Some(str) = requirement_data.get_env_var(&var_name) {
-                let value = str
-                    .parse::<T>()
-                    .map_err(|err| ValidationError::ParseError(err.to_string()))?;
-                Ok(value)
+                str.parse::<T>().map_err(|err| ValidationError::InEnvVar {
+                    env_var: var_name,
+                    error: Box::new(ValidationError::ParseError(err.to_string())),
+                })
             } else {
                 Err(ValidationError::MissingEnvVar(var_name))
             }
