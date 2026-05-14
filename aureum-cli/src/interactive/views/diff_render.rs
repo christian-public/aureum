@@ -1,4 +1,4 @@
-use aureum::{FieldOutcome, RunResult, TestCase, TestOutcome};
+use aureum::{FieldOutcome, TestCase, TestOutcome};
 use ratatui::Frame;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
@@ -151,10 +151,9 @@ pub(super) fn render_tui(
     frame.render_widget(summary, chunks[1]);
 
     // Title row — test path
-    let title_line = build_title_line(ctx);
+    let title_line = build_title_line(ctx.test_case);
+    let test_case = ctx.test_case;
     frame.render_widget(Paragraph::new(title_line), inner_chunks[2]);
-
-    let RunResult::Ran { test_case, .. } = ctx.run_result;
 
     // Program row — program name on the left, Stdin tab on the right (if present)
     let program = build_program_display(test_case);
@@ -277,8 +276,7 @@ pub(super) fn render_tui(
 // ── Row builders ─────────────────────────────────────────────────────────────
 
 /// Title row: test path.
-fn build_title_line(ctx: &DiffViewContext<'_>) -> Line<'static> {
-    let RunResult::Ran { test_case, .. } = ctx.run_result;
+fn build_title_line(test_case: &TestCase) -> Line<'static> {
     let test_case_id = test_case.display_id();
     Line::from(vec![
         Span::raw("  "),

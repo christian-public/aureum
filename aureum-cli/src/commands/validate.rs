@@ -36,8 +36,8 @@ pub fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode
                         ..
                     },
                 )| {
-                    let is_valid = watch_file_errors.is_empty()
-                        && test_entries.iter().all(|x| x.is_runnable());
+                    let is_valid =
+                        watch_file_errors.is_empty() && test_entries.iter().all(|x| x.is_valid());
                     let validate_result = if is_valid {
                         ReportValidateResult::Success(test_entries.len())
                     } else {

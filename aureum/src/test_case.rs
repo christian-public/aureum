@@ -28,6 +28,10 @@ pub struct TestCaseExpectations {
 #[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum PendingTestCase {
+    Skip {
+        id: TestCaseId,
+        reason: String,
+    },
     Run {
         test_case: TestCase,
         expectations: TestCaseExpectations,

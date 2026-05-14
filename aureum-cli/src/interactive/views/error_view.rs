@@ -1,4 +1,4 @@
-use aureum::RunResult;
+use aureum::{RunError, TestCase};
 use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use ratatui::Terminal;
 use ratatui::backend::{CrosstermBackend, TestBackend};
@@ -20,7 +20,8 @@ use crate::utils::shell;
 pub(crate) struct ErrorViewContext<'a> {
     pub index: usize,
     pub total: usize,
-    pub run_result: &'a RunResult,
+    pub test_case: &'a TestCase,
+    pub error: &'a RunError,
     pub counts: TestCounts,
     pub watch_mode: bool,
 }
@@ -77,10 +78,8 @@ fn render_error(frame: &mut ratatui::Frame, ctx: &ErrorViewContext<'_>) {
     render_divider(frame, inner_chunks[1]);
     render_divider(frame, inner_chunks[4]);
 
-    let RunResult::Ran { test_case, result } = ctx.run_result;
-
     // Title row
-    let test_case_id = test_case.display_id();
+    let test_case_id = ctx.test_case.display_id();
     frame.render_widget(
         Paragraph::new(Line::from(vec![
             Span::raw("  "),
@@ -90,7 +89,7 @@ fn render_error(frame: &mut ratatui::Frame, ctx: &ErrorViewContext<'_>) {
     );
 
     // Program row — dim `$ program args`
-    let program = build_program_display(ctx.run_result);
+    let program = build_program_display(ctx.test_case);
     frame.render_widget(
         Paragraph::new(Line::from(vec![
             Span::raw("  "),
@@ -101,10 +100,7 @@ fn render_error(frame: &mut ratatui::Frame, ctx: &ErrorViewContext<'_>) {
     );
 
     // Content: error message
-    let error_text = match result {
-        Err(e) => e.to_string(),
-        Ok(_) => String::new(),
-    };
+    let error_text = ctx.error.to_string();
     frame.render_widget(
         Paragraph::new(Line::from(vec![
             Span::raw("  "),
@@ -148,8 +144,7 @@ fn render_error(frame: &mut ratatui::Frame, ctx: &ErrorViewContext<'_>) {
     );
 }
 
-fn build_program_display(run_result: &RunResult) -> String {
-    let RunResult::Ran { test_case, .. } = run_result;
+fn build_program_display(test_case: &aureum::TestCase) -> String {
     let path = &test_case.program_path;
     let is_exe = path
         .extension()

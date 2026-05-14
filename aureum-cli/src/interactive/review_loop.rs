@@ -1,7 +1,12 @@
-use aureum::RunResult;
+use aureum::{RunError, TestCase, TestOutcome};
 use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
 use std::io::{self, BufRead, Write};
+
+pub(crate) struct FailedTest<'a> {
+    pub test_case: &'a TestCase,
+    pub result: &'a Result<TestOutcome, RunError>,
+}
 
 use crate::counts::TestCounts;
 use crate::interactive::action::{Action, ListAction};
@@ -41,7 +46,7 @@ pub(super) trait ReviewDriver {
 /// Steps through `failed` tests, calling `driver` for each diff/error and list view, and records
 /// per-test decisions in `past_decisions`.
 pub(super) fn run_review_loop(
-    failed: &[&RunResult],
+    failed: &[FailedTest<'_>],
     past_decisions: &mut Vec<Option<FieldDecisions>>,
     counts: TestCounts,
     driver: &mut dyn ReviewDriver,
@@ -49,25 +54,25 @@ pub(super) fn run_review_loop(
     let total = failed.len();
     let mut i = 0usize;
     while i < total {
-        let run_result = failed[i];
-        let RunResult::Ran { result, .. } = run_result;
-        let action = match result {
+        let failed_test = &failed[i];
+        let action = match failed_test.result {
             Ok(test_outcome) => {
                 let ctx = DiffViewContext {
                     index: i + 1,
                     total,
-                    run_result,
+                    test_case: failed_test.test_case,
                     test_outcome,
                     counts,
                     watch_mode: driver.watch_mode(),
                 };
                 driver.show_diff(&ctx, past_decisions[i])?
             }
-            Err(_) => {
+            Err(error) => {
                 let ctx = ErrorViewContext {
                     index: i + 1,
                     total,
-                    run_result,
+                    test_case: failed_test.test_case,
+                    error,
                     counts,
                     watch_mode: driver.watch_mode(),
                 };

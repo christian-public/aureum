@@ -3,7 +3,7 @@ use crate::report::formats::summary;
 use crate::report::formats::tap;
 use crate::report::theme;
 use crate::vendor::ascii_tree::Tree::{Leaf, Node};
-use aureum::{RunError, RunResult, TestCase, TestOutcome};
+use aureum::{RunError, RunResult, TestCase, TestCaseId, TestOutcome};
 use colored::Colorize;
 use std::io;
 
@@ -71,19 +71,14 @@ pub fn print_test_cases_start(report_config: &ReportConfig) {
     }
 }
 
-pub fn print_test_case(
-    report_config: &ReportConfig,
-    index: usize,
-    test_case: &TestCase,
-    result: &Result<TestOutcome, RunError>,
-) {
+pub fn print_test_case(report_config: &ReportConfig, index: usize, run_result: &RunResult) {
     match report_config.format {
         ReportFormat::Summary => {
-            summary_print_test_case(result);
+            summary_print_test_case(run_result);
         }
         ReportFormat::Tap => {
             let test_number_indent_level = report_config.number_of_tests.to_string().len();
-            tap_print_test_case(index + 1, test_case, result, test_number_indent_level);
+            tap_print_test_case(index + 1, run_result, test_number_indent_level);
         }
     }
 }
@@ -114,18 +109,11 @@ fn summary_print_test_cases_start(number_of_tests: usize) {
     println!("🚀 Running {number_of_tests} {label}:")
 }
 
-fn summary_print_test_case(result: &Result<TestOutcome, RunError>) {
-    match result {
-        Ok(test_outcome) => {
-            if test_outcome.is_success() {
-                print!(".");
-            } else {
-                print!("F");
-            }
-        }
-        Err(_) => {
-            print!("F");
-        }
+fn summary_print_test_case(run_result: &RunResult) {
+    match run_result {
+        RunResult::Skipped { .. } => print!("s"),
+        RunResult::Ran { .. } if run_result.is_success() => print!("."),
+        RunResult::Ran { .. } => print!("F"),
     }
 
     let _ = io::Write::flush(&mut io::stdout());
@@ -138,20 +126,47 @@ fn summary_print_test_cases_end(
 ) {
     println!(); // Print newline after dots
 
-    let (passed_tests, failed_tests): (Vec<_>, Vec<_>) =
-        run_results.iter().partition(|x| x.is_success());
+    let mut skipped_tests: Vec<(&TestCaseId, &String)> = vec![];
+    let mut passed_tests: Vec<&TestCase> = vec![];
+    let mut failed_tests: Vec<(&TestCase, &Result<TestOutcome, RunError>)> = vec![];
+
+    for run_result in run_results {
+        match run_result {
+            RunResult::Skipped { id, reason } => {
+                skipped_tests.push((id, reason));
+            }
+            RunResult::Ran {
+                test_case,
+                result: Ok(test_outcome),
+            } if run_result.is_success() => passed_tests.push(test_case),
+            RunResult::Ran { test_case, result } => {
+                failed_tests.push((test_case, result));
+            }
+        }
+    }
+
+    if verbose && !skipped_tests.is_empty() {
+        println!(); // Print newline before list of tests
+
+        let max_width = skipped_tests
+            .iter()
+            .map(|(id, _)| id.display_id().len())
+            .max()
+            .unwrap_or(0);
+        for (id, reason) in skipped_tests {
+            println!("{}", format_test_skipped(id, max_width, reason));
+        }
+    }
 
     if verbose && !passed_tests.is_empty() {
-        println!(); // Print newline before all the tests
+        println!(); // Print newline before list of tests
 
-        for passed_test in passed_tests {
-            let RunResult::Ran { test_case, .. } = passed_test;
+        for test_case in passed_tests {
             println!("{}", format_test_success(test_case));
         }
     }
 
-    for failed_test in failed_tests {
-        let RunResult::Ran { test_case, result } = failed_test;
+    for (test_case, result) in failed_tests {
         println!(); // Print newline before each failed test
         println!("{}", format_test_failure(test_case, result));
     }
@@ -164,6 +179,14 @@ fn summary_print_test_cases_end(
 
 fn format_test_success(test_case: &TestCase) -> String {
     format!("{} {}", theme::checkmark(), test_case.display_id())
+}
+
+fn format_test_skipped(id: &TestCaseId, max_width: usize, reason: &str) -> String {
+    format!(
+        "{} {:<max_width$}  {reason}",
+        theme::skip(),
+        id.display_id()
+    )
 }
 
 fn format_test_failure(test_case: &TestCase, result: &Result<TestOutcome, RunError>) -> String {
@@ -205,6 +228,10 @@ fn format_summary_line(counts: TestCounts) -> String {
 
     count_components.push(format!("{} passed", counts.passed));
 
+    if counts.skipped > 0 {
+        count_components.push(format!("{} skipped", counts.skipped));
+    }
+
     if counts.failed > 0 {
         count_components.push(format!("{} failed", counts.failed));
     }
@@ -219,33 +246,34 @@ fn tap_print_test_cases_start(number_of_tests: usize) {
     tap::print_plan(1, number_of_tests);
 }
 
-fn tap_print_test_case(
-    test_number: usize,
-    test_case: &TestCase,
-    result: &Result<TestOutcome, RunError>,
-    max_width: usize,
-) {
-    let message = test_case.display_id();
-
-    match result {
-        Ok(test_outcome) => {
-            if test_outcome.is_success() {
-                tap::print_ok(test_number, max_width, &message)
-            } else {
-                tap::print_not_ok(
+fn tap_print_test_case(test_number: usize, run_result: &RunResult, max_width: usize) {
+    match run_result {
+        RunResult::Skipped { id, reason } => {
+            tap::print_ok_skip(test_number, max_width, &id.display_id(), reason);
+        }
+        RunResult::Ran { test_case, result } => {
+            let message = test_case.display_id();
+            match result {
+                Ok(test_outcome) => {
+                    if test_outcome.is_success() {
+                        tap::print_ok(test_number, max_width, &message)
+                    } else {
+                        tap::print_not_ok(
+                            test_number,
+                            max_width,
+                            &message,
+                            Some(&tap::test_outcome_diagnostic(test_outcome)),
+                        )
+                    }
+                }
+                Err(error) => tap::print_not_ok(
                     test_number,
                     max_width,
                     &message,
-                    Some(&tap::test_outcome_diagnostic(test_outcome)),
-                )
+                    Some(&tap::message_diagnostic(&error.to_string())),
+                ),
             }
         }
-        Err(error) => tap::print_not_ok(
-            test_number,
-            max_width,
-            &message,
-            Some(&tap::message_diagnostic(&error.to_string())),
-        ),
     }
 }
 

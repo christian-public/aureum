@@ -1,0 +1,4 @@
+program = "echo"
+program_arguments = ["-n", "actual"]
+
+expected_stdout = "expected"

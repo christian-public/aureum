@@ -1,0 +1,68 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+
+[[tests]]
+id = "skip_root_test"
+program_arguments = ["test", "--format", "tap", "helpers/skip_root_test.toml"]
+
+expected_stdout = """
+TAP version 14
+1..1
+ok     1 - helpers/skip_root_test.toml # SKIP not implemented yet
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "skip_subtest"
+program_arguments = ["test", "--format", "tap", "helpers/skip_subtest.toml"]
+
+expected_stdout = """
+TAP version 14
+1..2
+ok     1 - helpers/skip_subtest.toml:passing
+ok     2 - helpers/skip_subtest.toml:not_ready # SKIP feature not ready
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "skip_invalid_config"
+program_arguments = [
+    "test",
+    "--format",
+    "tap",
+    "helpers/skip_invalid_config.toml",
+]
+
+expected_stdout = """
+TAP version 14
+1..1
+ok     1 - helpers/skip_invalid_config.toml # SKIP todo
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "all"
+program_arguments = ["test", "--format", "tap", "helpers/*.toml"]
+
+expected_stdout = """
+TAP version 14
+1..5
+not ok 1 - helpers/failing_test.toml
+  ---
+  stdout:
+    expected: expected
+    got: actual
+  ...
+ok     2 - helpers/skip_invalid_config.toml # SKIP todo
+ok     3 - helpers/skip_root_test.toml # SKIP not implemented yet
+ok     4 - helpers/skip_subtest.toml:passing
+ok     5 - helpers/skip_subtest.toml:not_ready # SKIP feature not ready
+"""
+expected_stderr = ""
+expected_exit_code = 1

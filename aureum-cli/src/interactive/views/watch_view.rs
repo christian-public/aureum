@@ -131,6 +131,7 @@ fn render_idle(
         config_stats,
         passed,
         failed,
+        skipped: 0,
     });
     let stats_chunks = Layout::default()
         .direction(Direction::Horizontal)

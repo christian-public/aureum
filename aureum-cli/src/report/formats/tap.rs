@@ -15,6 +15,11 @@ pub fn print_ok(test_number: usize, max_width: usize, message: &str) {
     println!("ok     {test_number:>max_width$} - {message}")
 }
 
+pub fn print_ok_skip(test_number: usize, max_width: usize, message: &str, reason: &str) {
+    let message = escape_message(message);
+    println!("ok     {test_number:>max_width$} - {message} # SKIP {reason}")
+}
+
 pub fn print_not_ok(
     test_number: usize,
     max_width: usize,

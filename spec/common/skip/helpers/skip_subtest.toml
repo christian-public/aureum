@@ -1,0 +1,16 @@
+program = "echo"
+
+
+[[tests]]
+id = "passing"
+program_arguments = ["hello"]
+
+expected_stdout = "hello\n"
+
+
+[[tests]]
+id = "not_ready"
+skip = "feature not ready"
+program_arguments = ["world"]
+
+expected_stdout = "world\n"

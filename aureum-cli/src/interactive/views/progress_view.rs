@@ -79,8 +79,8 @@ pub(crate) fn run_tests_with_progress(
             &test_cases_owned,
             parallel,
             &current_dir_owned,
-            &|_i, _tc, res| {
-                let _ = progress_tx.send(res.as_ref().map(|r| r.is_success()).unwrap_or(false));
+            &|_i, run_result| {
+                let _ = progress_tx.send(run_result.is_success());
             },
         );
         let _ = results_tx.send(results);
@@ -197,6 +197,7 @@ fn render_progress(
         config_stats,
         passed,
         failed,
+        skipped: 0,
     });
     let header_chunks = Layout::default()
         .direction(Direction::Horizontal)

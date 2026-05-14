@@ -1,0 +1,48 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+
+[[tests]]
+id = "skip_root_test"
+program_arguments = ["validate", "helpers/skip_root_test.toml"]
+
+expected_stdout = """
+✔ helpers/skip_root_test.toml  1 test
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "skip_subtest"
+program_arguments = ["validate", "helpers/skip_subtest.toml"]
+
+expected_stdout = """
+✔ helpers/skip_subtest.toml  2 tests
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "skip_invalid_config"
+program_arguments = ["validate", "helpers/skip_invalid_config.toml"]
+
+expected_stdout = """
+✔ helpers/skip_invalid_config.toml  1 test
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "all"
+program_arguments = ["validate", "helpers/*.toml"]
+
+expected_stdout = """
+✔ helpers/failing_test.toml         1 test
+✔ helpers/skip_invalid_config.toml  1 test
+✔ helpers/skip_root_test.toml       1 test
+✔ helpers/skip_subtest.toml         2 tests
+"""
+expected_stderr = ""
+expected_exit_code = 0

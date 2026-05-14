@@ -1,4 +1,5 @@
-use crate::test_case::{PendingTestCase, TestCase};
+use crate::test_case::{PendingTestCase, TestCase, TestCaseExpectations};
+use crate::test_case_id::TestCaseId;
 use crate::test_outcome::{FieldOutcome, TestOutcome};
 use crate::utils::string;
 use rayon::prelude::*;
@@ -18,6 +19,10 @@ pub struct ProgramOutput {
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum RunResult {
+    Skipped {
+        id: TestCaseId,
+        reason: String,
+    },
     Ran {
         test_case: TestCase,
         result: Result<TestOutcome, RunError>,
@@ -26,10 +31,12 @@ pub enum RunResult {
 
 impl RunResult {
     pub fn is_success(&self) -> bool {
-        let RunResult::Ran { result, .. } = self;
-        match result {
-            Ok(test_outcome) => test_outcome.is_success(),
-            Err(_) => false,
+        match self {
+            RunResult::Skipped { .. } => true,
+            RunResult::Ran { result, .. } => match result {
+                Ok(test_outcome) => test_outcome.is_success(),
+                Err(_) => false,
+            },
         }
     }
 }
@@ -52,16 +59,24 @@ pub fn run_test_cases(
     test_cases: &[PendingTestCase],
     run_in_parallel: bool,
     current_dir: &Path,
-    report_test_case: &(impl Fn(usize, &TestCase, &Result<TestOutcome, RunError>) + Sync),
+    report_test_case: &(impl Fn(usize, &RunResult) + Sync),
 ) -> Vec<RunResult> {
     let run = |(i, entry): (usize, &PendingTestCase)| -> RunResult {
-        let result = run_test_case(entry, current_dir);
-        let PendingTestCase::Run { test_case, .. } = entry;
-        report_test_case(i, test_case, &result);
-        RunResult::Ran {
-            test_case: test_case.clone(),
-            result,
-        }
+        let run_result = match entry {
+            PendingTestCase::Skip { id, reason } => RunResult::Skipped {
+                id: id.clone(),
+                reason: reason.clone(),
+            },
+            PendingTestCase::Run {
+                test_case,
+                expectations,
+            } => RunResult::Ran {
+                test_case: test_case.clone(),
+                result: run_test_case(test_case, expectations, current_dir),
+            },
+        };
+        report_test_case(i, &run_result);
+        run_result
     };
 
     if run_in_parallel {
@@ -71,11 +86,11 @@ pub fn run_test_cases(
     }
 }
 
-pub fn run_test_case(entry: &PendingTestCase, current_dir: &Path) -> Result<TestOutcome, RunError> {
-    let PendingTestCase::Run {
-        test_case,
-        expectations,
-    } = entry;
+fn run_test_case(
+    test_case: &TestCase,
+    expectations: &TestCaseExpectations,
+    current_dir: &Path,
+) -> Result<TestOutcome, RunError> {
     let output = run_program(test_case, current_dir)?;
 
     Ok(TestOutcome {

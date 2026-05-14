@@ -1,4 +1,4 @@
-use aureum::{RunResult, TestOutcome};
+use aureum::{TestCase, TestOutcome};
 use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use ratatui::Terminal;
 use ratatui::backend::{CrosstermBackend, TestBackend};
@@ -29,7 +29,7 @@ pub(super) enum Tab {
 pub(crate) struct DiffViewContext<'a> {
     pub index: usize,
     pub total: usize,
-    pub run_result: &'a RunResult,
+    pub test_case: &'a TestCase,
     pub test_outcome: &'a TestOutcome,
     pub counts: TestCounts,
     /// True when running under `--watch`; enables Esc → back-to-watch.
@@ -410,8 +410,7 @@ fn run_diff_view(
     let test_outcome = ctx.test_outcome;
     let is_last = ctx.index == ctx.total;
     let mut state = TuiState::new(test_outcome, initial_decisions.unwrap_or_default());
-    let RunResult::Ran { test_case, .. } = ctx.run_result;
-    let stdin = test_case.stdin.as_deref();
+    let stdin = ctx.test_case.stdin.as_deref();
 
     let content =
         diff_content::build_content(test_outcome, state.active_field, stdin, state.active_tab);

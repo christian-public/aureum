@@ -1,4 +1,4 @@
-use aureum::RunResult;
+use crate::interactive::review_loop::FailedTest;
 use crossterm::event::{Event, KeyCode, KeyEventKind};
 use ratatui::backend::{CrosstermBackend, TestBackend};
 use ratatui::layout::{Constraint, Direction, Layout};
@@ -16,7 +16,7 @@ use crate::interactive::utils::widgets;
 use crate::interactive::views::diff_view;
 
 pub(crate) struct ListViewContext<'a> {
-    pub failed: &'a [&'a RunResult],
+    pub failed: &'a [FailedTest<'a>],
     pub past_decisions: &'a [Option<FieldDecisions>],
     pub counts: TestCounts,
 }
@@ -99,10 +99,9 @@ fn render_list(frame: &mut Frame, ctx: &ListViewContext<'_>, selection: usize, s
 
     // List content
     let mut lines: Vec<Line<'static>> = Vec::new();
-    for (i, run_result) in ctx.failed.iter().enumerate() {
+    for (i, failed_test) in ctx.failed.iter().enumerate() {
         let is_selected = i == selection;
-        let RunResult::Ran { test_case, result } = *run_result;
-        let test_case_id = test_case.display_id();
+        let test_case_id = failed_test.test_case.display_id();
         let dec = ctx.past_decisions.get(i).and_then(|d| d.as_ref());
         let id_style = if is_selected {
             Style::default()
@@ -117,7 +116,7 @@ fn render_list(frame: &mut Frame, ctx: &ListViewContext<'_>, selection: usize, s
             Span::raw(" ")
         };
         let mut spans = vec![Span::raw("  "), arrow_span, Span::raw(" ")];
-        match result.as_ref() {
+        match failed_test.result.as_ref() {
             Ok(test_outcome) => {
                 let failing = FailingFields::of(test_outcome);
                 let [b1, sp1, icon, sp2, b2] = decision_indicator_spans(dec, failing);

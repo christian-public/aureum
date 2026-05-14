@@ -9,6 +9,10 @@ pub fn cross() -> String {
     "✘".red().bold().to_string() // U+2718 Heavy Ballot X
 }
 
+pub fn skip() -> String {
+    "⊘".yellow().bold().to_string() // U+2298 Circled Division Slash
+}
+
 pub fn error() -> String {
     "error:".red().bold().to_string()
 }

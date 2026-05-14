@@ -97,6 +97,18 @@ pub struct TestEntry {
 
 impl TestEntry {
     pub fn is_runnable(&self) -> bool {
+        matches!(self.pending_test_case(), Ok(PendingTestCase::Run { .. }))
+    }
+
+    pub fn is_runnable_if_no_validation_errors(&self) -> bool {
+        !self.is_skipped()
+    }
+
+    pub fn is_skipped(&self) -> bool {
+        matches!(self.pending_test_case(), Ok(PendingTestCase::Skip { .. }))
+    }
+
+    pub fn is_valid(&self) -> bool {
         self.pending_test_case().is_ok()
     }
 
@@ -105,6 +117,13 @@ impl TestEntry {
     }
 
     pub fn pending_test_case(&self) -> Result<PendingTestCase, BTreeSet<ValidationError>> {
+        if let Some(reason) = &self.skip_reason {
+            return Ok(PendingTestCase::Skip {
+                id: self.id.clone(),
+                reason: reason.clone(),
+            });
+        }
+
         match (&self.test_case, &self.expectations) {
             (Ok(tc), Ok(exp)) => Ok(PendingTestCase::Run {
                 test_case: tc.clone(),

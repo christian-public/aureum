@@ -169,7 +169,7 @@ fn run_tests_record(args: TestArgs, width: u16, height: u16, current_dir: &Path)
     let all_test_cases = collect_test_cases(&config_files);
 
     let run_results =
-        aureum::run_test_cases(&all_test_cases, args.parallel, current_dir, &|_, _, _| {});
+        aureum::run_test_cases(&all_test_cases, args.parallel, current_dir, &|_, _| {});
 
     let config_stats = config_files.config_stats();
 
@@ -296,14 +296,10 @@ fn run_test_cases_noninteractive(
 
     report::test::print_test_cases_start(&report_config);
 
-    let run_results = aureum::run_test_cases(
-        test_cases,
-        parallel,
-        current_dir,
-        &|index, test_case, result| {
-            report::test::print_test_case(&report_config, index, test_case, result);
-        },
-    );
+    let run_results =
+        aureum::run_test_cases(test_cases, parallel, current_dir, &|index, run_result| {
+            report::test::print_test_case(&report_config, index, run_result);
+        });
 
     report::test::print_test_cases_end(&report_config, &run_results, config_stats);
 
