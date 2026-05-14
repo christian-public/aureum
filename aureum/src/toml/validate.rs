@@ -4,6 +4,7 @@ use crate::utils::string;
 use crate::{TestId, TomlConfigFile, TomlConfigTest};
 use relative_path::RelativePath;
 use std::collections::{BTreeMap, BTreeSet};
+use std::fmt::Display;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
@@ -56,8 +57,8 @@ pub enum ValidationError {
     MissingExternalFile(String),
     #[error("missing environment variable `{0}`")]
     MissingEnvVar(String),
-    #[error("failed to parse string")]
-    FailedToParseString,
+    #[error("{0}")]
+    ParseError(String),
     #[error("missing required field `program`")]
     ProgramRequired,
     #[error("program not found: `{0}`")]
@@ -344,6 +345,7 @@ fn collect_error<T>(
 ) -> Option<T>
 where
     T: FromStr,
+    T::Err: Display,
 {
     match config_value {
         Some(config_value) => match read_from_config_value(config_value, requirement_data) {
@@ -366,14 +368,15 @@ fn read_from_config_value<T>(
 ) -> Result<T, ValidationError>
 where
     T: FromStr,
+    T::Err: Display,
 {
     match config_value {
         ConfigValue::Literal(value) => Ok(value),
         ConfigValue::ReadFromFile { file: file_path } => {
             if let Some(str) = requirement_data.get_file(&file_path) {
                 let value = str
-                    .parse()
-                    .map_err(|_err| ValidationError::FailedToParseString)?;
+                    .parse::<T>()
+                    .map_err(|err| ValidationError::ParseError(err.to_string()))?;
                 Ok(value)
             } else {
                 Err(ValidationError::MissingExternalFile(file_path))
@@ -382,8 +385,8 @@ where
         ConfigValue::FetchFromEnv { env: var_name } => {
             if let Some(str) = requirement_data.get_env_var(&var_name) {
                 let value = str
-                    .parse()
-                    .map_err(|_err| ValidationError::FailedToParseString)?;
+                    .parse::<T>()
+                    .map_err(|err| ValidationError::ParseError(err.to_string()))?;
                 Ok(value)
             } else {
                 Err(ValidationError::MissingEnvVar(var_name))
