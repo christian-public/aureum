@@ -49,7 +49,7 @@ expected_stderr = """
 📋 helpers/config_missing_env_var.toml
 └── Test
     └── Validation errors
-        └── ✘ missing environment variable `AUREUM_TEST_THIS_ENV_VAR_DOES_NOT_EXIST`
+        └── ✘ field `expected_stdout`: missing environment variable `AUREUM_TEST_THIS_ENV_VAR_DOES_NOT_EXIST`
 
 warning: some config files contain errors (see above)
 """
@@ -67,7 +67,7 @@ expected_stderr = """
 📋 helpers/config_missing_external_file.toml
 └── Test
     └── Validation errors
-        └── ✘ missing external file `aureum_test_this_file_does_not_exist`
+        └── ✘ field `expected_stdout`: missing external file `aureum_test_this_file_does_not_exist`
 
 warning: some config files contain errors (see above)
 """
@@ -124,7 +124,7 @@ expected_stderr = """
 📋 helpers/expected_exit_code_invalid_exit_code.toml
 └── Test
     └── Validation errors
-        └── ✘ field `expected_exit_code` must be between 0 and 255 on POSIX systems, or -2147483648 to 2147483647 on Windows
+        └── ✘ field `expected_exit_code`: must be between 0 and 255 on POSIX systems, or -2147483648 to 2147483647 on Windows
 
 warning: some config files contain errors (see above)
 """
@@ -145,7 +145,7 @@ expected_stderr = """
 📋 helpers/expected_exit_code_failed_to_parse.toml
 └── Test
     └── Validation errors
-        └── ✘ failed to parse string
+        └── ✘ field `expected_exit_code`: failed to parse string
 
 warning: some config files contain errors (see above)
 """
@@ -166,7 +166,7 @@ expected_stderr = """
 📋 helpers/timeout_seconds_negative_timeout.toml
 └── Test
     └── Validation errors
-        └── ✘ field `timeout_seconds` must be 0 or greater
+        └── ✘ field `timeout_seconds`: must be 0 or greater
 
 warning: some config files contain errors (see above)
 """

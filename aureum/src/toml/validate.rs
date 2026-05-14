@@ -47,6 +47,11 @@ impl ProgramPath {
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, thiserror::Error)]
 pub enum ValidationError {
+    #[error("field `{field}`: {error}")]
+    InField {
+        field: String,
+        error: Box<ValidationError>,
+    },
     #[error("missing external file `{0}`")]
     MissingExternalFile(String),
     #[error("missing environment variable `{0}`")]
@@ -61,11 +66,9 @@ pub enum ValidationError {
         "no expectations defined; specify at least one `expected_*` field: `expected_stdout`, `expected_stderr`, or `expected_exit_code`"
     )]
     ExpectationRequired,
-    #[error(
-        "field `expected_exit_code` must be between 0 and 255 on POSIX systems, or -2147483648 to 2147483647 on Windows"
-    )]
+    #[error("must be between 0 and 255 on POSIX systems, or -2147483648 to 2147483647 on Windows")]
     InvalidExitCode,
-    #[error("field `timeout_seconds` must be 0 or greater")]
+    #[error("must be 0 or greater")]
     TimeoutMustBeNonNegative,
 }
 
@@ -181,7 +184,7 @@ fn build_test_case(
 ) -> (ProgramPath, Result<TestCase, BTreeSet<ValidationError>>) {
     let mut errors = BTreeSet::new();
 
-    let program = collect_error(&mut errors, config.program, requirement_data)
+    let program = collect_error(&mut errors, config.program, requirement_data, "program")
         .map(|s| string::normalize_newlines(&s));
     let program_path = get_program_path(
         program.unwrap_or_default(),
@@ -212,24 +215,35 @@ fn build_test_case(
                 arguments.push(string::normalize_newlines(&arg));
             }
             Err(err) => {
-                errors.insert(err);
+                errors.insert(ValidationError::InField {
+                    field: "program_arguments".to_owned(),
+                    error: Box::new(err),
+                });
             }
         }
     }
 
-    let stdin = collect_error(&mut errors, config.stdin, requirement_data)
+    let stdin = collect_error(&mut errors, config.stdin, requirement_data, "stdin")
         .map(|s| string::normalize_newlines(&s));
 
-    let timeout_seconds = collect_error(&mut errors, config.timeout_seconds, requirement_data)
-        .and_then(|v| {
-            if v < 0 {
-                errors.insert(ValidationError::TimeoutMustBeNonNegative);
-                None
-            } else {
-                Some(v as u64)
-            }
-        })
-        .unwrap_or(default_timeout);
+    let timeout_seconds = collect_error(
+        &mut errors,
+        config.timeout_seconds,
+        requirement_data,
+        "timeout_seconds",
+    )
+    .and_then(|v| {
+        if v < 0 {
+            errors.insert(ValidationError::InField {
+                field: "timeout_seconds".to_owned(),
+                error: Box::new(ValidationError::TimeoutMustBeNonNegative),
+            });
+            None
+        } else {
+            Some(v as u64)
+        }
+    })
+    .unwrap_or(default_timeout);
 
     let test_case = match (program_path.get_resolved_path(), errors.is_empty()) {
         (Some(resolved_path), true) => Ok(TestCase {
@@ -260,17 +274,34 @@ fn build_test_case_expectations(
         errors.insert(ValidationError::ExpectationRequired);
     }
 
-    let expected_stdout = collect_error(&mut errors, config.expected_stdout, requirement_data)
-        .map(|s| string::normalize_newlines(&s));
-    let expected_stderr = collect_error(&mut errors, config.expected_stderr, requirement_data)
-        .map(|s| string::normalize_newlines(&s));
-    let expected_exit_code =
-        collect_error(&mut errors, config.expected_exit_code, requirement_data);
+    let expected_stdout = collect_error(
+        &mut errors,
+        config.expected_stdout,
+        requirement_data,
+        "expected_stdout",
+    )
+    .map(|s| string::normalize_newlines(&s));
+    let expected_stderr = collect_error(
+        &mut errors,
+        config.expected_stderr,
+        requirement_data,
+        "expected_stderr",
+    )
+    .map(|s| string::normalize_newlines(&s));
+    let expected_exit_code = collect_error(
+        &mut errors,
+        config.expected_exit_code,
+        requirement_data,
+        "expected_exit_code",
+    );
 
     let validated_expected_exit_code = expected_exit_code.and_then(|v| {
         i32::try_from(v)
             .map_err(|_| {
-                errors.insert(ValidationError::InvalidExitCode);
+                errors.insert(ValidationError::InField {
+                    field: "expected_exit_code".to_owned(),
+                    error: Box::new(ValidationError::InvalidExitCode),
+                });
             })
             .ok()
     });
@@ -309,6 +340,7 @@ fn collect_error<T>(
     errors: &mut BTreeSet<ValidationError>,
     config_value: Option<ConfigValue<T>>,
     requirement_data: &RequirementData,
+    field_name: &str,
 ) -> Option<T>
 where
     T: FromStr,
@@ -317,7 +349,10 @@ where
         Some(config_value) => match read_from_config_value(config_value, requirement_data) {
             Ok(value) => Some(value),
             Err(err) => {
-                errors.insert(err);
+                errors.insert(ValidationError::InField {
+                    field: field_name.to_owned(),
+                    error: Box::new(err),
+                });
                 None
             }
         },

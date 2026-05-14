@@ -39,11 +39,11 @@ expected_stderr = """
 ├── :env_var_exists
 ├── :env_var_missing
 │   └── Validation errors
-│       └── ✘ missing environment variable `AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST`
+│       └── ✘ field `expected_stdout`: missing environment variable `AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST`
 ├── :external_file_exists
 └── :external_file_missing
     └── Validation errors
-        └── ✘ missing external file `aureum_test_this_file_does_not_exist`
+        └── ✘ field `expected_stdout`: missing external file `aureum_test_this_file_does_not_exist`
 
 warning: some config files contain errors (see above)
 """
@@ -114,7 +114,7 @@ expected_stderr = """
 │   ├── Program to run
 │   │   └── ✔ <absolute path to 'echo'>
 │   └── Validation errors
-│       └── ✘ missing environment variable `AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST`
+│       └── ✘ field `expected_stdout`: missing environment variable `AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST`
 ├── :external_file_exists
 │   └── Program to run
 │       └── ✔ <absolute path to 'echo'>
@@ -122,7 +122,7 @@ expected_stderr = """
     ├── Program to run
     │   └── ✔ <absolute path to 'echo'>
     └── Validation errors
-        └── ✘ missing external file `aureum_test_this_file_does_not_exist`
+        └── ✘ field `expected_stdout`: missing external file `aureum_test_this_file_does_not_exist`
 
 📋 helpers/no_requirements.toml
 └── Test
