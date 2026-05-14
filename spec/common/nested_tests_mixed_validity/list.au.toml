@@ -37,7 +37,7 @@ expected_stderr = """
 ├── :test1
 └── :test2
     └── Validation errors
-        └── ✘ The field `program` is required
+        └── ✘ missing required field `program`
 
 warning: some config files contain errors (see above)
 """
@@ -56,7 +56,7 @@ expected_stderr = """
 ├── :test1
 └── :test2
     └── Validation errors
-        └── ✘ The field `program` is required
+        └── ✘ missing required field `program`
 
 warning: some config files contain errors (see above)
 """
@@ -75,10 +75,10 @@ expected_stderr = """
 📋 helpers/missing_program_on_all_tests.toml
 ├── :test1
 │   └── Validation errors
-│       └── ✘ The field `program` is required
+│       └── ✘ missing required field `program`
 └── :test2
     └── Validation errors
-        └── ✘ The field `program` is required
+        └── ✘ missing required field `program`
 
 warning: some config files contain errors (see above)
 """
@@ -96,10 +96,10 @@ expected_stderr = """
 📋 helpers/missing_program_on_all_tests.toml
 ├── :test1
 │   └── Validation errors
-│       └── ✘ The field `program` is required
+│       └── ✘ missing required field `program`
 └── :test2
     └── Validation errors
-        └── ✘ The field `program` is required
+        └── ✘ missing required field `program`
 
 warning: some config files contain errors (see above)
 """
@@ -122,16 +122,16 @@ expected_stderr = """
 📋 helpers/missing_program_on_all_tests.toml
 ├── :test1
 │   └── Validation errors
-│       └── ✘ The field `program` is required
+│       └── ✘ missing required field `program`
 └── :test2
     └── Validation errors
-        └── ✘ The field `program` is required
+        └── ✘ missing required field `program`
 
 📋 helpers/missing_program_on_test2.toml
 ├── :test1
 └── :test2
     └── Validation errors
-        └── ✘ The field `program` is required
+        └── ✘ missing required field `program`
 
 warning: some config files contain errors (see above)
 """

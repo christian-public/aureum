@@ -11,7 +11,7 @@ expected_stdout = """
 expected_stderr = """
 📋 helpers/watch_files_missing_file.toml
 └── Watch file errors
-    └── ✘ Missing external file `aureum_test_this_file_does_not_exist`
+    └── ✘ missing external file `aureum_test_this_file_does_not_exist`
 
 warning: some config files contain errors (see above)
 """
@@ -28,7 +28,7 @@ expected_stdout = """
 expected_stderr = """
 📋 helpers/watch_files_missing_env_var.toml
 └── Watch file errors
-    └── ✘ Missing environment variable `AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST`
+    └── ✘ missing environment variable `AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST`
 
 warning: some config files contain errors (see above)
 """

@@ -12,8 +12,8 @@ expected_stderr = """
 📋 helpers/config_empty.toml
 └── Test
     └── Validation errors
-        ├── ✘ The field `program` is required
-        └── ✘ At least one expectation is required
+        ├── ✘ missing required field `program`
+        └── ✘ no expectations defined; specify at least one `expected_*` field: `expected_stdout`, `expected_stderr`, or `expected_exit_code`
 
 warning: some config files contain errors (see above)
 """
@@ -31,7 +31,7 @@ expected_stderr = """
 📋 helpers/config_no_expectations.toml
 └── Test
     └── Validation errors
-        └── ✘ At least one expectation is required
+        └── ✘ no expectations defined; specify at least one `expected_*` field: `expected_stdout`, `expected_stderr`, or `expected_exit_code`
 
 warning: some config files contain errors (see above)
 """
@@ -49,7 +49,7 @@ expected_stderr = """
 📋 helpers/config_missing_env_var.toml
 └── Test
     └── Validation errors
-        └── ✘ Missing environment variable `AUREUM_TEST_THIS_ENV_VAR_DOES_NOT_EXIST`
+        └── ✘ missing environment variable `AUREUM_TEST_THIS_ENV_VAR_DOES_NOT_EXIST`
 
 warning: some config files contain errors (see above)
 """
@@ -67,7 +67,7 @@ expected_stderr = """
 📋 helpers/config_missing_external_file.toml
 └── Test
     └── Validation errors
-        └── ✘ Missing external file `aureum_test_this_file_does_not_exist`
+        └── ✘ missing external file `aureum_test_this_file_does_not_exist`
 
 warning: some config files contain errors (see above)
 """
@@ -85,7 +85,7 @@ expected_stderr = """
 📋 helpers/program_no_program.toml
 └── Test
     └── Validation errors
-        └── ✘ The field `program` is required
+        └── ✘ missing required field `program`
 
 warning: some config files contain errors (see above)
 """
@@ -103,7 +103,7 @@ expected_stderr = """
 📋 helpers/program_unknown_program.toml
 └── Test
     └── Validation errors
-        └── ✘ The program `aureum_test_this_program_does_not_exist` was not found
+        └── ✘ program not found: `aureum_test_this_program_does_not_exist`
 
 warning: some config files contain errors (see above)
 """
@@ -124,7 +124,7 @@ expected_stderr = """
 📋 helpers/expected_exit_code_invalid_exit_code.toml
 └── Test
     └── Validation errors
-        └── ✘ Exit code must be a value between -2147483648 to 2147483647 (On POSIX/Unix/Linux: Between 0 and 255)
+        └── ✘ field `expected_exit_code` must be between 0 and 255 on POSIX systems, or -2147483648 to 2147483647 on Windows
 
 warning: some config files contain errors (see above)
 """
@@ -145,7 +145,7 @@ expected_stderr = """
 📋 helpers/timeout_seconds_negative_timeout.toml
 └── Test
     └── Validation errors
-        └── ✘ The field `timeout_seconds` must be 0 or greater
+        └── ✘ field `timeout_seconds` must be 0 or greater
 
 warning: some config files contain errors (see above)
 """

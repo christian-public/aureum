@@ -354,30 +354,7 @@ fn requirements_map(requirements: &Requirements, requirement_data: &RequirementD
 }
 
 fn format_validation_error(validation_error: &ValidationError) -> String {
-    let msg = match validation_error {
-        ValidationError::MissingExternalFile(file_path) => {
-            format!("Missing external file `{file_path}`")
-        }
-        ValidationError::MissingEnvVar(var_name) => {
-            format!("Missing environment variable `{var_name}`")
-        }
-        ValidationError::FailedToParseString => String::from("Failed to parse string"),
-        ValidationError::ProgramRequired => String::from("The field `program` is required"),
-        ValidationError::ProgramNotFound(program) => {
-            format!("The program `{program}` was not found")
-        }
-        ValidationError::ExpectationRequired => {
-            String::from("At least one expectation is required")
-        }
-        ValidationError::InvalidExitCode => String::from(
-            "Exit code must be a value between -2147483648 to 2147483647 (On POSIX/Unix/Linux: Between 0 and 255)",
-        ),
-        ValidationError::TimeoutMustBeNonNegative => {
-            String::from("The field `timeout_seconds` must be 0 or greater")
-        }
-    };
-
-    format!("{} {}", theme::cross(), msg.red())
+    format!("{} {}", theme::cross(), validation_error.to_string().red())
 }
 
 fn str_to_tree(msg: &str) -> Tree {

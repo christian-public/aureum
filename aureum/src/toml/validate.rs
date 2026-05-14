@@ -53,15 +53,19 @@ pub enum ValidationError {
     MissingEnvVar(String),
     #[error("failed to parse string")]
     FailedToParseString,
-    #[error("`program` is required")]
+    #[error("missing required field `program`")]
     ProgramRequired,
     #[error("program not found: `{0}`")]
     ProgramNotFound(String),
-    #[error("at least one expectation (stdout, stderr, or exit code) is required")]
+    #[error(
+        "no expectations defined; specify at least one `expected_*` field: `expected_stdout`, `expected_stderr`, or `expected_exit_code`"
+    )]
     ExpectationRequired,
-    #[error("invalid exit code")]
+    #[error(
+        "field `expected_exit_code` must be between 0 and 255 on POSIX systems, or -2147483648 to 2147483647 on Windows"
+    )]
     InvalidExitCode,
-    #[error("timeout_seconds must be 0 or greater")]
+    #[error("field `timeout_seconds` must be 0 or greater")]
     TimeoutMustBeNonNegative,
 }
 
