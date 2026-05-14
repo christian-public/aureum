@@ -163,7 +163,7 @@ fn summary_print_test_cases_end(
 }
 
 fn format_test_success(test_case: &TestCase) -> String {
-    format!("{} {}", theme::checkmark(), test_case.id())
+    format!("{} {}", theme::checkmark(), test_case.display_id())
 }
 
 fn format_test_failure(test_case: &TestCase, result: &Result<TestOutcome, RunError>) -> String {
@@ -174,7 +174,7 @@ fn format_test_failure(test_case: &TestCase, result: &Result<TestOutcome, RunErr
         }
     };
 
-    let heading = format!("❌ {}", test_case.id());
+    let heading = format!("❌ {}", test_case.display_id());
     let tree = Node(heading, nodes);
     tree.to_string().trim_end().to_owned()
 }
@@ -225,7 +225,7 @@ fn tap_print_test_case(
     result: &Result<TestOutcome, RunError>,
     max_width: usize,
 ) {
-    let message = test_case.id();
+    let message = test_case.display_id();
 
     match result {
         Ok(test_outcome) => {

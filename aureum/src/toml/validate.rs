@@ -1,4 +1,5 @@
 use crate::test_case::{PendingTestCase, TestCase, TestCaseExpectations};
+use crate::test_case_id::TestCaseId;
 use crate::toml::config::ConfigValue;
 use crate::utils::string;
 use crate::{TestId, TomlConfigFile, TomlConfigTest};
@@ -85,6 +86,7 @@ pub enum ValidationError {
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct TestEntry {
+    pub id: TestCaseId,
     pub program_path: ProgramPath,
     pub test_case: Result<TestCase, BTreeSet<ValidationError>>,
     pub expectations: Result<TestCaseExpectations, BTreeSet<ValidationError>>,
@@ -121,51 +123,45 @@ impl TestEntry {
 
 pub fn build_test_entries(
     config: TomlConfigFile,
-    path_to_config_dir: &RelativePath,
+    config_dir_path: &RelativePath,
     file_name: &str,
     requirement_data: &RequirementData,
     current_dir: &Path,
     default_timeout: u64,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
-) -> Vec<(TestId, TestEntry)> {
+) -> Vec<TestEntry> {
     split_toml_config(config)
         .into_iter()
         .map(|c| {
-            let test_id = c.id.clone().expect("id must exist after parsing");
-
-            (
-                test_id.clone(),
-                build_test_entry(
-                    test_id,
-                    c,
-                    path_to_config_dir,
-                    file_name,
-                    requirement_data,
-                    current_dir,
-                    default_timeout,
-                    find_executable_path,
-                ),
+            let test_id = c.id.clone().expect("must exist after parsing");
+            let id = TestCaseId::new(
+                config_dir_path.to_relative_path_buf(),
+                file_name.to_owned(),
+                test_id,
+            );
+            build_test_entry(
+                id,
+                c,
+                requirement_data,
+                current_dir,
+                default_timeout,
+                find_executable_path,
             )
         })
         .collect()
 }
 
-#[allow(clippy::too_many_arguments)]
 fn build_test_entry(
-    test_id: TestId,
+    id: TestCaseId,
     config: TomlConfigTest,
-    path_to_config_dir: &RelativePath,
-    file_name: &str,
     requirement_data: &RequirementData,
     current_dir: &Path,
     default_timeout: u64,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> TestEntry {
     let (program_path, test_case) = build_test_case(
-        test_id,
+        id.clone(),
         config.clone(),
-        path_to_config_dir,
-        file_name,
         requirement_data,
         current_dir,
         default_timeout,
@@ -174,18 +170,16 @@ fn build_test_entry(
     let expectations = build_test_case_expectations(config, requirement_data);
 
     TestEntry {
+        id,
         program_path,
         test_case,
         expectations,
     }
 }
 
-#[allow(clippy::too_many_arguments)]
 fn build_test_case(
-    test_id: TestId,
+    id: TestCaseId,
     config: TomlConfigTest,
-    path_to_config_dir: &RelativePath,
-    file_name: &str,
     requirement_data: &RequirementData,
     current_dir: &Path,
     default_timeout: u64,
@@ -197,7 +191,7 @@ fn build_test_case(
         .map(|s| string::normalize_newlines(&s));
     let program_path = get_program_path(
         program.unwrap_or_default(),
-        &path_to_config_dir.to_path(current_dir),
+        &id.config_dir_path.to_path(current_dir),
         find_executable_path,
     );
     match &program_path {
@@ -256,9 +250,7 @@ fn build_test_case(
 
     let test_case = match (program_path.get_resolved_path(), errors.is_empty()) {
         (Some(resolved_path), true) => Ok(TestCase {
-            path_to_containing_dir: path_to_config_dir.to_relative_path_buf(),
-            file_name: file_name.to_owned(),
-            test_id,
+            id,
             program_path: resolved_path,
             arguments,
             stdin,

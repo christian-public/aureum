@@ -394,7 +394,7 @@ fn collect_test_cases(config_files: &LoadConfigFilesResult) -> Vec<PendingTestCa
         .loaded
         .values()
         .flat_map(|x| x.test_entries_in_coverage_set())
-        .filter_map(|(_, entry)| entry.pending_test_case().ok())
+        .filter_map(|entry| entry.pending_test_case().ok())
         .collect()
 }
 

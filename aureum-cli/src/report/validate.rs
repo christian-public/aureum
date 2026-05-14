@@ -3,7 +3,7 @@ use crate::report::theme;
 use crate::utils::file;
 use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
 use aureum::{
-    ParseError, ProgramPath, RequirementData, Requirements, TestEntry, TestId, TomlConfigError,
+    ParseError, ProgramPath, RequirementData, Requirements, TestEntry, TomlConfigError,
     ValidationError,
 };
 use colored::Colorize;
@@ -141,7 +141,7 @@ fn format_watch_path(path: &Path, current_dir: &Path, stable_paths: bool) -> Str
 #[allow(clippy::too_many_arguments)]
 pub fn print_config_details(
     config_file_path: &RelativePath,
-    test_entries: &[(TestId, TestEntry)],
+    test_entries: &[TestEntry],
     requirement_data: &RequirementData,
     requirements: &Requirements,
     watch_files: &BTreeSet<String>,
@@ -151,7 +151,8 @@ pub fn print_config_details(
 ) {
     let mut tests = vec![];
 
-    for (test_id, test_entry) in test_entries {
+    for test_entry in test_entries {
+        let test_id = &test_entry.id.test_id;
         let mut categories = vec![];
 
         if verbose {

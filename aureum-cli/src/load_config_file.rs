@@ -1,9 +1,7 @@
 use crate::counts::ConfigStats;
 use crate::find_config_file::FindConfigFilesResult;
 use crate::utils::file;
-use aureum::{
-    RequirementData, Requirements, TestEntry, TestId, TestIdCoverageSet, ValidationError,
-};
+use aureum::{RequirementData, Requirements, TestEntry, TestIdCoverageSet, ValidationError};
 use itertools::{Either, Itertools};
 use relative_path::RelativePathBuf;
 use std::collections::{BTreeMap, BTreeSet};
@@ -41,17 +39,16 @@ pub struct LoadedConfigFile {
     pub test_id_coverage_set: TestIdCoverageSet,
     pub requirement_data: RequirementData,
     pub requirements: Requirements,
-    pub test_entries: Vec<(TestId, TestEntry)>,
+    pub test_entries: Vec<TestEntry>,
     pub watch_files: BTreeSet<String>,
     pub watch_file_errors: BTreeSet<ValidationError>,
 }
 
 impl LoadedConfigFile {
-    pub fn test_entries_in_coverage_set(&self) -> impl Iterator<Item = (&TestId, &TestEntry)> {
+    pub fn test_entries_in_coverage_set(&self) -> impl Iterator<Item = &TestEntry> {
         self.test_entries
             .iter()
-            .filter(|(test_id, _)| self.test_id_coverage_set.contains(test_id))
-            .map(|(id, entry)| (id, entry))
+            .filter(|entry| self.test_id_coverage_set.contains(&entry.id.test_id))
     }
 
     pub fn has_config_errors(&self) -> bool {
@@ -67,7 +64,7 @@ impl LoadedConfigFile {
         let test_error_count = self
             .test_entries
             .iter()
-            .filter(|(_, entry)| entry.has_validation_errors())
+            .filter(|entry| entry.has_validation_errors())
             .count();
         watch_file_error_count + test_error_count
     }

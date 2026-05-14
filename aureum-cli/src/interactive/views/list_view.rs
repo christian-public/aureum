@@ -102,7 +102,7 @@ fn render_list(frame: &mut Frame, ctx: &ListViewContext<'_>, selection: usize, s
     for (i, run_result) in ctx.failed.iter().enumerate() {
         let is_selected = i == selection;
         let RunResult::Ran { test_case, result } = *run_result;
-        let test_case_id = test_case.id().to_string();
+        let test_case_id = test_case.display_id();
         let dec = ctx.past_decisions.get(i).and_then(|d| d.as_ref());
         let id_style = if is_selected {
             Style::default()

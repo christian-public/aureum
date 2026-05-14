@@ -22,7 +22,7 @@ pub fn print_one_or_more_programs_failed_to_run() {
 }
 
 pub fn print_test_case_id_as_toml_comment(test_case: &TestCase) {
-    println!("# TEST: {}", test_case.id());
+    println!("# TEST: {}", test_case.display_id());
 }
 
 pub fn print_failed_to_run_program_as_toml() {

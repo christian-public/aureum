@@ -33,12 +33,10 @@ impl Drop for TempDir {
 }
 
 pub(crate) fn make_test_case_root(dir: &str, file: &str) -> aureum::TestCase {
-    use aureum::TestId;
+    use aureum::{TestCaseId, TestId};
     use relative_path::RelativePathBuf;
     aureum::TestCase {
-        path_to_containing_dir: RelativePathBuf::from(dir),
-        file_name: file.to_string(),
-        test_id: TestId::root(),
+        id: TestCaseId::new(RelativePathBuf::from(dir), file.to_string(), TestId::root()),
         program_path: PathBuf::from("/bin/echo"),
         arguments: vec![],
         stdin: None,

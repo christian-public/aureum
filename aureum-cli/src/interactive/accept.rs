@@ -14,8 +14,8 @@ pub(crate) fn update_test_expectations(
     current_dir: &Path,
     decisions: &FieldDecisions,
 ) -> io::Result<()> {
-    let config_path = test_case.path_to_config_file().to_path(current_dir);
-    let containing_dir = test_case.path_to_containing_dir.to_path(current_dir);
+    let config_path = test_case.id.config_file_path().to_path(current_dir);
+    let containing_dir = test_case.id.config_dir_path.to_path(current_dir);
 
     let content = fs::read_to_string(&config_path)?;
     let mut doc: DocumentMut = content
@@ -28,7 +28,7 @@ pub(crate) fn update_test_expectations(
         && let FieldOutcome::Diff { got, .. } = &test_outcome.stdout
         && apply_field_update(
             &mut doc,
-            &test_case.test_id,
+            &test_case.id.test_id,
             "expected_stdout",
             &FieldValue::Str(got),
             &containing_dir,
@@ -41,7 +41,7 @@ pub(crate) fn update_test_expectations(
         && let FieldOutcome::Diff { got, .. } = &test_outcome.stderr
         && apply_field_update(
             &mut doc,
-            &test_case.test_id,
+            &test_case.id.test_id,
             "expected_stderr",
             &FieldValue::Str(got),
             &containing_dir,
@@ -54,7 +54,7 @@ pub(crate) fn update_test_expectations(
         && let FieldOutcome::Diff { got, .. } = &test_outcome.exit_code
         && apply_field_update(
             &mut doc,
-            &test_case.test_id,
+            &test_case.id.test_id,
             "expected_exit_code",
             &FieldValue::Int(*got as i64),
             &containing_dir,
@@ -190,7 +190,7 @@ mod tests {
     use super::super::field::{FieldDecision, FieldDecisions};
     use super::super::utils::test_helpers::{TempDir, make_test_case_root};
     use super::*;
-    use aureum::TestId;
+    use aureum::{TestCaseId, TestId};
     use relative_path::RelativePathBuf;
     use std::path::PathBuf;
 
@@ -202,9 +202,11 @@ mod tests {
 
     fn make_test_case_subtest(dir: &str, file: &str, name: &str) -> TestCase {
         TestCase {
-            path_to_containing_dir: RelativePathBuf::from(dir),
-            file_name: file.to_string(),
-            test_id: TestId::new(vec![name.to_string()]),
+            id: TestCaseId::new(
+                RelativePathBuf::from(dir),
+                file.to_string(),
+                TestId::new(vec![name.to_string()]),
+            ),
             program_path: PathBuf::from("/bin/echo"),
             arguments: vec![],
             stdin: None,

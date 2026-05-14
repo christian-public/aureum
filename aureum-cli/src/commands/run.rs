@@ -31,7 +31,7 @@ pub fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
 
     let all_test_cases = test_entries_in_coverage_set
         .iter()
-        .flat_map(|(_test_id, test_entry)| test_entry.test_case.clone().ok())
+        .flat_map(|test_entry| test_entry.test_case.clone().ok())
         .collect::<Vec<_>>();
 
     match args.format {

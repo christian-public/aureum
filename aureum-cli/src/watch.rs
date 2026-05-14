@@ -96,7 +96,7 @@ pub fn load_test_cases_for_watch(
         .loaded
         .values()
         .flat_map(|x| x.test_entries_in_coverage_set())
-        .filter_map(|(_, entry)| entry.pending_test_case().ok())
+        .filter_map(|entry| entry.pending_test_case().ok())
         .collect();
     (test_cases, config_stats)
 }
@@ -132,7 +132,7 @@ pub fn collect_watch_paths(
             discovered.push(containing_dir.join(file_key));
         }
 
-        for (_, entry) in &loaded.test_entries {
+        for entry in &loaded.test_entries {
             if let Ok(test_case) = &entry.test_case {
                 discovered.push(test_case.program_path.clone());
             }

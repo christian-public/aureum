@@ -225,7 +225,7 @@ pub fn run_program_passthrough(test_case: &TestCase, current_dir: &Path) -> Resu
 // HELPER FUNCTIONS
 
 fn init_command(test_case: &TestCase, current_dir: &Path) -> Command {
-    let run_dir = test_case.path_to_containing_dir.to_path(current_dir);
+    let run_dir = test_case.id.config_dir_path.to_path(current_dir);
 
     let mut cmd = Command::new(&test_case.program_path);
 

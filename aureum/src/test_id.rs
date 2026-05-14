@@ -69,17 +69,6 @@ impl fmt::Display for TestId {
     }
 }
 
-/// Formats a test identifier as `path` (root test) or `path:test_id` (subtest).
-/// Used by both [`crate::TestCase::id`] and the skipped-entry reporting path, which lacks
-/// a fully-constructed [`crate::TestCase`].
-pub fn format_test_id(config_file_path: impl fmt::Display, test_id: &TestId) -> String {
-    if test_id.is_root() {
-        config_file_path.to_string()
-    } else {
-        format!("{config_file_path}:{test_id}")
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

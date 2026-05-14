@@ -100,7 +100,7 @@ where
             writeln!(
                 writer,
                 "Updated {} ({})",
-                test_case.id(),
+                test_case.display_id(),
                 accepted_field_names(decisions)
             )?;
         }

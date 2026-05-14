@@ -279,7 +279,7 @@ pub(super) fn render_tui(
 /// Title row: test path.
 fn build_title_line(ctx: &DiffViewContext<'_>) -> Line<'static> {
     let RunResult::Ran { test_case, .. } = ctx.run_result;
-    let test_case_id = test_case.id().to_owned();
+    let test_case_id = test_case.display_id();
     Line::from(vec![
         Span::raw("  "),
         Span::styled(test_case_id, Style::default().add_modifier(Modifier::BOLD)),

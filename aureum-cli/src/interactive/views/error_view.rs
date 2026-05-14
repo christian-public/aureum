@@ -80,7 +80,7 @@ fn render_error(frame: &mut ratatui::Frame, ctx: &ErrorViewContext<'_>) {
     let RunResult::Ran { test_case, result } = ctx.run_result;
 
     // Title row
-    let test_case_id = test_case.id().to_owned();
+    let test_case_id = test_case.display_id();
     frame.render_widget(
         Paragraph::new(Line::from(vec![
             Span::raw("  "),
