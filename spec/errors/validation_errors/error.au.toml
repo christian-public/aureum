@@ -132,6 +132,27 @@ expected_exit_code = 3
 
 
 [[tests]]
+id = "expected_exit_code.failed_to_parse"
+program_arguments = [
+    "validate",
+    "helpers/expected_exit_code_failed_to_parse.toml",
+]
+
+expected_stdout = """
+✘ helpers/expected_exit_code_failed_to_parse.toml  1 test
+"""
+expected_stderr = """
+📋 helpers/expected_exit_code_failed_to_parse.toml
+└── Test
+    └── Validation errors
+        └── ✘ failed to parse string
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
 id = "timeout_seconds.negative_timeout"
 program_arguments = [
     "validate",
