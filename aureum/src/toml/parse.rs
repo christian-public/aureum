@@ -139,12 +139,12 @@ fn get_test_id_from_table(table: &toml::Table, key: &str) -> Result<Option<TestI
         toml::Value::String(s) => {
             TestId::try_from(s.as_str())
                 .map(Some)
-                .map_err(|_| ParseError::ErrorInField {
+                .map_err(|_| ParseError::InField {
                     field: key.to_owned(),
                     error: Box::new(ParseError::InvalidId { id: s.clone() }),
                 })
         }
-        _ => Err(ParseError::ErrorInField {
+        _ => Err(ParseError::InField {
             field: key.to_owned(),
             error: Box::new(ParseError::InvalidType {
                 expected: ConfigValueType::String,
@@ -163,7 +163,7 @@ fn get_tests_from_array(
     };
 
     let Some(array) = value.as_array() else {
-        return Err(vec![ParseError::ErrorInField {
+        return Err(vec![ParseError::InField {
             field: key.to_owned(),
             error: Box::new(ParseError::InvalidType {
                 expected: ConfigValueType::Array(vec![]),
@@ -177,7 +177,7 @@ fn get_tests_from_array(
 
     for (index, item) in array.iter().enumerate() {
         let Some(inner_table) = item.as_table() else {
-            errors.push(ParseError::ErrorAtIndex {
+            errors.push(ParseError::AtIndex {
                 index,
                 error: Box::new(ParseError::InvalidType {
                     expected: ConfigValueType::Table(BTreeMap::new()),
@@ -188,7 +188,7 @@ fn get_tests_from_array(
         };
 
         for err in check_unknown_fields(inner_table, KNOWN_TEST_FIELDS.iter().copied()) {
-            errors.push(ParseError::ErrorAtIndex {
+            errors.push(ParseError::AtIndex {
                 index,
                 error: Box::new(err),
             });
@@ -197,7 +197,7 @@ fn get_tests_from_array(
         match parse_toml_config_from_table(inner_table) {
             Ok(parsed_config) => {
                 if parsed_config.id.is_none() {
-                    errors.push(ParseError::ErrorAtIndex {
+                    errors.push(ParseError::AtIndex {
                         index,
                         error: Box::new(ParseError::MissingId),
                     });
@@ -207,7 +207,7 @@ fn get_tests_from_array(
             }
             Err(errs) => {
                 for err in errs {
-                    errors.push(ParseError::ErrorAtIndex {
+                    errors.push(ParseError::AtIndex {
                         index,
                         error: Box::new(err),
                     });
@@ -232,7 +232,7 @@ fn get_array_of_strings_from_table(
     };
 
     let Some(array) = value.as_array() else {
-        return Err(vec![ParseError::ErrorInField {
+        return Err(vec![ParseError::InField {
             field: key.to_owned(),
             error: Box::new(ParseError::InvalidType {
                 expected: ConfigValueType::Array(vec![]),
@@ -249,9 +249,9 @@ fn get_array_of_strings_from_table(
             &mut errors,
             parse_string_value(item)
                 .map(Some)
-                .map_err(|err| ParseError::ErrorInField {
+                .map_err(|err| ParseError::InField {
                     field: key.to_owned(),
-                    error: Box::new(ParseError::ErrorAtIndex {
+                    error: Box::new(ParseError::AtIndex {
                         index,
                         error: Box::new(err),
                     }),
@@ -277,7 +277,7 @@ fn get_string_from_table(
         return Ok(None);
     };
 
-    let config_value = parse_string_value(value).map_err(|err| ParseError::ErrorInField {
+    let config_value = parse_string_value(value).map_err(|err| ParseError::InField {
         field: key.to_owned(),
         error: Box::new(err),
     })?;
@@ -293,7 +293,7 @@ fn get_integer_from_table(
         return Ok(None);
     };
 
-    let config_value = parse_integer_value(value).map_err(|err| ParseError::ErrorInField {
+    let config_value = parse_integer_value(value).map_err(|err| ParseError::InField {
         field: key.to_owned(),
         error: Box::new(err),
     })?;
@@ -482,7 +482,7 @@ mod tests {
             Err(TomlConfigError::ParseErrors(errors))
                 if errors.iter().any(|e| matches!(
                     e,
-                    ParseError::ErrorAtIndex { index: 0, error }
+                    ParseError::AtIndex { index: 0, error }
                         if matches!(error.as_ref(), ParseError::UnknownField { field } if field == "typo_field")
                 ))
         ));
@@ -515,7 +515,7 @@ mod tests {
             Err(TomlConfigError::ParseErrors(errors))
                 if errors.iter().any(|e| matches!(
                     e,
-                    ParseError::ErrorAtIndex { index: 0, error }
+                    ParseError::AtIndex { index: 0, error }
                         if matches!(error.as_ref(), ParseError::UnknownField { field } if field == "watch_files")
                 ))
         ));

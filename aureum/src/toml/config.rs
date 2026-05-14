@@ -42,13 +42,13 @@ pub enum TomlConfigError {
 #[derive(Debug, thiserror::Error)]
 pub enum ParseError {
     #[error("field `{field}`: {error}")]
-    ErrorInField {
+    InField {
         field: String,
         #[source]
         error: Box<ParseError>,
     },
     #[error("[{index}]: {error}")]
-    ErrorAtIndex {
+    AtIndex {
         index: usize,
         #[source]
         error: Box<ParseError>,
