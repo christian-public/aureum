@@ -126,3 +126,24 @@ expected_stderr = """
 warning: some config files contain errors (see above)
 """
 expected_exit_code = 3
+
+
+[[tests]]
+id = "timeout_seconds.negative_timeout"
+program_arguments = [
+    "validate",
+    "helpers/timeout_seconds_negative_timeout.toml",
+]
+
+expected_stdout = """
+✘ helpers/timeout_seconds_negative_timeout.toml  1 test
+"""
+expected_stderr = """
+📋 helpers/timeout_seconds_negative_timeout.toml
+└── Test
+    └── Validation errors
+        └── ✘ The field `timeout_seconds` must be 0 or greater
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
