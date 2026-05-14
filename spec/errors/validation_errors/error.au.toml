@@ -2,14 +2,14 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 
 [[tests]]
-id = "empty_config"
-program_arguments = ["validate", "helpers/empty_config.toml"]
+id = "config.empty"
+program_arguments = ["validate", "helpers/config_empty.toml"]
 
 expected_stdout = """
-✘ helpers/empty_config.toml  1 test
+✘ helpers/config_empty.toml  1 test
 """
 expected_stderr = """
-📋 helpers/empty_config.toml
+📋 helpers/config_empty.toml
 └── Test
     └── Validation errors
         ├── ✘ The field `program` is required
@@ -21,50 +21,14 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "no_program_specified"
-program_arguments = ["validate", "helpers/no_test_program.toml"]
+id = "config.no_expectations"
+program_arguments = ["validate", "helpers/config_no_expectations.toml"]
 
 expected_stdout = """
-✘ helpers/no_test_program.toml  1 test
+✘ helpers/config_no_expectations.toml  1 test
 """
 expected_stderr = """
-📋 helpers/no_test_program.toml
-└── Test
-    └── Validation errors
-        └── ✘ The field `program` is required
-
-warning: some config files contain errors (see above)
-"""
-expected_exit_code = 3
-
-
-[[tests]]
-id = "unknown_test_program"
-program_arguments = ["validate", "helpers/unknown_test_program.toml"]
-
-expected_stdout = """
-✘ helpers/unknown_test_program.toml  1 test
-"""
-expected_stderr = """
-📋 helpers/unknown_test_program.toml
-└── Test
-    └── Validation errors
-        └── ✘ The program `aureum_test_this_program_does_not_exist` was not found
-
-warning: some config files contain errors (see above)
-"""
-expected_exit_code = 3
-
-
-[[tests]]
-id = "no_expectations"
-program_arguments = ["validate", "helpers/no_expectations.toml"]
-
-expected_stdout = """
-✘ helpers/no_expectations.toml  1 test
-"""
-expected_stderr = """
-📋 helpers/no_expectations.toml
+📋 helpers/config_no_expectations.toml
 └── Test
     └── Validation errors
         └── ✘ At least one expectation is required
@@ -75,32 +39,14 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "invalid_exit_code"
-program_arguments = ["validate", "helpers/invalid_exit_code.toml"]
+id = "config.missing_env_var"
+program_arguments = ["validate", "helpers/config_missing_env_var.toml"]
 
 expected_stdout = """
-✘ helpers/invalid_exit_code.toml  1 test
+✘ helpers/config_missing_env_var.toml  1 test
 """
 expected_stderr = """
-📋 helpers/invalid_exit_code.toml
-└── Test
-    └── Validation errors
-        └── ✘ Exit code must be a value between -2147483648 to 2147483647 (On POSIX/Unix/Linux: Between 0 and 255)
-
-warning: some config files contain errors (see above)
-"""
-expected_exit_code = 3
-
-
-[[tests]]
-id = "missing_env_var"
-program_arguments = ["validate", "helpers/missing_env_var.toml"]
-
-expected_stdout = """
-✘ helpers/missing_env_var.toml  1 test
-"""
-expected_stderr = """
-📋 helpers/missing_env_var.toml
+📋 helpers/config_missing_env_var.toml
 └── Test
     └── Validation errors
         └── ✘ Missing environment variable `AUREUM_TEST_THIS_ENV_VAR_DOES_NOT_EXIST`
@@ -111,17 +57,74 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "missing_external_file"
-program_arguments = ["validate", "helpers/missing_external_file.toml"]
+id = "config.missing_external_file"
+program_arguments = ["validate", "helpers/config_missing_external_file.toml"]
 
 expected_stdout = """
-✘ helpers/missing_external_file.toml  1 test
+✘ helpers/config_missing_external_file.toml  1 test
 """
 expected_stderr = """
-📋 helpers/missing_external_file.toml
+📋 helpers/config_missing_external_file.toml
 └── Test
     └── Validation errors
         └── ✘ Missing external file `aureum_test_this_file_does_not_exist`
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "program.no_program"
+program_arguments = ["validate", "helpers/program_no_program.toml"]
+
+expected_stdout = """
+✘ helpers/program_no_program.toml  1 test
+"""
+expected_stderr = """
+📋 helpers/program_no_program.toml
+└── Test
+    └── Validation errors
+        └── ✘ The field `program` is required
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "program.unknown_program"
+program_arguments = ["validate", "helpers/program_unknown_program.toml"]
+
+expected_stdout = """
+✘ helpers/program_unknown_program.toml  1 test
+"""
+expected_stderr = """
+📋 helpers/program_unknown_program.toml
+└── Test
+    └── Validation errors
+        └── ✘ The program `aureum_test_this_program_does_not_exist` was not found
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "expected_exit_code.invalid_exit_code"
+program_arguments = [
+    "validate",
+    "helpers/expected_exit_code_invalid_exit_code.toml",
+]
+
+expected_stdout = """
+✘ helpers/expected_exit_code_invalid_exit_code.toml  1 test
+"""
+expected_stderr = """
+📋 helpers/expected_exit_code_invalid_exit_code.toml
+└── Test
+    └── Validation errors
+        └── ✘ Exit code must be a value between -2147483648 to 2147483647 (On POSIX/Unix/Linux: Between 0 and 255)
 
 warning: some config files contain errors (see above)
 """
