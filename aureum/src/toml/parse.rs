@@ -134,27 +134,14 @@ fn parse_toml_config_from_table(table: &toml::Table) -> Result<TomlConfigTest, V
 }
 
 fn get_test_id_from_table(table: &toml::Table, key: &str) -> Result<Option<TestId>, ParseError> {
-    let Some(value) = table.get(key) else {
-        return Ok(None);
-    };
-
-    match value {
-        toml::Value::String(s) => {
-            TestId::try_from(s.as_str())
-                .map(Some)
-                .map_err(|_| ParseError::InField {
-                    field: key.to_owned(),
-                    error: Box::new(ParseError::InvalidId { id: s.clone() }),
-                })
-        }
-        _ => Err(ParseError::InField {
-            field: key.to_owned(),
-            error: Box::new(ParseError::InvalidType {
-                expected: ConfigValueType::String,
-                got: type_from_value(value),
-            }),
-        }),
-    }
+    get_plain_string_from_table(table, key)?
+        .map(|s| {
+            TestId::try_from(s.as_str()).map_err(|_| ParseError::InField {
+                field: key.to_owned(),
+                error: Box::new(ParseError::InvalidId { id: s }),
+            })
+        })
+        .transpose()
 }
 
 fn get_plain_string_from_table(
