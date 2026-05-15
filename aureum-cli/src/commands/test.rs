@@ -1,6 +1,6 @@
 use crate::args::{TerminalSize, TestArgs, TestOutputFormat};
 use crate::commands::common;
-use crate::counts::ConfigStats;
+use crate::counts::{ConfigStats, PendingCounts};
 use crate::exit_code::ExitCode;
 use crate::interactive;
 use crate::load_config_file::LoadConfigFilesResult;
@@ -177,6 +177,7 @@ fn run_tests_record(args: TestArgs, width: u16, height: u16, current_dir: &Path)
     let stdout = io::stdout();
     if let Err(e) = interactive::run_interactive_updates(
         &run_results,
+        PendingCounts::from_pending(&all_test_cases),
         current_dir,
         &mut stdin.lock(),
         &mut stdout.lock(),
@@ -289,7 +290,7 @@ fn run_test_cases_noninteractive(
     config_stats: ConfigStats,
 ) -> Vec<RunResult> {
     let report_config = ReportConfig {
-        number_of_tests: test_cases.len(),
+        pending_counts: PendingCounts::from_pending(test_cases),
         format: get_report_format(format),
         verbose,
     };

@@ -1,4 +1,4 @@
-use crate::counts::{ConfigStats, TestCounts};
+use crate::counts::{ConfigStats, PendingCounts, TestCounts};
 use crate::report::formats::summary;
 use crate::report::formats::tap;
 use crate::report::theme;
@@ -15,7 +15,7 @@ pub enum ReportFormat {
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct ReportConfig {
-    pub number_of_tests: usize,
+    pub pending_counts: PendingCounts,
     pub format: ReportFormat,
     pub verbose: bool,
 }
@@ -63,10 +63,10 @@ pub fn print_record_session_failed(error: &io::Error) {
 pub fn print_test_cases_start(report_config: &ReportConfig) {
     match report_config.format {
         ReportFormat::Summary => {
-            summary_print_test_cases_start(report_config.number_of_tests);
+            summary_print_test_cases_start(report_config.pending_counts);
         }
         ReportFormat::Tap => {
-            tap_print_test_cases_start(report_config.number_of_tests);
+            tap_print_test_cases_start(report_config.pending_counts.total());
         }
     }
 }
@@ -77,7 +77,7 @@ pub fn print_test_case(report_config: &ReportConfig, index: usize, run_result: &
             summary_print_test_case(run_result);
         }
         ReportFormat::Tap => {
-            let test_number_indent_level = report_config.number_of_tests.to_string().len();
+            let test_number_indent_level = report_config.pending_counts.total().to_string().len();
             tap_print_test_case(index + 1, run_result, test_number_indent_level);
         }
     }
@@ -100,13 +100,14 @@ pub fn print_test_cases_end(
 
 // SUMMARY HELPERS
 
-fn summary_print_test_cases_start(number_of_tests: usize) {
-    let label = if number_of_tests == 1 {
-        "test"
+fn summary_print_test_cases_start(counts: PendingCounts) {
+    let total = counts.total();
+    let label = if total == 1 { "test" } else { "tests" };
+    if counts.runnable == total {
+        println!("🚀 Running {total} {label}:")
     } else {
-        "tests"
-    };
-    println!("🚀 Running {number_of_tests} {label}:")
+        println!("🚀 Running {} of {total} {label}:", counts.runnable)
+    }
 }
 
 fn summary_print_test_case(run_result: &RunResult) {

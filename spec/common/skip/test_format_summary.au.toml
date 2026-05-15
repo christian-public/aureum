@@ -11,7 +11,7 @@ program_arguments = [
 ]
 
 expected_stdout = """
-🚀 Running 1 test:
+🚀 Running 0 of 1 test:
 s
 
 Test result: OK (0 passed, 1 skipped)
@@ -25,7 +25,7 @@ id = "skip_subtest"
 program_arguments = ["test", "--format", "summary", "helpers/skip_subtest.toml"]
 
 expected_stdout = """
-🚀 Running 2 tests:
+🚀 Running 1 of 2 tests:
 .s
 
 Test result: OK (1 passed, 1 skipped)
@@ -44,7 +44,7 @@ program_arguments = [
 ]
 
 expected_stdout = """
-🚀 Running 1 test:
+🚀 Running 0 of 1 test:
 s
 
 Test result: OK (0 passed, 1 skipped)
@@ -58,7 +58,7 @@ id = "all"
 program_arguments = ["test", "--format", "summary", "helpers/*.toml"]
 
 expected_stdout = """
-🚀 Running 5 tests:
+🚀 Running 2 of 5 tests:
 Fss.s
 
 ❌ helpers/failing_test.toml

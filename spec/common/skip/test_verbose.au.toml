@@ -11,7 +11,7 @@ program_arguments = [
 ]
 
 expected_stdout = """
-🚀 Running 1 test:
+🚀 Running 0 of 1 test:
 s
 
 ⊘ helpers/skip_root_test.toml  not implemented yet
@@ -41,7 +41,7 @@ program_arguments = [
 ]
 
 expected_stdout = """
-🚀 Running 2 tests:
+🚀 Running 1 of 2 tests:
 .s
 
 ⊘ helpers/skip_subtest.toml:not_ready  feature not ready
@@ -76,7 +76,7 @@ program_arguments = [
 ]
 
 expected_stdout = """
-🚀 Running 1 test:
+🚀 Running 0 of 1 test:
 s
 
 ⊘ helpers/skip_invalid_config.toml  todo
@@ -101,7 +101,7 @@ id = "all"
 program_arguments = ["test", "--verbose", "--stable-output", "helpers/*.toml"]
 
 expected_stdout = """
-🚀 Running 5 tests:
+🚀 Running 2 of 5 tests:
 Fss.s
 
 ⊘ helpers/skip_invalid_config.toml     todo

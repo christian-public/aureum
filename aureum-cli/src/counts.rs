@@ -1,8 +1,33 @@
-use aureum::{RunResult, RunResultKind};
+use aureum::{PendingTestCase, RunResult, RunResultKind};
 
 #[derive(Clone, Copy, Default)]
 pub(crate) struct ConfigStats {
     pub config_errors: usize,
+}
+
+#[derive(Clone, Copy)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub(crate) struct PendingCounts {
+    pub runnable: usize,
+    pub skipped: usize,
+}
+
+impl PendingCounts {
+    pub(crate) fn from_pending(cases: &[PendingTestCase]) -> Self {
+        let mut runnable = 0;
+        let mut skipped = 0;
+        for case in cases {
+            match case {
+                PendingTestCase::Skip { .. } => skipped += 1,
+                PendingTestCase::Run { .. } => runnable += 1,
+            }
+        }
+        Self { runnable, skipped }
+    }
+
+    pub(crate) fn total(&self) -> usize {
+        self.runnable + self.skipped
+    }
 }
 
 #[derive(Clone, Copy)]

@@ -7,7 +7,7 @@ mod theme;
 mod utils;
 mod views;
 
-use crate::counts::{ConfigStats, TestCounts};
+use crate::counts::{ConfigStats, PendingCounts, TestCounts};
 use crate::interactive::views::progress_view;
 use crate::interactive::views::watch_view::{self, IdleOutcome, WatchIdleContext};
 use crate::utils::time;
@@ -33,6 +33,7 @@ use std::time::{Duration, Instant};
 #[allow(clippy::too_many_arguments)]
 pub fn run_interactive_updates<R, W>(
     run_results: &[RunResult],
+    pending_counts: PendingCounts,
     current_dir: &Path,
     reader: &mut R,
     writer: &mut W,
@@ -47,6 +48,7 @@ where
 {
     progress_view::record_final_progress_frame(
         run_results,
+        pending_counts,
         config_stats,
         width,
         height,
@@ -124,10 +126,12 @@ where
 
     'rerun: loop {
         let (test_cases, config_stats) = load_test_cases();
+        let pending_counts = PendingCounts::from_pending(&test_cases);
         let run_results = aureum::run_test_cases(&test_cases, parallel, current_dir, &|_, _| {});
 
         progress_view::record_final_progress_frame(
             &run_results,
+            pending_counts,
             config_stats,
             width,
             height,
@@ -506,6 +510,10 @@ mod tests {
 
         run_interactive_updates(
             &results,
+            PendingCounts {
+                runnable: 1,
+                skipped: 0,
+            },
             tmp.path(),
             &mut input,
             &mut output,

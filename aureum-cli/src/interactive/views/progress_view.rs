@@ -1,4 +1,4 @@
-use crate::counts::{ConfigStats, TestCounts};
+use crate::counts::{ConfigStats, PendingCounts, TestCounts};
 use crate::interactive::keys;
 use crate::interactive::theme;
 use crate::interactive::utils::widgets;
@@ -19,8 +19,10 @@ use std::time::{Duration, Instant};
 
 /// Renders the completed progress frame to a `TestBackend` and writes it to `writer`.
 /// Used in `--record` mode to capture the final progress state before the review session.
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn record_final_progress_frame<W: Write>(
     run_results: &[RunResult],
+    pending_counts: PendingCounts,
     config_stats: ConfigStats,
     width: u16,
     height: u16,
@@ -28,13 +30,12 @@ pub(crate) fn record_final_progress_frame<W: Write>(
     writer: &mut W,
     separator: bool,
 ) -> io::Result<()> {
-    let total = run_results.len();
     let counts = TestCounts::from_results(run_results, config_stats);
 
     let backend = TestBackend::new(width, height);
     let mut terminal = Terminal::new(backend).map_err(io::Error::other)?;
     terminal
-        .draw(|frame| render_progress(frame, total, counts, elapsed, false))
+        .draw(|frame| render_progress(frame, pending_counts, counts, elapsed, false))
         .map_err(io::Error::other)?;
 
     let buffer = terminal.backend().buffer().clone();
@@ -65,7 +66,8 @@ pub(crate) fn run_tests_with_progress(
     config_stats: ConfigStats,
     stable_duration: Option<Duration>,
 ) -> io::Result<Option<Vec<RunResult>>> {
-    let total = test_cases.len();
+    let pending_counts = PendingCounts::from_pending(test_cases);
+    let total = pending_counts.total();
     let (progress_tx, progress_rx) = mpsc::channel::<RunResultKind>();
     let (results_tx, results_rx) = mpsc::channel::<Vec<RunResult>>();
 
@@ -114,7 +116,7 @@ pub(crate) fn run_tests_with_progress(
             .draw(|frame| {
                 render_progress(
                     frame,
-                    total,
+                    pending_counts,
                     counts,
                     stable_duration.unwrap_or_else(|| start.elapsed()),
                     false,
@@ -135,7 +137,7 @@ pub(crate) fn run_tests_with_progress(
                         .draw(|frame| {
                             render_progress(
                                 frame,
-                                total,
+                                pending_counts,
                                 counts,
                                 stable_duration.unwrap_or_else(|| start.elapsed()),
                                 true,
@@ -159,11 +161,12 @@ pub(crate) fn run_tests_with_progress(
 
 fn render_progress(
     frame: &mut Frame,
-    total: usize,
+    pending_counts: PendingCounts,
     counts: TestCounts,
     elapsed: Duration,
     stopping: bool,
 ) {
+    let total = pending_counts.total();
     let skipped = counts.skipped;
     let passed = counts.passed;
     let failed = counts.failed;
@@ -192,7 +195,11 @@ fn render_progress(
 
     // Header row
     let label = if total == 1 { "test" } else { "tests" };
-    let left = format!("  Running {} {label}", total);
+    let left = if pending_counts.runnable == total {
+        format!("  Running {} {label}", total)
+    } else {
+        format!("  Running {} of {} {label}", pending_counts.runnable, total)
+    };
     let summary = widgets::TestSummary(counts);
     let header_chunks = Layout::default()
         .direction(Direction::Horizontal)
@@ -302,10 +309,14 @@ mod tests {
             passed,
             failed,
         };
+        let pending_counts = PendingCounts {
+            runnable: total,
+            skipped: 0,
+        };
         let backend = TestBackend::new(width, height);
         let mut terminal = Terminal::new(backend).unwrap();
         terminal
-            .draw(|frame| render_progress(frame, total, counts, elapsed, stopping))
+            .draw(|frame| render_progress(frame, pending_counts, counts, elapsed, stopping))
             .unwrap();
         let buffer = terminal.backend().buffer().clone();
         let content = buffer.content();
