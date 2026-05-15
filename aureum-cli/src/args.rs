@@ -183,7 +183,7 @@ impl str::FromStr for RunOutputFormat {
         match format {
             "passthrough" => Ok(Self::Passthrough),
             "toml" => Ok(Self::Toml),
-            _ => Err("valid formats: passthrough, toml"),
+            _ => Err("valid options: passthrough, toml"),
         }
     }
 }
@@ -202,7 +202,7 @@ impl str::FromStr for TestOutputFormat {
         match format {
             "summary" => Ok(Self::Summary),
             "tap" => Ok(Self::Tap),
-            _ => Err("valid formats: summary, tap"),
+            _ => Err("valid options: summary, tap"),
         }
     }
 }
