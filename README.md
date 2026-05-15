@@ -9,13 +9,13 @@ Key functionality:
 - Language-agnostic: Configure tests using [TOML](https://toml.io) files.
 - A configuration file may contain multiple tests.
 - Each test can provide the expected value for `stdout`, `stderr` and `exit code`. See [format](#aureum-configuration-format) below.
-- Tests are allowed to reference environment variables and external files.
+- Tests can reference external files and environment variables.
 - Supports two output formats: `summary` and [`tap`](https://testanything.org).
-- Tries to provide helpful error messages.
+- Provides helpful error messages.
 - `aureum` is tested by `aureum`. See [`spec/`](spec) directory.
 - Runs on Linux, macOS and Windows.
 
-This tool is best suited to test executables that are stateless, i.e. running an executable with a given input always produces the same output.
+This tool is best suited for testing stateless executables: Given the same input, they always produce the same output.
 
 Inspired by [Idris 2's golden test runner](https://github.com/idris-lang/Idris2/tree/main/tests).
 
@@ -45,11 +45,13 @@ Arguments:
   <PATHS>...  Paths to config files
 
 Options:
-      --format <FORMAT>  Options: summary, tap [default: summary]
-      --parallel         Run tests in parallel
-      --interactive      Interactively review and accept new expectations for each failed test
-      --verbose          Print extra information about config files
-  -h, --help             Print help
+      --format <FORMAT>            Options: summary, tap [default: summary]
+      --default-timeout <SECONDS>  Fallback timeout for tests without a timeout [default: 5]
+      --parallel                   Run tests in parallel
+      --watch                      Re-run tests when config or watched files change
+      --interactive                Interactively review and accept new test expectations
+      --verbose                    Print extra information about config files
+  -h, --help                       Print help
 ```
 
 When running `aureum test`, you may specify one or more files/directories/[glob patterns](<https://en.wikipedia.org/wiki/Glob_(programming)>). When specifying a directory, `aureum` will search for files with the file extension `.au.toml`. This file extension was chosen to allow other `.toml` files to be located in the same directory structure as the Aureum-specific config files.
@@ -84,7 +86,7 @@ program = ""            # String (Required field)
 program_arguments = []  # List of strings
 stdin = ""              # String
 
-# At least one of the `expected_` fields are required
+# At least one of the `expected_*` fields are required:
 expected_stdout = ""    # String
 expected_stderr = ""    # String
 expected_exit_code = 0  # Integer
@@ -102,7 +104,7 @@ Recommended file extension: `.au.toml`
 
 An Aureum config file may contain multiple tests. To specify a sub-test you can add a header using the following format: `[[tests]]`, include an `id` field (example: `id = "id_of_test"`) and configure the test as normal.
 
-Note that fields specified at the level above the sub-test will get inherited by the sub-tests. Because of this, only the leaf nodes are considered a test. The following example configures two tests, where both tests run the program `/bin/echo`:
+When specifying multiple tests, the top-level fields are no longer treated as a test itself. Instead, its fields are inherited by each sub-test unless overridden. The following example configures two tests, where both tests run the program `/bin/echo`:
 
 Filename: `multiple_tests.au.toml`
 
