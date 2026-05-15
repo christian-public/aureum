@@ -133,6 +133,17 @@ where
         let (test_cases, config_stats) = load_test_cases();
         let run_results = aureum::run_test_cases(&test_cases, parallel, current_dir, &|_, _, _| {});
 
+        progress_view::record_final_progress_frame(
+            &run_results,
+            config_stats,
+            width,
+            height,
+            Duration::ZERO,
+            writer,
+            emit_separator,
+        )?;
+        emit_separator = true;
+
         loop {
             let outcome = watch_view::record_watch_idle(
                 &run_results,
