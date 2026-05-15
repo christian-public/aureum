@@ -1,4 +1,5 @@
 use crate::counts::TestCounts;
+use crate::interactive::theme;
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::style::{Color, Style};
@@ -9,9 +10,10 @@ pub(crate) struct TestSummary(pub TestCounts);
 
 impl TestSummary {
     pub(crate) fn width(&self) -> u16 {
+        let skipped_len = self.skipped().len();
         let passed_len = self.passed().len();
         let failed_len = self.failed().len();
-        let base = passed_len + 2 + failed_len + 2;
+        let base = skipped_len + 2 + passed_len + 2 + failed_len + 2;
         if self.0.config_stats.config_errors > 0 {
             let errors_len = self.config_errors().len();
             (base + errors_len + 2) as u16
@@ -24,6 +26,10 @@ impl TestSummary {
         let count = self.0.config_stats.config_errors;
         let errors = if count == 1 { "error" } else { "errors" };
         format!("{count} config {errors}")
+    }
+
+    fn skipped(&self) -> String {
+        format!("{} skipped", self.0.skipped)
     }
 
     fn passed(&self) -> String {
@@ -45,6 +51,13 @@ impl Widget for TestSummary {
             ));
             spans.push(Span::raw("  "));
         }
+        let skipped_style = if self.0.skipped == 0 {
+            theme::dim()
+        } else {
+            Style::default()
+        };
+        spans.push(Span::styled(self.skipped(), skipped_style));
+        spans.push(Span::raw("  "));
         spans.push(Span::styled(
             self.passed(),
             Style::default().fg(Color::Green),

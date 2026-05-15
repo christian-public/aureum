@@ -29,6 +29,14 @@ pub enum RunResult {
     },
 }
 
+#[cfg_attr(debug_assertions, derive(Debug))]
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum RunResultKind {
+    Skipped,
+    Passed,
+    Failed,
+}
+
 impl RunResult {
     pub fn is_success(&self) -> bool {
         match self {
@@ -36,6 +44,16 @@ impl RunResult {
             RunResult::Ran { result, .. } => match result {
                 Ok(test_outcome) => test_outcome.is_success(),
                 Err(_) => false,
+            },
+        }
+    }
+
+    pub fn kind(&self) -> RunResultKind {
+        match self {
+            RunResult::Skipped { .. } => RunResultKind::Skipped,
+            RunResult::Ran { result, .. } => match result {
+                Ok(outcome) if outcome.is_success() => RunResultKind::Passed,
+                _ => RunResultKind::Failed,
             },
         }
     }

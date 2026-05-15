@@ -39,22 +39,12 @@ pub(crate) fn run_watch_idle(
     ctx: &WatchIdleContext<'_>,
     change_rx: &Receiver<usize>,
 ) -> io::Result<IdleOutcome> {
-    let passed = ctx.run_results.iter().filter(|r| r.is_success()).count();
-    let total = ctx.run_results.len();
-    let failed = total - passed;
+    let counts = TestCounts::from_results(ctx.run_results, ctx.config_stats);
+    let failed = counts.failed;
 
     loop {
         terminal
-            .draw(|frame| {
-                render_idle(
-                    frame,
-                    passed,
-                    total,
-                    ctx.finished_at,
-                    ctx.duration,
-                    ctx.config_stats,
-                )
-            })
+            .draw(|frame| render_idle(frame, counts, ctx.finished_at, ctx.duration))
             .map_err(io::Error::other)?;
 
         // Poll for key events with a short timeout so we can also check the channel.
@@ -95,15 +85,9 @@ pub(crate) fn run_watch_idle(
     }
 }
 
-fn render_idle(
-    frame: &mut Frame,
-    passed: usize,
-    total: usize,
-    finished_at: &str,
-    duration: &str,
-    config_stats: ConfigStats,
-) {
-    let failed = total - passed;
+fn render_idle(frame: &mut Frame, counts: TestCounts, finished_at: &str, duration: &str) {
+    let total = counts.total();
+    let failed = counts.failed;
     let area = frame.area();
 
     let outer_chunks = Layout::default()
@@ -127,12 +111,7 @@ fn render_idle(
         .split(inner_area);
 
     // Stats header
-    let summary = widgets::TestSummary(TestCounts {
-        config_stats,
-        passed,
-        failed,
-        skipped: 0,
-    });
+    let summary = widgets::TestSummary(counts);
     let stats_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Min(1), Constraint::Length(summary.width())])
@@ -290,15 +269,14 @@ pub(crate) fn record_watch_idle<R: BufRead, W: Write>(
     duration: &str,
     config_stats: ConfigStats,
 ) -> io::Result<IdleOutcome> {
-    let passed = run_results.iter().filter(|r| r.is_success()).count();
-    let total = run_results.len();
-    let failed = total - passed;
+    let counts = TestCounts::from_results(run_results, config_stats);
+    let failed = counts.failed;
 
     let backend = TestBackend::new(width, height);
     let mut terminal = Terminal::new(backend).map_err(io::Error::other)?;
 
     terminal
-        .draw(|frame| render_idle(frame, passed, total, finished_at, duration, config_stats))
+        .draw(|frame| render_idle(frame, counts, finished_at, duration))
         .map_err(io::Error::other)?;
     diff_view::write_frame(terminal.backend(), width, height, writer, emit_separator)?;
 
@@ -323,9 +301,7 @@ pub(crate) fn record_watch_idle<R: BufRead, W: Write>(
                 _ => {}
             }
             terminal
-                .draw(|frame| {
-                    render_idle(frame, passed, total, finished_at, duration, config_stats)
-                })
+                .draw(|frame| render_idle(frame, counts, finished_at, duration))
                 .map_err(io::Error::other)?;
             diff_view::write_frame(terminal.backend(), width, height, writer, true)?;
         }

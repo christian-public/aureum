@@ -3,7 +3,7 @@ use crate::interactive::keys;
 use crate::interactive::theme;
 use crate::interactive::utils::widgets;
 use crate::utils::time;
-use aureum::{PendingTestCase, RunResult, run_test_cases};
+use aureum::{PendingTestCase, RunResult, RunResultKind, run_test_cases};
 use crossterm::event::{Event, KeyEventKind};
 use ratatui::backend::{CrosstermBackend, TestBackend};
 use ratatui::layout::{Alignment, Constraint, Direction, Layout};
@@ -29,13 +29,12 @@ pub(crate) fn record_final_progress_frame<W: Write>(
     separator: bool,
 ) -> io::Result<()> {
     let total = run_results.len();
-    let passed = run_results.iter().filter(|r| r.is_success()).count();
-    let failed = total - passed;
+    let counts = TestCounts::from_results(run_results, config_stats);
 
     let backend = TestBackend::new(width, height);
     let mut terminal = Terminal::new(backend).map_err(io::Error::other)?;
     terminal
-        .draw(|frame| render_progress(frame, total, passed, failed, elapsed, false, config_stats))
+        .draw(|frame| render_progress(frame, total, counts, elapsed, false))
         .map_err(io::Error::other)?;
 
     let buffer = terminal.backend().buffer().clone();
@@ -67,7 +66,7 @@ pub(crate) fn run_tests_with_progress(
     stable_duration: Option<Duration>,
 ) -> io::Result<Option<Vec<RunResult>>> {
     let total = test_cases.len();
-    let (progress_tx, progress_rx) = mpsc::channel::<bool>();
+    let (progress_tx, progress_rx) = mpsc::channel::<RunResultKind>();
     let (results_tx, results_rx) = mpsc::channel::<Vec<RunResult>>();
 
     // Clone data so the thread is 'static and can be detached on quit.
@@ -80,12 +79,13 @@ pub(crate) fn run_tests_with_progress(
             parallel,
             &current_dir_owned,
             &|_i, run_result| {
-                let _ = progress_tx.send(run_result.is_success());
+                let _ = progress_tx.send(run_result.kind());
             },
         );
         let _ = results_tx.send(results);
     });
 
+    let mut skipped = 0usize;
     let mut passed = 0usize;
     let mut failed = 0usize;
     let start = Instant::now();
@@ -94,12 +94,9 @@ pub(crate) fn run_tests_with_progress(
         let mut all_done = false;
         loop {
             match progress_rx.try_recv() {
-                Ok(true) => {
-                    passed += 1;
-                }
-                Ok(false) => {
-                    failed += 1;
-                }
+                Ok(RunResultKind::Skipped) => skipped += 1,
+                Ok(RunResultKind::Passed) => passed += 1,
+                Ok(RunResultKind::Failed) => failed += 1,
                 Err(mpsc::TryRecvError::Empty) => break,
                 Err(mpsc::TryRecvError::Disconnected) => {
                     all_done = true;
@@ -107,20 +104,24 @@ pub(crate) fn run_tests_with_progress(
                 }
             }
         }
+        let counts = TestCounts {
+            config_stats,
+            skipped,
+            passed,
+            failed,
+        };
         terminal
             .draw(|frame| {
                 render_progress(
                     frame,
                     total,
-                    passed,
-                    failed,
+                    counts,
                     stable_duration.unwrap_or_else(|| start.elapsed()),
                     false,
-                    config_stats,
                 )
             })
             .map_err(io::Error::other)?;
-        if all_done || passed + failed >= total {
+        if all_done || skipped + passed + failed >= total {
             break;
         }
         match crossterm::event::poll(Duration::from_millis(50)) {
@@ -135,11 +136,9 @@ pub(crate) fn run_tests_with_progress(
                             render_progress(
                                 frame,
                                 total,
-                                passed,
-                                failed,
+                                counts,
                                 stable_duration.unwrap_or_else(|| start.elapsed()),
                                 true,
-                                config_stats,
                             )
                         })
                         .map_err(io::Error::other)?;
@@ -161,12 +160,13 @@ pub(crate) fn run_tests_with_progress(
 fn render_progress(
     frame: &mut Frame,
     total: usize,
-    passed: usize,
-    failed: usize,
+    counts: TestCounts,
     elapsed: Duration,
     stopping: bool,
-    config_stats: ConfigStats,
 ) {
+    let skipped = counts.skipped;
+    let passed = counts.passed;
+    let failed = counts.failed;
     let area = frame.area();
 
     let outer_chunks = Layout::default()
@@ -193,12 +193,7 @@ fn render_progress(
     // Header row
     let label = if total == 1 { "test" } else { "tests" };
     let left = format!("  Running {} {label}", total);
-    let summary = widgets::TestSummary(TestCounts {
-        config_stats,
-        passed,
-        failed,
-        skipped: 0,
-    });
+    let summary = widgets::TestSummary(counts);
     let header_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Min(1), Constraint::Length(summary.width())])
@@ -229,7 +224,7 @@ fn render_progress(
         .split(inner_chunks[2]);
 
     // Progress bar ─────────────────────────────────────────────────────────
-    let completed = passed + failed;
+    let completed = skipped + passed + failed;
     let bar_width = w.saturating_sub(4).clamp(1, 60);
 
     let filled_chars = usize::checked_div(completed * bar_width, total).unwrap_or(0);
@@ -301,20 +296,16 @@ mod tests {
         elapsed: Duration,
         stopping: bool,
     ) -> String {
+        let counts = TestCounts {
+            config_stats: ConfigStats::default(),
+            skipped: 0,
+            passed,
+            failed,
+        };
         let backend = TestBackend::new(width, height);
         let mut terminal = Terminal::new(backend).unwrap();
         terminal
-            .draw(|frame| {
-                render_progress(
-                    frame,
-                    total,
-                    passed,
-                    failed,
-                    elapsed,
-                    stopping,
-                    ConfigStats::default(),
-                )
-            })
+            .draw(|frame| render_progress(frame, total, counts, elapsed, stopping))
             .unwrap();
         let buffer = terminal.backend().buffer().clone();
         let content = buffer.content();
@@ -337,7 +328,7 @@ mod tests {
             actual,
             [
                 "┌──────────────────────────────────────────────────────────┐",
-                "│  Running 5 tests                     0 passed  0 failed  │",
+                "│  Running 5 tests          0 skipped  0 passed  0 failed  │",
                 "├──────────────────────────────────────────────────────────┤",
                 "│                                                          │",
                 "│  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  │",
@@ -358,7 +349,7 @@ mod tests {
             actual,
             [
                 "┌──────────────────────────────────────────────────────────┐",
-                "│  Running 5 tests                     2 passed  1 failed  │",
+                "│  Running 5 tests          0 skipped  2 passed  1 failed  │",
                 "├──────────────────────────────────────────────────────────┤",
                 "│                                                          │",
                 "│  ████████████████████████████████░░░░░░░░░░░░░░░░░░░░░░  │",
@@ -379,7 +370,7 @@ mod tests {
             actual,
             [
                 "┌──────────────────────────────────────────────────────────┐",
-                "│  Running 5 tests                     5 passed  0 failed  │",
+                "│  Running 5 tests          0 skipped  5 passed  0 failed  │",
                 "├──────────────────────────────────────────────────────────┤",
                 "│                                                          │",
                 "│  ██████████████████████████████████████████████████████  │",
@@ -400,7 +391,7 @@ mod tests {
             actual,
             [
                 "┌──────────────────────────────────────────────────────────┐",
-                "│  Running 5 tests                     2 passed  1 failed  │",
+                "│  Running 5 tests          0 skipped  2 passed  1 failed  │",
                 "├──────────────────────────────────────────────────────────┤",
                 "│                                                          │",
                 "│  ████████████████████████████████░░░░░░░░░░░░░░░░░░░░░░  │",

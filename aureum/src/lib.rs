@@ -23,7 +23,7 @@ pub use test_case_id::TestCaseId;
 pub use test_id::TestId;
 pub use test_id_coverage_set::TestIdCoverageSet;
 pub use test_outcome::{FieldOutcome, TestOutcome};
-pub use test_runner::{ProgramOutput, RunError, RunResult};
+pub use test_runner::{ProgramOutput, RunError, RunResult, RunResultKind};
 pub use toml::config::{ParseError, TomlConfigError, TomlConfigFile, TomlConfigTest};
 pub use toml::requirement::Requirements;
 pub use toml::validate::{ProgramPath, RequirementData, TestEntry, ValidationError};

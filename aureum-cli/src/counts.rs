@@ -1,4 +1,4 @@
-use aureum::RunResult;
+use aureum::{RunResult, RunResultKind};
 
 #[derive(Clone, Copy, Default)]
 pub(crate) struct ConfigStats {
@@ -8,33 +8,32 @@ pub(crate) struct ConfigStats {
 #[derive(Clone, Copy)]
 pub(crate) struct TestCounts {
     pub config_stats: ConfigStats,
+    pub skipped: usize,
     pub passed: usize,
     pub failed: usize,
-    pub skipped: usize,
 }
 
 impl TestCounts {
     pub(crate) fn from_results(results: &[RunResult], config_stats: ConfigStats) -> Self {
+        let mut skipped = 0;
         let mut passed = 0;
         let mut failed = 0;
-        let mut skipped = 0;
-        for r in results {
-            match r {
-                RunResult::Skipped { .. } => skipped += 1,
-                RunResult::Ran { .. } if r.is_success() => passed += 1,
-                RunResult::Ran { .. } => failed += 1,
+        for result in results {
+            match result.kind() {
+                RunResultKind::Skipped => skipped += 1,
+                RunResultKind::Passed => passed += 1,
+                RunResultKind::Failed => failed += 1,
             }
         }
         Self {
             config_stats,
+            skipped,
             passed,
             failed,
-            skipped,
         }
     }
 
-    #[allow(dead_code)]
     pub(crate) fn total(&self) -> usize {
-        self.passed + self.failed + self.skipped
+        self.skipped + self.passed + self.failed
     }
 }

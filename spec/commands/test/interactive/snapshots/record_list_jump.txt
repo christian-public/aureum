@@ -1,5 +1,5 @@
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│  Running 2 tests                                                             0 passed  2 failed  │
+│  Running 2 tests                                                  0 skipped  0 passed  2 failed  │
 ├──────────────────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                                  │
 │                                                                                                  │
@@ -20,7 +20,7 @@
   q: quit
 ---
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│  Failed test 1 of 2                                                          0 passed  2 failed  │
+│  Failed test 1 of 2                                               0 skipped  0 passed  2 failed  │
 ├──────────────────────────────────────────────────────────────────────────────────────────────────┤
 │  helpers/two_failing_stdout_tests.toml:first                                                     │
 │  $ echo got_first                                                                                │
@@ -41,7 +41,7 @@
   p: previous test   n: next test   l: list tests   q: quit
 ---
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│  Failed tests                                                                0 passed  2 failed  │
+│  Failed tests                                                     0 skipped  0 passed  2 failed  │
 ├──────────────────────────────────────────────────────────────────────────────────────────────────┤
 │  ❯ [   ] helpers/two_failing_stdout_tests.toml:first                                             │
 │    [   ] helpers/two_failing_stdout_tests.toml:second                                            │
@@ -62,7 +62,7 @@
   Esc: cancel selection   q: quit
 ---
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│  Failed tests                                                                0 passed  2 failed  │
+│  Failed tests                                                     0 skipped  0 passed  2 failed  │
 ├──────────────────────────────────────────────────────────────────────────────────────────────────┤
 │    [   ] helpers/two_failing_stdout_tests.toml:first                                             │
 │  ❯ [   ] helpers/two_failing_stdout_tests.toml:second                                            │
@@ -83,7 +83,7 @@
   Esc: cancel selection   q: quit
 ---
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│  Failed test 2 of 2                                                          0 passed  2 failed  │
+│  Failed test 2 of 2                                               0 skipped  0 passed  2 failed  │
 ├──────────────────────────────────────────────────────────────────────────────────────────────────┤
 │  helpers/two_failing_stdout_tests.toml:second                                                    │
 │  $ echo got_second                                                                               │
