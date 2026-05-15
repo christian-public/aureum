@@ -167,7 +167,6 @@ fn render_progress(
     stopping: bool,
 ) {
     let total = pending_counts.total();
-    let skipped = counts.skipped;
     let passed = counts.passed;
     let failed = counts.failed;
     let area = frame.area();
@@ -231,10 +230,12 @@ fn render_progress(
         .split(inner_chunks[2]);
 
     // Progress bar ─────────────────────────────────────────────────────────
-    let completed = skipped + passed + failed;
+    let runnable = pending_counts.runnable;
+    let ran = passed + failed;
     let bar_width = w.saturating_sub(4).clamp(1, 60);
 
-    let filled_chars = usize::checked_div(completed * bar_width, total).unwrap_or(0);
+    // When there's nothing to run (everything skipped), show a full bar.
+    let filled_chars = (ran * bar_width).checked_div(runnable).unwrap_or(bar_width);
 
     let empty_chars = bar_width - filled_chars;
 
@@ -270,7 +271,7 @@ fn render_progress(
         ])
         .split(bar_rect);
     frame.render_widget(
-        Paragraph::new(format!("{} / {}", completed, total)).alignment(Alignment::Left),
+        Paragraph::new(format!("{} / {}", ran, runnable)).alignment(Alignment::Left),
         info_chunks[0],
     );
 
