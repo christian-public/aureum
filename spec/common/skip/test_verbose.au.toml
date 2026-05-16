@@ -97,16 +97,53 @@ expected_exit_code = 0
 
 
 [[tests]]
+id = "validation_error_with_skipped"
+program_arguments = [
+    "test",
+    "--verbose",
+    "--stable-output",
+    "helpers/validation_error_with_skipped.toml",
+]
+
+expected_stdout = """
+🚀 Running 0 of 1 test:
+s
+
+⊘ helpers/validation_error_with_skipped.toml:skipped  todo
+
+Test result: OK* (0 passed, 1 skipped, 1 config error)
+"""
+expected_stderr = """
+🔍 Found 1 config files
+└── helpers/validation_error_with_skipped.toml
+
+📋 helpers/validation_error_with_skipped.toml
+├── :skipped
+│   └── Program to run
+│       └── ✔ <absolute path to 'echo'>
+└── :invalid
+    ├── Program to run
+    │   └── ✔ <absolute path to 'echo'>
+    └── Validation errors
+        └── ✘ no expectations defined; specify at least one `expected_*` field: `expected_stdout`, `expected_stderr`, or `expected_exit_code`
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
 id = "all"
 program_arguments = ["test", "--verbose", "--stable-output", "helpers/*.toml"]
 
 expected_stdout = """
-🚀 Running 2 of 5 tests:
-Fss.s
+🚀 Running 2 of 6 tests:
+Fss.ss
 
-⊘ helpers/skip_invalid_config.toml     todo
-⊘ helpers/skip_root_test.toml          not implemented yet
-⊘ helpers/skip_subtest.toml:not_ready  feature not ready
+⊘ helpers/skip_invalid_config.toml                    todo
+⊘ helpers/skip_root_test.toml                         not implemented yet
+⊘ helpers/skip_subtest.toml:not_ready                 feature not ready
+⊘ helpers/validation_error_with_skipped.toml:skipped  todo
 
 ✔ helpers/skip_subtest.toml:passing
 
@@ -126,14 +163,15 @@ Fss.s
         │   1 │ +actual
         ╰
 
-Test result: FAIL (1 failed, 1 passed, 3 skipped)
+Test result: FAIL (1 failed, 1 passed, 4 skipped, 1 config error)
 """
 expected_stderr = """
-🔍 Found 4 config files
+🔍 Found 5 config files
 ├── helpers/failing_test.toml
 ├── helpers/skip_invalid_config.toml
 ├── helpers/skip_root_test.toml
-└── helpers/skip_subtest.toml
+├── helpers/skip_subtest.toml
+└── helpers/validation_error_with_skipped.toml
 
 📋 helpers/failing_test.toml
 └── Test
@@ -158,5 +196,16 @@ expected_stderr = """
     └── Program to run
         └── ✔ <absolute path to 'echo'>
 
+📋 helpers/validation_error_with_skipped.toml
+├── :skipped
+│   └── Program to run
+│       └── ✔ <absolute path to 'echo'>
+└── :invalid
+    ├── Program to run
+    │   └── ✔ <absolute path to 'echo'>
+    └── Validation errors
+        └── ✘ no expectations defined; specify at least one `expected_*` field: `expected_stdout`, `expected_stderr`, or `expected_exit_code`
+
+warning: some config files contain errors (see above)
 """
 expected_exit_code = 1

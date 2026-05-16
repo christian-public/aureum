@@ -1,0 +1,14 @@
+program = "echo"
+
+
+[[tests]]
+id = "skipped"
+skip = "todo"
+program_arguments = ["hello"]
+
+expected_stdout = "hello\n"
+
+
+[[tests]]
+id = "invalid"
+program_arguments = ["world"]

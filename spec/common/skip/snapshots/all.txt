@@ -1,5 +1,5 @@
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│  Running 2 of 5 tests                                             3 skipped  1 passed  1 failed  │
+│  Running 2 of 6 tests                             1 config error  4 skipped  1 passed  1 failed  │
 ├──────────────────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                                  │
 │                                                                                                  │
@@ -20,7 +20,7 @@
   q: quit
 ---
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│  Watching for changes                                             3 skipped  1 passed  1 failed  │
+│  Watching for changes                             1 config error  4 skipped  1 passed  1 failed  │
 ├──────────────────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                                  │
 │                                                                                                  │
@@ -41,7 +41,7 @@
   q: quit
 ---
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│  Failed test 1 of 1                                               3 skipped  1 passed  1 failed  │
+│  Failed test 1 of 1                               1 config error  4 skipped  1 passed  1 failed  │
 ├──────────────────────────────────────────────────────────────────────────────────────────────────┤
 │  helpers/failing_test.toml                                                                       │
 │  $ echo -n actual                                                                                │
@@ -62,7 +62,7 @@
   p: previous test   n: next test   l: list tests   Esc: end review   q: quit
 ---
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
-│  Failed tests                                                     3 skipped  1 passed  1 failed  │
+│  Failed tests                                     1 config error  4 skipped  1 passed  1 failed  │
 ├──────────────────────────────────────────────────────────────────────────────────────────────────┤
 │  ❯ [   ] helpers/failing_test.toml                                                               │
 │                                                                                                  │

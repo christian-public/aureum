@@ -38,10 +38,12 @@ pub fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode
                 )| {
                     let is_valid =
                         watch_file_errors.is_empty() && test_entries.iter().all(|x| x.is_valid());
+                    let total = test_entries.len();
+                    let skipped = test_entries.iter().filter(|x| x.is_skipped()).count();
                     let validate_result = if is_valid {
-                        ReportValidateResult::Success(test_entries.len())
+                        ReportValidateResult::Success { total, skipped }
                     } else {
-                        ReportValidateResult::ValidationError(test_entries.len())
+                        ReportValidateResult::ValidationError { total, skipped }
                     };
 
                     (config_file_path.clone(), validate_result)

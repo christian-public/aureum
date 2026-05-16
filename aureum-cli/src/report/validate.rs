@@ -16,8 +16,8 @@ use std::path::{Path, PathBuf};
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum ReportValidateResult {
     ParseError,
-    ValidationError(usize),
-    Success(usize),
+    ValidationError { total: usize, skipped: usize },
+    Success { total: usize, skipped: usize },
 }
 
 pub fn print_config_details_if_needed(
@@ -57,37 +57,85 @@ pub fn print_no_config_files() {
 }
 
 pub fn print_validate_table(entries: &BTreeMap<RelativePathBuf, ReportValidateResult>) {
-    let max_len = entries
+    let rows: Vec<(&RelativePathBuf, &ReportValidateResult, String, String)> = entries
+        .iter()
+        .map(|(file, result)| {
+            let test_count_str = format_test_count(result);
+            let skipped_count_str = format_skipped_count(result);
+            (file, result, test_count_str, skipped_count_str)
+        })
+        .collect();
+
+    let file_width = rows
         .iter()
         .map(|(file, ..)| file.as_str().len())
         .max()
         .unwrap_or(0);
+    let count_width = rows
+        .iter()
+        .map(|(.., count, _)| count.len())
+        .max()
+        .unwrap_or(0);
+    let skipped_width = rows
+        .iter()
+        .map(|(.., skipped)| skipped.len())
+        .max()
+        .unwrap_or(0);
 
-    for (file, result) in entries {
-        let count_str = match result {
-            ReportValidateResult::ParseError => String::from("Parse error"),
-            ReportValidateResult::ValidationError(test_count)
-            | ReportValidateResult::Success(test_count) => {
-                if *test_count == 1 {
-                    String::from("1 test")
-                } else {
-                    format!("{test_count} tests")
-                }
-            }
+    for (file, result, count_str, skipped_str) in rows {
+        let suffix = if has_no_runnable_tests(result) {
+            "  → no runnable tests"
+        } else {
+            ""
         };
 
         let line = format!(
-            "{file:<width$}  {count_str}",
+            "{file:<file_width$}  {count_str:<count_width$}  {skipped_str:<skipped_width$}{suffix}",
             file = file.as_str(),
-            width = max_len,
         );
+        let line = line.trim_end();
 
-        let is_valid = matches!(result, ReportValidateResult::Success(_));
+        let is_valid = matches!(result, ReportValidateResult::Success { .. });
         if is_valid {
             println!("{} {line}", theme::checkmark());
         } else {
             println!("{} {}", theme::cross(), line.red());
         }
+    }
+}
+
+fn format_test_count(result: &ReportValidateResult) -> String {
+    match result {
+        ReportValidateResult::ParseError => String::from("Parse error"),
+        ReportValidateResult::ValidationError { total, .. }
+        | ReportValidateResult::Success { total, .. } => {
+            if *total == 1 {
+                String::from("1 test")
+            } else {
+                format!("{total} tests")
+            }
+        }
+    }
+}
+
+fn format_skipped_count(result: &ReportValidateResult) -> String {
+    match result {
+        ReportValidateResult::ParseError => String::new(),
+        ReportValidateResult::ValidationError { skipped, .. }
+        | ReportValidateResult::Success { skipped, .. } => {
+            if *skipped == 0 {
+                String::new()
+            } else {
+                format!("{skipped} skipped")
+            }
+        }
+    }
+}
+
+fn has_no_runnable_tests(result: &ReportValidateResult) -> bool {
+    match result {
+        ReportValidateResult::Success { total, skipped } => *total > 0 && *total == *skipped,
+        ReportValidateResult::ParseError | ReportValidateResult::ValidationError { .. } => false,
     }
 }
 

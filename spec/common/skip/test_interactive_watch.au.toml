@@ -47,6 +47,21 @@ expected_exit_code = 0
 
 
 [[tests]]
+id = "validation_error_with_skipped"
+program_arguments = [
+    "test",
+    "--record",
+    "100x20",
+    "--watch",
+    "helpers/validation_error_with_skipped.toml",
+]
+
+expected_stdout = { file = "snapshots/validation_error_with_skipped.txt" }
+expected_stderr = ""
+expected_exit_code = 3
+
+
+[[tests]]
 id = "all"
 program_arguments = ["test", "--record", "100x20", "--watch", "helpers/*.toml"]
 stdin = "r\nl\nq\n"
