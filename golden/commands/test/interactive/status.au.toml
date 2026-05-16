@@ -8,11 +8,11 @@ program_arguments = [
     "test",
     "--record",
     "120x20",
-    "helpers/failing_stdout_only.toml",
+    "helpers/failing-stdout-only.toml",
 ]
 stdin = "q\n"
 
-expected_stdout = { file = "snapshots/status_empty.txt" }
+expected_stdout = { file = "snapshots/status-empty.txt" }
 expected_exit_code = 1
 
 
@@ -23,11 +23,11 @@ program_arguments = [
     "test",
     "--record",
     "120x20",
-    "helpers/failing_stdout_only.toml",
+    "helpers/failing-stdout-only.toml",
 ]
 stdin = "e\nq\n"
 
-expected_stdout = { file = "snapshots/status_non_failing_field.txt" }
+expected_stdout = { file = "snapshots/status-non-failing-field.txt" }
 expected_exit_code = 1
 
 
@@ -38,11 +38,11 @@ program_arguments = [
     "test",
     "--record",
     "120x20",
-    "helpers/failing_stdout_only.toml",
+    "helpers/failing-stdout-only.toml",
 ]
 stdin = "i\nq\n"
 
-expected_stdout = { file = "snapshots/status_stdin_field.txt" }
+expected_stdout = { file = "snapshots/status-stdin-field.txt" }
 expected_exit_code = 1
 
 
@@ -53,11 +53,11 @@ program_arguments = [
     "test",
     "--record",
     "120x20",
-    "helpers/failing_stdout_only.toml",
+    "helpers/failing-stdout-only.toml",
 ]
 stdin = "enter\nq\n"
 
-expected_stdout = { file = "snapshots/status_enter_undecided.txt" }
+expected_stdout = { file = "snapshots/status-enter-undecided.txt" }
 expected_exit_code = 1
 
 
@@ -68,11 +68,11 @@ program_arguments = [
     "test",
     "--record",
     "120x20",
-    "helpers/failing_stdout_only.toml",
+    "helpers/failing-stdout-only.toml",
 ]
 stdin = "a\nq\n"
 
-expected_stdout = { file = "snapshots/status_all_decided.txt" }
+expected_stdout = { file = "snapshots/status-all-decided.txt" }
 expected_exit_code = 1
 
 
@@ -83,11 +83,11 @@ program_arguments = [
     "test",
     "--record",
     "120x20",
-    "helpers/failing_stdout_and_exit_code.toml",
+    "helpers/failing-stdout-and-exit-code.toml",
 ]
 stdin = "a\nq\n"
 
-expected_stdout = { file = "snapshots/status_pending_next_field.txt" }
+expected_stdout = { file = "snapshots/status-pending-next-field.txt" }
 expected_exit_code = 1
 
 
@@ -98,9 +98,9 @@ program_arguments = [
     "test",
     "--record",
     "120x20",
-    "helpers/failing_stdout_only.toml",
+    "helpers/failing-stdout-only.toml",
 ]
 stdin = "a\ne\nq\n"
 
-expected_stdout = { file = "snapshots/status_pending_reverts.txt" }
+expected_stdout = { file = "snapshots/status-pending-reverts.txt" }
 expected_exit_code = 1

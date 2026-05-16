@@ -1,0 +1,209 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+
+[[tests]]
+id = "config.empty"
+program_arguments = ["validate", "helpers/config-empty.toml"]
+
+expected_stdout = """
+✘ helpers/config-empty.toml  1 test
+"""
+expected_stderr = """
+📋 helpers/config-empty.toml
+└── Test
+    └── Validation errors
+        ├── ✘ missing required field `program`
+        └── ✘ no expectations defined; specify at least one `expected_*` field: `expected_stdout`, `expected_stderr`, or `expected_exit_code`
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "config.no_expectations"
+program_arguments = ["validate", "helpers/config-no-expectations.toml"]
+
+expected_stdout = """
+✘ helpers/config-no-expectations.toml  1 test
+"""
+expected_stderr = """
+📋 helpers/config-no-expectations.toml
+└── Test
+    └── Validation errors
+        └── ✘ no expectations defined; specify at least one `expected_*` field: `expected_stdout`, `expected_stderr`, or `expected_exit_code`
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "config.missing_env_var"
+program_arguments = ["validate", "helpers/config-missing-env-var.toml"]
+
+expected_stdout = """
+✘ helpers/config-missing-env-var.toml  1 test
+"""
+expected_stderr = """
+📋 helpers/config-missing-env-var.toml
+└── Test
+    └── Validation errors
+        └── ✘ field `expected_stdout`: missing environment variable `AUREUM_TEST_THIS_ENV_VAR_DOES_NOT_EXIST`
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "config.missing_external_file"
+program_arguments = ["validate", "helpers/config-missing-external-file.toml"]
+
+expected_stdout = """
+✘ helpers/config-missing-external-file.toml  1 test
+"""
+expected_stderr = """
+📋 helpers/config-missing-external-file.toml
+└── Test
+    └── Validation errors
+        └── ✘ field `expected_stdout`: missing external file `aureum_test_this_file_does_not_exist`
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "program.no_program"
+program_arguments = ["validate", "helpers/program-no-program.toml"]
+
+expected_stdout = """
+✘ helpers/program-no-program.toml  1 test
+"""
+expected_stderr = """
+📋 helpers/program-no-program.toml
+└── Test
+    └── Validation errors
+        └── ✘ missing required field `program`
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "program.unknown_program"
+program_arguments = ["validate", "helpers/program-unknown-program.toml"]
+
+expected_stdout = """
+✘ helpers/program-unknown-program.toml  1 test
+"""
+expected_stderr = """
+📋 helpers/program-unknown-program.toml
+└── Test
+    └── Validation errors
+        └── ✘ program not found: `aureum_test_this_program_does_not_exist`
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "expected_exit_code.invalid_exit_code"
+program_arguments = [
+    "validate",
+    "helpers/expected-exit-code-invalid-exit-code.toml",
+]
+
+expected_stdout = """
+✘ helpers/expected-exit-code-invalid-exit-code.toml  1 test
+"""
+expected_stderr = """
+📋 helpers/expected-exit-code-invalid-exit-code.toml
+└── Test
+    └── Validation errors
+        └── ✘ field `expected_exit_code`: must be between 0 and 255 on POSIX systems, or -2147483648 to 2147483647 on Windows
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "expected_exit_code.failed_to_parse"
+program_arguments = [
+    "validate",
+    "helpers/expected-exit-code-failed-to-parse.toml",
+]
+
+expected_stdout = """
+✘ helpers/expected-exit-code-failed-to-parse.toml  1 test
+"""
+expected_stderr = """
+📋 helpers/expected-exit-code-failed-to-parse.toml
+└── Test
+    └── Validation errors
+        └── ✘ field `expected_exit_code`: in external file `not-a-number.txt`: invalid digit found in string
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "timeout_seconds.negative_timeout"
+program_arguments = [
+    "validate",
+    "helpers/timeout-seconds-negative-timeout.toml",
+]
+
+expected_stdout = """
+✘ helpers/timeout-seconds-negative-timeout.toml  1 test
+"""
+expected_stderr = """
+📋 helpers/timeout-seconds-negative-timeout.toml
+└── Test
+    └── Validation errors
+        └── ✘ field `timeout_seconds`: must be 0 or greater
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "skip.no_reason"
+program_arguments = ["validate", "helpers/skip-no-reason.toml"]
+
+expected_stdout = """
+✘ helpers/skip-no-reason.toml  1 test
+"""
+expected_stderr = """
+📋 helpers/skip-no-reason.toml
+└── Test
+    └── Validation errors
+        └── ✘ field `skip`: must contain a reason
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "skip.multi_line_reason"
+program_arguments = ["validate", "helpers/skip-multi-line-reason.toml"]
+
+expected_stdout = """
+✘ helpers/skip-multi-line-reason.toml  1 test
+"""
+expected_stderr = """
+📋 helpers/skip-multi-line-reason.toml
+└── Test
+    └── Validation errors
+        └── ✘ field `skip`: must not contain newlines
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3

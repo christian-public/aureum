@@ -2,10 +2,10 @@ program = { env = "AUREUM_TEST_EXEC" }
 program_arguments = ["list", "helpers/*.toml"]
 
 expected_stdout = """
-helpers/nested_test.toml:test1
-helpers/nested_test.toml:test2
-helpers/passing_test.toml
-helpers/passing_test2.toml
+helpers/nested-test.toml:test1
+helpers/nested-test.toml:test2
+helpers/passing-test.toml
+helpers/passing-test2.toml
 """
 expected_stderr = ""
 expected_exit_code = 0

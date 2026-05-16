@@ -1,4 +1,0 @@
-program = "echo"
-program_arguments = ["-n", "Hello world"]
-
-expected_stdout = { file = "helpers/read_external_file.stdout" }

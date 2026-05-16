@@ -1,0 +1,10 @@
+program = { env = "AUREUM_TEST_EXEC" }
+program_arguments = ["test", "--format", "UNKNOWN", "helpers/passing-test.toml"]
+
+expected_stdout = ""
+expected_stderr = """
+error: invalid value 'UNKNOWN' for '--format <FORMAT>': valid options: summary, tap
+
+For more information, try '--help'.
+"""
+expected_exit_code = 2

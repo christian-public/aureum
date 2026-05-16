@@ -1,3 +1,0 @@
-program = "helpers/local_program"
-
-expected_stdout = "Hello world"

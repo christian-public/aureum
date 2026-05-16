@@ -3,10 +3,10 @@ use aureum::{ProgramOutput, string};
 use std::io;
 use std::process;
 
-const TEMPLATE_01_MINIMAL_TEST: &str = include_str!("../assets/01_minimal_test.au.toml");
-const TEMPLATE_02_NESTED_TESTS: &str = include_str!("../assets/02_nested_tests.au.toml");
+const TEMPLATE_01_MINIMAL_TEST: &str = include_str!("../assets/01-minimal-test.au.toml");
+const TEMPLATE_02_NESTED_TESTS: &str = include_str!("../assets/02-nested-tests.au.toml");
 const TEMPLATE_03_ALL_SUPPORTED_FIELDS: &str =
-    include_str!("../assets/03_all_supported_fields.au.toml");
+    include_str!("../assets/03-all-supported-fields.au.toml");
 
 pub fn default_template() -> String {
     let t01 = format_template("Minimal test", TEMPLATE_01_MINIMAL_TEST);

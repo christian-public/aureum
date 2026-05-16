@@ -1,0 +1,53 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+
+[[tests]]
+id = "ambiguous"
+program_arguments = ["validate", "helpers/ambiguous-special-form.toml"]
+
+expected_stdout = """
+✘ helpers/ambiguous-special-form.toml  Parse error
+"""
+expected_stderr = """
+📋 helpers/ambiguous-special-form.toml
+└── Parse errors
+    └── ✘ field `expected_stdout`: cannot specify both `env` and `file`
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "extra_keys"
+program_arguments = ["validate", "helpers/special-form-extra-keys.toml"]
+
+expected_stdout = """
+✘ helpers/special-form-extra-keys.toml  Parse error
+"""
+expected_stderr = """
+📋 helpers/special-form-extra-keys.toml
+└── Parse errors
+    └── ✘ field `expected_stdout`: unknown keys: `unknown_key`; expected `file` or `env`
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "invalid"
+program_arguments = ["validate", "helpers/invalid-special-form.toml"]
+
+expected_stdout = """
+✘ helpers/invalid-special-form.toml  Parse error
+"""
+expected_stderr = """
+📋 helpers/invalid-special-form.toml
+└── Parse errors
+    ├── ✘ field `expected_stdout`: unknown keys: `unknown_key`; expected `file` or `env`
+    └── ✘ field `expected_stderr`: expected string, got integer
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3

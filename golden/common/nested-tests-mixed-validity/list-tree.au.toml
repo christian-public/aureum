@@ -1,0 +1,173 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+
+[[tests]]
+id = "all_valid.all"
+program_arguments = ["list", "--tree", "helpers/all-valid.toml"]
+
+expected_stdout = """
+/
+└── helpers/
+    └── all-valid.toml
+        ├── :test1
+        └── :test2
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "all_valid.specific_test_id"
+program_arguments = ["list", "--tree", "helpers/all-valid.toml:test1"]
+
+expected_stdout = """
+/
+└── helpers/
+    └── all-valid.toml
+        └── :test1
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "missing_program_on_test2.all"
+program_arguments = ["list", "--tree", "helpers/missing-program-on-test2.toml"]
+
+expected_stdout = """
+/
+└── helpers/
+    └── missing-program-on-test2.toml
+        ├── :test1
+        └── :test2
+"""
+expected_stderr = """
+📋 helpers/missing-program-on-test2.toml
+├── :test1
+└── :test2
+    └── Validation errors
+        └── ✘ missing required field `program`
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "missing_program_on_test2.specific_test_id"
+program_arguments = [
+    "list",
+    "--tree",
+    "helpers/missing-program-on-test2.toml:test1",
+]
+
+expected_stdout = """
+/
+└── helpers/
+    └── missing-program-on-test2.toml
+        └── :test1
+"""
+expected_stderr = """
+📋 helpers/missing-program-on-test2.toml
+├── :test1
+└── :test2
+    └── Validation errors
+        └── ✘ missing required field `program`
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "missing_program_on_all_tests"
+program_arguments = [
+    "list",
+    "--tree",
+    "helpers/missing-program-on-all-tests.toml",
+]
+
+expected_stdout = """
+/
+└── helpers/
+    └── missing-program-on-all-tests.toml
+        ├── :test1
+        └── :test2
+"""
+expected_stderr = """
+📋 helpers/missing-program-on-all-tests.toml
+├── :test1
+│   └── Validation errors
+│       └── ✘ missing required field `program`
+└── :test2
+    └── Validation errors
+        └── ✘ missing required field `program`
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "missing_program_on_all_tests.specific_test_id"
+program_arguments = [
+    "list",
+    "--tree",
+    "helpers/missing-program-on-all-tests.toml:test1",
+]
+
+expected_stdout = """
+/
+└── helpers/
+    └── missing-program-on-all-tests.toml
+        └── :test1
+"""
+expected_stderr = """
+📋 helpers/missing-program-on-all-tests.toml
+├── :test1
+│   └── Validation errors
+│       └── ✘ missing required field `program`
+└── :test2
+    └── Validation errors
+        └── ✘ missing required field `program`
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "all_files"
+program_arguments = ["list", "--tree", "helpers/*.toml"]
+
+expected_stdout = """
+/
+└── helpers/
+    ├── all-valid.toml
+    │   ├── :test1
+    │   └── :test2
+    ├── missing-program-on-all-tests.toml
+    │   ├── :test1
+    │   └── :test2
+    └── missing-program-on-test2.toml
+        ├── :test1
+        └── :test2
+"""
+expected_stderr = """
+📋 helpers/missing-program-on-all-tests.toml
+├── :test1
+│   └── Validation errors
+│       └── ✘ missing required field `program`
+└── :test2
+    └── Validation errors
+        └── ✘ missing required field `program`
+
+📋 helpers/missing-program-on-test2.toml
+├── :test1
+└── :test2
+    └── Validation errors
+        └── ✘ missing required field `program`
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3

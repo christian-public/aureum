@@ -1,0 +1,203 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+
+[[tests]]
+id = "skip_root_test"
+program_arguments = [
+    "test",
+    "--verbose",
+    "--stable-output",
+    "helpers/skip-root-test.toml",
+]
+
+expected_stdout = """
+🚀 Running 0 of 1 test:
+s
+
+⊘ helpers/skip-root-test.toml  not implemented yet
+
+Test result: OK (0 passed, 1 skipped) — Finished in 0.0s
+"""
+expected_stderr = """
+🔍 Found 1 config files
+└── helpers/skip-root-test.toml
+
+📋 helpers/skip-root-test.toml
+└── Test
+    └── ⊘ Skipped: not implemented yet
+
+"""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "skip_subtest"
+program_arguments = [
+    "test",
+    "--verbose",
+    "--stable-output",
+    "helpers/skip-subtest.toml",
+]
+
+expected_stdout = """
+🚀 Running 1 of 2 tests:
+.s
+
+⊘ helpers/skip-subtest.toml:not_ready  feature not ready
+
+✔ helpers/skip-subtest.toml:passing
+
+Test result: OK (1 passed, 1 skipped) — Finished in 0.0s
+"""
+expected_stderr = """
+🔍 Found 1 config files
+└── helpers/skip-subtest.toml
+
+📋 helpers/skip-subtest.toml
+├── :passing
+│   └── Program to run
+│       └── ✔ <absolute path to 'echo'>
+└── :not_ready
+    └── ⊘ Skipped: feature not ready
+
+"""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "skip_invalid_config"
+program_arguments = [
+    "test",
+    "--verbose",
+    "--stable-output",
+    "helpers/skip-invalid-config.toml",
+]
+
+expected_stdout = """
+🚀 Running 0 of 1 test:
+s
+
+⊘ helpers/skip-invalid-config.toml  todo
+
+Test result: OK (0 passed, 1 skipped) — Finished in 0.0s
+"""
+expected_stderr = """
+🔍 Found 1 config files
+└── helpers/skip-invalid-config.toml
+
+📋 helpers/skip-invalid-config.toml
+└── Test
+    └── ⊘ Skipped: todo
+
+"""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "validation_error_with_skipped"
+program_arguments = [
+    "test",
+    "--verbose",
+    "--stable-output",
+    "helpers/validation-error-with-skipped.toml",
+]
+
+expected_stdout = """
+🚀 Running 0 of 1 test:
+s
+
+⊘ helpers/validation-error-with-skipped.toml:skipped  todo
+
+Test result: OK* (0 passed, 1 skipped, 1 config error) — Finished in 0.0s
+"""
+expected_stderr = """
+🔍 Found 1 config files
+└── helpers/validation-error-with-skipped.toml
+
+📋 helpers/validation-error-with-skipped.toml
+├── :skipped
+│   └── ⊘ Skipped: todo
+└── :invalid
+    ├── Program to run
+    │   └── ✔ <absolute path to 'echo'>
+    └── Validation errors
+        └── ✘ no expectations defined; specify at least one `expected_*` field: `expected_stdout`, `expected_stderr`, or `expected_exit_code`
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "all"
+program_arguments = ["test", "--verbose", "--stable-output", "helpers/*.toml"]
+
+expected_stdout = """
+🚀 Running 2 of 6 tests:
+Fss.ss
+
+⊘ helpers/skip-invalid-config.toml                    todo
+⊘ helpers/skip-root-test.toml                         not implemented yet
+⊘ helpers/skip-subtest.toml:not_ready                 feature not ready
+⊘ helpers/validation-error-with-skipped.toml:skipped  todo
+
+✔ helpers/skip-subtest.toml:passing
+
+✘ helpers/failing-test.toml
+└── Standard output
+    ├── Expected
+    │   ╭
+    │   │ 1   │  expected
+    │   ╰
+    ├── Got
+    │   ╭
+    │   │   1 │  actual
+    │   ╰
+    └── Diff
+        ╭
+        │ 1   │ -expected
+        │   1 │ +actual
+        ╰
+
+Test result: FAIL (1 failed, 1 passed, 4 skipped, 1 config error) — Finished in 0.0s
+"""
+expected_stderr = """
+🔍 Found 5 config files
+├── helpers/failing-test.toml
+├── helpers/skip-invalid-config.toml
+├── helpers/skip-root-test.toml
+├── helpers/skip-subtest.toml
+└── helpers/validation-error-with-skipped.toml
+
+📋 helpers/failing-test.toml
+└── Test
+    └── Program to run
+        └── ✔ <absolute path to 'echo'>
+
+📋 helpers/skip-invalid-config.toml
+└── Test
+    └── ⊘ Skipped: todo
+
+📋 helpers/skip-root-test.toml
+└── Test
+    └── ⊘ Skipped: not implemented yet
+
+📋 helpers/skip-subtest.toml
+├── :passing
+│   └── Program to run
+│       └── ✔ <absolute path to 'echo'>
+└── :not_ready
+    └── ⊘ Skipped: feature not ready
+
+📋 helpers/validation-error-with-skipped.toml
+├── :skipped
+│   └── ⊘ Skipped: todo
+└── :invalid
+    ├── Program to run
+    │   └── ✔ <absolute path to 'echo'>
+    └── Validation errors
+        └── ✘ no expectations defined; specify at least one `expected_*` field: `expected_stdout`, `expected_stderr`, or `expected_exit_code`
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 1

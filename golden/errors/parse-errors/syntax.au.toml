@@ -1,0 +1,21 @@
+program = { env = "AUREUM_TEST_EXEC" }
+program_arguments = ["validate", "helpers/invalid-syntax.toml"]
+
+expected_stdout = """
+✘ helpers/invalid-syntax.toml  Parse error
+"""
+expected_stderr = """
+📋 helpers/invalid-syntax.toml
+└── Parse errors
+    └── ✘ invalid TOML syntax
+        ╭
+        │ TOML parse error at line 1, column 10
+        │   |
+        │ 1 | program =
+        │   |          ^
+        │ string values must be quoted, expected literal string
+        ╰
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3

@@ -3,11 +3,33 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 [[tests]]
 id = "without_verbose"
-program_arguments = ["validate", "helpers/*.toml"]
+program_arguments = ["run", "--format", "toml", "helpers/*.toml"]
 
 expected_stdout = """
-✘ helpers/many-requirements.toml  4 tests
-✔ helpers/no-requirements.toml    1 test
+# TEST: helpers/many-requirements.toml:env_var_exists
+expected_stdout = "Hello world"
+expected_stderr = ""
+expected_exit_code = 0
+
+# TEST: helpers/many-requirements.toml:env_var_missing
+expected_stdout = "Hello world"
+expected_stderr = ""
+expected_exit_code = 0
+
+# TEST: helpers/many-requirements.toml:external_file_exists
+expected_stdout = "Hello world"
+expected_stderr = ""
+expected_exit_code = 0
+
+# TEST: helpers/many-requirements.toml:external_file_missing
+expected_stdout = "Hello world"
+expected_stderr = ""
+expected_exit_code = 0
+
+# TEST: helpers/no-requirements.toml
+expected_stdout = "Hello world"
+expected_stderr = ""
+expected_exit_code = 0
 """
 expected_stderr = """
 📋 helpers/many-requirements.toml
@@ -31,15 +53,39 @@ expected_exit_code = 3
 [[tests]]
 id = "with_verbose"
 program_arguments = [
-    "validate",
+    "run",
+    "--format",
+    "toml",
     "--verbose",
     "--stable-output",
     "helpers/*.toml",
 ]
 
 expected_stdout = """
-✘ helpers/many-requirements.toml  4 tests
-✔ helpers/no-requirements.toml    1 test
+# TEST: helpers/many-requirements.toml:env_var_exists
+expected_stdout = "Hello world"
+expected_stderr = ""
+expected_exit_code = 0
+
+# TEST: helpers/many-requirements.toml:env_var_missing
+expected_stdout = "Hello world"
+expected_stderr = ""
+expected_exit_code = 0
+
+# TEST: helpers/many-requirements.toml:external_file_exists
+expected_stdout = "Hello world"
+expected_stderr = ""
+expected_exit_code = 0
+
+# TEST: helpers/many-requirements.toml:external_file_missing
+expected_stdout = "Hello world"
+expected_stderr = ""
+expected_exit_code = 0
+
+# TEST: helpers/no-requirements.toml
+expected_stdout = "Hello world"
+expected_stderr = ""
+expected_exit_code = 0
 """
 expected_stderr = """
 🔍 Found 2 config files

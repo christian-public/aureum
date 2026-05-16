@@ -6,14 +6,14 @@ id = "without_verbose"
 program_arguments = ["list", "helpers/*.toml"]
 
 expected_stdout = """
-helpers/many_requirements.toml:env_var_exists
-helpers/many_requirements.toml:env_var_missing
-helpers/many_requirements.toml:external_file_exists
-helpers/many_requirements.toml:external_file_missing
-helpers/no_requirements.toml
+helpers/many-requirements.toml:env_var_exists
+helpers/many-requirements.toml:env_var_missing
+helpers/many-requirements.toml:external_file_exists
+helpers/many-requirements.toml:external_file_missing
+helpers/no-requirements.toml
 """
 expected_stderr = """
-📋 helpers/many_requirements.toml
+📋 helpers/many-requirements.toml
 ├── Watch file errors
 │   ├── ✘ missing external file `AUREUM_TEST_FILE_WITH_PATH_TO_WATCH_DOES_NOT_EXIST`
 │   └── ✘ missing environment variable `AUREUM_TEST_ENV_VAR_WITH_PATH_TO_WATCH_DOES_NOT_EXIST`
@@ -36,29 +36,29 @@ id = "with_verbose"
 program_arguments = ["list", "--verbose", "--stable-output", "helpers/*.toml"]
 
 expected_stdout = """
-helpers/many_requirements.toml:env_var_exists
-helpers/many_requirements.toml:env_var_missing
-helpers/many_requirements.toml:external_file_exists
-helpers/many_requirements.toml:external_file_missing
-helpers/no_requirements.toml
+helpers/many-requirements.toml:env_var_exists
+helpers/many-requirements.toml:env_var_missing
+helpers/many-requirements.toml:external_file_exists
+helpers/many-requirements.toml:external_file_missing
+helpers/no-requirements.toml
 """
 expected_stderr = """
 🔍 Found 2 config files
-├── helpers/many_requirements.toml
-└── helpers/no_requirements.toml
+├── helpers/many-requirements.toml
+└── helpers/no-requirements.toml
 
-📋 helpers/many_requirements.toml
+📋 helpers/many-requirements.toml
 ├── Requirements
 │   ├── Files
 │   │   ├── ✘ AUREUM_TEST_FILE_WITH_PATH_TO_WATCH_DOES_NOT_EXIST
 │   │   ├── ✘ aureum_test_this_file_does_not_exist
-│   │   └── ✔ hello_world.txt
+│   │   └── ✔ hello-world.txt
 │   └── Environment variables
 │       ├── ✘ AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST
 │       ├── ✘ AUREUM_TEST_ENV_VAR_WITH_PATH_TO_WATCH_DOES_NOT_EXIST
 │       └── ✔ AUREUM_TEST_HELLO_WORLD
 ├── Watch files
-│   └── hello_world.txt
+│   └── hello-world.txt
 ├── Watch file errors
 │   ├── ✘ missing external file `AUREUM_TEST_FILE_WITH_PATH_TO_WATCH_DOES_NOT_EXIST`
 │   └── ✘ missing environment variable `AUREUM_TEST_ENV_VAR_WITH_PATH_TO_WATCH_DOES_NOT_EXIST`
@@ -79,7 +79,7 @@ expected_stderr = """
     └── Validation errors
         └── ✘ field `expected_stdout`: missing external file `aureum_test_this_file_does_not_exist`
 
-📋 helpers/no_requirements.toml
+📋 helpers/no-requirements.toml
 └── Test
     └── Program to run
         └── ✔ <absolute path to 'echo'>

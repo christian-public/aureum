@@ -1,0 +1,188 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+
+[[tests]]
+id = "passing"
+program_arguments = [
+    "test",
+    "--format",
+    "summary",
+    "--stable-output",
+    "helpers/passing-test.toml",
+]
+
+expected_stdout = """
+🚀 Running 1 test:
+.
+
+Test result: OK (1 passed) — Finished in 0.0s
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "failing"
+program_arguments = [
+    "test",
+    "--format",
+    "summary",
+    "--stable-output",
+    "helpers/failing-test.toml",
+]
+
+expected_stdout = """
+🚀 Running 1 test:
+F
+
+✘ helpers/failing-test.toml
+├── Standard output
+│   ├── Expected
+│   │   ╭
+│   │   │ 1   │  STDOUT
+│   │   ╰
+│   ├── Got
+│   │   ╭
+│   │   │   1 │  Hello world
+│   │   ╰
+│   └── Diff
+│       ╭
+│       │ 1   │ -STDOUT
+│       │   1 │ +Hello world
+│       ╰
+├── Standard error
+│   ├── Expected
+│   │   ╭
+│   │   │ 1   │  STDERR
+│   │   ╰
+│   ├── Got
+│   │   ╭
+│   │   │   1 │
+│   │   ╰
+│   └── Diff
+│       ╭
+│       │ 1   │ -STDERR
+│       ╰
+└── Exit code
+    ├── Expected
+    │   └── 42
+    └── Got
+        └── 0
+
+Test result: FAIL (1 failed, 0 passed) — Finished in 0.0s
+"""
+expected_stderr = ""
+expected_exit_code = 1
+
+
+[[tests]]
+id = "failing_with_newline"
+program_arguments = [
+    "test",
+    "--format",
+    "summary",
+    "--stable-output",
+    "helpers/failing-test-newline.toml",
+]
+
+expected_stdout = """
+🚀 Running 1 test:
+F
+
+✘ helpers/failing-test-newline.toml
+└── Standard output
+    ├── Expected
+    │   ╭
+    │   │ 1   │  Hello world
+    │   │ 2   │
+    │   ╰
+    ├── Got
+    │   ╭
+    │   │   1 │  Hello
+    │   │   2 │
+    │   ╰
+    └── Diff
+        ╭
+        │ 1   │ -Hello world
+        │   1 │ +Hello
+        │ 2 2 │
+        ╰
+
+Test result: FAIL (1 failed, 0 passed) — Finished in 0.0s
+"""
+expected_stderr = ""
+expected_exit_code = 1
+
+
+[[tests]]
+id = "multiple_failing_tests"
+program_arguments = [
+    "test",
+    "--format",
+    "summary",
+    "--stable-output",
+    "helpers/failing-test.toml",
+    "helpers/failing-test-newline.toml",
+]
+
+expected_stdout = """
+🚀 Running 2 tests:
+FF
+
+✘ helpers/failing-test-newline.toml
+└── Standard output
+    ├── Expected
+    │   ╭
+    │   │ 1   │  Hello world
+    │   │ 2   │
+    │   ╰
+    ├── Got
+    │   ╭
+    │   │   1 │  Hello
+    │   │   2 │
+    │   ╰
+    └── Diff
+        ╭
+        │ 1   │ -Hello world
+        │   1 │ +Hello
+        │ 2 2 │
+        ╰
+
+✘ helpers/failing-test.toml
+├── Standard output
+│   ├── Expected
+│   │   ╭
+│   │   │ 1   │  STDOUT
+│   │   ╰
+│   ├── Got
+│   │   ╭
+│   │   │   1 │  Hello world
+│   │   ╰
+│   └── Diff
+│       ╭
+│       │ 1   │ -STDOUT
+│       │   1 │ +Hello world
+│       ╰
+├── Standard error
+│   ├── Expected
+│   │   ╭
+│   │   │ 1   │  STDERR
+│   │   ╰
+│   ├── Got
+│   │   ╭
+│   │   │   1 │
+│   │   ╰
+│   └── Diff
+│       ╭
+│       │ 1   │ -STDERR
+│       ╰
+└── Exit code
+    ├── Expected
+    │   └── 42
+    └── Got
+        └── 0
+
+Test result: FAIL (2 failed, 0 passed) — Finished in 0.0s
+"""
+expected_stderr = ""
+expected_exit_code = 1

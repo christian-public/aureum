@@ -1,3 +1,0 @@
-program = "true"
-
-expected_exit_code = { file = "not_a_number.txt" }

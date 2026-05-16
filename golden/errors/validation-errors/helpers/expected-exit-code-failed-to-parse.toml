@@ -1,0 +1,3 @@
+program = "true"
+
+expected_exit_code = { file = "not-a-number.txt" }

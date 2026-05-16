@@ -3,11 +3,14 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 [[tests]]
 id = "without_verbose"
-program_arguments = ["validate", "helpers/*.toml"]
+program_arguments = ["test", "--format", "tap", "helpers/*.toml"]
 
 expected_stdout = """
-✘ helpers/many-requirements.toml  4 tests
-✔ helpers/no-requirements.toml    1 test
+TAP version 14
+1..3
+ok     1 - helpers/many-requirements.toml:env_var_exists
+ok     2 - helpers/many-requirements.toml:external_file_exists
+ok     3 - helpers/no-requirements.toml
 """
 expected_stderr = """
 📋 helpers/many-requirements.toml
@@ -31,15 +34,20 @@ expected_exit_code = 3
 [[tests]]
 id = "with_verbose"
 program_arguments = [
-    "validate",
+    "test",
+    "--format",
+    "tap",
     "--verbose",
     "--stable-output",
     "helpers/*.toml",
 ]
 
 expected_stdout = """
-✘ helpers/many-requirements.toml  4 tests
-✔ helpers/no-requirements.toml    1 test
+TAP version 14
+1..3
+ok     1 - helpers/many-requirements.toml:env_var_exists
+ok     2 - helpers/many-requirements.toml:external_file_exists
+ok     3 - helpers/no-requirements.toml
 """
 expected_stderr = """
 🔍 Found 2 config files

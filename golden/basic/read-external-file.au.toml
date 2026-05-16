@@ -1,0 +1,4 @@
+program = "echo"
+program_arguments = ["-n", "Hello world"]
+
+expected_stdout = { file = "helpers/read-external-file.stdout" }

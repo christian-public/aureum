@@ -7,11 +7,11 @@ program_arguments = [
   "test",
   "--record",
   "100x20",
-  "helpers/non_terminating_with_timeout.toml",
+  "helpers/non-terminating-with-timeout.toml",
 ]
 stdin = "l\nq\n"
 
-expected_stdout = { file = "snapshots/timeout_seconds_field.txt" }
+expected_stdout = { file = "snapshots/timeout-seconds-field.txt" }
 expected_exit_code = 1
 
 
@@ -23,9 +23,9 @@ program_arguments = [
   "0",
   "--record",
   "100x20",
-  "helpers/non_terminating.toml",
+  "helpers/non-terminating.toml",
 ]
 stdin = "l\nq\n"
 
-expected_stdout = { file = "snapshots/default_timeout_option.txt" }
+expected_stdout = { file = "snapshots/default-timeout-option.txt" }
 expected_exit_code = 1

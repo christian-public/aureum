@@ -1,0 +1,53 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+
+[[tests]]
+id = "missing_id"
+program_arguments = ["validate", "helpers/missing-id.toml"]
+
+expected_stdout = """
+✘ helpers/missing-id.toml  Parse error
+"""
+expected_stderr = """
+📋 helpers/missing-id.toml
+└── Parse errors
+    └── ✘ [0]: missing required field `id`
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "invalid_id"
+program_arguments = ["validate", "helpers/invalid-id.toml"]
+
+expected_stdout = """
+✘ helpers/invalid-id.toml  Parse error
+"""
+expected_stderr = """
+📋 helpers/invalid-id.toml
+└── Parse errors
+    ├── ✘ [1]: field `id`: invalid id `invalid id!`
+    └── ✘ [2]: field `id`: invalid id ``
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[tests]]
+id = "id_at_root"
+program_arguments = ["validate", "helpers/id-at-root.toml"]
+
+expected_stdout = """
+✘ helpers/id-at-root.toml  Parse error
+"""
+expected_stderr = """
+📋 helpers/id-at-root.toml
+└── Parse errors
+    └── ✘ `id` is not allowed at the root level
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3

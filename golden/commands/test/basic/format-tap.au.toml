@@ -1,0 +1,76 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+
+[[tests]]
+id = "passing"
+program_arguments = ["test", "--format", "tap", "helpers/passing-test.toml"]
+
+expected_stdout = """
+TAP version 14
+1..1
+ok     1 - helpers/passing-test.toml
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[tests]]
+id = "failing"
+program_arguments = ["test", "--format", "tap", "helpers/failing-test.toml"]
+
+expected_stdout = """
+TAP version 14
+1..1
+not ok 1 - helpers/failing-test.toml
+  ---
+  stdout:
+    expected: STDOUT
+    got: Hello world
+  stderr:
+    expected: STDERR
+    got: ''
+  exit-code:
+    expected: 42
+    got: 0
+  ...
+"""
+expected_stderr = ""
+expected_exit_code = 1
+
+
+[[tests]]
+id = "failing_with_newline"
+program_arguments = [
+  "test",
+  "--format",
+  "tap",
+  "helpers/failing-test-newline.toml",
+]
+
+expected_stdout = """
+TAP version 14
+1..1
+not ok 1 - helpers/failing-test-newline.toml
+  ---
+  stdout:
+    expected: |
+      Hello world
+    got: |
+      Hello
+  ...
+"""
+expected_stderr = ""
+expected_exit_code = 1
+
+
+[[tests]]
+id = "passing_with_hash_in_filename"
+program_arguments = ["test", "--format", "tap", "helpers/test-with-#-sign.toml"]
+
+expected_stdout = """
+TAP version 14
+1..1
+ok     1 - helpers/test-with-\\#-sign.toml
+"""
+expected_stderr = ""
+expected_exit_code = 0

@@ -9,11 +9,11 @@ program_arguments = [
   "--watch",
   "--record",
   "100x20",
-  "helpers/failing_stdout_only.toml",
+  "helpers/failing-stdout-only.toml",
 ]
 stdin = "q\n"
 
-expected_stdout = { file = "snapshots/initial_frame.txt" }
+expected_stdout = { file = "snapshots/initial-frame.txt" }
 expected_exit_code = 1
 
 
@@ -26,11 +26,11 @@ program_arguments = [
   "--watch",
   "--record",
   "100x20",
-  "helpers/failing_stdout_only.toml",
+  "helpers/failing-stdout-only.toml",
 ]
 stdin = "file-change\nq\n"
 
-expected_stdout = { file = "snapshots/file_change_reruns_tests.txt" }
+expected_stdout = { file = "snapshots/file-change-reruns-tests.txt" }
 expected_exit_code = 1
 
 
@@ -42,11 +42,11 @@ program_arguments = [
   "--watch",
   "--record",
   "100x20",
-  "helpers/failing_stdout_only.toml",
+  "helpers/failing-stdout-only.toml",
 ]
 stdin = "r\nesc\nq\n"
 
-expected_stdout = { file = "snapshots/review_and_back_to_idle.txt" }
+expected_stdout = { file = "snapshots/review-and-back-to-idle.txt" }
 expected_exit_code = 1
 
 
@@ -58,11 +58,11 @@ program_arguments = [
   "--watch",
   "--record",
   "100x20",
-  "helpers/failing_stdout_only.toml",
+  "helpers/failing-stdout-only.toml",
 ]
 stdin = "t\nq\n"
 
-expected_stdout = { file = "snapshots/t_rerun_tests.txt" }
+expected_stdout = { file = "snapshots/t-rerun-tests.txt" }
 expected_exit_code = 1
 
 
@@ -74,9 +74,9 @@ program_arguments = [
   "--watch",
   "--record",
   "100x20",
-  "helpers/failing_stdout_only.toml",
+  "helpers/failing-stdout-only.toml",
 ]
 stdin = "r\nl\nesc\nq\n"
 
-expected_stdout = { file = "snapshots/list_esc_to_diff.txt" }
+expected_stdout = { file = "snapshots/list-esc-to-diff.txt" }
 expected_exit_code = 1
