@@ -86,7 +86,8 @@ pub(crate) fn run_watch_idle(
 }
 
 fn render_idle(frame: &mut Frame, counts: TestCounts, finished_at: &str, duration: &str) {
-    let total = counts.total();
+    let skipped = counts.skipped;
+    let passed = counts.passed;
     let failed = counts.failed;
     let area = frame.area();
 
@@ -135,35 +136,51 @@ fn render_idle(frame: &mut Frame, counts: TestCounts, finished_at: &str, duratio
     let label_w = 8usize;
     let value_w = table_rows.iter().map(|(_, v)| v.len()).max().unwrap_or(0);
 
-    // Status title + border color
-    let border_color = if failed == 0 {
-        Color::Green
-    } else {
-        Color::Red
-    };
-    let status_label = if failed == 0 {
-        format!(
-            " ✓ All {} {} passed ",
-            total,
-            if total == 1 { "test" } else { "tests" }
-        )
-    } else {
-        format!(
+    // Status title + border style
+    let (border_style, title, title_text_len) = if failed > 0 {
+        let label = format!(
             " ✗ {} {} failed ",
             failed,
             if failed == 1 { "test" } else { "tests" }
+        );
+        let style = Style::default().fg(Color::Red).add_modifier(Modifier::BOLD);
+        let width = label.len();
+        (
+            Style::default().fg(Color::Red),
+            Line::from(Span::styled(label, style)),
+            width,
+        )
+    } else if passed == 0 && skipped > 0 {
+        let word = if skipped == 1 { "test" } else { "tests" };
+        let text = format!(" All {skipped} {word} skipped ");
+        let width = " ⊘".len() + text.len();
+        (
+            Style::default(),
+            Line::from(vec![Span::raw(" "), theme::skip_span(), Span::raw(text)]),
+            width,
+        )
+    } else {
+        let word = if passed == 1 { "test" } else { "tests" };
+        let label = if skipped == 0 {
+            format!(" ✓ All {passed} {word} passed ")
+        } else {
+            format!(" ✓ {passed} {word} passed ")
+        };
+        let style = Style::default()
+            .fg(Color::Green)
+            .add_modifier(Modifier::BOLD);
+        let width = label.len();
+        (
+            Style::default().fg(Color::Green),
+            Line::from(Span::styled(label, style)),
+            width,
         )
     };
-    let title_style = Style::default()
-        .fg(border_color)
-        .add_modifier(Modifier::BOLD);
-    let title = Line::from(Span::styled(status_label.clone(), title_style));
 
     // Box sizing: fixed padding on each side, wide enough for title and minimum width
     const BOX_PADDING: usize = 2;
     const MIN_BOX_TOTAL_W: usize = 31;
     let content_block_w = label_w + 2 + value_w;
-    let title_text_len = status_label.len();
     let box_inner_w = (content_block_w + BOX_PADDING * 2)
         .max(title_text_len + 2)
         .max(MIN_BOX_TOTAL_W - 2);
@@ -194,7 +211,7 @@ fn render_idle(frame: &mut Frame, counts: TestCounts, finished_at: &str, duratio
     let block = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
-        .border_style(Style::default().fg(border_color))
+        .border_style(border_style)
         .title(title)
         .title_alignment(Alignment::Center);
     let box_inner = block.inner(box_area);

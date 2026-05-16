@@ -57,8 +57,4 @@ impl TestCounts {
             failed,
         }
     }
-
-    pub(crate) fn total(&self) -> usize {
-        self.skipped + self.passed + self.failed
-    }
 }

@@ -26,7 +26,7 @@
 │                                                                                                  │
 │                                                                                                  │
 │                                                                                                  │
-│                                  ╭─── ✓ All 2 tests passed ────╮                                 │
+│                                  ╭────── ✓ 1 test passed ──────╮                                 │
 │                                  │                             │                                 │
 │                                  │     Last run  12:00:00      │                                 │
 │                                  │     Run time  0.5s          │                                 │
