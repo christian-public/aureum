@@ -2,7 +2,7 @@ program = "echo"
 
 
 [[tests]]
-id = "valid_id"
+id = "valid-id"
 program_arguments = ["-n", "hello"]
 
 expected_stdout = "hello"

@@ -2,7 +2,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 
 [[tests]]
-id = "all_valid.all"
+id = "all-valid.all"
 program_arguments = ["validate", "helpers/all-valid.toml"]
 
 expected_stdout = """
@@ -13,7 +13,7 @@ expected_exit_code = 0
 
 
 [[tests]]
-id = "all_valid.specific_test_id"
+id = "all-valid.specific-test-id"
 program_arguments = ["validate", "helpers/all-valid.toml:test1"]
 
 expected_stdout = """
@@ -24,7 +24,7 @@ expected_exit_code = 0
 
 
 [[tests]]
-id = "missing_program_on_test2.all"
+id = "missing-program-on-test2.all"
 program_arguments = ["validate", "helpers/missing-program-on-test2.toml"]
 
 expected_stdout = """
@@ -43,7 +43,7 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "missing_program_on_test2.specific_test_id"
+id = "missing-program-on-test2.specific-test-id"
 program_arguments = ["validate", "helpers/missing-program-on-test2.toml:test1"]
 
 expected_stdout = """
@@ -62,7 +62,7 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "missing_program_on_all_tests.all"
+id = "missing-program-on-all-tests.all"
 program_arguments = ["validate", "helpers/missing-program-on-all-tests.toml"]
 
 expected_stdout = """
@@ -83,7 +83,7 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "missing_program_on_all_tests.specific_test_id"
+id = "missing-program-on-all-tests.specific-test-id"
 program_arguments = [
     "validate",
     "helpers/missing-program-on-all-tests.toml:test1",
@@ -107,7 +107,7 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "all_files"
+id = "all-files"
 program_arguments = ["validate", "helpers/*.toml"]
 
 expected_stdout = """

@@ -2,4 +2,4 @@ program = "echo"
 
 expected_stdout = "hello"
 
-id = "should_not_be_here"
+id = "should-not-be-here"

@@ -2,7 +2,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 
 [[tests]]
-id = "startup_message"
+id = "startup-message"
 program_arguments = ["test", "--watch", "--stable-output", "helpers/passing.toml"]
 
 expected_stdout = """
@@ -18,7 +18,7 @@ expected_exit_code = 0
 
 
 [[tests]]
-id = "file_change_reruns_tests"
+id = "file-change-reruns-tests"
 program_arguments = ["test", "--watch", "--stable-output", "helpers/passing.toml"]
 stdin = "file-change\n"
 

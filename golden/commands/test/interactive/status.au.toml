@@ -3,7 +3,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 # Status area starts empty: no message shown when on a failing field that is undecided.
 [[tests]]
-id = "empty_when_on_failing_undecided_field"
+id = "empty-when-on-failing-undecided-field"
 program_arguments = [
     "test",
     "--record",
@@ -18,7 +18,7 @@ expected_exit_code = 1
 
 # Switching to a non-failing output field (stderr is NotChecked) shows the navigation hint.
 [[tests]]
-id = "non_failing_output_field"
+id = "non-failing-output-field"
 program_arguments = [
     "test",
     "--record",
@@ -33,7 +33,7 @@ expected_exit_code = 1
 
 # Switching to stdin shows the same navigation hint.
 [[tests]]
-id = "stdin_field"
+id = "stdin-field"
 program_arguments = [
     "test",
     "--record",
@@ -48,7 +48,7 @@ expected_exit_code = 1
 
 # Pressing Enter on a failing field without a decision shows the error message.
 [[tests]]
-id = "enter_on_undecided_failing_field"
+id = "enter-on-undecided-failing-field"
 program_arguments = [
     "test",
     "--record",
@@ -63,7 +63,7 @@ expected_exit_code = 1
 
 # With a pending decision that would resolve all fields, shows "go to the next test."
 [[tests]]
-id = "pending_decision_last_field"
+id = "pending-decision-last-field"
 program_arguments = [
     "test",
     "--record",
@@ -78,7 +78,7 @@ expected_exit_code = 1
 
 # With a pending decision but other fields still undecided, shows "go to the next field."
 [[tests]]
-id = "pending_decision_more_fields_remain"
+id = "pending-decision-more-fields-remain"
 program_arguments = [
     "test",
     "--record",
@@ -93,7 +93,7 @@ expected_exit_code = 1
 
 # Pressing a then navigating to another field reverts the pending decision.
 [[tests]]
-id = "pending_decision_reverts_on_navigate"
+id = "pending-decision-reverts-on-navigate"
 program_arguments = [
     "test",
     "--record",

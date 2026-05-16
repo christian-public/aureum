@@ -19,7 +19,7 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "extra_keys"
+id = "extra-keys"
 program_arguments = ["validate", "helpers/special-form-extra-keys.toml"]
 
 expected_stdout = """

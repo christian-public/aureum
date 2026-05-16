@@ -2,7 +2,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 
 [[tests]]
-id = "timeout_seconds_field"
+id = "timeout-seconds-field"
 program_arguments = [
   "test",
   "--record",
@@ -16,7 +16,7 @@ expected_exit_code = 1
 
 
 [[tests]]
-id = "default_timeout_option"
+id = "default-timeout-option"
 program_arguments = [
   "test",
   "--default-timeout",

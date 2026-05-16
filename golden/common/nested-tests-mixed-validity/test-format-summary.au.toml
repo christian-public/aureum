@@ -2,7 +2,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 
 [[tests]]
-id = "all_valid.all"
+id = "all-valid.all"
 program_arguments = [
     "test",
     "--format",
@@ -22,7 +22,7 @@ expected_exit_code = 0
 
 
 [[tests]]
-id = "all_valid.specific_test_id"
+id = "all-valid.specific-test-id"
 program_arguments = [
     "test",
     "--format",
@@ -42,7 +42,7 @@ expected_exit_code = 0
 
 
 [[tests]]
-id = "missing_program_on_test2.all"
+id = "missing-program-on-test2.all"
 program_arguments = [
     "test",
     "--format",
@@ -70,7 +70,7 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "missing_program_on_test2.specific_test_id"
+id = "missing-program-on-test2.specific-test-id"
 program_arguments = [
     "test",
     "--format",
@@ -98,7 +98,7 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "missing_program_on_all_tests"
+id = "missing-program-on-all-tests"
 program_arguments = [
     "test",
     "--format",
@@ -128,7 +128,7 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "missing_program_on_all_tests.specific_test_id"
+id = "missing-program-on-all-tests.specific-test-id"
 program_arguments = [
     "test",
     "--format",
@@ -158,7 +158,7 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "all_files"
+id = "all-files"
 program_arguments = [
     "test",
     "--format",

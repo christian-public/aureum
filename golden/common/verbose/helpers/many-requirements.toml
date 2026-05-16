@@ -9,24 +9,24 @@ program_arguments = ["-n", "Hello world"]
 
 
 [[tests]]
-id = "env_var_exists"
+id = "env-var-exists"
 
 expected_stdout = { env = "AUREUM_TEST_HELLO_WORLD" }
 
 
 [[tests]]
-id = "env_var_missing"
+id = "env-var-missing"
 
 expected_stdout = { env = "AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST" }
 
 
 [[tests]]
-id = "external_file_exists"
+id = "external-file-exists"
 
 expected_stdout = { file = "hello-world.txt" }
 
 
 [[tests]]
-id = "external_file_missing"
+id = "external-file-missing"
 
 expected_stdout = { file = "aureum_test_this_file_does_not_exist" }

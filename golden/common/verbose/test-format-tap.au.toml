@@ -2,14 +2,14 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 
 [[tests]]
-id = "without_verbose"
+id = "without-verbose"
 program_arguments = ["test", "--format", "tap", "helpers/*.toml"]
 
 expected_stdout = """
 TAP version 14
 1..3
-ok     1 - helpers/many-requirements.toml:env_var_exists
-ok     2 - helpers/many-requirements.toml:external_file_exists
+ok     1 - helpers/many-requirements.toml:env-var-exists
+ok     2 - helpers/many-requirements.toml:external-file-exists
 ok     3 - helpers/no-requirements.toml
 """
 expected_stderr = """
@@ -17,12 +17,12 @@ expected_stderr = """
 ├── Watch file errors
 │   ├── ✘ missing external file `AUREUM_TEST_FILE_WITH_PATH_TO_WATCH_DOES_NOT_EXIST`
 │   └── ✘ missing environment variable `AUREUM_TEST_ENV_VAR_WITH_PATH_TO_WATCH_DOES_NOT_EXIST`
-├── :env_var_exists
-├── :env_var_missing
+├── :env-var-exists
+├── :env-var-missing
 │   └── Validation errors
 │       └── ✘ field `expected_stdout`: missing environment variable `AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST`
-├── :external_file_exists
-└── :external_file_missing
+├── :external-file-exists
+└── :external-file-missing
     └── Validation errors
         └── ✘ field `expected_stdout`: missing external file `aureum_test_this_file_does_not_exist`
 
@@ -32,7 +32,7 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "with_verbose"
+id = "with-verbose"
 program_arguments = [
     "test",
     "--format",
@@ -45,8 +45,8 @@ program_arguments = [
 expected_stdout = """
 TAP version 14
 1..3
-ok     1 - helpers/many-requirements.toml:env_var_exists
-ok     2 - helpers/many-requirements.toml:external_file_exists
+ok     1 - helpers/many-requirements.toml:env-var-exists
+ok     2 - helpers/many-requirements.toml:external-file-exists
 ok     3 - helpers/no-requirements.toml
 """
 expected_stderr = """
@@ -69,18 +69,18 @@ expected_stderr = """
 ├── Watch file errors
 │   ├── ✘ missing external file `AUREUM_TEST_FILE_WITH_PATH_TO_WATCH_DOES_NOT_EXIST`
 │   └── ✘ missing environment variable `AUREUM_TEST_ENV_VAR_WITH_PATH_TO_WATCH_DOES_NOT_EXIST`
-├── :env_var_exists
+├── :env-var-exists
 │   └── Program to run
 │       └── ✔ <absolute path to 'echo'>
-├── :env_var_missing
+├── :env-var-missing
 │   ├── Program to run
 │   │   └── ✔ <absolute path to 'echo'>
 │   └── Validation errors
 │       └── ✘ field `expected_stdout`: missing environment variable `AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST`
-├── :external_file_exists
+├── :external-file-exists
 │   └── Program to run
 │       └── ✔ <absolute path to 'echo'>
-└── :external_file_missing
+└── :external-file-missing
     ├── Program to run
     │   └── ✔ <absolute path to 'echo'>
     └── Validation errors

@@ -17,9 +17,9 @@ id = "list.default"
 program_arguments = ["list", "helpers/insertion-order-tests.toml"]
 
 expected_stdout = """
-helpers/insertion-order-tests.toml:test_z
-helpers/insertion-order-tests.toml:test_a
-helpers/insertion-order-tests.toml:test_m
+helpers/insertion-order-tests.toml:test-z
+helpers/insertion-order-tests.toml:test-a
+helpers/insertion-order-tests.toml:test-m
 """
 expected_stderr = ""
 expected_exit_code = 0
@@ -33,16 +33,16 @@ expected_stdout = """
 /
 └── helpers/
     └── insertion-order-tests.toml
-        ├── :test_z
-        ├── :test_a
-        └── :test_m
+        ├── :test-z
+        ├── :test-a
+        └── :test-m
 """
 expected_stderr = ""
 expected_exit_code = 0
 
 
 [[tests]]
-id = "run.format_toml"
+id = "run.format-toml"
 program_arguments = [
     "run",
     "--format",
@@ -51,17 +51,17 @@ program_arguments = [
 ]
 
 expected_stdout = """
-# TEST: helpers/insertion-order-tests.toml:test_z
+# TEST: helpers/insertion-order-tests.toml:test-z
 expected_stdout = "Z"
 expected_stderr = ""
 expected_exit_code = 0
 
-# TEST: helpers/insertion-order-tests.toml:test_a
+# TEST: helpers/insertion-order-tests.toml:test-a
 expected_stdout = "A"
 expected_stderr = ""
 expected_exit_code = 0
 
-# TEST: helpers/insertion-order-tests.toml:test_m
+# TEST: helpers/insertion-order-tests.toml:test-m
 expected_stdout = "M"
 expected_stderr = ""
 expected_exit_code = 0
@@ -71,7 +71,7 @@ expected_exit_code = 0
 
 
 [[tests]]
-id = "test.format_tap"
+id = "test.format-tap"
 program_arguments = [
     "test",
     "--format",
@@ -82,9 +82,9 @@ program_arguments = [
 expected_stdout = """
 TAP version 14
 1..3
-ok     1 - helpers/insertion-order-tests.toml:test_z
-ok     2 - helpers/insertion-order-tests.toml:test_a
-ok     3 - helpers/insertion-order-tests.toml:test_m
+ok     1 - helpers/insertion-order-tests.toml:test-z
+ok     2 - helpers/insertion-order-tests.toml:test-a
+ok     3 - helpers/insertion-order-tests.toml:test-m
 """
 expected_stderr = ""
 expected_exit_code = 0

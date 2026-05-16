@@ -2,7 +2,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 
 [[tests]]
-id = "skip_root_test"
+id = "skip-root-test"
 program_arguments = [
     "test",
     "--record",
@@ -17,7 +17,7 @@ expected_exit_code = 0
 
 
 [[tests]]
-id = "skip_subtest"
+id = "skip-subtest"
 program_arguments = [
     "test",
     "--record",
@@ -32,7 +32,7 @@ expected_exit_code = 0
 
 
 [[tests]]
-id = "skip_invalid_config"
+id = "skip-invalid-config"
 program_arguments = [
     "test",
     "--record",
@@ -47,7 +47,7 @@ expected_exit_code = 0
 
 
 [[tests]]
-id = "validation_error_with_skipped"
+id = "validation-error-with-skipped"
 program_arguments = [
     "test",
     "--record",

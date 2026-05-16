@@ -2,7 +2,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 
 [[tests]]
-id = "without_verbose"
+id = "without-verbose"
 program_arguments = ["run", "--format", "passthrough", "helpers/*.toml"]
 
 expected_stdout = """
@@ -15,7 +15,7 @@ expected_exit_code = 2
 
 
 [[tests]]
-id = "with_verbose"
+id = "with-verbose"
 program_arguments = [
     "run",
     "--format",

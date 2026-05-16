@@ -32,7 +32,7 @@ expected_exit_code = 0
 
 
 [[tests]]
-id = "stderr_and_exit_code"
+id = "stderr-and-exit-code"
 program_arguments = [
     "run",
     "--format",

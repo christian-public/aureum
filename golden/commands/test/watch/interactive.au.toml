@@ -3,7 +3,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 # The initial idle screen is shown after the first test run completes.
 [[tests]]
-id = "initial_frame"
+id = "initial-frame"
 program_arguments = [
   "test",
   "--watch",
@@ -20,7 +20,7 @@ expected_exit_code = 1
 # "file-change" in the input stream simulates a watcher event, triggering a re-run.
 # A --- separator appears between the two idle screens.
 [[tests]]
-id = "file_change_reruns_tests"
+id = "file-change-reruns-tests"
 program_arguments = [
   "test",
   "--watch",
@@ -36,7 +36,7 @@ expected_exit_code = 1
 
 # Pressing r opens the diff review; Esc returns to the idle screen.
 [[tests]]
-id = "review_and_back_to_idle"
+id = "review-and-back-to-idle"
 program_arguments = [
   "test",
   "--watch",
@@ -52,7 +52,7 @@ expected_exit_code = 1
 
 # Pressing t manually triggers a re-run without waiting for a file change.
 [[tests]]
-id = "t_reruns_tests"
+id = "t-reruns-tests"
 program_arguments = [
   "test",
   "--watch",
@@ -68,7 +68,7 @@ expected_exit_code = 1
 
 # From diff view, pressing l opens the list; Esc cancels the selection and returns to the diff view.
 [[tests]]
-id = "list_esc_returns_to_diff"
+id = "list-esc-returns-to-diff"
 program_arguments = [
   "test",
   "--watch",

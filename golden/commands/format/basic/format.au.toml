@@ -2,7 +2,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 
 [[tests]]
-id = "already_formatted"
+id = "already-formatted"
 program_arguments = ["format", "helpers/already-formatted.toml"]
 
 expected_stdout = ""
@@ -11,7 +11,7 @@ expected_exit_code = 0
 
 
 [[tests]]
-id = "check_already_formatted"
+id = "check-already-formatted"
 program_arguments = ["format", "--check", "helpers/already-formatted.toml"]
 
 expected_stdout = ""
@@ -20,7 +20,7 @@ expected_exit_code = 0
 
 
 [[tests]]
-id = "check_needs_reformatting"
+id = "check-needs-reformatting"
 program_arguments = ["format", "--check", "helpers/wrong-order.toml"]
 
 expected_stdout = ""
@@ -31,7 +31,7 @@ expected_exit_code = 1
 
 
 [[tests]]
-id = "check_missing_blank_line_before_tests"
+id = "check-missing-blank-line-before-tests"
 program_arguments = ["format", "--check", "helpers/no-blank-before-tests.toml"]
 
 expected_stdout = ""

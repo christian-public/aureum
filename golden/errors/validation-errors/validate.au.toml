@@ -21,7 +21,7 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "config.no_expectations"
+id = "config.no-expectations"
 program_arguments = ["validate", "helpers/config-no-expectations.toml"]
 
 expected_stdout = """
@@ -39,7 +39,7 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "config.missing_env_var"
+id = "config.missing-env-var"
 program_arguments = ["validate", "helpers/config-missing-env-var.toml"]
 
 expected_stdout = """
@@ -57,7 +57,7 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "config.missing_external_file"
+id = "config.missing-external-file"
 program_arguments = ["validate", "helpers/config-missing-external-file.toml"]
 
 expected_stdout = """
@@ -75,7 +75,7 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "program.no_program"
+id = "program.no-program"
 program_arguments = ["validate", "helpers/program-no-program.toml"]
 
 expected_stdout = """
@@ -93,7 +93,7 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "program.unknown_program"
+id = "program.unknown-program"
 program_arguments = ["validate", "helpers/program-unknown-program.toml"]
 
 expected_stdout = """
@@ -111,7 +111,7 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "expected_exit_code.invalid_exit_code"
+id = "expected-exit-code.invalid-exit-code"
 program_arguments = [
     "validate",
     "helpers/expected-exit-code-invalid-exit-code.toml",
@@ -132,7 +132,7 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "expected_exit_code.failed_to_parse"
+id = "expected-exit-code.failed-to-parse"
 program_arguments = [
     "validate",
     "helpers/expected-exit-code-failed-to-parse.toml",
@@ -153,7 +153,7 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "timeout_seconds.negative_timeout"
+id = "timeout-seconds.negative-timeout"
 program_arguments = [
     "validate",
     "helpers/timeout-seconds-negative-timeout.toml",
@@ -174,7 +174,7 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "skip.no_reason"
+id = "skip.no-reason"
 program_arguments = ["validate", "helpers/skip-no-reason.toml"]
 
 expected_stdout = """
@@ -192,7 +192,7 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "skip.multi_line_reason"
+id = "skip.multi-line-reason"
 program_arguments = ["validate", "helpers/skip-multi-line-reason.toml"]
 
 expected_stdout = """

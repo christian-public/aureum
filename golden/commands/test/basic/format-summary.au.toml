@@ -76,7 +76,7 @@ expected_exit_code = 1
 
 
 [[tests]]
-id = "failing_with_newline"
+id = "failing-with-newline"
 program_arguments = [
     "test",
     "--format",
@@ -115,7 +115,7 @@ expected_exit_code = 1
 
 
 [[tests]]
-id = "multiple_failing_tests"
+id = "multiple-failing-tests"
 program_arguments = [
     "test",
     "--format",

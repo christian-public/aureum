@@ -2,7 +2,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 
 [[tests]]
-id = "format_summary.timeout_seconds_field"
+id = "format-summary.timeout-seconds-field"
 program_arguments = [
   "test",
   "--format",
@@ -24,7 +24,7 @@ expected_exit_code = 1
 
 
 [[tests]]
-id = "format_summary.default_timeout_option"
+id = "format-summary.default-timeout-option"
 program_arguments = [
   "test",
   "--format",
@@ -48,7 +48,7 @@ expected_exit_code = 1
 
 
 [[tests]]
-id = "format_tap.timeout_seconds_field"
+id = "format-tap.timeout-seconds-field"
 program_arguments = [
   "test",
   "--format",
@@ -68,7 +68,7 @@ expected_exit_code = 1
 
 
 [[tests]]
-id = "format_tap.default_timeout_option"
+id = "format-tap.default-timeout-option"
 program_arguments = [
   "test",
   "--format",

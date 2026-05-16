@@ -2,7 +2,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 
 [[tests]]
-id = "missing_config"
+id = "missing-config"
 program_arguments = ["validate", "aureum_test_this_file_does_not_exist"]
 
 expected_stdout = ""
@@ -16,7 +16,7 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "missing_config_with_test_id"
+id = "missing-config-with-test-id"
 program_arguments = ["validate", "aureum_test_this_file_does_not_exist:sub1"]
 
 expected_stdout = ""

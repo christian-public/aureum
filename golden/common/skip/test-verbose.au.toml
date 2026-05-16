@@ -2,7 +2,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 
 [[tests]]
-id = "skip_root_test"
+id = "skip-root-test"
 program_arguments = [
     "test",
     "--verbose",
@@ -31,7 +31,7 @@ expected_exit_code = 0
 
 
 [[tests]]
-id = "skip_subtest"
+id = "skip-subtest"
 program_arguments = [
     "test",
     "--verbose",
@@ -43,7 +43,7 @@ expected_stdout = """
 🚀 Running 1 of 2 tests:
 .s
 
-⊘ helpers/skip-subtest.toml:not_ready  feature not ready
+⊘ helpers/skip-subtest.toml:not-ready  feature not ready
 
 ✔ helpers/skip-subtest.toml:passing
 
@@ -57,7 +57,7 @@ expected_stderr = """
 ├── :passing
 │   └── Program to run
 │       └── ✔ <absolute path to 'echo'>
-└── :not_ready
+└── :not-ready
     └── ⊘ Skipped: feature not ready
 
 """
@@ -65,7 +65,7 @@ expected_exit_code = 0
 
 
 [[tests]]
-id = "skip_invalid_config"
+id = "skip-invalid-config"
 program_arguments = [
     "test",
     "--verbose",
@@ -94,7 +94,7 @@ expected_exit_code = 0
 
 
 [[tests]]
-id = "validation_error_with_skipped"
+id = "validation-error-with-skipped"
 program_arguments = [
     "test",
     "--verbose",
@@ -138,7 +138,7 @@ Fss.ss
 
 ⊘ helpers/skip-invalid-config.toml                    todo
 ⊘ helpers/skip-root-test.toml                         not implemented yet
-⊘ helpers/skip-subtest.toml:not_ready                 feature not ready
+⊘ helpers/skip-subtest.toml:not-ready                 feature not ready
 ⊘ helpers/validation-error-with-skipped.toml:skipped  todo
 
 ✔ helpers/skip-subtest.toml:passing
@@ -186,7 +186,7 @@ expected_stderr = """
 ├── :passing
 │   └── Program to run
 │       └── ✔ <absolute path to 'echo'>
-└── :not_ready
+└── :not-ready
     └── ⊘ Skipped: feature not ready
 
 📋 helpers/validation-error-with-skipped.toml

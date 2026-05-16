@@ -39,7 +39,7 @@ expected_exit_code = 1
 
 
 [[tests]]
-id = "failing_with_newline"
+id = "failing-with-newline"
 program_arguments = [
   "test",
   "--format",
@@ -64,7 +64,7 @@ expected_exit_code = 1
 
 
 [[tests]]
-id = "passing_with_hash_in_filename"
+id = "passing-with-hash-in-filename"
 program_arguments = ["test", "--format", "tap", "helpers/test-with-#-sign.toml"]
 
 expected_stdout = """

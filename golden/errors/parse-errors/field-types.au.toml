@@ -2,7 +2,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 
 [[tests]]
-id = "wrong_field_types"
+id = "wrong-field-types"
 program_arguments = ["validate", "helpers/wrong-field-types.toml"]
 
 expected_stdout = """
@@ -21,7 +21,7 @@ expected_exit_code = 3
 
 
 [[tests]]
-id = "wrong_array_element"
+id = "wrong-array-element"
 program_arguments = ["validate", "helpers/wrong-array-element.toml"]
 
 expected_stdout = """

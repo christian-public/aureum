@@ -9,7 +9,7 @@ expected_stdout = "hello\n"
 
 
 [[tests]]
-id = "not_ready"
+id = "not-ready"
 skip = "feature not ready"
 program_arguments = ["world"]
 
