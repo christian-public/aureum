@@ -203,44 +203,48 @@ pub fn print_config_details(
         let subtest_path = &test_entry.id.subtest_path;
         let mut categories = vec![];
 
-        if verbose {
-            // Program to run
-            let program_to_run = match &test_entry.program_path {
-                ProgramPath::NotSpecified => {
-                    format!("{} {}", theme::cross(), "Not specified".red())
-                }
-                ProgramPath::MissingProgram { requested_program } => {
-                    format!("{} {}", theme::cross(), requested_program.red())
-                }
-                ProgramPath::ResolvedPath {
-                    requested_program: _,
-                    resolved_path,
-                } => {
-                    let path = if stable_paths {
-                        file::display_path(resolved_path)
-                    } else {
-                        resolved_path.display().to_string()
-                    };
-                    format!("{} {path}", theme::checkmark())
-                }
-            };
+        if let Some(reason) = &test_entry.skip_reason {
+            categories.push(str_to_tree(&format!("{} Skipped: {reason}", theme::skip())));
+        } else {
+            if verbose {
+                // Program to run
+                let program_to_run = match &test_entry.program_path {
+                    ProgramPath::NotSpecified => {
+                        format!("{} {}", theme::cross(), "Not specified".red())
+                    }
+                    ProgramPath::MissingProgram { requested_program } => {
+                        format!("{} {}", theme::cross(), requested_program.red())
+                    }
+                    ProgramPath::ResolvedPath {
+                        requested_program: _,
+                        resolved_path,
+                    } => {
+                        let path = if stable_paths {
+                            file::display_path(resolved_path)
+                        } else {
+                            resolved_path.display().to_string()
+                        };
+                        format!("{} {path}", theme::checkmark())
+                    }
+                };
 
-            let nodes = vec![str_to_tree(&program_to_run)];
+                let nodes = vec![str_to_tree(&program_to_run)];
 
-            let heading = String::from("Program to run");
-            categories.push(Node(heading, nodes));
-        }
+                let heading = String::from("Program to run");
+                categories.push(Node(heading, nodes));
+            }
 
-        // Validation errors
-        let validation_errors = test_entry.planned_test_case().err().unwrap_or_default();
-        if !validation_errors.is_empty() {
-            let nodes = validation_errors
-                .iter()
-                .map(|err| str_to_tree(&format_validation_error(err)))
-                .collect();
+            // Validation errors
+            let validation_errors = test_entry.planned_test_case().err().unwrap_or_default();
+            if !validation_errors.is_empty() {
+                let nodes = validation_errors
+                    .iter()
+                    .map(|err| str_to_tree(&format_validation_error(err)))
+                    .collect();
 
-            let heading = String::from("Validation errors");
-            categories.push(Node(heading, nodes));
+                let heading = String::from("Validation errors");
+                categories.push(Node(heading, nodes));
+            }
         }
 
         tests.push((subtest_path, categories))

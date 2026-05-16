@@ -24,8 +24,7 @@ expected_stderr = """
 
 📋 helpers/skip_root_test.toml
 └── Test
-    └── Program to run
-        └── ✔ <absolute path to 'echo'>
+    └── ⊘ Skipped: not implemented yet
 
 """
 expected_exit_code = 0
@@ -59,8 +58,7 @@ expected_stderr = """
 │   └── Program to run
 │       └── ✔ <absolute path to 'echo'>
 └── :not_ready
-    └── Program to run
-        └── ✔ <absolute path to 'echo'>
+    └── ⊘ Skipped: feature not ready
 
 """
 expected_exit_code = 0
@@ -89,8 +87,7 @@ expected_stderr = """
 
 📋 helpers/skip_invalid_config.toml
 └── Test
-    └── Program to run
-        └── ✘ Not specified
+    └── ⊘ Skipped: todo
 
 """
 expected_exit_code = 0
@@ -119,8 +116,7 @@ expected_stderr = """
 
 📋 helpers/validation_error_with_skipped.toml
 ├── :skipped
-│   └── Program to run
-│       └── ✔ <absolute path to 'echo'>
+│   └── ⊘ Skipped: todo
 └── :invalid
     ├── Program to run
     │   └── ✔ <absolute path to 'echo'>
@@ -180,26 +176,22 @@ expected_stderr = """
 
 📋 helpers/skip_invalid_config.toml
 └── Test
-    └── Program to run
-        └── ✘ Not specified
+    └── ⊘ Skipped: todo
 
 📋 helpers/skip_root_test.toml
 └── Test
-    └── Program to run
-        └── ✔ <absolute path to 'echo'>
+    └── ⊘ Skipped: not implemented yet
 
 📋 helpers/skip_subtest.toml
 ├── :passing
 │   └── Program to run
 │       └── ✔ <absolute path to 'echo'>
 └── :not_ready
-    └── Program to run
-        └── ✔ <absolute path to 'echo'>
+    └── ⊘ Skipped: feature not ready
 
 📋 helpers/validation_error_with_skipped.toml
 ├── :skipped
-│   └── Program to run
-│       └── ✔ <absolute path to 'echo'>
+│   └── ⊘ Skipped: todo
 └── :invalid
     ├── Program to run
     │   └── ✔ <absolute path to 'echo'>

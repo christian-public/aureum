@@ -79,6 +79,7 @@ Test result: OK* (0 passed, 1 skipped, 1 config error) — Finished in 0.0s
 expected_stderr = """
 📋 helpers/validation_error_with_skipped.toml
 ├── :skipped
+│   └── ⊘ Skipped: todo
 └── :invalid
     └── Validation errors
         └── ✘ no expectations defined; specify at least one `expected_*` field: `expected_stdout`, `expected_stderr`, or `expected_exit_code`
@@ -123,6 +124,7 @@ Test result: FAIL (1 failed, 1 passed, 4 skipped, 1 config error) — Finished i
 expected_stderr = """
 📋 helpers/validation_error_with_skipped.toml
 ├── :skipped
+│   └── ⊘ Skipped: todo
 └── :invalid
     └── Validation errors
         └── ✘ no expectations defined; specify at least one `expected_*` field: `expected_stdout`, `expected_stderr`, or `expected_exit_code`

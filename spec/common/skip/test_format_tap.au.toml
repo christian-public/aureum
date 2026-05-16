@@ -63,6 +63,7 @@ ok     1 - helpers/validation_error_with_skipped.toml:skipped # SKIP todo
 expected_stderr = """
 📋 helpers/validation_error_with_skipped.toml
 ├── :skipped
+│   └── ⊘ Skipped: todo
 └── :invalid
     └── Validation errors
         └── ✘ no expectations defined; specify at least one `expected_*` field: `expected_stdout`, `expected_stderr`, or `expected_exit_code`
@@ -94,6 +95,7 @@ ok     6 - helpers/validation_error_with_skipped.toml:skipped # SKIP todo
 expected_stderr = """
 📋 helpers/validation_error_with_skipped.toml
 ├── :skipped
+│   └── ⊘ Skipped: todo
 └── :invalid
     └── Validation errors
         └── ✘ no expectations defined; specify at least one `expected_*` field: `expected_stdout`, `expected_stderr`, or `expected_exit_code`
