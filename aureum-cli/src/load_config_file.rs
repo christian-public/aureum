@@ -37,8 +37,8 @@ impl LoadConfigFilesResult {
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct LoadedConfigFile {
     pub test_id_coverage_set: TestIdCoverageSet,
-    pub requirement_data: RequirementData,
     pub requirements: Requirements,
+    pub requirement_data: RequirementData,
     pub test_entries: Vec<TestEntry>,
     pub watch_files: BTreeSet<String>,
     pub watch_file_errors: BTreeSet<ValidationError>,
@@ -146,8 +146,8 @@ fn load_config_file(
 
     Ok(LoadedConfigFile {
         test_id_coverage_set,
-        requirement_data,
         requirements,
+        requirement_data,
         test_entries,
         watch_files,
         watch_file_errors,
