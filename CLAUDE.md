@@ -18,11 +18,11 @@ cargo build --release # optimized build
 ### Test
 
 ```bash
-cargo test                          # all unit tests
-cargo test <test_name>              # single test by name
-./test_spec.sh test spec            # all golden tests (uses debug build)
-RELEASE=1 ./test_spec.sh test spec  # golden tests with release build
-./test_spec.sh test spec/basic/expect_stdout.au.toml  # single golden test file
+cargo test                               # all unit tests
+cargo test <test_name>                   # single test by name
+./check-golden.sh test golden            # all golden tests (uses debug build)
+RELEASE=1 ./check-golden.sh test golden  # golden tests with release build
+./check-golden.sh test golden/basic/expect_stdout.au.toml  # single golden test file
 ```
 
 ### Lint & Format
@@ -39,7 +39,7 @@ After any Rust code change, run all four of these and fix any failures or warnin
 1. `cargo fmt`
 2. `cargo test`
 3. `cargo clippy --all-targets --all-features -- -D warnings`
-4. `./test_spec.sh test spec`
+4. `./check-golden.sh test golden`
 
 ## Architecture
 
@@ -130,4 +130,4 @@ expected_stdout = "output"
 
 ### Self-Testing
 
-Aureum is tested by Aureum — the `spec/` directory contains the golden test suite. CI runs `./test_spec.sh test spec` on Ubuntu, macOS, and Windows.
+Aureum is tested by Aureum — the `golden/` directory contains the golden test suite. CI runs `./check-golden.sh test golden` on Ubuntu, macOS, and Windows.
