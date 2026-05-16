@@ -77,7 +77,7 @@ Fss.s
         │   1 │ +actual
         ╰
 
-Test result: FAIL (1 passed, 3 skipped, 1 failed)
+Test result: FAIL (1 failed, 1 passed, 3 skipped)
 """
 expected_stderr = ""
 expected_exit_code = 1

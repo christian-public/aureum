@@ -9,7 +9,7 @@ expected_stdout = """
 🚀 Running 3 tests:
 ...
 
-Test result: OK* (3 config errors, 3 passed)
+Test result: OK* (3 passed, 3 config errors)
 """
 expected_stderr = """
 📋 helpers/many_requirements.toml
@@ -42,7 +42,7 @@ expected_stdout = """
 ✔ helpers/many_requirements.toml:external_file_exists
 ✔ helpers/no_requirements.toml
 
-Test result: OK* (3 config errors, 3 passed)
+Test result: OK* (3 passed, 3 config errors)
 """
 expected_stderr = """
 🔍 Found 2 config files

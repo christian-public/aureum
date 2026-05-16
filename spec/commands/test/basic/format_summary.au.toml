@@ -57,7 +57,7 @@ F
     └── Got
         └── 0
 
-Test result: FAIL (0 passed, 1 failed)
+Test result: FAIL (1 failed, 0 passed)
 """
 expected_stderr = ""
 expected_exit_code = 1
@@ -95,7 +95,7 @@ F
         │ 2 2 │
         ╰
 
-Test result: FAIL (0 passed, 1 failed)
+Test result: FAIL (1 failed, 0 passed)
 """
 expected_stderr = ""
 expected_exit_code = 1
@@ -168,7 +168,7 @@ FF
         │ 2 2 │
         ╰
 
-Test result: FAIL (0 passed, 2 failed)
+Test result: FAIL (2 failed, 0 passed)
 """
 expected_stderr = ""
 expected_exit_code = 1

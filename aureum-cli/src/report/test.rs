@@ -218,13 +218,8 @@ fn format_summary_line(counts: TestCounts) -> String {
 
     let mut count_components = vec![];
 
-    if counts.config_stats.config_errors > 0 {
-        let errors = if config_error_count == 1 {
-            "error"
-        } else {
-            "errors"
-        };
-        count_components.push(format!("{config_error_count} config {errors}"));
+    if counts.failed > 0 {
+        count_components.push(format!("{} failed", counts.failed));
     }
 
     count_components.push(format!("{} passed", counts.passed));
@@ -233,8 +228,13 @@ fn format_summary_line(counts: TestCounts) -> String {
         count_components.push(format!("{} skipped", counts.skipped));
     }
 
-    if counts.failed > 0 {
-        count_components.push(format!("{} failed", counts.failed));
+    if config_error_count > 0 {
+        let errors = if config_error_count == 1 {
+            "error"
+        } else {
+            "errors"
+        };
+        count_components.push(format!("{config_error_count} config {errors}"));
     }
 
     format!("Test result: {status} ({})", count_components.join(", "))
