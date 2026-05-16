@@ -7,13 +7,13 @@ mod theme;
 mod utils;
 mod views;
 
-use crate::counts::{ConfigStats, PendingCounts, TestCounts};
+use crate::counts::{ConfigStats, PlannedCounts, TestCounts};
 use crate::interactive::views::progress_view;
 use crate::interactive::views::watch_view::{self, IdleOutcome, WatchIdleContext};
 use crate::utils::time;
 use crate::watch;
 use accept::update_test_expectations;
-use aureum::{self, PendingTestCase, RunResult};
+use aureum::{self, PlannedTestCase, RunResult};
 use chrono::Local;
 use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
 use field::{FieldDecision, FieldDecisions};
@@ -33,7 +33,7 @@ use std::time::{Duration, Instant};
 #[allow(clippy::too_many_arguments)]
 pub fn run_interactive_updates<R, W>(
     run_results: &[RunResult],
-    pending_counts: PendingCounts,
+    planned_counts: PlannedCounts,
     current_dir: &Path,
     reader: &mut R,
     writer: &mut W,
@@ -48,7 +48,7 @@ where
 {
     progress_view::record_final_progress_frame(
         run_results,
-        pending_counts,
+        planned_counts,
         config_stats,
         width,
         height,
@@ -110,7 +110,7 @@ where
 /// idle or review views. Frames are written to `writer` separated by `---`.
 #[allow(clippy::too_many_arguments)]
 pub fn run_interactive_updates_with_watch<R, W>(
-    load_test_cases: &dyn Fn() -> (Vec<PendingTestCase>, ConfigStats),
+    load_test_cases: &dyn Fn() -> (Vec<PlannedTestCase>, ConfigStats),
     parallel: bool,
     current_dir: &Path,
     reader: &mut R,
@@ -126,12 +126,12 @@ where
 
     'rerun: loop {
         let (test_cases, config_stats) = load_test_cases();
-        let pending_counts = PendingCounts::from_pending(&test_cases);
+        let planned_counts = PlannedCounts::from_planned(&test_cases);
         let run_results = aureum::run_test_cases(&test_cases, parallel, current_dir, &|_, _| {});
 
         progress_view::record_final_progress_frame(
             &run_results,
-            pending_counts,
+            planned_counts,
             config_stats,
             width,
             height,
@@ -224,7 +224,7 @@ where
 /// Full interactive watch session: runs tests, shows idle screen, lets the user review and
 /// accept failures, and re-runs on file changes. Always returns the last run's results.
 pub fn run_with_progress_review_and_watch<'a>(
-    load_test_cases: &dyn Fn() -> (Vec<PendingTestCase>, ConfigStats),
+    load_test_cases: &dyn Fn() -> (Vec<PlannedTestCase>, ConfigStats),
     parallel: bool,
     current_dir: &Path,
     watch_paths: impl IntoIterator<Item = &'a PathBuf>,
@@ -256,7 +256,7 @@ pub fn run_with_progress_review_and_watch<'a>(
 
 fn run_watch_interactive_loop(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
-    load_test_cases: &dyn Fn() -> (Vec<PendingTestCase>, ConfigStats),
+    load_test_cases: &dyn Fn() -> (Vec<PlannedTestCase>, ConfigStats),
     parallel: bool,
     current_dir: &Path,
     change_rx: &Receiver<usize>,
@@ -368,7 +368,7 @@ fn run_watch_review<'a>(
 /// Full interactive session for a real terminal: shows live test progress, then lets the user
 /// review and accept failures one by one. Enters/leaves alternate screen internally.
 pub fn run_with_progress_and_review(
-    test_cases: &[PendingTestCase],
+    test_cases: &[PlannedTestCase],
     parallel: bool,
     current_dir: &Path,
     config_stats: ConfigStats,
@@ -402,7 +402,7 @@ pub fn run_with_progress_and_review(
 
 fn run_tui_session(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
-    test_cases: &[PendingTestCase],
+    test_cases: &[PlannedTestCase],
     parallel: bool,
     current_dir: &Path,
     config_stats: ConfigStats,
@@ -510,7 +510,7 @@ mod tests {
 
         run_interactive_updates(
             &results,
-            PendingCounts {
+            PlannedCounts {
                 runnable: 1,
                 skipped: 0,
             },

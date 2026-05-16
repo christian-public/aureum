@@ -1,13 +1,13 @@
 use crate::args::{TerminalSize, TestArgs, TestOutputFormat};
 use crate::commands::common;
-use crate::counts::{ConfigStats, PendingCounts};
+use crate::counts::{ConfigStats, PlannedCounts};
 use crate::exit_code::ExitCode;
 use crate::interactive;
 use crate::load_config_file::LoadConfigFilesResult;
 use crate::report;
 use crate::report::test::{ReportConfig, ReportFormat};
 use crate::watch;
-use aureum::{PendingTestCase, RunResult};
+use aureum::{PlannedTestCase, RunResult};
 use std::collections::BTreeSet;
 use std::io::{self, BufRead, IsTerminal};
 use std::path::{Path, PathBuf};
@@ -177,7 +177,7 @@ fn run_tests_record(args: TestArgs, width: u16, height: u16, current_dir: &Path)
     let stdout = io::stdout();
     if let Err(e) = interactive::run_interactive_updates(
         &run_results,
-        PendingCounts::from_pending(&all_test_cases),
+        PlannedCounts::from_planned(&all_test_cases),
         current_dir,
         &mut stdin.lock(),
         &mut stdout.lock(),
@@ -282,7 +282,7 @@ fn run_tests_noninteractive(args: TestArgs, current_dir: &Path) -> ExitCode {
 // HELPERS
 
 fn run_test_cases_noninteractive(
-    test_cases: &[PendingTestCase],
+    test_cases: &[PlannedTestCase],
     parallel: bool,
     current_dir: &Path,
     format: &TestOutputFormat,
@@ -290,7 +290,7 @@ fn run_test_cases_noninteractive(
     config_stats: ConfigStats,
 ) -> Vec<RunResult> {
     let report_config = ReportConfig {
-        pending_counts: PendingCounts::from_pending(test_cases),
+        planned_counts: PlannedCounts::from_planned(test_cases),
         format: get_report_format(format),
         verbose,
     };
@@ -308,7 +308,7 @@ fn run_test_cases_noninteractive(
 }
 
 fn run_watch_loop(
-    load_test_cases: impl Fn() -> (Vec<PendingTestCase>, ConfigStats),
+    load_test_cases: impl Fn() -> (Vec<PlannedTestCase>, ConfigStats),
     parallel: bool,
     current_dir: &Path,
     watch_paths: &BTreeSet<PathBuf>,
@@ -386,12 +386,12 @@ fn run_watch_loop(
     Ok(last_run_results)
 }
 
-fn collect_test_cases(config_files: &LoadConfigFilesResult) -> Vec<PendingTestCase> {
+fn collect_test_cases(config_files: &LoadConfigFilesResult) -> Vec<PlannedTestCase> {
     config_files
         .loaded
         .values()
         .flat_map(|x| x.test_entries_in_coverage_set())
-        .filter_map(|entry| entry.pending_test_case().ok())
+        .filter_map(|entry| entry.planned_test_case().ok())
         .collect()
 }
 

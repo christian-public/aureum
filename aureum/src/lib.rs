@@ -18,7 +18,7 @@ mod test_runner;
 pub use utils::diff;
 pub use utils::string;
 
-pub use test_case::{PendingTestCase, TestCase, TestCaseExpectations};
+pub use test_case::{PlannedTestCase, TestCase, TestCaseExpectations};
 pub use test_case_id::TestCaseId;
 pub use test_id::TestId;
 pub use test_id_coverage_set::TestIdCoverageSet;

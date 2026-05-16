@@ -184,7 +184,7 @@ pub fn print_config_details(
         }
 
         // Validation errors
-        let validation_errors = test_entry.pending_test_case().err().unwrap_or_default();
+        let validation_errors = test_entry.planned_test_case().err().unwrap_or_default();
         if !validation_errors.is_empty() {
             let nodes = validation_errors
                 .iter()

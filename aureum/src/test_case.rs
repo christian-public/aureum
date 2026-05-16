@@ -27,7 +27,7 @@ pub struct TestCaseExpectations {
 
 #[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
-pub enum PendingTestCase {
+pub enum PlannedTestCase {
     Skip {
         id: TestCaseId,
         reason: String,

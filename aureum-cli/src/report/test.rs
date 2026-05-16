@@ -1,4 +1,4 @@
-use crate::counts::{ConfigStats, PendingCounts, TestCounts};
+use crate::counts::{ConfigStats, PlannedCounts, TestCounts};
 use crate::report::formats::summary;
 use crate::report::formats::tap;
 use crate::report::theme;
@@ -15,7 +15,7 @@ pub enum ReportFormat {
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct ReportConfig {
-    pub pending_counts: PendingCounts,
+    pub planned_counts: PlannedCounts,
     pub format: ReportFormat,
     pub verbose: bool,
 }
@@ -63,10 +63,10 @@ pub fn print_record_session_failed(error: &io::Error) {
 pub fn print_test_cases_start(report_config: &ReportConfig) {
     match report_config.format {
         ReportFormat::Summary => {
-            summary_print_test_cases_start(report_config.pending_counts);
+            summary_print_test_cases_start(report_config.planned_counts);
         }
         ReportFormat::Tap => {
-            tap_print_test_cases_start(report_config.pending_counts.total());
+            tap_print_test_cases_start(report_config.planned_counts.total());
         }
     }
 }
@@ -77,7 +77,7 @@ pub fn print_test_case(report_config: &ReportConfig, index: usize, run_result: &
             summary_print_test_case(run_result);
         }
         ReportFormat::Tap => {
-            let test_number_indent_level = report_config.pending_counts.total().to_string().len();
+            let test_number_indent_level = report_config.planned_counts.total().to_string().len();
             tap_print_test_case(index + 1, run_result, test_number_indent_level);
         }
     }
@@ -100,7 +100,7 @@ pub fn print_test_cases_end(
 
 // SUMMARY HELPERS
 
-fn summary_print_test_cases_start(counts: PendingCounts) {
+fn summary_print_test_cases_start(counts: PlannedCounts) {
     let total = counts.total();
     let label = if total == 1 { "test" } else { "tests" };
     if counts.runnable == total {

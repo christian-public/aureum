@@ -1,4 +1,4 @@
-use aureum::{PendingTestCase, RunResult, RunResultKind};
+use aureum::{PlannedTestCase, RunResult, RunResultKind};
 
 #[derive(Clone, Copy, Default)]
 pub(crate) struct ConfigStats {
@@ -7,19 +7,19 @@ pub(crate) struct ConfigStats {
 
 #[derive(Clone, Copy)]
 #[cfg_attr(debug_assertions, derive(Debug))]
-pub(crate) struct PendingCounts {
+pub(crate) struct PlannedCounts {
     pub runnable: usize,
     pub skipped: usize,
 }
 
-impl PendingCounts {
-    pub(crate) fn from_pending(cases: &[PendingTestCase]) -> Self {
+impl PlannedCounts {
+    pub(crate) fn from_planned(cases: &[PlannedTestCase]) -> Self {
         let mut runnable = 0;
         let mut skipped = 0;
         for case in cases {
             match case {
-                PendingTestCase::Skip { .. } => skipped += 1,
-                PendingTestCase::Run { .. } => runnable += 1,
+                PlannedTestCase::Skip { .. } => skipped += 1,
+                PlannedTestCase::Run { .. } => runnable += 1,
             }
         }
         Self { runnable, skipped }

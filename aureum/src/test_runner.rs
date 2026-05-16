@@ -1,4 +1,4 @@
-use crate::test_case::{PendingTestCase, TestCase, TestCaseExpectations};
+use crate::test_case::{PlannedTestCase, TestCase, TestCaseExpectations};
 use crate::test_case_id::TestCaseId;
 use crate::test_outcome::{FieldOutcome, TestOutcome};
 use crate::utils::string;
@@ -74,18 +74,18 @@ pub enum RunError {
 // RUN TEST CASES
 
 pub fn run_test_cases(
-    test_cases: &[PendingTestCase],
+    test_cases: &[PlannedTestCase],
     run_in_parallel: bool,
     current_dir: &Path,
     report_test_case: &(impl Fn(usize, &RunResult) + Sync),
 ) -> Vec<RunResult> {
-    let run = |(i, entry): (usize, &PendingTestCase)| -> RunResult {
-        let run_result = match entry {
-            PendingTestCase::Skip { id, reason } => RunResult::Skipped {
+    let run = |(i, test_case): (usize, &PlannedTestCase)| -> RunResult {
+        let run_result = match test_case {
+            PlannedTestCase::Skip { id, reason } => RunResult::Skipped {
                 id: id.clone(),
                 reason: reason.clone(),
             },
-            PendingTestCase::Run {
+            PlannedTestCase::Run {
                 test_case,
                 expectations,
             } => RunResult::Ran {

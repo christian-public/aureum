@@ -1,9 +1,9 @@
-use crate::counts::{ConfigStats, PendingCounts, TestCounts};
+use crate::counts::{ConfigStats, PlannedCounts, TestCounts};
 use crate::interactive::keys;
 use crate::interactive::theme;
 use crate::interactive::utils::widgets;
 use crate::utils::time;
-use aureum::{PendingTestCase, RunResult, RunResultKind, run_test_cases};
+use aureum::{PlannedTestCase, RunResult, RunResultKind, run_test_cases};
 use crossterm::event::{Event, KeyEventKind};
 use ratatui::backend::{CrosstermBackend, TestBackend};
 use ratatui::layout::{Alignment, Constraint, Direction, Layout};
@@ -22,7 +22,7 @@ use std::time::{Duration, Instant};
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn record_final_progress_frame<W: Write>(
     run_results: &[RunResult],
-    pending_counts: PendingCounts,
+    planned_counts: PlannedCounts,
     config_stats: ConfigStats,
     width: u16,
     height: u16,
@@ -35,7 +35,7 @@ pub(crate) fn record_final_progress_frame<W: Write>(
     let backend = TestBackend::new(width, height);
     let mut terminal = Terminal::new(backend).map_err(io::Error::other)?;
     terminal
-        .draw(|frame| render_progress(frame, pending_counts, counts, elapsed, false))
+        .draw(|frame| render_progress(frame, planned_counts, counts, elapsed, false))
         .map_err(io::Error::other)?;
 
     let buffer = terminal.backend().buffer().clone();
@@ -60,14 +60,14 @@ pub(crate) fn record_final_progress_frame<W: Write>(
 /// On quit the background thread is detached; the caller should `process::exit` after cleanup.
 pub(crate) fn run_tests_with_progress(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
-    test_cases: &[PendingTestCase],
+    test_cases: &[PlannedTestCase],
     parallel: bool,
     current_dir: &Path,
     config_stats: ConfigStats,
     stable_duration: Option<Duration>,
 ) -> io::Result<Option<Vec<RunResult>>> {
-    let pending_counts = PendingCounts::from_pending(test_cases);
-    let total = pending_counts.total();
+    let planned_counts = PlannedCounts::from_planned(test_cases);
+    let total = planned_counts.total();
     let (progress_tx, progress_rx) = mpsc::channel::<RunResultKind>();
     let (results_tx, results_rx) = mpsc::channel::<Vec<RunResult>>();
 
@@ -116,7 +116,7 @@ pub(crate) fn run_tests_with_progress(
             .draw(|frame| {
                 render_progress(
                     frame,
-                    pending_counts,
+                    planned_counts,
                     counts,
                     stable_duration.unwrap_or_else(|| start.elapsed()),
                     false,
@@ -137,7 +137,7 @@ pub(crate) fn run_tests_with_progress(
                         .draw(|frame| {
                             render_progress(
                                 frame,
-                                pending_counts,
+                                planned_counts,
                                 counts,
                                 stable_duration.unwrap_or_else(|| start.elapsed()),
                                 true,
@@ -161,12 +161,12 @@ pub(crate) fn run_tests_with_progress(
 
 fn render_progress(
     frame: &mut Frame,
-    pending_counts: PendingCounts,
+    planned_counts: PlannedCounts,
     counts: TestCounts,
     elapsed: Duration,
     stopping: bool,
 ) {
-    let total = pending_counts.total();
+    let total = planned_counts.total();
     let passed = counts.passed;
     let failed = counts.failed;
     let area = frame.area();
@@ -194,10 +194,10 @@ fn render_progress(
 
     // Header row
     let label = if total == 1 { "test" } else { "tests" };
-    let left = if pending_counts.runnable == total {
+    let left = if planned_counts.runnable == total {
         format!("  Running {} {label}", total)
     } else {
-        format!("  Running {} of {} {label}", pending_counts.runnable, total)
+        format!("  Running {} of {} {label}", planned_counts.runnable, total)
     };
     let summary = widgets::TestSummary(counts);
     let header_chunks = Layout::default()
@@ -230,7 +230,7 @@ fn render_progress(
         .split(inner_chunks[2]);
 
     // Progress bar ─────────────────────────────────────────────────────────
-    let runnable = pending_counts.runnable;
+    let runnable = planned_counts.runnable;
     let ran = passed + failed;
     let bar_width = w.saturating_sub(4).clamp(1, 60);
 
@@ -310,14 +310,14 @@ mod tests {
             passed,
             failed,
         };
-        let pending_counts = PendingCounts {
+        let planned_counts = PlannedCounts {
             runnable: total,
             skipped: 0,
         };
         let backend = TestBackend::new(width, height);
         let mut terminal = Terminal::new(backend).unwrap();
         terminal
-            .draw(|frame| render_progress(frame, pending_counts, counts, elapsed, stopping))
+            .draw(|frame| render_progress(frame, planned_counts, counts, elapsed, stopping))
             .unwrap();
         let buffer = terminal.backend().buffer().clone();
         let content = buffer.content();

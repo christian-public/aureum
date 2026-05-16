@@ -1,4 +1,4 @@
-use crate::test_case::{PendingTestCase, TestCase, TestCaseExpectations};
+use crate::test_case::{PlannedTestCase, TestCase, TestCaseExpectations};
 use crate::test_case_id::TestCaseId;
 use crate::toml::config::ConfigValue;
 use crate::utils::string;
@@ -97,7 +97,7 @@ pub struct TestEntry {
 
 impl TestEntry {
     pub fn is_runnable(&self) -> bool {
-        matches!(self.pending_test_case(), Ok(PendingTestCase::Run { .. }))
+        matches!(self.planned_test_case(), Ok(PlannedTestCase::Run { .. }))
     }
 
     pub fn is_runnable_if_no_validation_errors(&self) -> bool {
@@ -105,27 +105,27 @@ impl TestEntry {
     }
 
     pub fn is_skipped(&self) -> bool {
-        matches!(self.pending_test_case(), Ok(PendingTestCase::Skip { .. }))
+        matches!(self.planned_test_case(), Ok(PlannedTestCase::Skip { .. }))
     }
 
     pub fn is_valid(&self) -> bool {
-        self.pending_test_case().is_ok()
+        self.planned_test_case().is_ok()
     }
 
     pub fn has_validation_errors(&self) -> bool {
-        self.pending_test_case().is_err()
+        self.planned_test_case().is_err()
     }
 
-    pub fn pending_test_case(&self) -> Result<PendingTestCase, BTreeSet<ValidationError>> {
+    pub fn planned_test_case(&self) -> Result<PlannedTestCase, BTreeSet<ValidationError>> {
         if let Some(reason) = &self.skip_reason {
-            return Ok(PendingTestCase::Skip {
+            return Ok(PlannedTestCase::Skip {
                 id: self.id.clone(),
                 reason: reason.clone(),
             });
         }
 
         match (&self.test_case, &self.expectations) {
-            (Ok(tc), Ok(exp)) => Ok(PendingTestCase::Run {
+            (Ok(tc), Ok(exp)) => Ok(PlannedTestCase::Run {
                 test_case: tc.clone(),
                 expectations: exp.clone(),
             }),
