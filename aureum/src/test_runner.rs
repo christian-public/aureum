@@ -1,5 +1,5 @@
 use crate::test_case::{PlannedTestCase, TestCase, TestCaseExpectations};
-use crate::test_case_id::TestCaseId;
+use crate::test_id::TestId;
 use crate::test_outcome::{FieldOutcome, TestOutcome};
 use crate::utils::string;
 use rayon::prelude::*;
@@ -20,7 +20,7 @@ pub struct ProgramOutput {
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum RunResult {
     Skipped {
-        id: TestCaseId,
+        id: TestId,
         reason: String,
     },
     Ran {

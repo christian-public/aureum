@@ -8,20 +8,20 @@ mod utils {
     pub mod diff;
     pub mod string;
 }
+mod subtest_path;
+mod subtest_path_coverage_set;
 mod test_case;
-mod test_case_id;
 mod test_id;
-mod test_id_coverage_set;
 mod test_outcome;
 mod test_runner;
 
 pub use utils::diff;
 pub use utils::string;
 
+pub use subtest_path::SubtestPath;
+pub use subtest_path_coverage_set::SubtestPathCoverageSet;
 pub use test_case::{PlannedTestCase, TestCase, TestCaseExpectations};
-pub use test_case_id::TestCaseId;
 pub use test_id::TestId;
-pub use test_id_coverage_set::TestIdCoverageSet;
 pub use test_outcome::{FieldOutcome, TestOutcome};
 pub use test_runner::{ProgramOutput, RunError, RunResult, RunResultKind};
 pub use toml::config::{ParseError, TomlConfigError, TomlConfigFile, TomlConfigTest};

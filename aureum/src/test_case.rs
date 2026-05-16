@@ -1,10 +1,10 @@
-use crate::test_case_id::TestCaseId;
+use crate::test_id::TestId;
 use std::path::PathBuf;
 
 #[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct TestCase {
-    pub id: TestCaseId,
+    pub id: TestId,
     pub program_path: PathBuf, // Expects an absolute path
     pub arguments: Vec<String>,
     pub stdin: Option<String>,
@@ -29,7 +29,7 @@ pub struct TestCaseExpectations {
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum PlannedTestCase {
     Skip {
-        id: TestCaseId,
+        id: TestId,
         reason: String,
     },
     Run {

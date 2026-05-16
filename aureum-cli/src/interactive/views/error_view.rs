@@ -79,11 +79,11 @@ fn render_error(frame: &mut ratatui::Frame, ctx: &ErrorViewContext<'_>) {
     render_divider(frame, inner_chunks[4]);
 
     // Title row
-    let test_case_id = ctx.test_case.display_id();
+    let test_id = ctx.test_case.display_id();
     frame.render_widget(
         Paragraph::new(Line::from(vec![
             Span::raw("  "),
-            Span::styled(test_case_id, Style::default().add_modifier(Modifier::BOLD)),
+            Span::styled(test_id, Style::default().add_modifier(Modifier::BOLD)),
         ])),
         inner_chunks[2],
     );

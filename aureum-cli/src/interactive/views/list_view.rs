@@ -101,7 +101,7 @@ fn render_list(frame: &mut Frame, ctx: &ListViewContext<'_>, selection: usize, s
     let mut lines: Vec<Line<'static>> = Vec::new();
     for (i, failed_test) in ctx.failed.iter().enumerate() {
         let is_selected = i == selection;
-        let test_case_id = failed_test.test_case.display_id();
+        let test_id = failed_test.test_case.display_id();
         let dec = ctx.past_decisions.get(i).and_then(|d| d.as_ref());
         let id_style = if is_selected {
             Style::default()
@@ -132,14 +132,14 @@ fn render_list(frame: &mut Frame, ctx: &ListViewContext<'_>, selection: usize, s
                     Span::styled("]", theme::dim()),
                 ]);
                 spans.push(Span::raw(" "));
-                spans.push(Span::styled(test_case_id, id_style));
+                spans.push(Span::styled(test_id, id_style));
                 spans.push(Span::styled(format!(" — {error}"), theme::dim()));
                 lines.push(Line::from(spans));
                 continue;
             }
         }
         spans.push(Span::raw(" "));
-        spans.push(Span::styled(test_case_id, id_style));
+        spans.push(Span::styled(test_id, id_style));
         lines.push(Line::from(spans));
     }
 

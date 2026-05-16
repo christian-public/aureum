@@ -1,15 +1,15 @@
 use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
-use aureum::TestCaseId;
+use aureum::TestId;
 use std::collections::BTreeMap;
 
-pub fn print_test_list_as_tree(ids: &[TestCaseId]) {
+pub fn print_test_list_as_tree(ids: &[TestId]) {
     let tree = build_test_list_tree(ids);
     let output = tree.to_string();
 
     print!("{}", output);
 }
 
-fn build_test_list_tree(ids: &[TestCaseId]) -> Tree {
+fn build_test_list_tree(ids: &[TestId]) -> Tree {
     let mut by_file: BTreeMap<Vec<String>, Vec<String>> = BTreeMap::new();
 
     for id in ids {
@@ -19,8 +19,8 @@ fn build_test_list_tree(ids: &[TestCaseId]) -> Tree {
             .map(|c| c.as_str().to_string())
             .collect();
         let subtests = by_file.entry(segments).or_default();
-        if !id.test_id.is_root() {
-            subtests.push(format!(":{}", id.test_id));
+        if !id.subtest_path.is_root() {
+            subtests.push(format!(":{}", id.subtest_path));
         }
     }
 

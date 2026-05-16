@@ -152,7 +152,7 @@ pub fn print_config_details(
     let mut tests = vec![];
 
     for test_entry in test_entries {
-        let test_id = &test_entry.id.test_id;
+        let subtest_path = &test_entry.id.subtest_path;
         let mut categories = vec![];
 
         if verbose {
@@ -195,7 +195,7 @@ pub fn print_config_details(
             categories.push(Node(heading, nodes));
         }
 
-        tests.push((test_id, categories))
+        tests.push((subtest_path, categories))
     }
 
     let mut nodes = Vec::<Tree>::new();
@@ -224,15 +224,15 @@ pub fn print_config_details(
         ));
     }
 
-    nodes.extend(tests.into_iter().filter_map(|(test_id, children)| {
-        if test_id.is_root() {
+    nodes.extend(tests.into_iter().filter_map(|(subtest_path, children)| {
+        if subtest_path.is_root() {
             if !children.is_empty() {
                 Some(Node(String::from("Test"), children))
             } else {
                 None
             }
         } else {
-            Some(Node(format!(":{test_id}"), children))
+            Some(Node(format!(":{subtest_path}"), children))
         }
     }));
 

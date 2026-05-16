@@ -1,8 +1,8 @@
 use crate::test_case::{PlannedTestCase, TestCase, TestCaseExpectations};
-use crate::test_case_id::TestCaseId;
+use crate::test_id::TestId;
 use crate::toml::config::ConfigValue;
 use crate::utils::string;
-use crate::{TestId, TomlConfigFile, TomlConfigTest};
+use crate::{SubtestPath, TomlConfigFile, TomlConfigTest};
 use relative_path::RelativePath;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Display;
@@ -88,7 +88,7 @@ pub enum ValidationError {
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct TestEntry {
-    pub id: TestCaseId,
+    pub id: TestId,
     pub skip_reason: Option<String>,
     pub program_path: ProgramPath,
     pub test_case: Result<TestCase, BTreeSet<ValidationError>>,
@@ -155,11 +155,11 @@ pub fn build_test_entries(
     split_toml_config(config)
         .into_iter()
         .map(|c| {
-            let test_id = c.id.clone().expect("must exist after parsing");
-            let id = TestCaseId::new(
+            let subtest_path = c.id.clone().expect("must exist after parsing");
+            let id = TestId::new(
                 config_dir_path.to_relative_path_buf(),
                 file_name.to_owned(),
-                test_id,
+                subtest_path,
             );
             build_test_entry(
                 id,
@@ -174,7 +174,7 @@ pub fn build_test_entries(
 }
 
 fn build_test_entry(
-    id: TestCaseId,
+    id: TestId,
     config: TomlConfigTest,
     requirement_data: &RequirementData,
     current_dir: &Path,
@@ -201,7 +201,7 @@ fn build_test_entry(
 }
 
 fn build_test_case(
-    id: TestCaseId,
+    id: TestId,
     config: TomlConfigTest,
     requirement_data: &RequirementData,
     current_dir: &Path,
@@ -440,7 +440,7 @@ where
 fn split_toml_config(config: TomlConfigFile) -> Vec<TomlConfigTest> {
     if config.tests.is_empty() {
         let mut root_test = config.root;
-        root_test.id = Some(TestId::root());
+        root_test.id = Some(SubtestPath::root());
 
         vec![root_test]
     } else {

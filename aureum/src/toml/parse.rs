@@ -1,4 +1,4 @@
-use crate::TestId;
+use crate::SubtestPath;
 use crate::toml::config::{
     ConfigValue, ConfigValueType, ParseError, TomlConfigError, TomlConfigFile, TomlConfigTest,
 };
@@ -91,7 +91,7 @@ pub fn parse_toml_config(file_content: &str) -> Result<TomlConfigFile, TomlConfi
 fn parse_toml_config_from_table(table: &toml::Table) -> Result<TomlConfigTest, Vec<ParseError>> {
     let mut errors: Vec<ParseError> = vec![];
 
-    let id = collect_error(&mut errors, get_test_id_from_table(table, "id"));
+    let id = collect_error(&mut errors, get_subtest_path_from_table(table, "id"));
     let skip = collect_error(&mut errors, get_plain_string_from_table(table, "skip"));
     let program = collect_error(&mut errors, get_string_from_table(table, "program"));
 
@@ -133,10 +133,13 @@ fn parse_toml_config_from_table(table: &toml::Table) -> Result<TomlConfigTest, V
     }
 }
 
-fn get_test_id_from_table(table: &toml::Table, key: &str) -> Result<Option<TestId>, ParseError> {
+fn get_subtest_path_from_table(
+    table: &toml::Table,
+    key: &str,
+) -> Result<Option<SubtestPath>, ParseError> {
     get_plain_string_from_table(table, key)?
         .map(|s| {
-            TestId::try_from(s.as_str()).map_err(|_| ParseError::InField {
+            SubtestPath::try_from(s.as_str()).map_err(|_| ParseError::InField {
                 field: key.to_owned(),
                 error: Box::new(ParseError::InvalidId { id: s }),
             })

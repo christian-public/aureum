@@ -3,7 +3,7 @@ use crate::report::formats::summary;
 use crate::report::formats::tap;
 use crate::report::theme;
 use crate::vendor::ascii_tree::Tree::{Leaf, Node};
-use aureum::{RunError, RunResult, TestCase, TestCaseId, TestOutcome};
+use aureum::{RunError, RunResult, TestCase, TestId, TestOutcome};
 use colored::Colorize;
 use std::io;
 
@@ -127,7 +127,7 @@ fn summary_print_test_cases_end(
 ) {
     println!(); // Print newline after dots
 
-    let mut skipped_tests: Vec<(&TestCaseId, &String)> = vec![];
+    let mut skipped_tests: Vec<(&TestId, &String)> = vec![];
     let mut passed_tests: Vec<&TestCase> = vec![];
     let mut failed_tests: Vec<(&TestCase, &Result<TestOutcome, RunError>)> = vec![];
 
@@ -182,7 +182,7 @@ fn format_test_success(test_case: &TestCase) -> String {
     format!("{} {}", theme::checkmark(), test_case.display_id())
 }
 
-fn format_test_skipped(id: &TestCaseId, max_width: usize, reason: &str) -> String {
+fn format_test_skipped(id: &TestId, max_width: usize, reason: &str) -> String {
     format!(
         "{} {:<max_width$}  {reason}",
         theme::skip(),

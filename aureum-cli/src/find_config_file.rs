@@ -1,5 +1,5 @@
 use crate::utils::glob;
-use aureum::{TestId, TestIdCoverageSet};
+use aureum::{SubtestPath, SubtestPathCoverageSet};
 use relative_path::RelativePathBuf;
 use std::collections::BTreeMap;
 use std::path::{Component, Path, PathBuf};
@@ -9,7 +9,7 @@ static DIRECTORY_SEARCH_PATTERN: &str = "**/*.au.toml";
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct FindConfigFilesResult {
-    pub found: BTreeMap<RelativePathBuf, TestIdCoverageSet>,
+    pub found: BTreeMap<RelativePathBuf, SubtestPathCoverageSet>,
     pub errors: BTreeMap<PathBuf, PathError>,
 }
 
@@ -17,10 +17,10 @@ pub struct FindConfigFilesResult {
 pub enum PathError {
     #[error("file not found")]
     FileNotFound,
-    #[error("test ID must be UTF-8")]
-    TestIdMustBeUtf8,
-    #[error("invalid test ID")]
-    InvalidTestId,
+    #[error("ID must be UTF-8")]
+    SubtestPathMustBeUtf8,
+    #[error("invalid ID")]
+    InvalidSubtestPath,
     #[error("glob pattern must be UTF-8")]
     GlobPatternMustBeUtf8,
     #[error("invalid glob entry")]
@@ -36,16 +36,16 @@ pub fn find_config_files(paths: Vec<PathBuf>, current_dir: &Path) -> FindConfigF
     for path in paths {
         match find_config_files_in_path(&path, current_dir) {
             Ok(files) => {
-                for (file, test_id) in files {
+                for (file, subtest_path) in files {
                     found
                         .entry(file)
-                        .and_modify(|test_ids: &mut TestIdCoverageSet| {
-                            test_ids.add(test_id.clone());
+                        .and_modify(|subtest_paths: &mut SubtestPathCoverageSet| {
+                            subtest_paths.add(subtest_path.clone());
                         })
                         .or_insert_with(|| {
-                            let mut test_ids = TestIdCoverageSet::empty();
-                            test_ids.add(test_id);
-                            test_ids
+                            let mut subtest_paths = SubtestPathCoverageSet::empty();
+                            subtest_paths.add(subtest_path);
+                            subtest_paths
                         });
                 }
             }
@@ -61,7 +61,7 @@ pub fn find_config_files(paths: Vec<PathBuf>, current_dir: &Path) -> FindConfigF
 fn find_config_files_in_path(
     search_path: &Path,
     current_dir: &Path,
-) -> Result<Vec<(RelativePathBuf, TestId)>, PathError> {
+) -> Result<Vec<(RelativePathBuf, SubtestPath)>, PathError> {
     // Check to see if file name contains a colon. If this is the case, we assume
     // that the part before colon refers to a regular file, while the part after
     // colon refers to a test ID.
@@ -78,25 +78,34 @@ fn find_config_files_in_path(
             return Err(PathError::FileNotFound);
         }
 
-        let suffix_str = suffix.to_str().ok_or(PathError::TestIdMustBeUtf8)?;
-        let test_id = TestId::try_from(suffix_str).map_err(|_| PathError::InvalidTestId)?;
+        let suffix_str = suffix.to_str().ok_or(PathError::SubtestPathMustBeUtf8)?;
+        let subtest_path =
+            SubtestPath::try_from(suffix_str).map_err(|_| PathError::InvalidSubtestPath)?;
 
-        prepare_paths(vec![updated_search_path.to_owned()], test_id, current_dir)
+        prepare_paths(
+            vec![updated_search_path.to_owned()],
+            subtest_path,
+            current_dir,
+        )
     }
     // Check if there is a file at this exact path.
     else if search_path.is_file() {
-        prepare_paths(vec![search_path.to_owned()], TestId::root(), current_dir)
+        prepare_paths(
+            vec![search_path.to_owned()],
+            SubtestPath::root(),
+            current_dir,
+        )
     }
     // Check if there is a directory at this exact path.
     else if search_path.is_dir() {
         let paths = glob::walk(&search_path.join(DIRECTORY_SEARCH_PATTERN))
             .map_err(|_| PathError::InvalidGlobEntry)?;
-        prepare_paths(paths, TestId::root(), current_dir)
+        prepare_paths(paths, SubtestPath::root(), current_dir)
     }
     // Search for glob pattern.
     else if glob::is_glob(search_path) {
         let paths = find_config_files_for_glob(search_path, current_dir)?;
-        prepare_paths(paths, TestId::root(), current_dir)
+        prepare_paths(paths, SubtestPath::root(), current_dir)
     }
     // Otherwise: File not found.
     else {
@@ -135,16 +144,16 @@ fn find_config_files_for_glob(pattern: &Path, base: &Path) -> Result<Vec<PathBuf
 
 fn prepare_paths(
     paths: Vec<PathBuf>,
-    test_id: TestId,
+    subtest_path: SubtestPath,
     current_dir: &Path,
-) -> Result<Vec<(RelativePathBuf, TestId)>, PathError> {
+) -> Result<Vec<(RelativePathBuf, SubtestPath)>, PathError> {
     let mut result = vec![];
 
     for path in paths {
         let relative_path = get_relative_path(&path, current_dir)
             .ok_or(PathError::FailedToConvertPathToRelativePath)?;
 
-        result.push((relative_path, test_id.clone()));
+        result.push((relative_path, subtest_path.clone()));
     }
 
     Ok(result)

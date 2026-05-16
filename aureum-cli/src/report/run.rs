@@ -1,6 +1,6 @@
 use crate::report::theme;
 use crate::utils::toml;
-use aureum::{ProgramOutput, TestCase};
+use aureum::{ProgramOutput, TestId};
 
 pub fn print_verbose_is_not_supported_in_passthrough() {
     eprintln!(
@@ -21,8 +21,8 @@ pub fn print_one_or_more_programs_failed_to_run() {
     eprintln!("{} one or more programs failed to run", theme::error());
 }
 
-pub fn print_test_case_id_as_toml_comment(test_case: &TestCase) {
-    println!("# TEST: {}", test_case.display_id());
+pub fn print_test_id_as_toml_comment(test_id: &TestId) {
+    println!("# TEST: {}", test_id.display_id());
 }
 
 pub fn print_failed_to_run_program_as_toml() {

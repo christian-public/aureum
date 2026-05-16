@@ -277,10 +277,10 @@ pub(super) fn render_tui(
 
 /// Title row: test path.
 fn build_title_line(test_case: &TestCase) -> Line<'static> {
-    let test_case_id = test_case.display_id();
+    let test_id = test_case.display_id();
     Line::from(vec![
         Span::raw("  "),
-        Span::styled(test_case_id, Style::default().add_modifier(Modifier::BOLD)),
+        Span::styled(test_id, Style::default().add_modifier(Modifier::BOLD)),
     ])
 }
 

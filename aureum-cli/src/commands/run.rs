@@ -102,7 +102,7 @@ fn run_programs_with_toml_output(all_test_cases: &[TestCase], current_dir: &Path
             println!();
         }
 
-        report::run::print_test_case_id_as_toml_comment(test_case);
+        report::run::print_test_id_as_toml_comment(&test_case.id);
 
         match aureum::run_program(test_case, current_dir) {
             Ok(output) => {

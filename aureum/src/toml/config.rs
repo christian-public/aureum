@@ -1,4 +1,4 @@
-use crate::TestId;
+use crate::SubtestPath;
 use std::collections::BTreeMap;
 use std::fmt;
 
@@ -13,7 +13,7 @@ pub struct TomlConfigFile {
 #[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct TomlConfigTest {
-    pub id: Option<TestId>,
+    pub id: Option<SubtestPath>,
     pub skip: Option<String>,
     pub program: Option<ConfigValue<String>>,
     pub program_arguments: Option<Vec<ConfigValue<String>>>,

@@ -1,7 +1,7 @@
 use crate::counts::ConfigStats;
 use crate::find_config_file::FindConfigFilesResult;
 use crate::utils::file;
-use aureum::{RequirementData, Requirements, TestEntry, TestIdCoverageSet, ValidationError};
+use aureum::{RequirementData, Requirements, SubtestPathCoverageSet, TestEntry, ValidationError};
 use itertools::{Either, Itertools};
 use relative_path::RelativePathBuf;
 use std::collections::{BTreeMap, BTreeSet};
@@ -36,7 +36,7 @@ impl LoadConfigFilesResult {
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct LoadedConfigFile {
-    pub test_id_coverage_set: TestIdCoverageSet,
+    pub subtest_path_coverage_set: SubtestPathCoverageSet,
     pub requirements: Requirements,
     pub requirement_data: RequirementData,
     pub test_entries: Vec<TestEntry>,
@@ -46,9 +46,10 @@ pub struct LoadedConfigFile {
 
 impl LoadedConfigFile {
     pub fn test_entries_in_coverage_set(&self) -> impl Iterator<Item = &TestEntry> {
-        self.test_entries
-            .iter()
-            .filter(|entry| self.test_id_coverage_set.contains(&entry.id.test_id))
+        self.test_entries.iter().filter(|entry| {
+            self.subtest_path_coverage_set
+                .contains(&entry.id.subtest_path)
+        })
     }
 
     pub fn has_config_errors(&self) -> bool {
@@ -88,10 +89,10 @@ pub fn load_config_files(
     default_timeout: u64,
 ) -> LoadConfigFilesResult {
     let (loaded, invalid) = find_config_files_result.found.into_iter().partition_map(
-        |(config_file_path, test_id_coverage_set)| {
+        |(config_file_path, subtest_path_coverage_set)| {
             let result = load_config_file(
                 config_file_path.clone(),
-                test_id_coverage_set,
+                subtest_path_coverage_set,
                 current_dir,
                 default_timeout,
             );
@@ -111,7 +112,7 @@ pub fn load_config_files(
 
 fn load_config_file(
     config_file_path: RelativePathBuf,
-    test_id_coverage_set: TestIdCoverageSet,
+    subtest_path_coverage_set: SubtestPathCoverageSet,
     current_dir: &Path,
     default_timeout: u64,
 ) -> Result<LoadedConfigFile, ConfigFileError> {
@@ -145,7 +146,7 @@ fn load_config_file(
     );
 
     Ok(LoadedConfigFile {
-        test_id_coverage_set,
+        subtest_path_coverage_set,
         requirements,
         requirement_data,
         test_entries,

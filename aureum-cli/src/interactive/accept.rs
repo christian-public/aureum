@@ -1,4 +1,4 @@
-use aureum::{FieldOutcome, TestCase, TestId, TestOutcome};
+use aureum::{FieldOutcome, SubtestPath, TestCase, TestOutcome};
 use std::fs;
 use std::io;
 use std::path::Path;
@@ -28,7 +28,7 @@ pub(crate) fn update_test_expectations(
         && let FieldOutcome::Diff { got, .. } = &test_outcome.stdout
         && apply_field_update(
             &mut doc,
-            &test_case.id.test_id,
+            &test_case.id.subtest_path,
             "expected_stdout",
             &FieldValue::Str(got),
             &config_dir_path,
@@ -41,7 +41,7 @@ pub(crate) fn update_test_expectations(
         && let FieldOutcome::Diff { got, .. } = &test_outcome.stderr
         && apply_field_update(
             &mut doc,
-            &test_case.id.test_id,
+            &test_case.id.subtest_path,
             "expected_stderr",
             &FieldValue::Str(got),
             &config_dir_path,
@@ -54,7 +54,7 @@ pub(crate) fn update_test_expectations(
         && let FieldOutcome::Diff { got, .. } = &test_outcome.exit_code
         && apply_field_update(
             &mut doc,
-            &test_case.id.test_id,
+            &test_case.id.subtest_path,
             "expected_exit_code",
             &FieldValue::Int(*got as i64),
             &config_dir_path,
@@ -95,16 +95,16 @@ impl FieldValue<'_> {
 /// or updating the TOML value in-place. Returns `true` if the document itself was modified.
 fn apply_field_update(
     doc: &mut DocumentMut,
-    test_id: &TestId,
+    subtest_path: &SubtestPath,
     field: &str,
     new_value: &FieldValue<'_>,
     config_dir_path: &Path,
 ) -> io::Result<bool> {
-    if test_id.is_root() {
+    if subtest_path.is_root() {
         return apply_to_section(doc.as_table_mut(), field, new_value, config_dir_path);
     }
 
-    let test_name = test_id.to_string();
+    let test_name = subtest_path.to_string();
 
     // Check if the field is in the subtest section (takes precedence over root).
     let in_subtest = get_subtest_section(doc, &test_name)
@@ -190,7 +190,7 @@ mod tests {
     use super::super::field::{FieldDecision, FieldDecisions};
     use super::super::utils::test_helpers::{TempDir, make_test_case_root};
     use super::*;
-    use aureum::{TestCaseId, TestId};
+    use aureum::{SubtestPath, TestId};
     use relative_path::RelativePathBuf;
     use std::path::PathBuf;
 
@@ -202,10 +202,10 @@ mod tests {
 
     fn make_test_case_subtest(dir: &str, file: &str, name: &str) -> TestCase {
         TestCase {
-            id: TestCaseId::new(
+            id: TestId::new(
                 RelativePathBuf::from(dir),
                 file.to_string(),
-                TestId::new(vec![name.to_string()]),
+                SubtestPath::new(vec![name.to_string()]),
             ),
             program_path: PathBuf::from("/bin/echo"),
             arguments: vec![],
