@@ -43,10 +43,10 @@ jobs:
 
     - name: Check Aureum formatting
       if: always() && steps.build.outcome == 'success'
-      run: RELEASE=1 ./test_spec.sh format --check spec examples aureum-cli/assets
+      run: RELEASE=1 ./test_spec.sh format --check golden examples aureum-cli/assets
       shell: bash
 
     - name: Run Aureum tests
       if: always() && steps.build.outcome == 'success'
-      run: RELEASE=1 ./test_spec.sh test --verbose spec examples aureum-cli/assets
+      run: RELEASE=1 ./test_spec.sh test --verbose golden examples aureum-cli/assets
       shell: bash
