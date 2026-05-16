@@ -56,14 +56,23 @@ impl Widget for TestSummary {
         } else {
             Style::default()
         };
+        let passed_style = if self.0.passed == 0 {
+            theme::dim()
+        } else if self.0.failed > 0 {
+            Style::default()
+        } else {
+            Style::default().fg(Color::Green)
+        };
+        let failed_style = if self.0.failed == 0 {
+            theme::dim()
+        } else {
+            Style::default().fg(Color::Red)
+        };
         spans.push(Span::styled(self.skipped(), skipped_style));
         spans.push(Span::raw("  "));
-        spans.push(Span::styled(
-            self.passed(),
-            Style::default().fg(Color::Green),
-        ));
+        spans.push(Span::styled(self.passed(), passed_style));
         spans.push(Span::raw("  "));
-        spans.push(Span::styled(self.failed(), Style::default().fg(Color::Red)));
+        spans.push(Span::styled(self.failed(), failed_style));
         spans.push(Span::raw("  "));
         let line = Line::from(spans);
         Paragraph::new(line).render(area, buf);
