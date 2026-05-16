@@ -198,7 +198,9 @@ fn format_test_failure(test_case: &TestCase, result: &Result<TestOutcome, RunErr
         }
     };
 
-    let heading = format!("❌ {}", test_case.display_id());
+    let heading = format!("{} {}", theme::cross(), test_case.display_id())
+        .red()
+        .to_string();
     let tree = Node(heading, nodes);
     tree.to_string().trim_end().to_owned()
 }

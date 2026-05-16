@@ -147,7 +147,7 @@ Fss.ss
 
 ✔ helpers/skip_subtest.toml:passing
 
-❌ helpers/failing_test.toml
+✘ helpers/failing_test.toml
 └── Standard output
     ├── Expected
     │   ╭
