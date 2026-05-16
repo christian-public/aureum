@@ -6,7 +6,7 @@ use crate::interactive;
 use crate::load_config_file::LoadConfigFilesResult;
 use crate::report;
 use crate::report::test::{ReportConfig, ReportFormat};
-use crate::watch;
+use crate::watch::{self, WatchHandle};
 use aureum::{PlannedTestCase, RunResult};
 use std::collections::BTreeSet;
 use std::io::{self, BufRead, IsTerminal};
@@ -322,10 +322,10 @@ fn run_watch_loop(
     verbose: bool,
     stable_duration: Option<Duration>,
 ) -> io::Result<Vec<RunResult>> {
-    let watch::WatchHandle {
+    let WatchHandle {
         receiver: watch_rx,
         watched_path_count,
-        _debouncer: _watcher,
+        _debouncer: watcher,
     } = watch::start_watcher_for_paths(watch_paths)?;
     report::test::print_watch_started(watched_path_count);
     let format = TestOutputFormat::Summary;
@@ -342,7 +342,7 @@ fn run_watch_loop(
 
     let (trigger_tx, trigger_rx) = mpsc::channel::<bool>();
 
-    {
+    let watch_forwarder = {
         let tx = trigger_tx.clone();
         std::thread::spawn(move || {
             while watch_rx.recv().is_ok() {
@@ -350,10 +350,12 @@ fn run_watch_loop(
                     break;
                 }
             }
-        });
-    }
+        })
+    };
 
     if !io::stdin().is_terminal() {
+        // Stdin reader is intentionally not joined: `Stdin::lines` blocks with
+        // no portable way to cancel, so the thread lives until process exit.
         std::thread::spawn(move || {
             for line in io::stdin().lock().lines() {
                 match line {
@@ -368,6 +370,8 @@ fn run_watch_loop(
             }
             let _ = trigger_tx.send(false);
         });
+    } else {
+        drop(trigger_tx);
     }
 
     while let Ok(true) = trigger_rx.recv() {
@@ -392,6 +396,10 @@ fn run_watch_loop(
             break;
         }
     }
+
+    drop(trigger_rx);
+    drop(watcher);
+    let _ = watch_forwarder.join();
 
     Ok(last_run_results)
 }
