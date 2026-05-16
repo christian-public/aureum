@@ -51,3 +51,21 @@ expected_stderr = """
 warning: some config files contain errors (see above)
 """
 expected_exit_code = 3
+
+
+[[tests]]
+id = "duplicate-id"
+program_arguments = ["validate", "helpers/duplicate-id.toml"]
+
+expected_stdout = """
+✘ helpers/duplicate-id.toml  Parse error
+"""
+expected_stderr = """
+📋 helpers/duplicate-id.toml
+└── Parse errors
+    ├── ✘ [2]: duplicate id `shared`, first defined at index 0
+    └── ✘ [3]: duplicate id `shared`, first defined at index 0
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3

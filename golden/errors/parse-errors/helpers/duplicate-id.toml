@@ -1,0 +1,29 @@
+program = "echo"
+
+
+[[tests]]
+id = "shared"
+program_arguments = ["-n", "first"]
+
+expected_stdout = "first"
+
+
+[[tests]]
+id = "unique"
+program_arguments = ["-n", "second"]
+
+expected_stdout = "second"
+
+
+[[tests]]
+id = "shared"
+program_arguments = ["-n", "third"]
+
+expected_stdout = "third"
+
+
+[[tests]]
+id = "shared"
+program_arguments = ["-n", "fourth"]
+
+expected_stdout = "fourth"

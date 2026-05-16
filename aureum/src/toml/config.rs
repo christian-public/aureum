@@ -73,6 +73,8 @@ pub enum ParseError {
     MissingId,
     #[error("invalid id `{id}`")]
     InvalidId { id: String },
+    #[error("duplicate id `{id}`, first defined at index {first_index}")]
+    DuplicateId { id: String, first_index: usize },
     #[error("`id` is not allowed at the root level")]
     IdForbiddenAtRoot,
     #[error("unknown field `{field}`")]

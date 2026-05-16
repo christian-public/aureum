@@ -186,6 +186,7 @@ fn get_tests_from_array(
 
     let mut errors: Vec<ParseError> = vec![];
     let mut parsed_configs: Vec<TomlConfigTest> = vec![];
+    let mut seen_ids: BTreeMap<SubtestPath, usize> = BTreeMap::new();
 
     for (index, item) in array.iter().enumerate() {
         let Some(inner_table) = item.as_table() else {
@@ -207,16 +208,28 @@ fn get_tests_from_array(
         }
 
         match parse_toml_config_from_table(inner_table) {
-            Ok(parsed_config) => {
-                if parsed_config.id.is_none() {
+            Ok(parsed_config) => match &parsed_config.id {
+                None => {
                     errors.push(ParseError::AtIndex {
                         index,
                         error: Box::new(ParseError::MissingId),
                     });
-                } else {
-                    parsed_configs.push(parsed_config);
                 }
-            }
+                Some(id) => {
+                    if let Some(&first_index) = seen_ids.get(id) {
+                        errors.push(ParseError::AtIndex {
+                            index,
+                            error: Box::new(ParseError::DuplicateId {
+                                id: id.to_string(),
+                                first_index,
+                            }),
+                        });
+                    } else {
+                        seen_ids.insert(id.clone(), index);
+                        parsed_configs.push(parsed_config);
+                    }
+                }
+            },
             Err(errs) => {
                 for err in errs {
                     errors.push(ParseError::AtIndex {
