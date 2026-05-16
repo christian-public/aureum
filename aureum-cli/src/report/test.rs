@@ -2,10 +2,12 @@ use crate::counts::{ConfigStats, PlannedCounts, TestCounts};
 use crate::report::formats::summary;
 use crate::report::formats::tap;
 use crate::report::theme;
+use crate::utils::time;
 use crate::vendor::ascii_tree::Tree::{Leaf, Node};
 use aureum::{RunError, RunResult, TestCase, TestId, TestOutcome};
 use colored::Colorize;
 use std::io;
+use std::time::Duration;
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum ReportFormat {
@@ -87,10 +89,11 @@ pub fn print_test_cases_end(
     report_config: &ReportConfig,
     run_results: &[RunResult],
     config_stats: ConfigStats,
+    elapsed: Duration,
 ) {
     match report_config.format {
         ReportFormat::Summary => {
-            summary_print_test_cases_end(run_results, report_config.verbose, config_stats);
+            summary_print_test_cases_end(run_results, report_config.verbose, config_stats, elapsed);
         }
         ReportFormat::Tap => {
             tap_print_test_cases_end();
@@ -124,6 +127,7 @@ fn summary_print_test_cases_end(
     run_results: &[RunResult],
     verbose: bool,
     config_stats: ConfigStats,
+    elapsed: Duration,
 ) {
     println!(); // Print newline after dots
 
@@ -175,7 +179,7 @@ fn summary_print_test_cases_end(
     let counts = TestCounts::from_results(run_results, config_stats);
 
     println!();
-    println!("{}", format_summary_line(counts));
+    println!("{}", format_summary_line(counts, elapsed));
 }
 
 fn format_test_success(test_case: &TestCase) -> String {
@@ -205,7 +209,7 @@ fn format_test_failure(test_case: &TestCase, result: &Result<TestOutcome, RunErr
     tree.to_string().trim_end().to_owned()
 }
 
-fn format_summary_line(counts: TestCounts) -> String {
+fn format_summary_line(counts: TestCounts, elapsed: Duration) -> String {
     let config_error_count = counts.config_stats.config_errors;
 
     let status = if counts.failed == 0 {
@@ -239,7 +243,14 @@ fn format_summary_line(counts: TestCounts) -> String {
         count_components.push(format!("{config_error_count} config {errors}"));
     }
 
-    format!("Test result: {status} ({})", count_components.join(", "))
+    let suffix = format!(" — Finished in {}", time::format_duration(elapsed))
+        .dimmed()
+        .to_string();
+
+    format!(
+        "Test result: {status} ({}){suffix}",
+        count_components.join(", ")
+    )
 }
 
 // TAP HELPERS

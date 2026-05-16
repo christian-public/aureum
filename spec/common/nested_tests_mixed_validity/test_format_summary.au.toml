@@ -3,13 +3,19 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 [[tests]]
 id = "all_valid.all"
-program_arguments = ["test", "--format", "summary", "helpers/all_valid.toml"]
+program_arguments = [
+    "test",
+    "--format",
+    "summary",
+    "--stable-output",
+    "helpers/all_valid.toml",
+]
 
 expected_stdout = """
 🚀 Running 2 tests:
 ..
 
-Test result: OK (2 passed)
+Test result: OK (2 passed) — Finished in 0.0s
 """
 expected_stderr = ""
 expected_exit_code = 0
@@ -21,6 +27,7 @@ program_arguments = [
     "test",
     "--format",
     "summary",
+    "--stable-output",
     "helpers/all_valid.toml:test1",
 ]
 
@@ -28,7 +35,7 @@ expected_stdout = """
 🚀 Running 1 test:
 .
 
-Test result: OK (1 passed)
+Test result: OK (1 passed) — Finished in 0.0s
 """
 expected_stderr = ""
 expected_exit_code = 0
@@ -40,6 +47,7 @@ program_arguments = [
     "test",
     "--format",
     "summary",
+    "--stable-output",
     "helpers/missing_program_on_test2.toml",
 ]
 
@@ -47,7 +55,7 @@ expected_stdout = """
 🚀 Running 1 test:
 .
 
-Test result: OK* (1 passed, 1 config error)
+Test result: OK* (1 passed, 1 config error) — Finished in 0.0s
 """
 expected_stderr = """
 📋 helpers/missing_program_on_test2.toml
@@ -67,6 +75,7 @@ program_arguments = [
     "test",
     "--format",
     "summary",
+    "--stable-output",
     "helpers/missing_program_on_test2.toml:test1",
 ]
 
@@ -74,7 +83,7 @@ expected_stdout = """
 🚀 Running 1 test:
 .
 
-Test result: OK* (1 passed, 1 config error)
+Test result: OK* (1 passed, 1 config error) — Finished in 0.0s
 """
 expected_stderr = """
 📋 helpers/missing_program_on_test2.toml
@@ -94,6 +103,7 @@ program_arguments = [
     "test",
     "--format",
     "summary",
+    "--stable-output",
     "helpers/missing_program_on_all_tests.toml",
 ]
 
@@ -101,7 +111,7 @@ expected_stdout = """
 🚀 Running 0 tests:
 
 
-Test result: OK* (0 passed, 2 config errors)
+Test result: OK* (0 passed, 2 config errors) — Finished in 0.0s
 """
 expected_stderr = """
 📋 helpers/missing_program_on_all_tests.toml
@@ -123,6 +133,7 @@ program_arguments = [
     "test",
     "--format",
     "summary",
+    "--stable-output",
     "helpers/missing_program_on_all_tests.toml:test1",
 ]
 
@@ -130,7 +141,7 @@ expected_stdout = """
 🚀 Running 0 tests:
 
 
-Test result: OK* (0 passed, 2 config errors)
+Test result: OK* (0 passed, 2 config errors) — Finished in 0.0s
 """
 expected_stderr = """
 📋 helpers/missing_program_on_all_tests.toml
@@ -148,13 +159,19 @@ expected_exit_code = 3
 
 [[tests]]
 id = "all_files"
-program_arguments = ["test", "--format", "summary", "helpers/*.toml"]
+program_arguments = [
+    "test",
+    "--format",
+    "summary",
+    "--stable-output",
+    "helpers/*.toml",
+]
 
 expected_stdout = """
 🚀 Running 3 tests:
 ...
 
-Test result: OK* (3 passed, 3 config errors)
+Test result: OK* (3 passed, 3 config errors) — Finished in 0.0s
 """
 expected_stderr = """
 📋 helpers/missing_program_on_all_tests.toml

@@ -7,6 +7,7 @@ program_arguments = [
     "test",
     "--format",
     "summary",
+    "--stable-output",
     "helpers/skip_root_test.toml",
 ]
 
@@ -14,7 +15,7 @@ expected_stdout = """
 🚀 Running 0 of 1 test:
 s
 
-Test result: OK (0 passed, 1 skipped)
+Test result: OK (0 passed, 1 skipped) — Finished in 0.0s
 """
 expected_stderr = ""
 expected_exit_code = 0
@@ -22,13 +23,19 @@ expected_exit_code = 0
 
 [[tests]]
 id = "skip_subtest"
-program_arguments = ["test", "--format", "summary", "helpers/skip_subtest.toml"]
+program_arguments = [
+    "test",
+    "--format",
+    "summary",
+    "--stable-output",
+    "helpers/skip_subtest.toml",
+]
 
 expected_stdout = """
 🚀 Running 1 of 2 tests:
 .s
 
-Test result: OK (1 passed, 1 skipped)
+Test result: OK (1 passed, 1 skipped) — Finished in 0.0s
 """
 expected_stderr = ""
 expected_exit_code = 0
@@ -40,6 +47,7 @@ program_arguments = [
     "test",
     "--format",
     "summary",
+    "--stable-output",
     "helpers/skip_invalid_config.toml",
 ]
 
@@ -47,7 +55,7 @@ expected_stdout = """
 🚀 Running 0 of 1 test:
 s
 
-Test result: OK (0 passed, 1 skipped)
+Test result: OK (0 passed, 1 skipped) — Finished in 0.0s
 """
 expected_stderr = ""
 expected_exit_code = 0
@@ -66,7 +74,7 @@ expected_stdout = """
 🚀 Running 0 of 1 test:
 s
 
-Test result: OK* (0 passed, 1 skipped, 1 config error)
+Test result: OK* (0 passed, 1 skipped, 1 config error) — Finished in 0.0s
 """
 expected_stderr = """
 📋 helpers/validation_error_with_skipped.toml
@@ -82,7 +90,13 @@ expected_exit_code = 3
 
 [[tests]]
 id = "all"
-program_arguments = ["test", "--format", "summary", "helpers/*.toml"]
+program_arguments = [
+    "test",
+    "--format",
+    "summary",
+    "--stable-output",
+    "helpers/*.toml",
+]
 
 expected_stdout = """
 🚀 Running 2 of 6 tests:
@@ -104,7 +118,7 @@ Fss.ss
         │   1 │ +actual
         ╰
 
-Test result: FAIL (1 failed, 1 passed, 4 skipped, 1 config error)
+Test result: FAIL (1 failed, 1 passed, 4 skipped, 1 config error) — Finished in 0.0s
 """
 expected_stderr = """
 📋 helpers/validation_error_with_skipped.toml

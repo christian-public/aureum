@@ -3,13 +3,19 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 [[tests]]
 id = "passing"
-program_arguments = ["test", "--format", "summary", "helpers/passing_test.toml"]
+program_arguments = [
+    "test",
+    "--format",
+    "summary",
+    "--stable-output",
+    "helpers/passing_test.toml",
+]
 
 expected_stdout = """
 🚀 Running 1 test:
 .
 
-Test result: OK (1 passed)
+Test result: OK (1 passed) — Finished in 0.0s
 """
 expected_stderr = ""
 expected_exit_code = 0
@@ -17,7 +23,13 @@ expected_exit_code = 0
 
 [[tests]]
 id = "failing"
-program_arguments = ["test", "--format", "summary", "helpers/failing_test.toml"]
+program_arguments = [
+    "test",
+    "--format",
+    "summary",
+    "--stable-output",
+    "helpers/failing_test.toml",
+]
 
 expected_stdout = """
 🚀 Running 1 test:
@@ -57,7 +69,7 @@ F
     └── Got
         └── 0
 
-Test result: FAIL (1 failed, 0 passed)
+Test result: FAIL (1 failed, 0 passed) — Finished in 0.0s
 """
 expected_stderr = ""
 expected_exit_code = 1
@@ -69,6 +81,7 @@ program_arguments = [
     "test",
     "--format",
     "summary",
+    "--stable-output",
     "helpers/failing_test_newline.toml",
 ]
 
@@ -95,7 +108,7 @@ F
         │ 2 2 │
         ╰
 
-Test result: FAIL (1 failed, 0 passed)
+Test result: FAIL (1 failed, 0 passed) — Finished in 0.0s
 """
 expected_stderr = ""
 expected_exit_code = 1
@@ -107,6 +120,7 @@ program_arguments = [
     "test",
     "--format",
     "summary",
+    "--stable-output",
     "helpers/failing_test.toml",
     "helpers/failing_test_newline.toml",
 ]
@@ -168,7 +182,7 @@ FF
         │ 2 2 │
         ╰
 
-Test result: FAIL (2 failed, 0 passed)
+Test result: FAIL (2 failed, 0 passed) — Finished in 0.0s
 """
 expected_stderr = ""
 expected_exit_code = 1

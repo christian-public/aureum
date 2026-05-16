@@ -12,6 +12,7 @@ use std::collections::BTreeSet;
 use std::io::{self, BufRead, IsTerminal};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc;
+use std::time::{Duration, Instant};
 
 pub fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
     if let Some(TerminalSize { width, height }) = args.record {
@@ -232,6 +233,7 @@ fn run_tests_noninteractive_watch(args: TestArgs, current_dir: &Path) -> ExitCod
         current_dir,
         &watch_paths,
         args.common.verbose,
+        args.common.stable_output().map(|s| s.duration),
     ) {
         Ok(run_results) => {
             exit_code_from_run_results(&run_results, config_files.has_config_errors())
@@ -262,6 +264,7 @@ fn run_tests_noninteractive(args: TestArgs, current_dir: &Path) -> ExitCode {
 
     let all_test_cases = collect_test_cases(&config_files);
 
+    let stable_duration = args.common.stable_output().map(|s| s.duration);
     let run_results = run_test_cases_noninteractive(
         &all_test_cases,
         args.parallel,
@@ -269,6 +272,7 @@ fn run_tests_noninteractive(args: TestArgs, current_dir: &Path) -> ExitCode {
         &args.format,
         args.common.verbose,
         config_files.config_stats(),
+        stable_duration,
     );
 
     let has_config_errors = config_files.has_config_errors();
@@ -288,6 +292,7 @@ fn run_test_cases_noninteractive(
     format: &TestOutputFormat,
     verbose: bool,
     config_stats: ConfigStats,
+    stable_duration: Option<Duration>,
 ) -> Vec<RunResult> {
     let report_config = ReportConfig {
         planned_counts: PlannedCounts::from_planned(test_cases),
@@ -297,12 +302,14 @@ fn run_test_cases_noninteractive(
 
     report::test::print_test_cases_start(&report_config);
 
+    let start = Instant::now();
     let run_results =
         aureum::run_test_cases(test_cases, parallel, current_dir, &|index, run_result| {
             report::test::print_test_case(&report_config, index, run_result);
         });
+    let elapsed = stable_duration.unwrap_or_else(|| start.elapsed());
 
-    report::test::print_test_cases_end(&report_config, &run_results, config_stats);
+    report::test::print_test_cases_end(&report_config, &run_results, config_stats, elapsed);
 
     run_results
 }
@@ -313,6 +320,7 @@ fn run_watch_loop(
     current_dir: &Path,
     watch_paths: &BTreeSet<PathBuf>,
     verbose: bool,
+    stable_duration: Option<Duration>,
 ) -> io::Result<Vec<RunResult>> {
     let watch::WatchHandle {
         receiver: watch_rx,
@@ -329,6 +337,7 @@ fn run_watch_loop(
         &format,
         verbose,
         initial_config_stats,
+        stable_duration,
     );
 
     let (trigger_tx, trigger_rx) = mpsc::channel::<bool>();
@@ -377,6 +386,7 @@ fn run_watch_loop(
             &format,
             verbose,
             config_stats,
+            stable_duration,
         );
         if quit_pending {
             break;

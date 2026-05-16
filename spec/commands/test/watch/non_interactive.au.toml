@@ -3,13 +3,13 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 [[tests]]
 id = "startup_message"
-program_arguments = ["test", "--watch", "helpers/passing.toml"]
+program_arguments = ["test", "--watch", "--stable-output", "helpers/passing.toml"]
 
 expected_stdout = """
 🚀 Running 1 test:
 .
 
-Test result: OK (1 passed)
+Test result: OK (1 passed) — Finished in 0.0s
 """
 expected_stderr = """
 watch: watching 2 paths for changes...
@@ -19,18 +19,18 @@ expected_exit_code = 0
 
 [[tests]]
 id = "file_change_reruns_tests"
-program_arguments = ["test", "--watch", "helpers/passing.toml"]
+program_arguments = ["test", "--watch", "--stable-output", "helpers/passing.toml"]
 stdin = "file-change\n"
 
 expected_stdout = """
 🚀 Running 1 test:
 .
 
-Test result: OK (1 passed)
+Test result: OK (1 passed) — Finished in 0.0s
 🚀 Running 1 test:
 .
 
-Test result: OK (1 passed)
+Test result: OK (1 passed) — Finished in 0.0s
 """
 expected_stderr = """
 watch: watching 2 paths for changes...
@@ -56,7 +56,7 @@ expected_stdout = """
 
 ✔ helpers/passing.toml
 
-Test result: OK (1 passed)
+Test result: OK (1 passed) — Finished in 0.0s
 """
 expected_stderr = """
 🔍 Found 1 config files

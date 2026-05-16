@@ -16,7 +16,7 @@ s
 
 ⊘ helpers/skip_root_test.toml  not implemented yet
 
-Test result: OK (0 passed, 1 skipped)
+Test result: OK (0 passed, 1 skipped) — Finished in 0.0s
 """
 expected_stderr = """
 🔍 Found 1 config files
@@ -48,7 +48,7 @@ expected_stdout = """
 
 ✔ helpers/skip_subtest.toml:passing
 
-Test result: OK (1 passed, 1 skipped)
+Test result: OK (1 passed, 1 skipped) — Finished in 0.0s
 """
 expected_stderr = """
 🔍 Found 1 config files
@@ -81,7 +81,7 @@ s
 
 ⊘ helpers/skip_invalid_config.toml  todo
 
-Test result: OK (0 passed, 1 skipped)
+Test result: OK (0 passed, 1 skipped) — Finished in 0.0s
 """
 expected_stderr = """
 🔍 Found 1 config files
@@ -111,7 +111,7 @@ s
 
 ⊘ helpers/validation_error_with_skipped.toml:skipped  todo
 
-Test result: OK* (0 passed, 1 skipped, 1 config error)
+Test result: OK* (0 passed, 1 skipped, 1 config error) — Finished in 0.0s
 """
 expected_stderr = """
 🔍 Found 1 config files
@@ -163,7 +163,7 @@ Fss.ss
         │   1 │ +actual
         ╰
 
-Test result: FAIL (1 failed, 1 passed, 4 skipped, 1 config error)
+Test result: FAIL (1 failed, 1 passed, 4 skipped, 1 config error) — Finished in 0.0s
 """
 expected_stderr = """
 🔍 Found 5 config files

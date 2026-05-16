@@ -2,6 +2,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 program_arguments = [
   "test",
   "--parallel",
+  "--stable-output",
   "helpers/passing_test.toml",
   "helpers/passing_test2.toml",
 ]
@@ -10,7 +11,7 @@ expected_stdout = """
 🚀 Running 2 tests:
 ..
 
-Test result: OK (2 passed)
+Test result: OK (2 passed) — Finished in 0.0s
 """
 expected_stderr = ""
 expected_exit_code = 0

@@ -7,6 +7,7 @@ program_arguments = [
   "test",
   "--format",
   "summary",
+  "--stable-output",
   "helpers/non_terminating_with_timeout.toml",
 ]
 
@@ -17,7 +18,7 @@ F
 ✘ helpers/non_terminating_with_timeout.toml
 └── Run error: timed out
 
-Test result: FAIL (1 failed, 0 passed)
+Test result: FAIL (1 failed, 0 passed) — Finished in 0.0s
 """
 expected_exit_code = 1
 
@@ -30,6 +31,7 @@ program_arguments = [
   "summary",
   "--default-timeout",
   "0",
+  "--stable-output",
   "helpers/non_terminating.toml",
 ]
 
@@ -40,7 +42,7 @@ F
 ✘ helpers/non_terminating.toml
 └── Run error: timed out
 
-Test result: FAIL (1 failed, 0 passed)
+Test result: FAIL (1 failed, 0 passed) — Finished in 0.0s
 """
 expected_exit_code = 1
 

@@ -3,13 +3,13 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 [[tests]]
 id = "without_verbose"
-program_arguments = ["test", "helpers/*.toml"]
+program_arguments = ["test", "--stable-output", "helpers/*.toml"]
 
 expected_stdout = """
 🚀 Running 3 tests:
 ...
 
-Test result: OK* (3 passed, 3 config errors)
+Test result: OK* (3 passed, 3 config errors) — Finished in 0.0s
 """
 expected_stderr = """
 📋 helpers/many_requirements.toml
@@ -42,7 +42,7 @@ expected_stdout = """
 ✔ helpers/many_requirements.toml:external_file_exists
 ✔ helpers/no_requirements.toml
 
-Test result: OK* (3 passed, 3 config errors)
+Test result: OK* (3 passed, 3 config errors) — Finished in 0.0s
 """
 expected_stderr = """
 🔍 Found 2 config files
