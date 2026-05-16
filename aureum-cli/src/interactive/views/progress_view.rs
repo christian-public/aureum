@@ -1,6 +1,7 @@
 use crate::counts::{ConfigStats, PlannedCounts, TestCounts};
 use crate::interactive::keys;
 use crate::interactive::theme;
+use crate::interactive::utils::frame;
 use crate::interactive::utils::widgets;
 use crate::utils::time;
 use aureum::{PlannedTestCase, RunResult, RunResultKind, run_test_cases};
@@ -38,22 +39,7 @@ pub(crate) fn record_final_progress_frame<W: Write>(
         .draw(|frame| render_progress(frame, planned_counts, counts, elapsed, false))
         .map_err(io::Error::other)?;
 
-    let buffer = terminal.backend().buffer().clone();
-    let content = buffer.content();
-    let w = width as usize;
-    let mut lines = Vec::with_capacity(height as usize);
-    for y in 0..height as usize {
-        let mut line = String::with_capacity(w);
-        for x in 0..w {
-            line.push_str(content[y * w + x].symbol());
-        }
-        lines.push(line.trim_end().to_string());
-    }
-
-    if separator {
-        writeln!(writer, "---")?;
-    }
-    writeln!(writer, "{}", lines.join("\n"))
+    frame::write_frame(terminal.backend(), width, height, writer, separator)
 }
 
 /// Returns `Some(results)` when all tests complete, or `None` if the user pressed q.

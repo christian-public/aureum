@@ -4,10 +4,12 @@ mod field;
 mod keys;
 mod review_loop;
 mod theme;
+mod tty;
 mod utils;
 mod views;
 
 use crate::counts::{ConfigStats, PlannedCounts, TestCounts};
+use crate::interactive::tty::{LiveTty, RecordTty};
 use crate::interactive::views::progress_view;
 use crate::interactive::views::watch_view::{self, IdleOutcome, WatchIdleContext};
 use crate::utils::time;
@@ -16,11 +18,11 @@ use accept::update_test_expectations;
 use aureum::{self, PlannedTestCase, RunResult};
 use chrono::Local;
 use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
-use field::{FieldDecision, FieldDecisions};
+use field::{FieldDecision, FieldDecisions, OUTPUT_FIELDS};
 use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
 use review_loop::FailedTest;
-use review_loop::{HeadlessDriver, LiveDriver, ReviewOutcome};
+use review_loop::ReviewOutcome;
 use std::io::{self, BufRead, Write};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::Receiver;
@@ -58,32 +60,19 @@ where
     )?;
 
     let failed = build_failed_tests(run_results);
-
-    let total = failed.len();
-    if total == 0 {
+    if failed.is_empty() {
         return Ok(());
     }
 
     let counts = TestCounts::from_results(run_results, config_stats);
-
-    let mut past_decisions: Vec<Option<FieldDecisions>> = vec![None; total];
-    let mut driver = HeadlessDriver {
-        width,
-        height,
-        reader,
-        writer,
-        emit_separator: true,
-        watch_mode: false,
-    };
-    review_loop::run_review_loop(&failed, &mut past_decisions, counts, &mut driver)?;
-    // Non-watch session: BackToWatch never occurs; past_decisions already populated.
+    let mut past_decisions: Vec<Option<FieldDecisions>> = vec![None; failed.len()];
+    {
+        let mut record_tty = RecordTty::new(width, height, reader, writer, true)?;
+        review_loop::run_review_loop(&failed, &mut past_decisions, counts, &mut record_tty, false)?;
+    }
 
     let mut wrote_header = false;
-    for (idx, dec_opt) in past_decisions.iter().enumerate() {
-        let Some(decisions) = dec_opt else { continue };
-        if !decisions.any_accepted() {
-            continue;
-        }
+    for (idx, decisions) in accepted_from_past(&past_decisions) {
         let failed_test = &failed[idx];
         let Ok(test_outcome) = failed_test.result else {
             continue;
@@ -92,12 +81,12 @@ where
             writeln!(writer)?;
             wrote_header = true;
         }
-        update_test_expectations(failed_test.test_case, test_outcome, current_dir, decisions)?;
+        update_test_expectations(failed_test.test_case, test_outcome, current_dir, &decisions)?;
         writeln!(
             writer,
             "Updated {} ({})",
             failed_test.test_case.display_id(),
-            accepted_field_names(decisions)
+            accepted_field_names(&decisions)
         )?;
     }
 
@@ -108,7 +97,6 @@ where
 /// headlessly, and loops on file-change commands from `reader`. The special key name
 /// `"file-change"` simulates a watcher event; all other key names are forwarded to the
 /// idle or review views. Frames are written to `writer` separated by `---`.
-#[allow(clippy::too_many_arguments)]
 pub fn run_interactive_updates_with_watch<R, W>(
     load_test_cases: &dyn Fn() -> (Vec<PlannedTestCase>, ConfigStats),
     parallel: bool,
@@ -159,62 +147,31 @@ where
                 IdleOutcome::Rerun => continue 'rerun,
                 IdleOutcome::Quit => return Ok(run_results),
                 IdleOutcome::Review => {
-                    let counts = TestCounts::from_results(&run_results, config_stats);
-                    let failed_pairs = build_failed_tests(&run_results);
-
-                    if failed_pairs.is_empty() {
+                    let failed = build_failed_tests(&run_results);
+                    if failed.is_empty() {
                         continue;
                     }
-
-                    let mut past_decisions = vec![None; failed_pairs.len()];
-                    let mut driver = HeadlessDriver {
-                        width,
-                        height,
-                        reader,
-                        writer,
-                        emit_separator,
-                        watch_mode: true,
+                    let counts = TestCounts::from_results(&run_results, config_stats);
+                    let mut past_decisions = vec![None; failed.len()];
+                    let review_outcome = {
+                        let mut record_tty = RecordTty::new(width, height, reader, writer, true)?;
+                        review_loop::run_review_loop(
+                            &failed,
+                            &mut past_decisions,
+                            counts,
+                            &mut record_tty,
+                            true,
+                        )?
                     };
 
-                    let outcome = review_loop::run_review_loop(
-                        &failed_pairs,
-                        &mut past_decisions,
-                        counts,
-                        &mut driver,
-                    )?;
-                    emit_separator = driver.emit_separator;
-
-                    let decisions: Vec<(usize, FieldDecisions)> = match outcome {
-                        ReviewOutcome::Quit => return Ok(run_results),
-                        ReviewOutcome::BackToWatch(d) => d
-                            .into_iter()
-                            .filter(|(_, dec)| dec.any_accepted())
-                            .collect(),
-                        ReviewOutcome::Done => past_decisions
-                            .iter()
-                            .enumerate()
-                            .filter_map(|(i, dec_opt)| {
-                                let dec = (*dec_opt)?;
-                                if !dec.any_accepted() {
-                                    return None;
-                                }
-                                Some((i, dec))
-                            })
-                            .collect(),
-                    };
-
-                    for (failed_idx, decisions) in &decisions {
-                        let failed_test = &failed_pairs[*failed_idx];
-                        let Ok(test_outcome) = failed_test.result else {
-                            continue;
-                        };
-                        update_test_expectations(
-                            failed_test.test_case,
-                            test_outcome,
-                            current_dir,
-                            decisions,
-                        )?;
+                    if let ReviewOutcome::Quit = review_outcome {
+                        return Ok(run_results);
                     }
+                    apply_decisions(
+                        &failed,
+                        &accepted_from_outcome(review_outcome, &past_decisions),
+                        current_dir,
+                    )?;
                 }
             }
         }
@@ -231,12 +188,7 @@ pub fn run_with_progress_review_and_watch<'a>(
     stable_duration: Option<Duration>,
 ) -> io::Result<Vec<RunResult>> {
     let watch_handle = watch::start_watcher_for_paths(watch_paths)?;
-
-    crossterm::terminal::enable_raw_mode()?;
-    let mut stdout = io::stdout();
-    crossterm::execute!(stdout, EnterAlternateScreen)?;
-    let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend).map_err(io::Error::other)?;
+    let mut terminal = enter_alternate_screen()?;
 
     let result = run_watch_interactive_loop(
         &mut terminal,
@@ -247,122 +199,8 @@ pub fn run_with_progress_review_and_watch<'a>(
         stable_duration,
     );
 
-    let _ = crossterm::terminal::disable_raw_mode();
-    let _ = crossterm::execute!(terminal.backend_mut(), LeaveAlternateScreen);
-
-    let run_results = result?.unwrap_or_default();
-    Ok(run_results)
-}
-
-fn run_watch_interactive_loop(
-    terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
-    load_test_cases: &dyn Fn() -> (Vec<PlannedTestCase>, ConfigStats),
-    parallel: bool,
-    current_dir: &Path,
-    change_rx: &Receiver<usize>,
-    stable_duration: Option<Duration>,
-) -> io::Result<Option<Vec<RunResult>>> {
-    'rerun: loop {
-        let (test_cases, config_stats) = load_test_cases();
-        let run_start = Instant::now();
-        // Run tests with live progress view.
-        let Some(last_results) = progress_view::run_tests_with_progress(
-            terminal,
-            &test_cases,
-            parallel,
-            current_dir,
-            config_stats,
-            stable_duration,
-        )?
-        else {
-            return Ok(None); // user pressed q during progress
-        };
-        let finished_at = Local::now().format("%H:%M:%S").to_string();
-        let duration = time::format_duration(run_start.elapsed());
-
-        // Idle/watching loop — re-enters after review until a file change triggers a re-run.
-        loop {
-            let idle_ctx = WatchIdleContext {
-                run_results: &last_results,
-                finished_at: &finished_at,
-                duration: &duration,
-                config_stats,
-            };
-            match watch_view::run_watch_idle(terminal, &idle_ctx, change_rx)? {
-                IdleOutcome::Rerun => continue 'rerun,
-                IdleOutcome::Quit => return Ok(Some(last_results)),
-                IdleOutcome::Review => {
-                    // Enter review loop (watch mode = true so Esc returns here).
-                    let failed_pairs = build_failed_tests(&last_results);
-                    let counts = TestCounts::from_results(&last_results, config_stats);
-                    let Some(accepted) = run_watch_review(terminal, &failed_pairs, counts)? else {
-                        return Ok(Some(last_results)); // user pressed q
-                    };
-                    for (failed_idx, decisions) in &accepted {
-                        let failed_test = &failed_pairs[*failed_idx];
-                        let Ok(test_outcome) = failed_test.result else {
-                            continue;
-                        };
-                        update_test_expectations(
-                            failed_test.test_case,
-                            test_outcome,
-                            current_dir,
-                            decisions,
-                        )?;
-                    }
-                    // Back to idle screen after review.
-                }
-            }
-        }
-    }
-}
-
-/// Runs a watch-mode review session. Returns `Some(accepted_decisions)` when the user
-/// finishes or presses Esc (back to watch), or `None` if the user pressed `q`.
-/// Decisions are returned but NOT written to disk — the caller applies them.
-fn run_watch_review<'a>(
-    terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
-    failed_pairs: &'a [FailedTest<'a>],
-    counts: TestCounts,
-) -> io::Result<Option<Vec<(usize, FieldDecisions)>>> {
-    if failed_pairs.is_empty() {
-        return Ok(Some(vec![]));
-    }
-
-    let mut past_decisions: Vec<Option<FieldDecisions>> = vec![None; failed_pairs.len()];
-    let mut driver = LiveDriver {
-        terminal,
-        watch_mode: true,
-    };
-
-    let outcome =
-        review_loop::run_review_loop(failed_pairs, &mut past_decisions, counts, &mut driver)?;
-
-    let filter_accepted = |pairs: Vec<(usize, FieldDecisions)>| -> Vec<(usize, FieldDecisions)> {
-        pairs
-            .into_iter()
-            .filter(|(_, dec)| dec.any_accepted())
-            .collect()
-    };
-
-    match outcome {
-        ReviewOutcome::Quit => Ok(None),
-        ReviewOutcome::BackToWatch(d) => Ok(Some(filter_accepted(d))),
-        ReviewOutcome::Done => {
-            let collected: Vec<(usize, FieldDecisions)> = past_decisions
-                .iter()
-                .enumerate()
-                .filter_map(|(i, dec_opt)| {
-                    let dec = (*dec_opt)?;
-                    if !dec.any_accepted() {
-                        return None;
-                    }
-                    Some((i, dec))
-                })
-                .collect();
-            Ok(Some(collected))
-        }
-    }
+    leave_alternate_screen(&mut terminal);
+    Ok(result?.unwrap_or_default())
 }
 
 /// Full interactive session for a real terminal: shows live test progress, then lets the user
@@ -374,11 +212,7 @@ pub fn run_with_progress_and_review(
     config_stats: ConfigStats,
     stable_duration: Option<Duration>,
 ) -> io::Result<Vec<RunResult>> {
-    crossterm::terminal::enable_raw_mode()?;
-    let mut stdout = io::stdout();
-    crossterm::execute!(stdout, EnterAlternateScreen)?;
-    let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend).map_err(io::Error::other)?;
+    let mut terminal = enter_alternate_screen()?;
 
     let result = run_tui_session(
         &mut terminal,
@@ -389,16 +223,16 @@ pub fn run_with_progress_and_review(
         stable_duration,
     );
 
-    let _ = crossterm::terminal::disable_raw_mode();
-    let _ = crossterm::execute!(terminal.backend_mut(), LeaveAlternateScreen);
+    leave_alternate_screen(&mut terminal);
 
     let Some(run_results) = result? else {
         // User quit during progress; background test thread detached.
         std::process::exit(1);
     };
-
     Ok(run_results)
 }
+
+// ── Internals ────────────────────────────────────────────────────────────────
 
 fn run_tui_session(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
@@ -420,30 +254,98 @@ fn run_tui_session(
         return Ok(None); // user quit; background thread detached
     };
 
+    let failed = build_failed_tests(&run_results);
     let counts = TestCounts::from_results(&run_results, config_stats);
-    let failed_pairs = build_failed_tests(&run_results);
-
-    let mut past_decisions: Vec<Option<FieldDecisions>> = vec![None; failed_pairs.len()];
-    let mut driver = LiveDriver {
-        terminal,
-        watch_mode: false,
-    };
-    review_loop::run_review_loop(&failed_pairs, &mut past_decisions, counts, &mut driver)?;
-    // Non-watch session: BackToWatch/Quit both just proceed to apply decisions.
-
-    for (i, dec_opt) in past_decisions.iter().enumerate() {
-        let Some(decisions) = dec_opt else { continue };
-        if !decisions.any_accepted() {
-            continue;
-        }
-        let failed_test = &failed_pairs[i];
-        let Ok(test_outcome) = failed_test.result else {
-            continue;
-        };
-        update_test_expectations(failed_test.test_case, test_outcome, current_dir, decisions)?;
+    let mut past_decisions: Vec<Option<FieldDecisions>> = vec![None; failed.len()];
+    {
+        let mut live_tty = LiveTty { terminal };
+        review_loop::run_review_loop(&failed, &mut past_decisions, counts, &mut live_tty, false)?;
     }
+    // Non-watch session: BackToWatch/Quit both just proceed to apply decisions.
+    apply_decisions(&failed, &accepted_from_past(&past_decisions), current_dir)?;
 
     Ok(Some(run_results))
+}
+
+fn run_watch_interactive_loop(
+    terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
+    load_test_cases: &dyn Fn() -> (Vec<PlannedTestCase>, ConfigStats),
+    parallel: bool,
+    current_dir: &Path,
+    change_rx: &Receiver<usize>,
+    stable_duration: Option<Duration>,
+) -> io::Result<Option<Vec<RunResult>>> {
+    'rerun: loop {
+        let (test_cases, config_stats) = load_test_cases();
+        let run_start = Instant::now();
+        let Some(last_results) = progress_view::run_tests_with_progress(
+            terminal,
+            &test_cases,
+            parallel,
+            current_dir,
+            config_stats,
+            stable_duration,
+        )?
+        else {
+            return Ok(None); // user pressed q during progress
+        };
+        let finished_at = Local::now().format("%H:%M:%S").to_string();
+        let duration = time::format_duration(run_start.elapsed());
+
+        loop {
+            let idle_ctx = WatchIdleContext {
+                run_results: &last_results,
+                finished_at: &finished_at,
+                duration: &duration,
+                config_stats,
+            };
+            match watch_view::run_watch_idle(terminal, &idle_ctx, change_rx)? {
+                IdleOutcome::Rerun => continue 'rerun,
+                IdleOutcome::Quit => return Ok(Some(last_results)),
+                IdleOutcome::Review => {
+                    let failed = build_failed_tests(&last_results);
+                    if failed.is_empty() {
+                        continue;
+                    }
+                    let counts = TestCounts::from_results(&last_results, config_stats);
+                    let mut past_decisions = vec![None; failed.len()];
+                    let review_outcome = {
+                        let mut live_tty = LiveTty { terminal };
+                        review_loop::run_review_loop(
+                            &failed,
+                            &mut past_decisions,
+                            counts,
+                            &mut live_tty,
+                            true,
+                        )?
+                    };
+
+                    if let ReviewOutcome::Quit = review_outcome {
+                        return Ok(Some(last_results));
+                    }
+                    apply_decisions(
+                        &failed,
+                        &accepted_from_outcome(review_outcome, &past_decisions),
+                        current_dir,
+                    )?;
+                    // Back to idle screen after review.
+                }
+            }
+        }
+    }
+}
+
+fn enter_alternate_screen() -> io::Result<Terminal<CrosstermBackend<io::Stdout>>> {
+    crossterm::terminal::enable_raw_mode()?;
+    let mut stdout = io::stdout();
+    crossterm::execute!(stdout, EnterAlternateScreen)?;
+    let backend = CrosstermBackend::new(stdout);
+    Terminal::new(backend).map_err(io::Error::other)
+}
+
+fn leave_alternate_screen(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) {
+    let _ = crossterm::terminal::disable_raw_mode();
+    let _ = crossterm::execute!(terminal.backend_mut(), LeaveAlternateScreen);
 }
 
 fn build_failed_tests(run_results: &[RunResult]) -> Vec<FailedTest<'_>> {
@@ -458,18 +360,55 @@ fn build_failed_tests(run_results: &[RunResult]) -> Vec<FailedTest<'_>> {
         .collect()
 }
 
+/// Returns `(index, decisions)` pairs where the per-test decision has at least one accepted
+/// field. Used by both non-watch flows (which apply decisions regardless of how review
+/// ended) and the `Done` branch of watch flows.
+fn accepted_from_past(past_decisions: &[Option<FieldDecisions>]) -> Vec<(usize, FieldDecisions)> {
+    past_decisions
+        .iter()
+        .enumerate()
+        .filter_map(|(i, dec_opt)| dec_opt.filter(|d| d.any_accepted()).map(|d| (i, d)))
+        .collect()
+}
+
+/// Picks the accepted decisions from a `ReviewOutcome`. For `Done`, scans `past_decisions`;
+/// for `BackToWatch`, uses the carried list; for `Quit`, returns an empty vec.
+fn accepted_from_outcome(
+    outcome: ReviewOutcome,
+    past_decisions: &[Option<FieldDecisions>],
+) -> Vec<(usize, FieldDecisions)> {
+    match outcome {
+        ReviewOutcome::Quit => Vec::new(),
+        ReviewOutcome::BackToWatch(pairs) => pairs
+            .into_iter()
+            .filter(|(_, dec)| dec.any_accepted())
+            .collect(),
+        ReviewOutcome::Done => accepted_from_past(past_decisions),
+    }
+}
+
+fn apply_decisions(
+    failed: &[FailedTest<'_>],
+    decisions: &[(usize, FieldDecisions)],
+    current_dir: &Path,
+) -> io::Result<()> {
+    for (idx, dec) in decisions {
+        let failed_test = &failed[*idx];
+        let Ok(test_outcome) = failed_test.result else {
+            continue;
+        };
+        update_test_expectations(failed_test.test_case, test_outcome, current_dir, dec)?;
+    }
+    Ok(())
+}
+
 fn accepted_field_names(decisions: &FieldDecisions) -> String {
-    let mut names = Vec::new();
-    if decisions.stdout == FieldDecision::Accepted {
-        names.push("stdout");
-    }
-    if decisions.stderr == FieldDecision::Accepted {
-        names.push("stderr");
-    }
-    if decisions.exit_code == FieldDecision::Accepted {
-        names.push("exit_code");
-    }
-    names.join(", ")
+    OUTPUT_FIELDS
+        .iter()
+        .filter(|&&f| decisions.get(f) == FieldDecision::Accepted)
+        .map(|&f| f.name())
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 #[cfg(test)]

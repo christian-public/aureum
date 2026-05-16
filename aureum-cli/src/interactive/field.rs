@@ -34,6 +34,15 @@ impl Field {
             Field::ExitCode => Some(Field::Stderr),
         }
     }
+
+    pub(super) fn name(self) -> &'static str {
+        match self {
+            Field::Stdin => "stdin",
+            Field::Stdout => "stdout",
+            Field::Stderr => "stderr",
+            Field::ExitCode => "exit_code",
+        }
+    }
 }
 
 /// The three output fields in decisions order (stdout, stderr, exit_code).

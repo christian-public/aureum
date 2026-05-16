@@ -22,45 +22,34 @@ pub(crate) fn update_test_expectations(
         .parse()
         .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("{e}")))?;
 
-    let mut doc_modified = false;
-
-    if decisions.stdout == FieldDecision::Accepted
-        && let FieldOutcome::Diff { got, .. } = &test_outcome.stdout
-        && apply_field_update(
-            &mut doc,
-            &test_case.id.subtest_path,
+    let updates: [(&str, Option<FieldValue<'_>>); 3] = [
+        (
             "expected_stdout",
-            &FieldValue::Str(got),
-            &config_dir_path,
-        )?
-    {
-        doc_modified = true;
-    }
-
-    if decisions.stderr == FieldDecision::Accepted
-        && let FieldOutcome::Diff { got, .. } = &test_outcome.stderr
-        && apply_field_update(
-            &mut doc,
-            &test_case.id.subtest_path,
+            accepted_str(decisions.stdout, &test_outcome.stdout),
+        ),
+        (
             "expected_stderr",
-            &FieldValue::Str(got),
-            &config_dir_path,
-        )?
-    {
-        doc_modified = true;
-    }
-
-    if decisions.exit_code == FieldDecision::Accepted
-        && let FieldOutcome::Diff { got, .. } = &test_outcome.exit_code
-        && apply_field_update(
-            &mut doc,
-            &test_case.id.subtest_path,
+            accepted_str(decisions.stderr, &test_outcome.stderr),
+        ),
+        (
             "expected_exit_code",
-            &FieldValue::Int(*got as i64),
-            &config_dir_path,
-        )?
-    {
-        doc_modified = true;
+            accepted_int(decisions.exit_code, &test_outcome.exit_code),
+        ),
+    ];
+
+    let mut doc_modified = false;
+    for (field, value) in updates {
+        if let Some(value) = value
+            && apply_field_update(
+                &mut doc,
+                &test_case.id.subtest_path,
+                field,
+                &value,
+                &config_dir_path,
+            )?
+        {
+            doc_modified = true;
+        }
     }
 
     if doc_modified {
@@ -68,6 +57,25 @@ pub(crate) fn update_test_expectations(
     }
 
     Ok(())
+}
+
+/// Returns the diff's `got` wrapped in `FieldValue::Str` when the decision is `Accepted`
+/// and the outcome carries a diff.
+fn accepted_str(decision: FieldDecision, outcome: &FieldOutcome<String>) -> Option<FieldValue<'_>> {
+    match (decision, outcome) {
+        (FieldDecision::Accepted, FieldOutcome::Diff { got, .. }) => Some(FieldValue::Str(got)),
+        _ => None,
+    }
+}
+
+/// Like [`accepted_str`] but for `i32`-valued fields (exit code).
+fn accepted_int(decision: FieldDecision, outcome: &FieldOutcome<i32>) -> Option<FieldValue<'_>> {
+    match (decision, outcome) {
+        (FieldDecision::Accepted, FieldOutcome::Diff { got, .. }) => {
+            Some(FieldValue::Int(*got as i64))
+        }
+        _ => None,
+    }
 }
 
 enum FieldValue<'a> {

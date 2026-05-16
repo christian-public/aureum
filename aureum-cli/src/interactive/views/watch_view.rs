@@ -1,8 +1,8 @@
 use crate::counts::{ConfigStats, TestCounts};
 use crate::interactive::keys;
 use crate::interactive::theme;
+use crate::interactive::utils::frame;
 use crate::interactive::utils::widgets;
-use crate::interactive::views::diff_view;
 use aureum::RunResult;
 use crossterm::event::{Event, KeyCode, KeyEventKind};
 use ratatui::backend::{CrosstermBackend, TestBackend};
@@ -295,7 +295,7 @@ pub(crate) fn record_watch_idle<R: BufRead, W: Write>(
     terminal
         .draw(|frame| render_idle(frame, counts, finished_at, duration))
         .map_err(io::Error::other)?;
-    diff_view::write_frame(terminal.backend(), width, height, writer, emit_separator)?;
+    frame::write_frame(terminal.backend(), width, height, writer, emit_separator)?;
 
     let mut line = String::new();
     loop {
@@ -310,7 +310,7 @@ pub(crate) fn record_watch_idle<R: BufRead, W: Write>(
         if key_name == "file-change" {
             return Ok(IdleOutcome::Rerun);
         }
-        if let Some(key) = diff_view::parse_key_name(key_name) {
+        if let Some(key) = frame::parse_key_name(key_name) {
             match key {
                 KeyCode::Char('r') if failed > 0 => return Ok(IdleOutcome::Review),
                 KeyCode::Char('t') => return Ok(IdleOutcome::Rerun),
@@ -320,7 +320,7 @@ pub(crate) fn record_watch_idle<R: BufRead, W: Write>(
             terminal
                 .draw(|frame| render_idle(frame, counts, finished_at, duration))
                 .map_err(io::Error::other)?;
-            diff_view::write_frame(terminal.backend(), width, height, writer, true)?;
+            frame::write_frame(terminal.backend(), width, height, writer, true)?;
         }
     }
 }

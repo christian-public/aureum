@@ -1,19 +1,18 @@
 use crate::interactive::review_loop::FailedTest;
-use crossterm::event::{Event, KeyCode, KeyEventKind};
-use ratatui::backend::{CrosstermBackend, TestBackend};
+use crossterm::event::KeyCode;
+use ratatui::Frame;
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Borders, Paragraph};
-use ratatui::{Frame, Terminal};
-use std::io::{self, BufRead, Write};
+use std::io;
 
 use crate::counts::TestCounts;
 use crate::interactive::action::ListAction;
 use crate::interactive::field::{FailingFields, FieldDecision, FieldDecisions, OUTPUT_FIELDS};
 use crate::interactive::theme;
+use crate::interactive::tty::Tty;
 use crate::interactive::utils::widgets;
-use crate::interactive::views::diff_view;
 
 pub(crate) struct ListViewContext<'a> {
     pub failed: &'a [FailedTest<'a>],
@@ -194,115 +193,21 @@ fn list_scroll(selection: usize, scroll: usize, content_height: usize) -> usize 
     }
 }
 
-// ── ListIo trait: abstracts I/O so the event loop is shared ─────────────────
+/// chrome: 2 (outer border top+bottom) + 1 (stats) + 1 (divider) + 2 (footer) = 6
+const LIST_CHROME_HEIGHT: u16 = 6;
 
-trait ListIo {
-    fn render(
-        &mut self,
-        ctx: &ListViewContext<'_>,
-        selection: usize,
-        scroll: usize,
-    ) -> io::Result<()>;
-    /// Returns the next key to process, or `None` on EOF.
-    fn next_key(&mut self) -> io::Result<Option<KeyCode>>;
-    /// chrome: 2 (outer border top+bottom) + 1 (stats) + 1 (divider) + 2 (footer) = 6
-    fn content_height(&mut self) -> io::Result<usize>;
+fn content_height(tty: &dyn Tty) -> io::Result<usize> {
+    Ok((tty.area()?.height as usize)
+        .saturating_sub(LIST_CHROME_HEIGHT as usize)
+        .max(1))
 }
 
-// Live terminal implementation
+// ── Public entry point ───────────────────────────────────────────────────────
 
-struct LiveListIo<'a> {
-    terminal: &'a mut Terminal<CrosstermBackend<io::Stdout>>,
-}
-
-impl ListIo for LiveListIo<'_> {
-    fn render(
-        &mut self,
-        ctx: &ListViewContext<'_>,
-        selection: usize,
-        scroll: usize,
-    ) -> io::Result<()> {
-        self.terminal
-            .draw(|frame| render_list(frame, ctx, selection, scroll))
-            .map_err(io::Error::other)?;
-        Ok(())
-    }
-
-    fn next_key(&mut self) -> io::Result<Option<KeyCode>> {
-        loop {
-            if let Event::Key(key) = crossterm::event::read()?
-                && key.kind == KeyEventKind::Press
-            {
-                return Ok(Some(key.code));
-            }
-        }
-    }
-
-    fn content_height(&mut self) -> io::Result<usize> {
-        Ok(
-            (self.terminal.size().map_err(io::Error::other)?.height as usize)
-                .saturating_sub(6)
-                .max(1),
-        )
-    }
-}
-
-// Headless TestBackend implementation for --record
-
-struct HeadlessListIo<'a, R: BufRead, W: Write> {
-    terminal: Terminal<TestBackend>,
-    reader: &'a mut R,
-    writer: &'a mut W,
-    width: u16,
-    height: u16,
-}
-
-impl<R: BufRead, W: Write> ListIo for HeadlessListIo<'_, R, W> {
-    fn render(
-        &mut self,
-        ctx: &ListViewContext<'_>,
-        selection: usize,
-        scroll: usize,
-    ) -> io::Result<()> {
-        self.terminal
-            .draw(|frame| render_list(frame, ctx, selection, scroll))
-            .map_err(io::Error::other)?;
-        // Always preceded by a separator since we came from a diff view.
-        diff_view::write_frame(
-            self.terminal.backend(),
-            self.width,
-            self.height,
-            self.writer,
-            true,
-        )
-    }
-
-    fn next_key(&mut self) -> io::Result<Option<KeyCode>> {
-        let mut line = String::new();
-        loop {
-            line.clear();
-            if self.reader.read_line(&mut line)? == 0 {
-                return Ok(None);
-            }
-            let key_name = line.trim();
-            if key_name.is_empty() {
-                continue;
-            }
-            if let Some(key) = diff_view::parse_key_name(key_name) {
-                return Ok(Some(key));
-            }
-        }
-    }
-
-    fn content_height(&mut self) -> io::Result<usize> {
-        Ok((self.height as usize).saturating_sub(6).max(1))
-    }
-}
-
-// ── Unified event loop ───────────────────────────────────────────────────────
-
-fn run_list_view(
-    io: &mut impl ListIo,
+/// Renders the failing-tests list view and runs its event loop until the user picks a test
+/// (Enter), cancels (Esc), or quits (q).
+pub(crate) fn run_list_view(
+    tty: &mut dyn Tty,
     ctx: &ListViewContext<'_>,
     initial_selection: usize,
 ) -> io::Result<ListAction> {
@@ -312,55 +217,22 @@ fn run_list_view(
     let mut selection = initial_selection.min(ctx.failed.len() - 1);
     let mut scroll = 0usize;
 
-    scroll = list_scroll(selection, scroll, io.content_height()?);
-    io.render(ctx, selection, scroll)?;
+    scroll = list_scroll(selection, scroll, content_height(tty)?);
+    tty.draw(&mut |frame| render_list(frame, ctx, selection, scroll))?;
 
     loop {
-        let Some(key) = io.next_key()? else {
+        let Some(key) = tty.next_key()? else {
             return Ok(ListAction::Quit);
         };
-        if let ListKeyResult::Exit(action) =
-            apply_list_key(key, &mut selection, ctx.failed.len(), initial_selection)
-        {
+        if let ListKeyResult::Exit(action) = apply_list_key(
+            key.code,
+            &mut selection,
+            ctx.failed.len(),
+            initial_selection,
+        ) {
             return Ok(action);
         }
-        scroll = list_scroll(selection, scroll, io.content_height()?);
-        io.render(ctx, selection, scroll)?;
+        scroll = list_scroll(selection, scroll, content_height(tty)?);
+        tty.draw(&mut |frame| render_list(frame, ctx, selection, scroll))?;
     }
-}
-
-// ── Public API ───────────────────────────────────────────────────────────────
-
-/// Interactive list view for a real terminal.
-pub(crate) fn run_list_loop(
-    terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
-    ctx: &ListViewContext<'_>,
-    initial_selection: usize,
-) -> io::Result<ListAction> {
-    run_list_view(&mut LiveListIo { terminal }, ctx, initial_selection)
-}
-
-/// Headless list view for `--record` mode. Reads key names from `reader`, emits frames
-/// to `writer` separated by `---`. Always writes a separator before the first frame.
-pub(crate) fn record_list_view<R: BufRead, W: Write>(
-    ctx: &ListViewContext<'_>,
-    width: u16,
-    height: u16,
-    reader: &mut R,
-    writer: &mut W,
-    initial_selection: usize,
-) -> io::Result<ListAction> {
-    let backend = TestBackend::new(width, height);
-    let terminal = Terminal::new(backend).map_err(io::Error::other)?;
-    run_list_view(
-        &mut HeadlessListIo {
-            terminal,
-            reader,
-            writer,
-            width,
-            height,
-        },
-        ctx,
-        initial_selection,
-    )
 }

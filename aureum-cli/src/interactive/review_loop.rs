@@ -1,19 +1,18 @@
 use aureum::{RunError, TestCase, TestOutcome};
-use ratatui::Terminal;
-use ratatui::backend::CrosstermBackend;
-use std::io::{self, BufRead, Write};
+use std::io;
+
+use crate::counts::TestCounts;
+use crate::interactive::action::{Action, ListAction};
+use crate::interactive::field::FieldDecisions;
+use crate::interactive::tty::Tty;
+use crate::interactive::views::diff_view::{self, DiffViewContext};
+use crate::interactive::views::error_view::{self, ErrorViewContext};
+use crate::interactive::views::list_view::{self, ListViewContext};
 
 pub(crate) struct FailedTest<'a> {
     pub test_case: &'a TestCase,
     pub result: &'a Result<TestOutcome, RunError>,
 }
-
-use crate::counts::TestCounts;
-use crate::interactive::action::{Action, ListAction};
-use crate::interactive::field::FieldDecisions;
-use crate::interactive::views::diff_view::{self, DiffViewContext};
-use crate::interactive::views::error_view::{self, ErrorViewContext};
-use crate::interactive::views::list_view::{self, ListViewContext};
 
 /// Outcome returned by `run_review_loop`.
 pub(super) enum ReviewOutcome {
@@ -26,30 +25,15 @@ pub(super) enum ReviewOutcome {
     BackToWatch(Vec<(usize, FieldDecisions)>),
 }
 
-/// Abstracts the view functions so the navigation loop is shared between headless-record
-/// and live-terminal modes.
-pub(super) trait ReviewDriver {
-    fn show_diff(
-        &mut self,
-        ctx: &DiffViewContext<'_>,
-        initial_decisions: Option<FieldDecisions>,
-    ) -> io::Result<Action>;
-
-    fn show_error(&mut self, ctx: &ErrorViewContext<'_>) -> io::Result<Action>;
-
-    fn show_list(&mut self, ctx: &ListViewContext<'_>, selection: usize) -> io::Result<ListAction>;
-
-    fn watch_mode(&self) -> bool;
-}
-
-/// Core navigation loop shared by headless-record and live-terminal review sessions.
-/// Steps through `failed` tests, calling `driver` for each diff/error and list view, and records
-/// per-test decisions in `past_decisions`.
+/// Core navigation loop. Steps through `failed` tests, showing each one's diff or error view
+/// via `io`, optionally jumping to a list view, and records per-test decisions in
+/// `past_decisions`. `watch_mode` enables Esc → back-to-watch on the inner views.
 pub(super) fn run_review_loop(
     failed: &[FailedTest<'_>],
     past_decisions: &mut Vec<Option<FieldDecisions>>,
     counts: TestCounts,
-    driver: &mut dyn ReviewDriver,
+    tty: &mut dyn Tty,
+    watch_mode: bool,
 ) -> io::Result<ReviewOutcome> {
     let total = failed.len();
     let mut i = 0usize;
@@ -63,9 +47,9 @@ pub(super) fn run_review_loop(
                     test_case: failed_test.test_case,
                     test_outcome,
                     counts,
-                    watch_mode: driver.watch_mode(),
+                    watch_mode,
                 };
-                driver.show_diff(&ctx, past_decisions[i])?
+                diff_view::run_diff_view(tty, &ctx, past_decisions[i])?
             }
             Err(error) => {
                 let ctx = ErrorViewContext {
@@ -74,9 +58,9 @@ pub(super) fn run_review_loop(
                     test_case: failed_test.test_case,
                     error,
                     counts,
-                    watch_mode: driver.watch_mode(),
+                    watch_mode,
                 };
-                driver.show_error(&ctx)?
+                error_view::run_error_view(tty, &ctx)?
             }
         };
         match action {
@@ -95,7 +79,7 @@ pub(super) fn run_review_loop(
                     past_decisions: past_decisions.as_slice(),
                     counts,
                 };
-                match driver.show_list(&list_ctx, i)? {
+                match list_view::run_list_view(tty, &list_ctx, i)? {
                     ListAction::JumpTo(idx) => {
                         i = idx;
                     }
@@ -121,88 +105,4 @@ fn collect_decisions(past_decisions: &[Option<FieldDecisions>]) -> Vec<(usize, F
         .enumerate()
         .filter_map(|(i, d)| d.map(|dec| (i, dec)))
         .collect()
-}
-
-pub(super) struct HeadlessDriver<'a, R: BufRead, W: Write> {
-    pub width: u16,
-    pub height: u16,
-    pub reader: &'a mut R,
-    pub writer: &'a mut W,
-    pub emit_separator: bool,
-    pub watch_mode: bool,
-}
-
-impl<R: BufRead, W: Write> ReviewDriver for HeadlessDriver<'_, R, W> {
-    fn show_diff(
-        &mut self,
-        ctx: &DiffViewContext<'_>,
-        initial_decisions: Option<FieldDecisions>,
-    ) -> io::Result<Action> {
-        let result = diff_view::record_view_diff(
-            ctx,
-            self.width,
-            self.height,
-            self.reader,
-            self.writer,
-            initial_decisions,
-            self.emit_separator,
-        )?;
-        self.emit_separator = true;
-        Ok(result)
-    }
-
-    fn show_error(&mut self, ctx: &ErrorViewContext<'_>) -> io::Result<Action> {
-        let result = error_view::record_error_view(
-            ctx,
-            self.width,
-            self.height,
-            self.reader,
-            self.writer,
-            self.emit_separator,
-        )?;
-        self.emit_separator = true;
-        Ok(result)
-    }
-
-    fn show_list(&mut self, ctx: &ListViewContext<'_>, selection: usize) -> io::Result<ListAction> {
-        list_view::record_list_view(
-            ctx,
-            self.width,
-            self.height,
-            self.reader,
-            self.writer,
-            selection,
-        )
-    }
-
-    fn watch_mode(&self) -> bool {
-        self.watch_mode
-    }
-}
-
-pub(super) struct LiveDriver<'a> {
-    pub terminal: &'a mut Terminal<CrosstermBackend<io::Stdout>>,
-    pub watch_mode: bool,
-}
-
-impl ReviewDriver for LiveDriver<'_> {
-    fn show_diff(
-        &mut self,
-        ctx: &DiffViewContext<'_>,
-        initial_decisions: Option<FieldDecisions>,
-    ) -> io::Result<Action> {
-        diff_view::run_tui_loop(self.terminal, ctx, initial_decisions)
-    }
-
-    fn show_error(&mut self, ctx: &ErrorViewContext<'_>) -> io::Result<Action> {
-        error_view::run_tui_error(self.terminal, ctx)
-    }
-
-    fn show_list(&mut self, ctx: &ListViewContext<'_>, selection: usize) -> io::Result<ListAction> {
-        list_view::run_list_loop(self.terminal, ctx, selection)
-    }
-
-    fn watch_mode(&self) -> bool {
-        self.watch_mode
-    }
 }

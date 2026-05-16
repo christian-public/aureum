@@ -9,10 +9,12 @@ use crate::interactive::field::{
     FailingFields, Field, FieldDecision, FieldDecisions, OUTPUT_FIELDS,
 };
 use crate::interactive::theme;
+use crate::interactive::utils::program_display;
 use crate::interactive::utils::widgets;
 use crate::interactive::views::diff_content;
-use crate::interactive::views::diff_view::{self, DiffViewContext, EnterOutcome, Tab, TuiState};
-use crate::utils::shell;
+use crate::interactive::views::diff_view::{
+    self, Advance, DiffViewContext, EnterOutcome, Tab, TuiState,
+};
 
 // FIELD SELECTOR ROW LAYOUT
 // Update label strings when field names change; widths and FIELD_SEP_COL are derived
@@ -156,7 +158,7 @@ pub(super) fn render_tui(
     frame.render_widget(Paragraph::new(title_line), inner_chunks[2]);
 
     // Program row — program name on the left, Stdin tab on the right (if present)
-    let program = build_program_display(test_case);
+    let program = program_display::build_program_display(test_case);
     let program_line = build_program_line(&program);
     frame.render_widget(Paragraph::new(program_line), inner_chunks[3]);
 
@@ -555,39 +557,11 @@ fn enter_label(
         failing,
         is_last,
     ) {
-        EnterOutcome::NeedsDecision
-        | EnterOutcome::ConfirmNextField
-        | EnterOutcome::ConfirmNextTest
-        | EnterOutcome::ConfirmFinish => "confirm",
-        EnterOutcome::JumpToFirstFailing | EnterOutcome::NextField => "next field",
-        EnterOutcome::NextTest => "next test",
-        EnterOutcome::Finish => "finish",
+        EnterOutcome::NeedsDecision | EnterOutcome::Confirm(_) => "confirm",
+        EnterOutcome::JumpToFirstFailing | EnterOutcome::Advance(Advance::NextField) => {
+            "next field"
+        }
+        EnterOutcome::Advance(Advance::NextTest) => "next test",
+        EnterOutcome::Advance(Advance::Finish) => "finish",
     }
-}
-
-fn build_program_display(test_case: &TestCase) -> String {
-    let path = &test_case.program_path;
-    // On Windows, resolved paths carry a .exe suffix that is implicit at the command line.
-    // Strip it so the displayed command is pasteable on all platforms.
-    let is_exe = path
-        .extension()
-        .is_some_and(|e| e.eq_ignore_ascii_case("exe"));
-    let name = if is_exe {
-        path.file_stem()
-    } else {
-        path.file_name()
-    }
-    .map(|n| shell::shell_quote(&n.to_string_lossy()))
-    .unwrap_or_default();
-    let display = if test_case.arguments.is_empty() {
-        name
-    } else {
-        let args: Vec<String> = test_case
-            .arguments
-            .iter()
-            .map(|a| shell::shell_quote(a))
-            .collect();
-        format!("{name} {}", args.join(" "))
-    };
-    display.replace('\n', "\\n")
 }
