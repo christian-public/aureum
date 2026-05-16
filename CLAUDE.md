@@ -32,6 +32,15 @@ cargo fmt
 cargo clippy --all-targets --all-features -- -D warnings
 ```
 
+### Before reporting work done
+
+After any Rust code change, run all four of these and fix any failures or warnings before reporting the task complete:
+
+1. `cargo fmt`
+2. `cargo test`
+3. `cargo clippy --all-targets --all-features -- -D warnings`
+4. `./test_spec.sh test spec`
+
 ## Architecture
 
 Two-crate Rust workspace (Edition 2024):
@@ -46,6 +55,32 @@ Two-crate Rust workspace (Edition 2024):
 - Prefer using absolute path to modules (i.e. start with `crate::` instead of `super::`). `super::` may still be used in test sections.
 - Import data types at the top (merging them in curly braces if necessary).
 - Do not import specific functions directly. Instead import the namespace and the refer to the last component of the namespace when calling the function.
+- Don't write inline `crate::foo::bar(...)` calls in function bodies. Import the module at the top (`use crate::foo;`) and call via the short name (`foo::bar(...)`).
+
+Module structure:
+
+- `mod.rs` is structural only — module declarations and `pub use` re-exports. No logic.
+- Shared helpers used by submodules go in a dedicated named file (e.g. `commands/common.rs`), not in `mod.rs`. Files are cheap.
+
+### CLI Subcommands
+
+The `aureum` binary exposes these subcommands (see `aureum-cli/src/args.rs`):
+
+- `init` — create a new `.au.toml` from a recorded command invocation
+- `validate` — check that config files parse and pass validation
+- `list` — list tests discovered in config files (supports `--tree`, `--show all|runnable|skipped`)
+- `run` — run the programs from a config file, forwarding their output (`--format passthrough|toml`)
+- `test` — run tests and compare against expectations
+- `format` — rewrite `.au.toml` files in canonical form (`--check` exits non-zero if changes would be made)
+- `version` — print the version
+
+Notable `test` flags:
+
+- `--parallel` — run tests concurrently via rayon
+- `--watch` — re-run tests when config files or referenced files change
+- `--interactive` — review diffs in a TUI and accept new expectations (writes back via `toml_edit`)
+- `--format summary|tap` — choose between human-readable summary or TAP output
+- `--default-timeout SECONDS` — fallback per-test timeout (default 5)
 
 ### Core Data Flow
 
@@ -62,12 +97,15 @@ Two-crate Rust workspace (Edition 2024):
 
 ### Key Types
 
-| Type         | File                        | Purpose                                                                      |
-| ------------ | --------------------------- | ---------------------------------------------------------------------------- |
-| `TestCase`   | `aureum/src/test_case.rs`   | Program + args + stdin + expected outputs                                    |
-| `TestId`     | `aureum/src/test_id.rs`     | Hierarchical dot-notation test identifier                                    |
-| `TestRunner` | `aureum/src/test_runner.rs` | Spawns subprocesses, captures I/O, compares results                          |
-| `TomlConfig` | `aureum/src/toml/config.rs` | Parsed `.au.toml` — supports literals, `{ file = "..." }`, `{ env = "..." }` |
+| Type              | File                              | Purpose                                                                      |
+| ----------------- | --------------------------------- | ---------------------------------------------------------------------------- |
+| `TestCase`        | `aureum/src/test_case.rs`         | Program + args + stdin + expected outputs                                    |
+| `SubtestPath`     | `aureum/src/subtest_path.rs`      | Within-file dot-notation path identifying a subtest                          |
+| `TestId`          | `aureum/src/test_id.rs`           | Globally unique test id (config dir + file name + `SubtestPath`)             |
+| `TestOutcome`     | `aureum/src/test_outcome.rs`      | Per-test result: stdout / stderr / exit_code as `FieldOutcome<T>`            |
+| `FieldOutcome<T>` | `aureum/src/test_outcome.rs`      | `NotChecked(T)` / `Matches(T)` / `Diff { expected, got }`                    |
+| `TestRunner`      | `aureum/src/test_runner.rs`       | Spawns subprocesses, captures I/O, compares results                          |
+| `TomlConfigFile`  | `aureum/src/toml/config.rs`       | Parsed `.au.toml` — supports literals, `{ file = "..." }`, `{ env = "..." }` |
 
 ### Test Configuration Format
 
