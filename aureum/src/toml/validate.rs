@@ -84,6 +84,8 @@ pub enum ValidationError {
     TimeoutMustBeNonNegative,
     #[error("must contain a reason")]
     SkipMustNotBeEmpty,
+    #[error("must not contain newlines")]
+    SkipMustBeSingleLine,
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -215,14 +217,20 @@ fn build_test_case(
     let mut errors = BTreeSet::new();
 
     let skip_reason = config.skip.and_then(|reason| {
-        if !reason.trim().is_empty() {
-            Some(reason)
-        } else {
+        if reason.trim().is_empty() {
             errors.insert(ValidationError::InField {
                 field: "skip".to_owned(),
                 error: Box::new(ValidationError::SkipMustNotBeEmpty),
             });
             None
+        } else if reason.contains('\n') || reason.contains('\r') {
+            errors.insert(ValidationError::InField {
+                field: "skip".to_owned(),
+                error: Box::new(ValidationError::SkipMustBeSingleLine),
+            });
+            None
+        } else {
+            Some(reason)
         }
     });
 

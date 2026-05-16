@@ -189,3 +189,21 @@ expected_stderr = """
 warning: some config files contain errors (see above)
 """
 expected_exit_code = 3
+
+
+[[tests]]
+id = "skip.multi_line_reason"
+program_arguments = ["validate", "helpers/skip_multi_line_reason.toml"]
+
+expected_stdout = """
+✘ helpers/skip_multi_line_reason.toml  1 test
+"""
+expected_stderr = """
+📋 helpers/skip_multi_line_reason.toml
+└── Test
+    └── Validation errors
+        └── ✘ field `skip`: must not contain newlines
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3

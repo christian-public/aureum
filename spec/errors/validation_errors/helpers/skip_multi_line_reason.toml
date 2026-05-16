@@ -1,0 +1,7 @@
+skip = """
+todo
+follow up later
+"""
+program = "echo"
+
+expected_stdout = "hello"
