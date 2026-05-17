@@ -1,6 +1,6 @@
 use crate::SubtestPath;
 use crate::toml::config::{
-    ConfigValue, ConfigValueType, ParseError, TomlConfigError, TomlConfigFile, TomlConfigTest,
+    ConfigValueType, ParseError, TomlConfigError, TomlConfigFile, TomlConfigTest, ValueSource,
 };
 use std::collections::{BTreeMap, HashSet};
 use std::convert::TryFrom;
@@ -251,7 +251,7 @@ fn get_tests_from_array(
 fn get_array_of_strings_from_table(
     table: &toml::Table,
     key: &str,
-) -> Result<Option<Vec<ConfigValue<String>>>, Vec<ParseError>> {
+) -> Result<Option<Vec<ValueSource<String>>>, Vec<ParseError>> {
     let Some(value) = table.get(key) else {
         return Ok(None);
     };
@@ -267,7 +267,7 @@ fn get_array_of_strings_from_table(
     };
 
     let mut errors: Vec<ParseError> = vec![];
-    let mut parsed_values: Vec<ConfigValue<String>> = vec![];
+    let mut parsed_values: Vec<ValueSource<String>> = vec![];
 
     for (index, item) in array.iter().enumerate() {
         let Some(parsed_value) = collect_error(
@@ -297,7 +297,7 @@ fn get_array_of_strings_from_table(
 fn get_string_from_table(
     table: &toml::Table,
     key: &str,
-) -> Result<Option<ConfigValue<String>>, ParseError> {
+) -> Result<Option<ValueSource<String>>, ParseError> {
     let Some(value) = table.get(key) else {
         return Ok(None);
     };
@@ -313,7 +313,7 @@ fn get_string_from_table(
 fn get_integer_from_table(
     table: &toml::Table,
     key: &str,
-) -> Result<Option<ConfigValue<i64>>, ParseError> {
+) -> Result<Option<ValueSource<i64>>, ParseError> {
     let Some(value) = table.get(key) else {
         return Ok(None);
     };
@@ -326,9 +326,9 @@ fn get_integer_from_table(
     Ok(Some(config_value))
 }
 
-fn parse_string_value(value: &toml::Value) -> Result<ConfigValue<String>, ParseError> {
+fn parse_string_value(value: &toml::Value) -> Result<ValueSource<String>, ParseError> {
     match value {
-        toml::Value::String(s) => Ok(ConfigValue::Literal(s.clone())),
+        toml::Value::String(s) => Ok(ValueSource::Literal(s.clone())),
         toml::Value::Table(t) => parse_special_form(t),
         _ => Err(ParseError::InvalidType {
             expected: ConfigValueType::String,
@@ -337,9 +337,9 @@ fn parse_string_value(value: &toml::Value) -> Result<ConfigValue<String>, ParseE
     }
 }
 
-fn parse_integer_value(value: &toml::Value) -> Result<ConfigValue<i64>, ParseError> {
+fn parse_integer_value(value: &toml::Value) -> Result<ValueSource<i64>, ParseError> {
     match value {
-        toml::Value::Integer(i) => Ok(ConfigValue::Literal(*i)),
+        toml::Value::Integer(i) => Ok(ValueSource::Literal(*i)),
         toml::Value::Table(t) => parse_special_form(t),
         _ => Err(ParseError::InvalidType {
             expected: ConfigValueType::Integer,
@@ -350,7 +350,7 @@ fn parse_integer_value(value: &toml::Value) -> Result<ConfigValue<i64>, ParseErr
 
 static ALL_EXCLUSIVE_KEYS: [&str; 2] = ["file", "env"];
 
-fn parse_special_form<T>(table: &toml::Table) -> Result<ConfigValue<T>, ParseError> {
+fn parse_special_form<T>(table: &toml::Table) -> Result<ValueSource<T>, ParseError> {
     let exclusive_keys_in_table_count = ALL_EXCLUSIVE_KEYS
         .iter()
         .copied()
@@ -380,7 +380,7 @@ fn parse_special_form<T>(table: &toml::Table) -> Result<ConfigValue<T>, ParseErr
         match value {
             toml::Value::String(s) => {
                 if unexpected_keys.is_empty() {
-                    return Ok(ConfigValue::ReadFromFile { file: s.to_owned() });
+                    return Ok(ValueSource::ReadFromFile { file: s.to_owned() });
                 }
             }
             _ => {
@@ -396,7 +396,7 @@ fn parse_special_form<T>(table: &toml::Table) -> Result<ConfigValue<T>, ParseErr
         match value {
             toml::Value::String(s) => {
                 if unexpected_keys.is_empty() {
-                    return Ok(ConfigValue::FetchFromEnv { env: s.to_owned() });
+                    return Ok(ValueSource::FetchFromEnv { env: s.to_owned() });
                 }
             }
             _ => {
@@ -559,7 +559,7 @@ mod tests {
         assert!(matches!(
             result,
             Ok(TomlConfigFile { watch_files, .. })
-                if matches!(watch_files.as_slice(), [ConfigValue::Literal(s)] if s == "script.sh")
+                if matches!(watch_files.as_slice(), [ValueSource::Literal(s)] if s == "script.sh")
         ));
     }
 
@@ -574,7 +574,7 @@ mod tests {
         assert!(matches!(
             result,
             Ok(TomlConfigFile { watch_files, .. })
-                if matches!(watch_files.as_slice(), [ConfigValue::FetchFromEnv { env }] if env == "MY_SCRIPT")
+                if matches!(watch_files.as_slice(), [ValueSource::FetchFromEnv { env }] if env == "MY_SCRIPT")
         ));
     }
 
@@ -589,7 +589,7 @@ mod tests {
         assert!(matches!(
             result,
             Ok(TomlConfigFile { watch_files, .. })
-                if matches!(watch_files.as_slice(), [ConfigValue::ReadFromFile { file }] if file == "path_to_script")
+                if matches!(watch_files.as_slice(), [ValueSource::ReadFromFile { file }] if file == "path_to_script")
         ));
     }
 
@@ -612,7 +612,7 @@ mod tests {
         let result = parse_string_value(&value);
         assert!(matches!(
             result,
-            Ok(ConfigValue::Literal(value)) if value == "test",
+            Ok(ValueSource::Literal(value)) if value == "test",
         ));
     }
 
@@ -622,7 +622,7 @@ mod tests {
         let result = parse_string_value(&value);
         assert!(matches!(
             result,
-            Ok(ConfigValue::ReadFromFile { file }) if file == "path_to_file_containing_string",
+            Ok(ValueSource::ReadFromFile { file }) if file == "path_to_file_containing_string",
         ));
     }
 
@@ -647,7 +647,7 @@ mod tests {
         let result = parse_integer_value(&value);
         assert!(matches!(
             result,
-            Ok(ConfigValue::Literal(value)) if value == 42,
+            Ok(ValueSource::Literal(value)) if value == 42,
         ));
     }
 
@@ -657,7 +657,7 @@ mod tests {
         let result = parse_integer_value(&value);
         assert!(matches!(
             result,
-            Ok(ConfigValue::ReadFromFile { file }) if file == "path_to_file_containing_integer",
+            Ok(ValueSource::ReadFromFile { file }) if file == "path_to_file_containing_integer",
         ));
     }
 
@@ -706,7 +706,7 @@ unknown_key = "oops""#
         let result = parse_special_form::<String>(&table);
         assert!(matches!(
             result,
-            Ok(ConfigValue::ReadFromFile { file }) if file == "path_to_file",
+            Ok(ValueSource::ReadFromFile { file }) if file == "path_to_file",
         ));
     }
 
@@ -716,7 +716,7 @@ unknown_key = "oops""#
         let result = parse_special_form::<String>(&table);
         assert!(matches!(
             result,
-            Ok(ConfigValue::FetchFromEnv { env }) if env == "ENV_VAR",
+            Ok(ValueSource::FetchFromEnv { env }) if env == "ENV_VAR",
         ));
     }
 

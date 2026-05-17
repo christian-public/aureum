@@ -1,6 +1,6 @@
 use crate::test_case::{PlannedTestCase, TestCase, TestCaseExpectations};
 use crate::test_id::TestId;
-use crate::toml::config::ConfigValue;
+use crate::toml::config::ValueSource;
 use crate::utils::string;
 use crate::{SubtestPath, TomlConfigFile, TomlConfigTest};
 use relative_path::RelativePath;
@@ -386,7 +386,7 @@ fn get_program_path(
 
 fn collect_error<T>(
     errors: &mut BTreeSet<ValidationError>,
-    config_value: Option<ConfigValue<T>>,
+    config_value: Option<ValueSource<T>>,
     requirement_data: &RequirementData,
     field_name: &str,
 ) -> Option<T>
@@ -410,7 +410,7 @@ where
 }
 
 fn read_from_config_value<T>(
-    config_value: ConfigValue<T>,
+    config_value: ValueSource<T>,
     requirement_data: &RequirementData,
 ) -> Result<T, ValidationError>
 where
@@ -418,8 +418,8 @@ where
     T::Err: Display,
 {
     match config_value {
-        ConfigValue::Literal(value) => Ok(value),
-        ConfigValue::ReadFromFile { file: file_path } => {
+        ValueSource::Literal(value) => Ok(value),
+        ValueSource::ReadFromFile { file: file_path } => {
             if let Some(str) = requirement_data.get_file(&file_path) {
                 str.parse::<T>()
                     .map_err(|err| ValidationError::InExternalFile {
@@ -430,7 +430,7 @@ where
                 Err(ValidationError::MissingExternalFile(file_path))
             }
         }
-        ConfigValue::FetchFromEnv { env: var_name } => {
+        ValueSource::FetchFromEnv { env: var_name } => {
             if let Some(str) = requirement_data.get_env_var(&var_name) {
                 str.parse::<T>().map_err(|err| ValidationError::InEnvVar {
                     env_var: var_name,

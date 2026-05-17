@@ -7,7 +7,7 @@ use std::fmt;
 pub struct TomlConfigFile {
     pub root: TomlConfigTest,
     pub tests: Vec<TomlConfigTest>,
-    pub watch_files: Vec<ConfigValue<String>>,
+    pub watch_files: Vec<ValueSource<String>>,
 }
 
 #[derive(Clone)]
@@ -15,18 +15,18 @@ pub struct TomlConfigFile {
 pub struct TomlConfigTest {
     pub id: Option<SubtestPath>,
     pub skip: Option<String>,
-    pub program: Option<ConfigValue<String>>,
-    pub program_arguments: Option<Vec<ConfigValue<String>>>,
-    pub stdin: Option<ConfigValue<String>>,
-    pub expected_stdout: Option<ConfigValue<String>>,
-    pub expected_stderr: Option<ConfigValue<String>>,
-    pub expected_exit_code: Option<ConfigValue<i64>>,
-    pub timeout_seconds: Option<ConfigValue<i64>>,
+    pub program: Option<ValueSource<String>>,
+    pub program_arguments: Option<Vec<ValueSource<String>>>,
+    pub stdin: Option<ValueSource<String>>,
+    pub expected_stdout: Option<ValueSource<String>>,
+    pub expected_stderr: Option<ValueSource<String>>,
+    pub expected_exit_code: Option<ValueSource<i64>>,
+    pub timeout_seconds: Option<ValueSource<i64>>,
 }
 
 #[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
-pub enum ConfigValue<T> {
+pub enum ValueSource<T> {
     Literal(T),
     ReadFromFile { file: String },
     FetchFromEnv { env: String },

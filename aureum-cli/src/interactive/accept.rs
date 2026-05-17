@@ -137,7 +137,7 @@ fn apply_to_section(
     new_value: &FieldValue<'_>,
     config_dir_path: &Path,
 ) -> io::Result<bool> {
-    // Check for special forms ({ file = "..." } or { env = "..." }).
+    // Check for value sources ({ file = "..." } or { env = "..." }).
     if let Some(item) = section.get(field)
         && let Some(table) = item.as_inline_table()
     {
