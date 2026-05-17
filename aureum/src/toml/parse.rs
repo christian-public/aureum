@@ -1,6 +1,6 @@
 use crate::SubtestPath;
 use crate::toml::config::{
-    ConfigValueType, ParseError, TomlConfigError, TomlConfigFile, TomlConfigTest, ValueSource,
+    ParseError, TomlConfigError, TomlConfigFile, TomlConfigTest, TomlType, ValueSource,
 };
 use std::collections::{BTreeMap, HashSet};
 use std::convert::TryFrom;
@@ -159,7 +159,7 @@ fn get_plain_string_from_table(
         _ => Err(ParseError::InField {
             field: key.to_owned(),
             error: Box::new(ParseError::InvalidType {
-                expected: ConfigValueType::String,
+                expected: TomlType::String,
                 got: type_from_value(value),
             }),
         }),
@@ -178,7 +178,7 @@ fn get_tests_from_array(
         return Err(vec![ParseError::InField {
             field: key.to_owned(),
             error: Box::new(ParseError::InvalidType {
-                expected: ConfigValueType::Array(vec![]),
+                expected: TomlType::Array(vec![]),
                 got: type_from_value(value),
             }),
         }]);
@@ -193,7 +193,7 @@ fn get_tests_from_array(
             errors.push(ParseError::AtIndex {
                 index,
                 error: Box::new(ParseError::InvalidType {
-                    expected: ConfigValueType::Table(BTreeMap::new()),
+                    expected: TomlType::Table(BTreeMap::new()),
                     got: type_from_value(item),
                 }),
             });
@@ -260,7 +260,7 @@ fn get_array_of_strings_from_table(
         return Err(vec![ParseError::InField {
             field: key.to_owned(),
             error: Box::new(ParseError::InvalidType {
-                expected: ConfigValueType::Array(vec![]),
+                expected: TomlType::Array(vec![]),
                 got: type_from_value(value),
             }),
         }]);
@@ -331,7 +331,7 @@ fn parse_string_value(value: &toml::Value) -> Result<ValueSource<String>, ParseE
         toml::Value::String(s) => Ok(ValueSource::Literal(s.clone())),
         toml::Value::Table(t) => parse_special_form(t),
         _ => Err(ParseError::InvalidType {
-            expected: ConfigValueType::String,
+            expected: TomlType::String,
             got: type_from_value(value),
         }),
     }
@@ -342,7 +342,7 @@ fn parse_integer_value(value: &toml::Value) -> Result<ValueSource<i64>, ParseErr
         toml::Value::Integer(i) => Ok(ValueSource::Literal(*i)),
         toml::Value::Table(t) => parse_special_form(t),
         _ => Err(ParseError::InvalidType {
-            expected: ConfigValueType::Integer,
+            expected: TomlType::Integer,
             got: type_from_value(value),
         }),
     }
@@ -385,7 +385,7 @@ fn parse_special_form<T>(table: &toml::Table) -> Result<ValueSource<T>, ParseErr
             }
             _ => {
                 inner_error = Some(Box::new(ParseError::InvalidType {
-                    expected: ConfigValueType::String,
+                    expected: TomlType::String,
                     got: type_from_value(value),
                 }));
             }
@@ -401,7 +401,7 @@ fn parse_special_form<T>(table: &toml::Table) -> Result<ValueSource<T>, ParseErr
             }
             _ => {
                 inner_error = Some(Box::new(ParseError::InvalidType {
-                    expected: ConfigValueType::String,
+                    expected: TomlType::String,
                     got: type_from_value(value),
                 }));
             }
@@ -414,22 +414,20 @@ fn parse_special_form<T>(table: &toml::Table) -> Result<ValueSource<T>, ParseErr
     })
 }
 
-fn type_from_value(value: &toml::Value) -> ConfigValueType {
+fn type_from_value(value: &toml::Value) -> TomlType {
     match value {
-        toml::Value::String(_) => ConfigValueType::String,
-        toml::Value::Integer(_) => ConfigValueType::Integer,
-        toml::Value::Float(_) => ConfigValueType::Float,
-        toml::Value::Boolean(_) => ConfigValueType::Boolean,
-        toml::Value::Datetime(_) => ConfigValueType::Datetime,
-        toml::Value::Array(values) => {
-            ConfigValueType::Array(values.iter().map(type_from_value).collect())
-        }
+        toml::Value::String(_) => TomlType::String,
+        toml::Value::Integer(_) => TomlType::Integer,
+        toml::Value::Float(_) => TomlType::Float,
+        toml::Value::Boolean(_) => TomlType::Boolean,
+        toml::Value::Datetime(_) => TomlType::Datetime,
+        toml::Value::Array(values) => TomlType::Array(values.iter().map(type_from_value).collect()),
         toml::Value::Table(input_map) => {
-            let mut output_map: BTreeMap<String, ConfigValueType> = BTreeMap::new();
+            let mut output_map: BTreeMap<String, TomlType> = BTreeMap::new();
             for (key, value) in input_map {
                 output_map.insert(key.clone(), type_from_value(value));
             }
-            ConfigValueType::Table(output_map)
+            TomlType::Table(output_map)
         }
     }
 }
@@ -633,8 +631,8 @@ mod tests {
         assert!(matches!(
             result,
             Err(ParseError::InvalidType {
-                expected: ConfigValueType::String,
-                got: ConfigValueType::Boolean
+                expected: TomlType::String,
+                got: TomlType::Boolean
             })
         ));
     }
@@ -668,8 +666,8 @@ mod tests {
         assert!(matches!(
             result,
             Err(ParseError::InvalidType {
-                expected: ConfigValueType::Integer,
-                got: ConfigValueType::Boolean
+                expected: TomlType::Integer,
+                got: TomlType::Boolean
             })
         ));
     }

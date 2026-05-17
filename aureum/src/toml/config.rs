@@ -55,10 +55,7 @@ pub enum ParseError {
         error: Box<ParseError>,
     },
     #[error("expected {expected}, got {got}")]
-    InvalidType {
-        expected: ConfigValueType,
-        got: ConfigValueType,
-    },
+    InvalidType { expected: TomlType, got: TomlType },
     #[error("cannot specify both `{}` and `{}`", conflicting_keys[0], conflicting_keys[1])]
     AmbiguousSpecialForm {
         conflicting_keys: Vec<String>,
@@ -104,26 +101,26 @@ fn fmt_invalid_special_form(
 }
 
 #[derive(Debug)]
-pub enum ConfigValueType {
+pub enum TomlType {
     String,
     Integer,
     Float,
     Boolean,
     Datetime,
-    Array(Vec<ConfigValueType>),
-    Table(BTreeMap<String, ConfigValueType>),
+    Array(Vec<TomlType>),
+    Table(BTreeMap<String, TomlType>),
 }
 
-impl fmt::Display for ConfigValueType {
+impl fmt::Display for TomlType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let name = match self {
-            ConfigValueType::String => "string",
-            ConfigValueType::Integer => "integer",
-            ConfigValueType::Float => "float",
-            ConfigValueType::Boolean => "boolean",
-            ConfigValueType::Datetime => "datetime",
-            ConfigValueType::Array(_) => "array",
-            ConfigValueType::Table(_) => "table",
+            TomlType::String => "string",
+            TomlType::Integer => "integer",
+            TomlType::Float => "float",
+            TomlType::Boolean => "boolean",
+            TomlType::Datetime => "datetime",
+            TomlType::Array(_) => "array",
+            TomlType::Table(_) => "table",
         };
         write!(f, "{name}")
     }
