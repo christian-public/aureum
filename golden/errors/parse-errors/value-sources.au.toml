@@ -1,0 +1,22 @@
+program = { env = "AUREUM_TEST_EXEC" }
+program_arguments = ["validate", "helpers/invalid-value-sources.toml"]
+
+expected_stdout = """
+✘ helpers/invalid-value-sources.toml  Parse error
+"""
+expected_stderr = """
+📋 helpers/invalid-value-sources.toml
+└── Parse errors
+    ├── ✘ line 7: test `ambiguous`: field `expected_stdout`: invalid value source: cannot specify mutually exclusive fields: `file`, `env`
+    ├── ✘ line 8: test `ambiguous`: field `expected_stderr`: invalid value source: cannot specify mutually exclusive fields: `file`, `env`; unexpected fields: `unknown_key`
+    ├── ✘ line 14: test `missing-required-keys`: field `expected_stdout`: invalid value source: must specify `file` or `env` field; unexpected fields: `unknown_key`
+    ├── ✘ line 20: test `file`: field `expected_stdout`: invalid value source: unexpected fields: `unknown_key`
+    ├── ✘ line 21: test `file`: field `expected_stderr`: invalid value source: field `file`: expected string, got integer
+    ├── ✘ line 22: test `file`: field `expected_exit_code`: invalid value source: field `file`: expected string, got integer; unexpected fields: `other_key`
+    ├── ✘ line 28: test `env`: field `expected_stdout`: invalid value source: unexpected fields: `unknown_key`
+    ├── ✘ line 29: test `env`: field `expected_stderr`: invalid value source: field `env`: expected string, got integer
+    └── ✘ line 30: test `env`: field `expected_exit_code`: invalid value source: field `env`: expected string, got integer; unexpected fields: `other_key`
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3

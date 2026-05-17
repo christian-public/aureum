@@ -102,6 +102,7 @@ dependencies = [
  "relative-path",
  "thiserror 2.0.18",
  "toml",
+ "toml_edit",
 ]
 
 [[package]]

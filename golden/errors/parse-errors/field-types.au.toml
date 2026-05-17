@@ -11,9 +11,9 @@ expected_stdout = """
 expected_stderr = """
 📋 helpers/wrong-field-types.toml
 └── Parse errors
-    ├── ✘ field `program`: expected string, got boolean
-    ├── ✘ field `program_arguments`: expected array, got string
-    └── ✘ field `expected_exit_code`: expected integer, got string
+    ├── ✘ line 1: field `program`: expected string, got boolean
+    ├── ✘ line 2: field `program_arguments`: expected array, got string
+    └── ✘ line 4: field `expected_exit_code`: expected integer, got string
 
 warning: some config files contain errors (see above)
 """
@@ -30,8 +30,8 @@ expected_stdout = """
 expected_stderr = """
 📋 helpers/wrong-array-element.toml
 └── Parse errors
-    ├── ✘ field `program_arguments`: [1]: expected string, got integer
-    └── ✘ field `program_arguments`: [2]: expected string, got boolean
+    ├── ✘ line 2: field `program_arguments`: position 2: expected string, got integer
+    └── ✘ line 2: field `program_arguments`: position 3: expected string, got boolean
 
 warning: some config files contain errors (see above)
 """

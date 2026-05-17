@@ -11,7 +11,7 @@ expected_stdout = """
 expected_stderr = """
 📋 helpers/missing-id.toml
 └── Parse errors
-    └── ✘ [0]: missing required field `id`
+    └── ✘ line 4: [[tests]] #1: missing required field `id`
 
 warning: some config files contain errors (see above)
 """
@@ -28,8 +28,8 @@ expected_stdout = """
 expected_stderr = """
 📋 helpers/invalid-id.toml
 └── Parse errors
-    ├── ✘ [1]: field `id`: invalid id `invalid id!`
-    └── ✘ [2]: field `id`: invalid id ``
+    ├── ✘ line 12: [[tests]] #2: field `id`: invalid identifier `invalid id!` (allowed: ASCII letters, digits, `_`, `-`; separate nested ids with `.`)
+    └── ✘ line 19: [[tests]] #3: field `id`: invalid identifier `` (must be non-empty)
 
 warning: some config files contain errors (see above)
 """
@@ -46,7 +46,7 @@ expected_stdout = """
 expected_stderr = """
 📋 helpers/id-at-root.toml
 └── Parse errors
-    └── ✘ `id` is not allowed at the root level
+    └── ✘ line 5: field `id` is not allowed at the root level
 
 warning: some config files contain errors (see above)
 """
@@ -63,8 +63,8 @@ expected_stdout = """
 expected_stderr = """
 📋 helpers/duplicate-id.toml
 └── Parse errors
-    ├── ✘ [2]: duplicate id `shared`, first defined at index 0
-    └── ✘ [3]: duplicate id `shared`, first defined at index 0
+    ├── ✘ line 19: [[tests]] #3: field `id`: duplicate identifier `shared`, first defined on line 5
+    └── ✘ line 26: [[tests]] #4: field `id`: duplicate identifier `shared`, first defined on line 5
 
 warning: some config files contain errors (see above)
 """

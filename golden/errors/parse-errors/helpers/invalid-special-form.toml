@@ -1,4 +1,0 @@
-program = "echo"
-
-expected_stdout = { unknown_key = "value" }
-expected_stderr = { file = 99 }

@@ -41,63 +41,118 @@ pub enum TomlConfigError {
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum ParseError {
-    #[error("field `{field}`: {error}")]
+#[error("line {line}: {reason}")]
+pub struct ParseError {
+    pub line: usize,
+    #[source]
+    pub reason: ParseErrorReason,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum ParseErrorReason {
+    #[error("field `{field}`: {reason}")]
     InField {
         field: String,
         #[source]
-        error: Box<ParseError>,
+        reason: Box<ParseErrorReason>,
     },
-    #[error("[{index}]: {error}")]
+    #[error("position {}: {reason}", index + 1)]
     AtIndex {
         index: usize,
         #[source]
-        error: Box<ParseError>,
+        reason: Box<ParseErrorReason>,
+    },
+    #[error("{reference}: {reason}")]
+    InTest {
+        reference: TestReference,
+        #[source]
+        reason: Box<ParseErrorReason>,
     },
     #[error("expected {expected}, got {got}")]
     InvalidType { expected: TomlType, got: TomlType },
-    #[error("cannot specify both `{}` and `{}`", conflicting_keys[0], conflicting_keys[1])]
-    AmbiguousSpecialForm {
-        conflicting_keys: Vec<String>,
+    #[error(fmt = fmt_invalid_value_source)]
+    InvalidValueSource {
+        reason: Option<Box<ParseErrorReason>>,
         unexpected_keys: Vec<String>,
     },
-    #[error(fmt = fmt_invalid_special_form)]
-    InvalidSpecialForm {
-        error: Option<Box<ParseError>>,
-        unexpected_keys: Vec<String>,
-    },
+    #[error(fmt = fmt_ambiguous_value_source)]
+    AmbiguousValueSource { conflicting_keys: Vec<String> },
+    #[error("must specify `file` or `env` field")]
+    MissingRequiredFieldInValueSource,
+    #[error("field `id` is not allowed at the root level")]
+    IdForbiddenAtRoot,
     #[error("missing required field `id`")]
     MissingId,
-    #[error("invalid id `{id}`")]
+    #[error(fmt = fmt_invalid_id)]
     InvalidId { id: String },
-    #[error("duplicate id `{id}`, first defined at index {first_index}")]
-    DuplicateId { id: String, first_index: usize },
-    #[error("`id` is not allowed at the root level")]
-    IdForbiddenAtRoot,
+    #[error("duplicate identifier `{id}`, first defined on line {first_line}")]
+    DuplicateId { id: String, first_line: usize },
     #[error("unknown field `{field}`")]
     UnknownField { field: String },
 }
 
-fn fmt_invalid_special_form(
-    error: &Option<Box<ParseError>>,
-    unexpected_keys: &Vec<String>,
-    f: &mut fmt::Formatter,
-) -> fmt::Result {
-    match (error.as_deref(), unexpected_keys.as_slice()) {
-        (Some(e), []) => write!(f, "{e}"),
-        (Some(e), keys) => {
-            let quoted = keys.iter().map(|k| format!("`{k}`")).collect::<Vec<_>>();
-            write!(f, "{e}; unexpected keys: {}", quoted.join(", "))
-        }
-        (None, keys) => {
-            let quoted = keys.iter().map(|k| format!("`{k}`")).collect::<Vec<_>>();
-            write!(
-                f,
-                "unknown keys: {}; expected `file` or `env`",
-                quoted.join(", ")
-            )
+#[derive(Debug, Clone)]
+pub enum TestReference {
+    Id(String),
+    Position(usize),
+}
+
+impl fmt::Display for TestReference {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Id(id) => write!(f, "test `{id}`"),
+            Self::Position(n) => write!(f, "[[tests]] #{n}"),
         }
     }
+}
+
+fn fmt_invalid_value_source(
+    reason: &Option<Box<ParseErrorReason>>,
+    unexpected_keys: &[String],
+    f: &mut fmt::Formatter,
+) -> fmt::Result {
+    let inner_reason_part = reason.as_ref().map(|r| format!("{r}"));
+
+    let unexpected_keys_part = if !unexpected_keys.is_empty() {
+        let quoted = unexpected_keys
+            .iter()
+            .map(|k| format!("`{k}`"))
+            .collect::<Vec<_>>();
+        Some(format!("unexpected fields: {}", quoted.join(", ")))
+    } else {
+        None
+    };
+
+    write!(
+        f,
+        "invalid value source: {}",
+        [inner_reason_part, unexpected_keys_part]
+            .into_iter()
+            .flatten()
+            .collect::<Vec<_>>()
+            .join("; ")
+    )
+}
+
+fn fmt_ambiguous_value_source(conflicting_keys: &[String], f: &mut fmt::Formatter) -> fmt::Result {
+    let quoted = conflicting_keys
+        .iter()
+        .map(|k| format!("`{k}`"))
+        .collect::<Vec<_>>();
+    write!(
+        f,
+        "cannot specify mutually exclusive fields: {}",
+        quoted.join(", ")
+    )
+}
+
+fn fmt_invalid_id(id: &String, f: &mut fmt::Formatter) -> fmt::Result {
+    let hint = if id.is_empty() {
+        "must be non-empty"
+    } else {
+        "allowed: ASCII letters, digits, `_`, `-`; separate nested ids with `.`"
+    };
+    write!(f, "invalid identifier `{id}` ({hint})")
 }
 
 #[derive(Debug)]

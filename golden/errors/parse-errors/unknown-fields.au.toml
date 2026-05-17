@@ -11,7 +11,7 @@ expected_stdout = """
 expected_stderr = """
 📋 helpers/unknown-field-at-root.toml
 └── Parse errors
-    └── ✘ unknown field `typo_field`
+    └── ✘ line 5: unknown field `typo_field`
 
 warning: some config files contain errors (see above)
 """
@@ -28,7 +28,7 @@ expected_stdout = """
 expected_stderr = """
 📋 helpers/unknown-field-in-subtest.toml
 └── Parse errors
-    └── ✘ [0]: unknown field `typo_field`
+    └── ✘ line 9: test `test1`: unknown field `typo_field`
 
 warning: some config files contain errors (see above)
 """
