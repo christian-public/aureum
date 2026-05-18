@@ -152,10 +152,10 @@ pub(crate) fn run_error_view(tty: &mut dyn Tty, ctx: &ErrorViewContext<'_>) -> i
 
     loop {
         let Some(key) = tty.next_key()? else {
-            return Ok(Action::Quit);
+            return Ok(Action::Quit(FieldDecisions::default()));
         };
         if keys::is_quit_key(&key) {
-            return Ok(Action::Quit);
+            return Ok(Action::Quit(FieldDecisions::default()));
         }
         match key.code {
             KeyCode::Enter => return Ok(Action::Proceed(FieldDecisions::default())),

@@ -21,8 +21,7 @@ pub(super) enum ReviewOutcome {
     /// The user pressed `q` to quit the program entirely.
     Quit,
     /// The user pressed Esc in watch mode to return to the idle/watching screen.
-    /// Carries accumulated (failed-index, decisions) pairs for write-on-exit.
-    BackToWatch(Vec<(usize, FieldDecisions)>),
+    BackToWatch,
 }
 
 /// Core navigation loop. Steps through `failed` tests, showing each one's diff or error view
@@ -88,21 +87,13 @@ pub(super) fn run_review_loop(
             }
             Action::BackToWatch(partial_decisions) => {
                 past_decisions[i] = Some(partial_decisions);
-                return Ok(ReviewOutcome::BackToWatch(collect_decisions(
-                    past_decisions,
-                )));
+                return Ok(ReviewOutcome::BackToWatch);
             }
-            Action::Quit => return Ok(ReviewOutcome::Quit),
+            Action::Quit(partial_decisions) => {
+                past_decisions[i] = Some(partial_decisions);
+                return Ok(ReviewOutcome::Quit);
+            }
         }
     }
     Ok(ReviewOutcome::Done)
-}
-
-/// Collects all non-None decisions as (index, FieldDecisions) pairs.
-fn collect_decisions(past_decisions: &[Option<FieldDecisions>]) -> Vec<(usize, FieldDecisions)> {
-    past_decisions
-        .iter()
-        .enumerate()
-        .filter_map(|(i, d)| d.map(|dec| (i, dec)))
-        .collect()
 }

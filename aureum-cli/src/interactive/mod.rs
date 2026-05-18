@@ -164,14 +164,10 @@ where
                         )?
                     };
 
+                    apply_decisions(&failed, &accepted_from_past(&past_decisions), current_dir)?;
                     if let ReviewOutcome::Quit = review_outcome {
                         return Ok(run_results);
                     }
-                    apply_decisions(
-                        &failed,
-                        &accepted_from_outcome(review_outcome, &past_decisions),
-                        current_dir,
-                    )?;
                 }
             }
         }
@@ -320,14 +316,10 @@ fn run_watch_interactive_loop(
                         )?
                     };
 
+                    apply_decisions(&failed, &accepted_from_past(&past_decisions), current_dir)?;
                     if let ReviewOutcome::Quit = review_outcome {
                         return Ok(Some(last_results));
                     }
-                    apply_decisions(
-                        &failed,
-                        &accepted_from_outcome(review_outcome, &past_decisions),
-                        current_dir,
-                    )?;
                     // Back to idle screen after review.
                 }
             }
@@ -361,30 +353,13 @@ fn build_failed_tests(run_results: &[RunResult]) -> Vec<FailedTest<'_>> {
 }
 
 /// Returns `(index, decisions)` pairs where the per-test decision has at least one accepted
-/// field. Used by both non-watch flows (which apply decisions regardless of how review
-/// ended) and the `Done` branch of watch flows.
+/// field. Applied regardless of how the review ended — any confirmed field is durable.
 fn accepted_from_past(past_decisions: &[Option<FieldDecisions>]) -> Vec<(usize, FieldDecisions)> {
     past_decisions
         .iter()
         .enumerate()
         .filter_map(|(i, dec_opt)| dec_opt.filter(|d| d.any_accepted()).map(|d| (i, d)))
         .collect()
-}
-
-/// Picks the accepted decisions from a `ReviewOutcome`. For `Done`, scans `past_decisions`;
-/// for `BackToWatch`, uses the carried list; for `Quit`, returns an empty vec.
-fn accepted_from_outcome(
-    outcome: ReviewOutcome,
-    past_decisions: &[Option<FieldDecisions>],
-) -> Vec<(usize, FieldDecisions)> {
-    match outcome {
-        ReviewOutcome::Quit => Vec::new(),
-        ReviewOutcome::BackToWatch(pairs) => pairs
-            .into_iter()
-            .filter(|(_, dec)| dec.any_accepted())
-            .collect(),
-        ReviewOutcome::Done => accepted_from_past(past_decisions),
-    }
 }
 
 fn apply_decisions(

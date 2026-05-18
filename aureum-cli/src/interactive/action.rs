@@ -9,7 +9,9 @@ pub(super) enum Action {
     ShowList(FieldDecisions),
     /// User pressed Esc in watch mode to exit review and return to the idle/watching screen.
     BackToWatch(FieldDecisions),
-    Quit,
+    /// User pressed `q` to quit the program entirely; carries current partial decisions so
+    /// already-confirmed fields survive the exit.
+    Quit(FieldDecisions),
 }
 
 pub(super) enum ListAction {

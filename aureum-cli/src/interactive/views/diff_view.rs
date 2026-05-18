@@ -134,7 +134,7 @@ fn apply_key(
     is_field_configured: bool,
 ) -> KeyResult {
     if keys::is_quit_key(&key) {
-        return KeyResult::Exit(Action::Quit);
+        return KeyResult::Exit(Action::Quit(state.field_decisions));
     }
     match key.code {
         KeyCode::Right => {
@@ -324,7 +324,7 @@ pub(crate) fn run_diff_view(
 
     loop {
         let Some(key) = tty.next_key()? else {
-            return Ok(Action::Quit);
+            return Ok(Action::Quit(state.field_decisions));
         };
         let is_field_configured =
             diff_content::is_field_configured(test_outcome, state.active_field);
