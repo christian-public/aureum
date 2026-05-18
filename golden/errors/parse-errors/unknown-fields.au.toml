@@ -28,7 +28,8 @@ expected_stdout = """
 expected_stderr = """
 📋 helpers/unknown-field-in-subtest.toml
 └── Parse errors
-    └── ✘ line 9: test `test1`: unknown field `typo_field`
+    ├── ✘ line 9: test `test1`: unknown field `typo_field`
+    └── ✘ line 10: test `test1`: unknown field `watch_files`
 
 warning: some config files contain errors (see above)
 """

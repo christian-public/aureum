@@ -30,8 +30,9 @@ expected_stdout = """
 expected_stderr = """
 📋 helpers/wrong-array-element.toml
 └── Parse errors
-    ├── ✘ line 2: field `program_arguments`: position 2: expected string, got integer
-    └── ✘ line 2: field `program_arguments`: position 3: expected string, got boolean
+    ├── ✘ line 1: field `watch_files`: position 1: expected string, got boolean
+    ├── ✘ line 3: field `program_arguments`: position 2: expected string, got integer
+    └── ✘ line 3: field `program_arguments`: position 3: expected string, got boolean
 
 warning: some config files contain errors (see above)
 """

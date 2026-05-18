@@ -7,3 +7,4 @@ id = "test1"
 expected_stdout = "hello"
 
 typo_field = "oops"
+watch_files = ["script.sh"]

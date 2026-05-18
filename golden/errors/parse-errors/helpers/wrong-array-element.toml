@@ -1,3 +1,4 @@
+watch_files = [false]
 program = "echo"
 program_arguments = ["-n", 42, false]
 
