@@ -24,9 +24,7 @@ pub use test_case::{PlannedTestCase, TestCase, TestCaseExpectations};
 pub use test_id::TestId;
 pub use test_outcome::{FieldOutcome, TestOutcome};
 pub use test_runner::{ProgramOutput, RunError, RunResult, RunResultKind};
-pub use toml::config::{
-    ParseError, ParseErrorReason, TomlConfigError, TomlConfigFile, TomlConfigTest,
-};
+pub use toml::config::{ConfigFile, ConfigFileError, ConfigTest, ParseError, ParseErrorReason};
 pub use toml::requirement::Requirements;
 pub use toml::validate::{ProgramPath, RequirementData, TestEntry, ValidationError};
 

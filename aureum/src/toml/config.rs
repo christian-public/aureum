@@ -4,15 +4,15 @@ use std::fmt;
 
 #[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
-pub struct TomlConfigFile {
-    pub root: TomlConfigTest,
-    pub tests: Vec<TomlConfigTest>,
+pub struct ConfigFile {
+    pub root: ConfigTest,
+    pub tests: Vec<ConfigTest>,
     pub watch_files: Vec<ValueSource<String>>,
 }
 
 #[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
-pub struct TomlConfigTest {
+pub struct ConfigTest {
     pub id: Option<SubtestPath>,
     pub skip: Option<String>,
     pub program: Option<ValueSource<String>>,
@@ -33,7 +33,7 @@ pub enum ValueSource<T> {
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum TomlConfigError {
+pub enum ConfigFileError {
     #[error("invalid TOML syntax: {0}")]
     InvalidTomlSyntax(#[from] toml::de::Error),
     #[error("{} parse error(s)", .0.len())]
@@ -64,7 +64,7 @@ pub enum ParseErrorReason {
     },
     #[error("{reference}: {reason}")]
     InTest {
-        reference: TestReference,
+        reference: TestSectionReference,
         #[source]
         reason: Box<ParseErrorReason>,
     },
@@ -92,12 +92,12 @@ pub enum ParseErrorReason {
 }
 
 #[derive(Debug, Clone)]
-pub enum TestReference {
+pub enum TestSectionReference {
     Id(String),
     Position(usize),
 }
 
-impl fmt::Display for TestReference {
+impl fmt::Display for TestSectionReference {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Id(id) => write!(f, "test `{id}`"),

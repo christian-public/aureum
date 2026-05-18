@@ -1,4 +1,4 @@
-use crate::toml::config::{TomlConfigFile, TomlConfigTest, ValueSource};
+use crate::toml::config::{ConfigFile, ConfigTest, ValueSource};
 use crate::toml::validate::{RequirementData, ValidationError};
 use std::collections::BTreeSet;
 
@@ -9,7 +9,7 @@ pub struct Requirements {
     pub env_vars: BTreeSet<String>,
 }
 
-pub fn get_requirements(config: &TomlConfigFile) -> Requirements {
+pub fn get_requirements(config: &ConfigFile) -> Requirements {
     let mut requirements = Requirements::default();
 
     collect_requirements_from_toml_config_test(&mut requirements, &config.root);
@@ -24,7 +24,7 @@ pub fn get_requirements(config: &TomlConfigFile) -> Requirements {
 }
 
 pub fn resolve_watch_files(
-    config: &TomlConfigFile,
+    config: &ConfigFile,
     requirement_data: &RequirementData,
 ) -> (BTreeSet<String>, BTreeSet<ValidationError>) {
     let mut files = BTreeSet::new();
@@ -59,7 +59,7 @@ pub fn resolve_watch_files(
 
 fn collect_requirements_from_toml_config_test(
     requirements: &mut Requirements,
-    config: &TomlConfigTest,
+    config: &ConfigTest,
 ) {
     if let Some(value) = &config.program {
         collect_requirements_from_config_value(requirements, value);
@@ -109,8 +109,8 @@ fn collect_requirements_from_config_value<T>(
 mod tests {
     use super::*;
 
-    fn empty_test() -> TomlConfigTest {
-        TomlConfigTest {
+    fn empty_test() -> ConfigTest {
+        ConfigTest {
             id: None,
             skip: None,
             program: None,
@@ -123,8 +123,8 @@ mod tests {
         }
     }
 
-    fn make_config(watch_files: Vec<ValueSource<String>>) -> TomlConfigFile {
-        TomlConfigFile {
+    fn make_config(watch_files: Vec<ValueSource<String>>) -> ConfigFile {
+        ConfigFile {
             root: empty_test(),
             tests: vec![],
             watch_files,

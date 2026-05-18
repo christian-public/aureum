@@ -14,7 +14,7 @@ use std::path::Path;
 pub struct LoadConfigFilesResult {
     pub find_config_error_count: usize,
     pub loaded: BTreeMap<RelativePathBuf, LoadedConfigFile>,
-    pub invalid: BTreeMap<RelativePathBuf, ConfigFileError>,
+    pub invalid: BTreeMap<RelativePathBuf, LoadedConfigFileError>,
 }
 
 impl LoadConfigFilesResult {
@@ -72,7 +72,7 @@ impl LoadedConfigFile {
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum ConfigFileError {
+pub enum LoadedConfigFileError {
     #[error("config file path has no file name")]
     NoFileName,
     #[error("config file path has no parent directory")]
@@ -80,7 +80,7 @@ pub enum ConfigFileError {
     #[error("failed to read config file: {0}")]
     ReadFailed(#[from] io::Error),
     #[error("failed to parse config file: {0}")]
-    ParseFailed(#[from] aureum::TomlConfigError),
+    ParseFailed(#[from] aureum::ConfigFileError),
 }
 
 pub fn load_config_files(
@@ -115,19 +115,19 @@ fn load_config_file(
     subtest_path_coverage_set: SubtestPathCoverageSet,
     current_dir: &Path,
     default_timeout: u64,
-) -> Result<LoadedConfigFile, ConfigFileError> {
+) -> Result<LoadedConfigFile, LoadedConfigFileError> {
     let file_name = config_file_path
         .file_name()
-        .ok_or(ConfigFileError::NoFileName)?;
+        .ok_or(LoadedConfigFileError::NoFileName)?;
 
     let config_dir_path = config_file_path
         .parent()
-        .ok_or(ConfigFileError::NoParentDirectory)?;
+        .ok_or(LoadedConfigFileError::NoParentDirectory)?;
 
     let source = fs::read_to_string(config_file_path.to_path(current_dir))
-        .map_err(ConfigFileError::ReadFailed)?;
+        .map_err(LoadedConfigFileError::ReadFailed)?;
 
-    let config = aureum::parse_toml_config(&source).map_err(ConfigFileError::ParseFailed)?;
+    let config = aureum::parse_toml_config(&source).map_err(LoadedConfigFileError::ParseFailed)?;
 
     let requirements = aureum::get_requirements(&config);
     let requirement_data =

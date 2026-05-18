@@ -1,10 +1,12 @@
 use crate::SubtestPath;
 use crate::toml::config::{
-    ParseError, ParseErrorReason, TestReference, TomlConfigError, TomlConfigFile, TomlConfigTest,
+    ConfigFile, ConfigFileError, ConfigTest, ParseError, ParseErrorReason, TestSectionReference,
     TomlType, ValueSource,
 };
 use std::collections::{BTreeMap, HashSet};
 use std::convert::TryFrom;
+use toml::{Table, Value};
+use toml_edit::Document;
 
 struct TableSpans {
     header_line: usize,
@@ -52,7 +54,7 @@ static KNOWN_TEST_FIELDS: &[&str] = &[
 static KNOWN_ROOT_ONLY_FIELDS: &[&str] = &["tests", "watch_files"];
 
 fn check_unknown_fields(
-    table: &toml::Table,
+    table: &Table,
     known_fields: impl IntoIterator<Item = &'static str>,
 ) -> Vec<ParseErrorReason> {
     let known: HashSet<&str> = known_fields.into_iter().collect();
@@ -63,9 +65,9 @@ fn check_unknown_fields(
         .collect()
 }
 
-pub fn parse_toml_config(file_content: &str) -> Result<TomlConfigFile, TomlConfigError> {
+pub fn parse_toml_config(file_content: &str) -> Result<ConfigFile, ConfigFileError> {
     let table =
-        toml::from_str::<toml::Table>(file_content).map_err(TomlConfigError::InvalidTomlSyntax)?;
+        toml::from_str::<Table>(file_content).map_err(ConfigFileError::InvalidTomlSyntax)?;
 
     let root_spans = find_root_spans(file_content);
     let test_spans = find_test_entry_spans(file_content);
@@ -82,7 +84,7 @@ pub fn parse_toml_config(file_content: &str) -> Result<TomlConfigFile, TomlConfi
         }
     };
 
-    let root = match parse_toml_config_from_table(&table) {
+    let root = match parse_test_from_table(&table) {
         Ok(config) => {
             if config.id.is_some() {
                 all_errors.push(root_spans.locate(ParseErrorReason::IdForbiddenAtRoot));
@@ -120,20 +122,16 @@ pub fn parse_toml_config(file_content: &str) -> Result<TomlConfigFile, TomlConfi
     all_errors.sort_by_key(|err| err.line);
 
     match (root, tests, watch_files) {
-        (Some(root), Some(tests), Some(watch_files)) if all_errors.is_empty() => {
-            Ok(TomlConfigFile {
-                root,
-                tests,
-                watch_files,
-            })
-        }
-        _ => Err(TomlConfigError::ParseErrors(all_errors)),
+        (Some(root), Some(tests), Some(watch_files)) if all_errors.is_empty() => Ok(ConfigFile {
+            root,
+            tests,
+            watch_files,
+        }),
+        _ => Err(ConfigFileError::ParseErrors(all_errors)),
     }
 }
 
-fn parse_toml_config_from_table(
-    table: &toml::Table,
-) -> Result<TomlConfigTest, Vec<ParseErrorReason>> {
+fn parse_test_from_table(table: &Table) -> Result<ConfigTest, Vec<ParseErrorReason>> {
     let mut errors: Vec<ParseErrorReason> = vec![];
 
     let id = collect_error(&mut errors, get_subtest_path_from_table(table, "id"));
@@ -162,7 +160,7 @@ fn parse_toml_config_from_table(
     );
 
     if errors.is_empty() {
-        Ok(TomlConfigTest {
+        Ok(ConfigTest {
             id,
             skip,
             program,
@@ -179,7 +177,7 @@ fn parse_toml_config_from_table(
 }
 
 fn get_subtest_path_from_table(
-    table: &toml::Table,
+    table: &Table,
     key: &str,
 ) -> Result<Option<SubtestPath>, ParseErrorReason> {
     get_plain_string_from_table(table, key)?
@@ -193,14 +191,14 @@ fn get_subtest_path_from_table(
 }
 
 fn get_plain_string_from_table(
-    table: &toml::Table,
+    table: &Table,
     key: &str,
 ) -> Result<Option<String>, ParseErrorReason> {
     let Some(value) = table.get(key) else {
         return Ok(None);
     };
     match value {
-        toml::Value::String(s) => Ok(Some(s.clone())),
+        Value::String(s) => Ok(Some(s.clone())),
         _ => Err(ParseErrorReason::InField {
             field: key.to_owned(),
             reason: Box::new(ParseErrorReason::InvalidType {
@@ -227,7 +225,7 @@ fn collect_field_lines(source: &str, table: &toml_edit::Table) -> BTreeMap<Strin
 }
 
 fn find_root_spans(source: &str) -> TableSpans {
-    let Ok(doc) = toml_edit::Document::parse(source) else {
+    let Ok(doc) = Document::parse(source) else {
         return TableSpans {
             header_line: 1,
             field_lines: BTreeMap::new(),
@@ -240,7 +238,7 @@ fn find_root_spans(source: &str) -> TableSpans {
 }
 
 fn find_test_entry_spans(source: &str) -> Vec<TableSpans> {
-    let Ok(doc) = toml_edit::Document::parse(source) else {
+    let Ok(doc) = Document::parse(source) else {
         return vec![];
     };
     let Some(tests_item) = doc.get("tests") else {
@@ -264,24 +262,24 @@ fn find_test_entry_spans(source: &str) -> Vec<TableSpans> {
         .collect()
 }
 
-fn reference_for_entry(item: &toml::Value, position: usize) -> TestReference {
+fn reference_for_entry(item: &Value, position: usize) -> TestSectionReference {
     item.as_table()
         .and_then(|t| t.get("id"))
         .and_then(|v| match v {
-            toml::Value::String(s) if SubtestPath::try_from(s.as_str()).is_ok() => {
-                Some(TestReference::Id(s.clone()))
+            Value::String(s) if SubtestPath::try_from(s.as_str()).is_ok() => {
+                Some(TestSectionReference::Id(s.clone()))
             }
             _ => None,
         })
-        .unwrap_or(TestReference::Position(position))
+        .unwrap_or(TestSectionReference::Position(position))
 }
 
 fn get_tests_from_array(
-    table: &toml::Table,
+    table: &Table,
     key: &str,
     root_spans: &TableSpans,
     test_spans: &[TableSpans],
-) -> Result<Vec<TomlConfigTest>, Vec<ParseError>> {
+) -> Result<Vec<ConfigTest>, Vec<ParseError>> {
     let Some(value) = table.get(key) else {
         return Ok(vec![]);
     };
@@ -297,7 +295,7 @@ fn get_tests_from_array(
     };
 
     let mut errors: Vec<ParseError> = vec![];
-    let mut parsed_configs: Vec<TomlConfigTest> = vec![];
+    let mut parsed_configs: Vec<ConfigTest> = vec![];
     let mut seen_ids: BTreeMap<SubtestPath, usize> = BTreeMap::new();
 
     for (index, item) in array.iter().enumerate() {
@@ -334,7 +332,7 @@ fn get_tests_from_array(
             errors.push(wrap(line_for_reason(&err), err));
         }
 
-        match parse_toml_config_from_table(inner_table) {
+        match parse_test_from_table(inner_table) {
             Ok(parsed_config) => match &parsed_config.id {
                 None => {
                     errors.push(wrap(header_line, ParseErrorReason::MissingId));
@@ -344,7 +342,7 @@ fn get_tests_from_array(
                         errors.push(ParseError {
                             line: id_field_line(),
                             reason: ParseErrorReason::InTest {
-                                reference: TestReference::Position(position),
+                                reference: TestSectionReference::Position(position),
                                 reason: Box::new(ParseErrorReason::InField {
                                     field: String::from("id"),
                                     reason: Box::new(ParseErrorReason::DuplicateId {
@@ -376,7 +374,7 @@ fn get_tests_from_array(
 }
 
 fn get_array_of_strings_from_table(
-    table: &toml::Table,
+    table: &Table,
     key: &str,
 ) -> Result<Option<Vec<ValueSource<String>>>, Vec<ParseErrorReason>> {
     let Some(value) = table.get(key) else {
@@ -422,7 +420,7 @@ fn get_array_of_strings_from_table(
 }
 
 fn get_string_from_table(
-    table: &toml::Table,
+    table: &Table,
     key: &str,
 ) -> Result<Option<ValueSource<String>>, ParseErrorReason> {
     let Some(value) = table.get(key) else {
@@ -438,7 +436,7 @@ fn get_string_from_table(
 }
 
 fn get_integer_from_table(
-    table: &toml::Table,
+    table: &Table,
     key: &str,
 ) -> Result<Option<ValueSource<i64>>, ParseErrorReason> {
     let Some(value) = table.get(key) else {
@@ -453,10 +451,10 @@ fn get_integer_from_table(
     Ok(Some(config_value))
 }
 
-fn parse_string_value(value: &toml::Value) -> Result<ValueSource<String>, ParseErrorReason> {
+fn parse_string_value(value: &Value) -> Result<ValueSource<String>, ParseErrorReason> {
     match value {
-        toml::Value::String(s) => Ok(ValueSource::Literal(s.clone())),
-        toml::Value::Table(t) => parse_value_source(t),
+        Value::String(s) => Ok(ValueSource::Literal(s.clone())),
+        Value::Table(t) => parse_value_source(t),
         _ => Err(ParseErrorReason::InvalidType {
             expected: TomlType::String,
             got: type_from_value(value),
@@ -464,10 +462,10 @@ fn parse_string_value(value: &toml::Value) -> Result<ValueSource<String>, ParseE
     }
 }
 
-fn parse_integer_value(value: &toml::Value) -> Result<ValueSource<i64>, ParseErrorReason> {
+fn parse_integer_value(value: &Value) -> Result<ValueSource<i64>, ParseErrorReason> {
     match value {
-        toml::Value::Integer(i) => Ok(ValueSource::Literal(*i)),
-        toml::Value::Table(t) => parse_value_source(t),
+        Value::Integer(i) => Ok(ValueSource::Literal(*i)),
+        Value::Table(t) => parse_value_source(t),
         _ => Err(ParseErrorReason::InvalidType {
             expected: TomlType::Integer,
             got: type_from_value(value),
@@ -477,7 +475,7 @@ fn parse_integer_value(value: &toml::Value) -> Result<ValueSource<i64>, ParseErr
 
 static ALL_EXCLUSIVE_KEYS: [&str; 2] = ["file", "env"];
 
-fn parse_value_source<T>(table: &toml::Table) -> Result<ValueSource<T>, ParseErrorReason> {
+fn parse_value_source<T>(table: &Table) -> Result<ValueSource<T>, ParseErrorReason> {
     let mut inner_reason = None;
 
     let conflicting_keys: Vec<String> = ALL_EXCLUSIVE_KEYS
@@ -497,7 +495,7 @@ fn parse_value_source<T>(table: &toml::Table) -> Result<ValueSource<T>, ParseErr
         }));
     } else if let Some(value) = table.get("file") {
         match value {
-            toml::Value::String(s) => {
+            Value::String(s) => {
                 if unexpected_keys.is_empty() {
                     return Ok(ValueSource::ReadFromFile { file: s.to_owned() });
                 }
@@ -514,7 +512,7 @@ fn parse_value_source<T>(table: &toml::Table) -> Result<ValueSource<T>, ParseErr
         };
     } else if let Some(value) = table.get("env") {
         match value {
-            toml::Value::String(s) => {
+            Value::String(s) => {
                 if unexpected_keys.is_empty() {
                     return Ok(ValueSource::FetchFromEnv { env: s.to_owned() });
                 }
@@ -541,15 +539,15 @@ fn parse_value_source<T>(table: &toml::Table) -> Result<ValueSource<T>, ParseErr
     })
 }
 
-fn type_from_value(value: &toml::Value) -> TomlType {
+fn type_from_value(value: &Value) -> TomlType {
     match value {
-        toml::Value::String(_) => TomlType::String,
-        toml::Value::Integer(_) => TomlType::Integer,
-        toml::Value::Float(_) => TomlType::Float,
-        toml::Value::Boolean(_) => TomlType::Boolean,
-        toml::Value::Datetime(_) => TomlType::Datetime,
-        toml::Value::Array(values) => TomlType::Array(values.iter().map(type_from_value).collect()),
-        toml::Value::Table(input_map) => {
+        Value::String(_) => TomlType::String,
+        Value::Integer(_) => TomlType::Integer,
+        Value::Float(_) => TomlType::Float,
+        Value::Boolean(_) => TomlType::Boolean,
+        Value::Datetime(_) => TomlType::Datetime,
+        Value::Array(values) => TomlType::Array(values.iter().map(type_from_value).collect()),
+        Value::Table(input_map) => {
             let mut output_map: BTreeMap<String, TomlType> = BTreeMap::new();
             for (key, value) in input_map {
                 output_map.insert(key.clone(), type_from_value(value));

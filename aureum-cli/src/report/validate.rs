@@ -1,9 +1,9 @@
-use crate::load_config_file::{ConfigFileError, LoadedConfigFile};
+use crate::load_config_file::{LoadedConfigFile, LoadedConfigFileError};
 use crate::report::theme;
 use crate::utils::file;
 use crate::vendor::ascii_tree::Tree::{self, Leaf, Node};
 use aureum::{
-    ParseError, ProgramPath, RequirementData, Requirements, TestEntry, TomlConfigError,
+    ConfigFileError, ParseError, ProgramPath, RequirementData, Requirements, TestEntry,
     ValidationError,
 };
 use colored::Colorize;
@@ -293,14 +293,14 @@ pub fn print_config_details(
     print_tree(tree);
 }
 
-pub fn print_config_file_error(config_file_path: &RelativePath, error: &ConfigFileError) {
+pub fn print_config_file_error(config_file_path: &RelativePath, error: &LoadedConfigFileError) {
     let nodes: Vec<Tree> = match error {
-        ConfigFileError::NoFileName => vec![str_to_tree("Config file path has no filename")],
-        ConfigFileError::NoParentDirectory => {
+        LoadedConfigFileError::NoFileName => vec![str_to_tree("Config file path has no filename")],
+        LoadedConfigFileError::NoParentDirectory => {
             vec![str_to_tree("Config file path has no parent directory")]
         }
-        ConfigFileError::ReadFailed(_) => vec![str_to_tree("Failed to read config file")],
-        ConfigFileError::ParseFailed(err) => vec![Node(
+        LoadedConfigFileError::ReadFailed(_) => vec![str_to_tree("Failed to read config file")],
+        LoadedConfigFileError::ParseFailed(err) => vec![Node(
             String::from("Parse errors"),
             format_toml_config_error(err),
         )],
@@ -310,16 +310,16 @@ pub fn print_config_file_error(config_file_path: &RelativePath, error: &ConfigFi
     print_tree(tree);
 }
 
-fn format_toml_config_error(err: &TomlConfigError) -> Vec<Tree> {
+fn format_toml_config_error(err: &ConfigFileError) -> Vec<Tree> {
     match err {
-        TomlConfigError::InvalidTomlSyntax(e) => {
+        ConfigFileError::InvalidTomlSyntax(e) => {
             let label = format!("{} invalid TOML syntax", theme::cross());
             let block = theme::dimmed_border_text_block(e.to_string().trim_end());
             let mut lines = vec![label];
             lines.extend(block.lines().map(str::to_owned));
             vec![Leaf(lines)]
         }
-        TomlConfigError::ParseErrors(errors) => errors
+        ConfigFileError::ParseErrors(errors) => errors
             .iter()
             .map(|e| str_to_tree(&format_parse_error(e)))
             .collect(),

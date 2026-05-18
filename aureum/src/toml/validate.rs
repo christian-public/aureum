@@ -2,7 +2,7 @@ use crate::test_case::{PlannedTestCase, TestCase, TestCaseExpectations};
 use crate::test_id::TestId;
 use crate::toml::config::ValueSource;
 use crate::utils::string;
-use crate::{SubtestPath, TomlConfigFile, TomlConfigTest};
+use crate::{ConfigFile, ConfigTest, SubtestPath};
 use relative_path::RelativePath;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Display;
@@ -146,7 +146,7 @@ impl TestEntry {
 }
 
 pub fn build_test_entries(
-    config: TomlConfigFile,
+    config: ConfigFile,
     config_dir_path: &RelativePath,
     file_name: &str,
     requirement_data: &RequirementData,
@@ -154,7 +154,7 @@ pub fn build_test_entries(
     default_timeout: u64,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
 ) -> Vec<TestEntry> {
-    split_toml_config(config)
+    split_config_file(config)
         .into_iter()
         .map(|c| {
             let subtest_path = c.id.clone().expect("must exist after parsing");
@@ -177,7 +177,7 @@ pub fn build_test_entries(
 
 fn build_test_entry(
     id: TestId,
-    config: TomlConfigTest,
+    config: ConfigTest,
     requirement_data: &RequirementData,
     current_dir: &Path,
     default_timeout: u64,
@@ -204,7 +204,7 @@ fn build_test_entry(
 
 fn build_test_case(
     id: TestId,
-    config: TomlConfigTest,
+    config: ConfigTest,
     requirement_data: &RequirementData,
     current_dir: &Path,
     default_timeout: u64,
@@ -310,7 +310,7 @@ fn build_test_case(
 }
 
 fn build_test_case_expectations(
-    config: TomlConfigTest,
+    config: ConfigTest,
     requirement_data: &RequirementData,
 ) -> Result<TestCaseExpectations, BTreeSet<ValidationError>> {
     let mut errors = BTreeSet::new();
@@ -443,28 +443,25 @@ where
     }
 }
 
-// SPLIT TOML CONFIG
+// SPLIT CONFIG
 
-fn split_toml_config(config: TomlConfigFile) -> Vec<TomlConfigTest> {
-    if config.tests.is_empty() {
-        let mut root_test = config.root;
+fn split_config_file(config_file: ConfigFile) -> Vec<ConfigTest> {
+    if config_file.tests.is_empty() {
+        let mut root_test = config_file.root;
         root_test.id = Some(SubtestPath::root());
 
         vec![root_test]
     } else {
-        let TomlConfigFile { root, tests, .. } = config;
+        let ConfigFile { root, tests, .. } = config_file;
         tests
             .into_iter()
-            .map(|sub_config| merge_toml_configs(root.clone(), sub_config))
+            .map(|sub_config| merge_config_tests(root.clone(), sub_config))
             .collect()
     }
 }
 
-fn merge_toml_configs(
-    base_config: TomlConfigTest,
-    override_config: TomlConfigTest,
-) -> TomlConfigTest {
-    TomlConfigTest {
+fn merge_config_tests(base_config: ConfigTest, override_config: ConfigTest) -> ConfigTest {
+    ConfigTest {
         id: override_config.id.or(base_config.id),
         skip: override_config.skip.or(base_config.skip),
         program: override_config.program.or(base_config.program),
