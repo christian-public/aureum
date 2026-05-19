@@ -441,4 +441,61 @@ mod tests {
         assert_eq!(tmp.read("expected_stdout.txt"), "actual\n");
         assert!(String::from_utf8_lossy(&output).contains("Updated test.toml (stdout)"));
     }
+
+    #[test]
+    fn test_record_mode_quit_persists_only_confirmed_fields() {
+        let tmp = TempDir::new("record_quit_partial");
+        tmp.write(
+            "test.toml",
+            "program = \"echo\"\nexpected_stdout = \"wrong-out\"\nexpected_stderr = \"wrong-err\"\n",
+        );
+
+        let tc = make_test_case_root("", "test.toml");
+        let results = vec![RunResult::Ran {
+            test_case: tc,
+            result: Ok(TestOutcome {
+                stdout: FieldOutcome::Diff {
+                    expected: "wrong-out".to_string(),
+                    got: "actual-out".to_string(),
+                },
+                stderr: FieldOutcome::Diff {
+                    expected: "wrong-err".to_string(),
+                    got: "actual-err".to_string(),
+                },
+                exit_code: FieldOutcome::NotChecked(0),
+            }),
+        }];
+
+        // On stdout: `a` stages Accept, `enter` confirms and advances to stderr.
+        // On stderr: `a` stages Accept but `q` quits before confirming.
+        let mut input = Cursor::new(b"a\nenter\na\nq\n");
+        let mut output = Vec::<u8>::new();
+
+        run_interactive_updates(
+            &results,
+            PlannedCounts {
+                runnable: 1,
+                skipped: 0,
+            },
+            tmp.path(),
+            &mut input,
+            &mut output,
+            80,
+            20,
+            ConfigStats::default(),
+            std::time::Duration::ZERO,
+        )
+        .unwrap();
+
+        let updated = tmp.read("test.toml");
+        assert!(
+            updated.contains("expected_stdout = \"actual-out\""),
+            "stdout was confirmed and should be saved, got:\n{updated}"
+        );
+        assert!(
+            updated.contains("expected_stderr = \"wrong-err\""),
+            "stderr was staged but not confirmed and must not be saved, got:\n{updated}"
+        );
+        assert!(String::from_utf8_lossy(&output).contains("Updated test.toml (stdout)"));
+    }
 }
