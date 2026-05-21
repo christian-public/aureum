@@ -2,33 +2,32 @@ use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
 
+/// Thin test-only wrapper around `tempfile::TempDir` that adds `write`/`read`
+/// sugar so test bodies don't have to repeat `fs::write(td.path().join(...))`.
+/// Cleanup happens automatically when dropped (inherited from `tempfile`).
 pub(crate) struct TempDir {
-    path: PathBuf,
+    inner: tempfile::TempDir,
 }
 
 impl TempDir {
-    pub(crate) fn new(name: &str) -> Self {
-        let path = std::env::temp_dir().join(format!("aureum_test_{name}_{}", std::process::id()));
-        fs::create_dir_all(&path).unwrap();
-        Self { path }
+    pub(crate) fn new(prefix: &str) -> Self {
+        let inner = tempfile::Builder::new()
+            .prefix(&format!("aureum_test_{prefix}_"))
+            .tempdir()
+            .unwrap();
+        Self { inner }
     }
 
     pub(crate) fn write(&self, name: &str, content: &str) {
-        fs::write(self.path.join(name), content).unwrap();
+        fs::write(self.inner.path().join(name), content).unwrap();
     }
 
     pub(crate) fn read(&self, name: &str) -> String {
-        fs::read_to_string(self.path.join(name)).unwrap()
+        fs::read_to_string(self.inner.path().join(name)).unwrap()
     }
 
     pub(crate) fn path(&self) -> &Path {
-        &self.path
-    }
-}
-
-impl Drop for TempDir {
-    fn drop(&mut self) {
-        let _ = fs::remove_dir_all(&self.path);
+        self.inner.path()
     }
 }
 
