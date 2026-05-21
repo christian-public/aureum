@@ -2,6 +2,7 @@ use crate::args::InitArgs;
 use crate::exit_code::ExitCode;
 use crate::init;
 use crate::report;
+use std::env;
 use std::fs;
 
 pub fn init_config(args: InitArgs) -> ExitCode {
@@ -12,7 +13,11 @@ pub fn init_config(args: InitArgs) -> ExitCode {
 
     let content = match args.command.as_slice() {
         [program, arguments @ ..] => match init::record_command(program, arguments) {
-            Ok(output) => init::generate_record_toml(program, arguments, &output),
+            Ok(output) => {
+                let cwd = env::current_dir().unwrap_or_default();
+                let input_files = init::detect_input_files(program, arguments, &cwd);
+                init::generate_record_toml(program, arguments, &input_files, &output)
+            }
             Err(_) => {
                 report::init::print_failed_to_run_command();
                 return ExitCode::GeneralError;
