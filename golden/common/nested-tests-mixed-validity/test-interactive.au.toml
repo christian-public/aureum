@@ -1,7 +1,7 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[[tests]]
+[[test]]
 id = "all-valid.all"
 program_arguments = ["test", "--record", "100x10", "helpers/all-valid.toml"]
 
@@ -21,7 +21,7 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[[tests]]
+[[test]]
 id = "all-valid.specific-test-id"
 program_arguments = [
   "test",
@@ -46,7 +46,7 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[[tests]]
+[[test]]
 id = "missing-program-on-test2.all"
 program_arguments = [
   "test",
@@ -71,7 +71,7 @@ expected_stderr = ""
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "missing-program-on-test2.specific-test-id"
 program_arguments = [
   "test",
@@ -96,7 +96,7 @@ expected_stderr = ""
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "missing-program-on-all-tests"
 program_arguments = [
   "test",
@@ -121,7 +121,7 @@ expected_stderr = ""
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "missing-program-on-all-tests.specific-test-id"
 program_arguments = [
   "test",
@@ -146,7 +146,7 @@ expected_stderr = ""
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "all-files"
 program_arguments = ["test", "--record", "100x10", "helpers/*.toml"]
 

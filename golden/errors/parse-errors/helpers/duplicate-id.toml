@@ -1,28 +1,28 @@
 program = "echo"
 
 
-[[tests]]
+[[test]]
 id = "shared"
 program_arguments = ["-n", "first"]
 
 expected_stdout = "first"
 
 
-[[tests]]
+[[test]]
 id = "unique"
 program_arguments = ["-n", "second"]
 
 expected_stdout = "second"
 
 
-[[tests]]
+[[test]]
 id = "shared"
 program_arguments = ["-n", "third"]
 
 expected_stdout = "third"
 
 
-[[tests]]
+[[test]]
 id = "shared"
 program_arguments = ["-n", "fourth"]
 

@@ -1,7 +1,7 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[[tests]]
+[[test]]
 id = "wrong-field-types"
 program_arguments = ["validate", "helpers/wrong-field-types.toml"]
 
@@ -20,7 +20,7 @@ warning: some config files contain errors (see above)
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "wrong-array-element"
 program_arguments = ["validate", "helpers/wrong-array-element.toml"]
 

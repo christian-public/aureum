@@ -1,7 +1,7 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[[tests]]
+[[test]]
 id = "validate"
 program_arguments = ["validate", "helpers/insertion-order-tests.toml"]
 
@@ -12,7 +12,7 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[[tests]]
+[[test]]
 id = "list.default"
 program_arguments = ["list", "helpers/insertion-order-tests.toml"]
 
@@ -25,7 +25,7 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[[tests]]
+[[test]]
 id = "list.tree"
 program_arguments = ["list", "--tree", "helpers/insertion-order-tests.toml"]
 
@@ -41,7 +41,7 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[[tests]]
+[[test]]
 id = "run.format-toml"
 program_arguments = [
     "run",
@@ -70,7 +70,7 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[[tests]]
+[[test]]
 id = "test.format-tap"
 program_arguments = [
     "test",

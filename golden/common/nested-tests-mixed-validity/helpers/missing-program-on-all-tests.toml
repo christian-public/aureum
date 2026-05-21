@@ -1,4 +1,4 @@
-[[tests]]
+[[test]]
 id = "test1"
 # `program` is missing
 program_arguments = ["-n", "Test 1"]
@@ -6,7 +6,7 @@ program_arguments = ["-n", "Test 1"]
 expected_stdout = "Test 1"
 
 
-[[tests]]
+[[test]]
 id = "test2"
 # `program` is missing
 program_arguments = ["-n", "Test 2"]

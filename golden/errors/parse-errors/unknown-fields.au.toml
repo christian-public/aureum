@@ -1,7 +1,7 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[[tests]]
+[[test]]
 id = "unknown-field-at-root"
 program_arguments = ["validate", "helpers/unknown-field-at-root.toml"]
 
@@ -18,7 +18,7 @@ warning: some config files contain errors (see above)
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "unknown-field-in-subtest"
 program_arguments = ["validate", "helpers/unknown-field-in-subtest.toml"]
 

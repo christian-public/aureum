@@ -13,14 +13,14 @@ expected_stdout = "Hello world"
 # program = "echo"
 
 
-# [[tests]]
+# [[test]]
 # id = "test1"
 # program_arguments = ["-n", "Test 1"]
 
 # expected_stdout = "Test 1"
 
 
-# [[tests]]
+# [[test]]
 # id = "test2"
 # program_arguments = ["-n", "Test 2"]
 

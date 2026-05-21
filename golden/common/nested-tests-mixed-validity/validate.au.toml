@@ -1,7 +1,7 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[[tests]]
+[[test]]
 id = "all-valid.all"
 program_arguments = ["validate", "helpers/all-valid.toml"]
 
@@ -12,7 +12,7 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[[tests]]
+[[test]]
 id = "all-valid.specific-test-id"
 program_arguments = ["validate", "helpers/all-valid.toml:test1"]
 
@@ -23,7 +23,7 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[[tests]]
+[[test]]
 id = "missing-program-on-test2.all"
 program_arguments = ["validate", "helpers/missing-program-on-test2.toml"]
 
@@ -42,7 +42,7 @@ warning: some config files contain errors (see above)
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "missing-program-on-test2.specific-test-id"
 program_arguments = ["validate", "helpers/missing-program-on-test2.toml:test1"]
 
@@ -61,7 +61,7 @@ warning: some config files contain errors (see above)
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "missing-program-on-all-tests.all"
 program_arguments = ["validate", "helpers/missing-program-on-all-tests.toml"]
 
@@ -82,7 +82,7 @@ warning: some config files contain errors (see above)
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "missing-program-on-all-tests.specific-test-id"
 program_arguments = [
     "validate",
@@ -106,7 +106,7 @@ warning: some config files contain errors (see above)
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "all-files"
 program_arguments = ["validate", "helpers/*.toml"]
 

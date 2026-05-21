@@ -1,7 +1,7 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[[tests]]
+[[test]]
 id = "passing"
 program_arguments = [
     "test",
@@ -21,7 +21,7 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[[tests]]
+[[test]]
 id = "failing"
 program_arguments = [
     "test",
@@ -75,7 +75,7 @@ expected_stderr = ""
 expected_exit_code = 1
 
 
-[[tests]]
+[[test]]
 id = "failing-with-newline"
 program_arguments = [
     "test",
@@ -114,7 +114,7 @@ expected_stderr = ""
 expected_exit_code = 1
 
 
-[[tests]]
+[[test]]
 id = "multiple-failing-tests"
 program_arguments = [
     "test",

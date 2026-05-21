@@ -1,21 +1,21 @@
 program = "echo"
 
 
-[[tests]]
+[[test]]
 id = "valid-id"
 program_arguments = ["-n", "hello"]
 
 expected_stdout = "hello"
 
 
-[[tests]]
+[[test]]
 id = "invalid id!"
 program_arguments = ["-n", "world"]
 
 expected_stdout = "world"
 
 
-[[tests]]
+[[test]]
 id = ""
 program_arguments = ["-n", "empty"]
 

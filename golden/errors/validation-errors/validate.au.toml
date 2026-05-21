@@ -1,7 +1,7 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[[tests]]
+[[test]]
 id = "config.empty"
 program_arguments = ["validate", "helpers/config-empty.toml"]
 
@@ -20,7 +20,7 @@ warning: some config files contain errors (see above)
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "config.no-expectations"
 program_arguments = ["validate", "helpers/config-no-expectations.toml"]
 
@@ -38,7 +38,7 @@ warning: some config files contain errors (see above)
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "config.missing-env-var"
 program_arguments = ["validate", "helpers/config-missing-env-var.toml"]
 
@@ -56,7 +56,7 @@ warning: some config files contain errors (see above)
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "config.missing-external-file"
 program_arguments = ["validate", "helpers/config-missing-external-file.toml"]
 
@@ -74,7 +74,7 @@ warning: some config files contain errors (see above)
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "program.no-program"
 program_arguments = ["validate", "helpers/program-no-program.toml"]
 
@@ -92,7 +92,7 @@ warning: some config files contain errors (see above)
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "program.unknown-program"
 program_arguments = ["validate", "helpers/program-unknown-program.toml"]
 
@@ -110,7 +110,7 @@ warning: some config files contain errors (see above)
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "expected-exit-code.invalid-exit-code"
 program_arguments = [
     "validate",
@@ -131,7 +131,7 @@ warning: some config files contain errors (see above)
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "expected-exit-code.failed-to-parse"
 program_arguments = [
     "validate",
@@ -152,7 +152,7 @@ warning: some config files contain errors (see above)
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "timeout-seconds.negative-timeout"
 program_arguments = [
     "validate",
@@ -173,7 +173,7 @@ warning: some config files contain errors (see above)
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "skip.no-reason"
 program_arguments = ["validate", "helpers/skip-no-reason.toml"]
 
@@ -191,7 +191,7 @@ warning: some config files contain errors (see above)
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "skip.multi-line-reason"
 program_arguments = ["validate", "helpers/skip-multi-line-reason.toml"]
 

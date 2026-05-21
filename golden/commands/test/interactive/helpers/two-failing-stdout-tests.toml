@@ -1,14 +1,14 @@
 program = "echo"
 
 
-[[tests]]
+[[test]]
 id = "first"
 program_arguments = ["got_first"]
 
 expected_stdout = "expected_first"
 
 
-[[tests]]
+[[test]]
 id = "second"
 program_arguments = ["got_second"]
 

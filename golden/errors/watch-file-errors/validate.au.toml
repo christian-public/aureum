@@ -1,7 +1,7 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[[tests]]
+[[test]]
 id = "missing-file"
 program_arguments = ["validate", "helpers/watch-files-missing-file.toml"]
 
@@ -18,7 +18,7 @@ warning: some config files contain errors (see above)
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "missing-env-var"
 program_arguments = ["validate", "helpers/watch-files-missing-env-var.toml"]
 

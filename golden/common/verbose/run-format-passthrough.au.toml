@@ -1,7 +1,7 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[[tests]]
+[[test]]
 id = "without-verbose"
 program_arguments = ["run", "--format", "passthrough", "helpers/*.toml"]
 
@@ -14,7 +14,7 @@ hint: use `--format toml` to run multiple tests or run the `list` command to lis
 expected_exit_code = 2
 
 
-[[tests]]
+[[test]]
 id = "with-verbose"
 program_arguments = [
     "run",

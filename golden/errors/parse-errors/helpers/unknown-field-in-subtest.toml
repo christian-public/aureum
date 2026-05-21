@@ -1,7 +1,7 @@
 program = "echo"
 
 
-[[tests]]
+[[test]]
 id = "test1"
 
 expected_stdout = "hello"

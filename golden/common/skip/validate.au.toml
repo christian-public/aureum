@@ -1,7 +1,7 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[[tests]]
+[[test]]
 id = "skip-root-test"
 program_arguments = ["validate", "helpers/skip-root-test.toml"]
 
@@ -12,7 +12,7 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[[tests]]
+[[test]]
 id = "skip-subtest"
 program_arguments = ["validate", "helpers/skip-subtest.toml"]
 
@@ -23,7 +23,7 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[[tests]]
+[[test]]
 id = "skip-invalid-config"
 program_arguments = ["validate", "helpers/skip-invalid-config.toml"]
 
@@ -34,7 +34,7 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[[tests]]
+[[test]]
 id = "validation-error-with-skipped"
 program_arguments = ["validate", "helpers/validation-error-with-skipped.toml"]
 
@@ -54,7 +54,7 @@ warning: some config files contain errors (see above)
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "all"
 program_arguments = ["validate", "helpers/*.toml"]
 

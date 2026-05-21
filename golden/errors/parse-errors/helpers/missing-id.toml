@@ -1,13 +1,13 @@
 program = "echo"
 
 
-[[tests]]
+[[test]]
 program_arguments = ["-n", "test1"]
 
 expected_stdout = "test1"
 
 
-[[tests]]
+[[test]]
 id = "test2"
 program_arguments = ["-n", "test2"]
 

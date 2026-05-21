@@ -51,7 +51,7 @@ static KNOWN_TEST_FIELDS: &[&str] = &[
     "timeout_seconds",
 ];
 
-static KNOWN_ROOT_ONLY_FIELDS: &[&str] = &["tests", "watch_files"];
+static KNOWN_ROOT_ONLY_FIELDS: &[&str] = &["test", "watch_files"];
 
 fn check_unknown_fields(
     table: &Table,
@@ -101,7 +101,7 @@ pub fn parse_toml_config(file_content: &str) -> Result<ConfigFile, ConfigFileErr
         }
     };
 
-    let tests = match get_tests_from_array(&table, "tests", &root_spans, &test_spans) {
+    let tests = match get_tests_from_array(&table, "test", &root_spans, &test_spans) {
         Ok(tests) => Some(tests),
         Err(errs) => {
             all_errors.extend(errs);
@@ -241,7 +241,7 @@ fn find_test_entry_spans(source: &str) -> Vec<TableSpans> {
     let Ok(doc) = Document::parse(source) else {
         return vec![];
     };
-    let Some(tests_item) = doc.get("tests") else {
+    let Some(tests_item) = doc.get("test") else {
         return vec![];
     };
     let Some(array_of_tables) = tests_item.as_array_of_tables() else {

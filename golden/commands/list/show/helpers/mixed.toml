@@ -1,14 +1,14 @@
 program = "echo"
 
 
-[[tests]]
+[[test]]
 id = "runs"
 program_arguments = ["hello"]
 
 expected_stdout = "hello\n"
 
 
-[[tests]]
+[[test]]
 id = "nope"
 skip = "not yet"
 program_arguments = ["world"]

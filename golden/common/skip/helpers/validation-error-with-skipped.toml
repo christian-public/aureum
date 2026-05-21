@@ -1,7 +1,7 @@
 program = "echo"
 
 
-[[tests]]
+[[test]]
 id = "skipped"
 skip = "todo"
 program_arguments = ["hello"]
@@ -9,6 +9,6 @@ program_arguments = ["hello"]
 expected_stdout = "hello\n"
 
 
-[[tests]]
+[[test]]
 id = "invalid"
 program_arguments = ["world"]

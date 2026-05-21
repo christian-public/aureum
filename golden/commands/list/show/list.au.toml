@@ -1,7 +1,7 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[[tests]]
+[[test]]
 id = "all"
 program_arguments = ["list", "--show", "all", "helpers/*.toml"]
 
@@ -15,7 +15,7 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[[tests]]
+[[test]]
 id = "runnable"
 program_arguments = ["list", "--show", "runnable", "helpers/*.toml"]
 
@@ -27,7 +27,7 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[[tests]]
+[[test]]
 id = "skipped"
 program_arguments = ["list", "--show", "skipped", "helpers/*.toml"]
 
@@ -39,7 +39,7 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[[tests]]
+[[test]]
 id = "unknown"
 program_arguments = ["list", "--show", "UNKNOWN", "helpers/*.toml"]
 

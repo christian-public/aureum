@@ -102,7 +102,7 @@ Recommended file extension: `.au.toml`
 
 ### Multiple tests per file
 
-An Aureum config file may contain multiple tests. To specify a sub-test you can add a header using the following format: `[[tests]]`, include an `id` field (example: `id = "id_of_test"`) and configure the test as normal.
+An Aureum config file may contain multiple tests. To specify a sub-test you can add a header using the following format: `[[test]]`, include an `id` field (example: `id = "id_of_test"`) and configure the test as normal.
 
 When specifying multiple tests, the top-level fields are no longer treated as a test itself. Instead, its fields are inherited by each sub-test unless overridden. The following example configures two tests, where both tests run the program `/bin/echo`:
 
@@ -112,13 +112,13 @@ Filename: `multiple_tests.au.toml`
 program = "echo"
 
 
-[[tests]]
+[[test]]
 id = "test1"
 program_arguments = ["-n", "Test 1"]
 expected_stdout = "Test 1"
 
 
-[[tests]]
+[[test]]
 id = "test2"
 program_arguments = ["-n", "Test 2"]
 expected_stdout = "Test 2"

@@ -1,7 +1,7 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[[tests]]
+[[test]]
 id = "missing-id"
 program_arguments = ["validate", "helpers/missing-id.toml"]
 
@@ -11,14 +11,14 @@ expected_stdout = """
 expected_stderr = """
 📋 helpers/missing-id.toml
 └── Parse errors
-    └── ✘ line 4: [[tests]] #1: missing required field `id`
+    └── ✘ line 4: [[test]] #1: missing required field `id`
 
 warning: some config files contain errors (see above)
 """
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "invalid-id"
 program_arguments = ["validate", "helpers/invalid-id.toml"]
 
@@ -28,15 +28,15 @@ expected_stdout = """
 expected_stderr = """
 📋 helpers/invalid-id.toml
 └── Parse errors
-    ├── ✘ line 12: [[tests]] #2: field `id`: invalid identifier `invalid id!` (allowed: ASCII letters, digits, `_`, `-`; separate nested ids with `.`)
-    └── ✘ line 19: [[tests]] #3: field `id`: invalid identifier `` (must be non-empty)
+    ├── ✘ line 12: [[test]] #2: field `id`: invalid identifier `invalid id!` (allowed: ASCII letters, digits, `_`, `-`; separate nested ids with `.`)
+    └── ✘ line 19: [[test]] #3: field `id`: invalid identifier `` (must be non-empty)
 
 warning: some config files contain errors (see above)
 """
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "id-at-root"
 program_arguments = ["validate", "helpers/id-at-root.toml"]
 
@@ -53,7 +53,7 @@ warning: some config files contain errors (see above)
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "duplicate-id"
 program_arguments = ["validate", "helpers/duplicate-id.toml"]
 
@@ -63,8 +63,8 @@ expected_stdout = """
 expected_stderr = """
 📋 helpers/duplicate-id.toml
 └── Parse errors
-    ├── ✘ line 19: [[tests]] #3: field `id`: duplicate identifier `shared`, first defined on line 5
-    └── ✘ line 26: [[tests]] #4: field `id`: duplicate identifier `shared`, first defined on line 5
+    ├── ✘ line 19: [[test]] #3: field `id`: duplicate identifier `shared`, first defined on line 5
+    └── ✘ line 26: [[test]] #4: field `id`: duplicate identifier `shared`, first defined on line 5
 
 warning: some config files contain errors (see above)
 """

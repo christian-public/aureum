@@ -1,7 +1,7 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[[tests]]
+[[test]]
 id = "timeout-seconds-field"
 program_arguments = [
   "test",
@@ -15,7 +15,7 @@ expected_stdout = { file = "snapshots/timeout-seconds-field.txt" }
 expected_exit_code = 1
 
 
-[[tests]]
+[[test]]
 id = "default-timeout-option"
 program_arguments = [
   "test",

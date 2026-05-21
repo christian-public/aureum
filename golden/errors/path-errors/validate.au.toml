@@ -1,7 +1,7 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[[tests]]
+[[test]]
 id = "missing-config"
 program_arguments = ["validate", "aureum_test_this_file_does_not_exist"]
 
@@ -15,7 +15,7 @@ error: no config files found for the given paths
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "missing-config-with-test-id"
 program_arguments = ["validate", "aureum_test_this_file_does_not_exist:sub1"]
 

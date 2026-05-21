@@ -101,7 +101,7 @@ impl fmt::Display for TestSectionReference {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Id(id) => write!(f, "test `{id}`"),
-            Self::Position(n) => write!(f, "[[tests]] #{n}"),
+            Self::Position(n) => write!(f, "[[test]] #{n}"),
         }
     }
 }

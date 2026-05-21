@@ -1,7 +1,7 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[[tests]]
+[[test]]
 id = "startup-message"
 program_arguments = ["test", "--watch", "--stable-output", "helpers/passing.toml"]
 
@@ -17,7 +17,7 @@ watch: watching 2 paths for changes...
 expected_exit_code = 0
 
 
-[[tests]]
+[[test]]
 id = "file-change-reruns-tests"
 program_arguments = ["test", "--watch", "--stable-output", "helpers/passing.toml"]
 stdin = "file-change\n"
@@ -40,7 +40,7 @@ watch: changes detected
 expected_exit_code = 0
 
 
-[[tests]]
+[[test]]
 id = "verbose"
 program_arguments = [
     "test",

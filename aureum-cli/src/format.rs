@@ -12,7 +12,7 @@ const ROOT_FIELD_ORDER: &[&str] = &[
     "expected_stdout",
     "expected_stderr",
     "expected_exit_code",
-    "tests",
+    "test",
 ];
 
 const TEST_FIELD_ORDER: &[&str] = &[
@@ -109,7 +109,7 @@ pub fn format_content(content: &str) -> Result<String, toml_edit::TomlError> {
 
     reorder_table(doc.as_table_mut(), ROOT_FIELD_ORDER);
 
-    if let Some(tests_item) = doc.get_mut("tests")
+    if let Some(tests_item) = doc.get_mut("test")
         && let Some(tests) = tests_item.as_array_of_tables_mut()
     {
         for table in tests.iter_mut() {
@@ -186,7 +186,7 @@ fn insert_group_spacing(content: &str) -> String {
         }
 
         // After the watch_files block, insert one blank line before the next content.
-        // The [[tests]] and expected_* handlers below will top this up if needed.
+        // The [[test]] and expected_* handlers below will top this up if needed.
         if watch_files_just_ended && !result.is_empty() {
             result.push("");
             watch_files_just_ended = false;
@@ -336,7 +336,7 @@ mod tests {
             program = "echo"
 
 
-            [[tests]]
+            [[test]]
             expected_stdout = "a"
             program_arguments = ["-n", "a"]
             id = "t1"
@@ -345,7 +345,7 @@ mod tests {
             program = "echo"
 
 
-            [[tests]]
+            [[test]]
             id = "t1"
             program_arguments = ["-n", "a"]
 
@@ -360,13 +360,13 @@ mod tests {
             program = "echo"
 
 
-            [[tests]]
+            [[test]]
             id = "t1"
             expected_stdout = "a"
 
 
 
-            [[tests]]
+            [[test]]
             id = "t2"
             expected_stdout = "b"
         "#};
@@ -374,13 +374,13 @@ mod tests {
             program = "echo"
 
 
-            [[tests]]
+            [[test]]
             id = "t1"
 
             expected_stdout = "a"
 
 
-            [[tests]]
+            [[test]]
             id = "t2"
 
             expected_stdout = "b"
@@ -392,10 +392,10 @@ mod tests {
     fn adds_two_blank_lines_before_tests_if_missing() {
         let input = indoc! {r#"
             program = "echo"
-            [[tests]]
+            [[test]]
             id = "t1"
             expected_stdout = "a"
-            [[tests]]
+            [[test]]
             id = "t2"
             expected_stdout = "b"
         "#};
@@ -403,13 +403,13 @@ mod tests {
             program = "echo"
 
 
-            [[tests]]
+            [[test]]
             id = "t1"
 
             expected_stdout = "a"
 
 
-            [[tests]]
+            [[test]]
             id = "t2"
 
             expected_stdout = "b"
@@ -422,11 +422,11 @@ mod tests {
         let input = indoc! {r#"
             program = "echo"
             # first test
-            [[tests]]
+            [[test]]
             id = "t1"
             expected_stdout = "a"
             # second test
-            [[tests]]
+            [[test]]
             id = "t2"
             expected_stdout = "b"
         "#};
@@ -435,14 +435,14 @@ mod tests {
 
 
             # first test
-            [[tests]]
+            [[test]]
             id = "t1"
 
             expected_stdout = "a"
 
 
             # second test
-            [[tests]]
+            [[test]]
             id = "t2"
 
             expected_stdout = "b"
@@ -527,7 +527,7 @@ mod tests {
             program = "echo"
 
 
-            [[tests]]
+            [[test]]
             expected_stdout = "hello"
             skip = "not ready"
             id = "t1"
@@ -536,7 +536,7 @@ mod tests {
             program = "echo"
 
 
-            [[tests]]
+            [[test]]
             id = "t1"
             skip = "not ready"
 
@@ -696,12 +696,12 @@ mod tests {
             program = "echo"
 
 
-            [[tests]]
+            [[test]]
             expected_stdout = "a"
             id = "t1"
 
 
-            [[tests]]
+            [[test]]
             expected_stdout = "b"
             id = "t2"
         "#};

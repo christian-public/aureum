@@ -2,7 +2,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 
 # The final progress frame is the first recorded frame when using `--record`.
-[[tests]]
+[[test]]
 id = "all-passed"
 program_arguments = ["test", "--record", "100x20", "helpers/passing-test.toml"]
 

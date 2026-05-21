@@ -1,7 +1,7 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[[tests]]
+[[test]]
 id = "format-summary.timeout-seconds-field"
 program_arguments = [
   "test",
@@ -23,7 +23,7 @@ Test result: FAIL (1 failed, 0 passed) — Finished in 0.0s
 expected_exit_code = 1
 
 
-[[tests]]
+[[test]]
 id = "format-summary.default-timeout-option"
 program_arguments = [
   "test",
@@ -47,7 +47,7 @@ Test result: FAIL (1 failed, 0 passed) — Finished in 0.0s
 expected_exit_code = 1
 
 
-[[tests]]
+[[test]]
 id = "format-tap.timeout-seconds-field"
 program_arguments = [
   "test",
@@ -67,7 +67,7 @@ not ok 1 - helpers/non-terminating-with-timeout.toml
 expected_exit_code = 1
 
 
-[[tests]]
+[[test]]
 id = "format-tap.default-timeout-option"
 program_arguments = [
   "test",

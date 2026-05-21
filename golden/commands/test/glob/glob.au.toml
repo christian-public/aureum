@@ -4,7 +4,7 @@ expected_stderr = ""
 expected_exit_code = 0
 
 
-[[tests]]
+[[test]]
 id = "single-file"
 program_arguments = ["test", "--stable-output", "helpers/dir1/test1.toml"]
 
@@ -16,7 +16,7 @@ Test result: OK (1 passed) — Finished in 0.0s
 """
 
 
-[[tests]]
+[[test]]
 id = "single-dir"
 program_arguments = ["test", "--stable-output", "helpers/dir1/*.toml"]
 
@@ -28,7 +28,7 @@ Test result: OK (2 passed) — Finished in 0.0s
 """
 
 
-[[tests]]
+[[test]]
 id = "multiple-dirs"
 program_arguments = [
   "test",
@@ -46,7 +46,7 @@ Test result: OK (4 passed) — Finished in 0.0s
 """
 
 
-[[tests]]
+[[test]]
 id = "multiple-files"
 program_arguments = [
   "test",

@@ -1,7 +1,7 @@
 program = { env = "AUREUM_TEST_EXEC" }
 
 
-[[tests]]
+[[test]]
 id = "without-verbose"
 program_arguments = ["test", "--format", "tap", "helpers/*.toml"]
 
@@ -31,7 +31,7 @@ warning: some config files contain errors (see above)
 expected_exit_code = 3
 
 
-[[tests]]
+[[test]]
 id = "with-verbose"
 program_arguments = [
     "test",
