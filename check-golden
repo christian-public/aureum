@@ -22,9 +22,5 @@ export AUREUM_TEST_EXEC="$PROGRAM_PATH"
 export AUREUM_TEST_HELLO_WORLD="Hello world" # Required by `basic/read_env_var.au.toml`
 
 # Run the tests
-# The golden suite predates per-test isolation and many tests reference files
-# via paths relative to the config directory. Pass `--no-scratch` so they keep
-# running with cwd = config dir. New tests that specifically exercise isolation
-# can be wrapped in their own helper configs that pass the scratch flags.
-default_command=(test --no-scratch golden)
+default_command=(test golden)
 "$PROGRAM_PATH" "${@:-${default_command[@]}}"

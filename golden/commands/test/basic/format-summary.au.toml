@@ -8,7 +8,7 @@ program_arguments = [
     "--format",
     "summary",
     "--stable-output",
-    "helpers/passing-test.toml",
+    { path_of_file = "helpers/passing-test.toml" },
 ]
 
 expected_stdout = """
@@ -28,7 +28,7 @@ program_arguments = [
     "--format",
     "summary",
     "--stable-output",
-    "helpers/failing-test.toml",
+    { path_of_file = "helpers/failing-test.toml" },
 ]
 
 expected_stdout = """
@@ -82,7 +82,7 @@ program_arguments = [
     "--format",
     "summary",
     "--stable-output",
-    "helpers/failing-test-newline.toml",
+    { path_of_file = "helpers/failing-test-newline.toml" },
 ]
 
 expected_stdout = """
@@ -121,8 +121,8 @@ program_arguments = [
     "--format",
     "summary",
     "--stable-output",
-    "helpers/failing-test.toml",
-    "helpers/failing-test-newline.toml",
+    { path_of_file = "helpers/failing-test.toml" },
+    { path_of_file = "helpers/failing-test-newline.toml" },
 ]
 
 expected_stdout = """

@@ -3,7 +3,12 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 [[test]]
 id = "startup-message"
-program_arguments = ["test", "--watch", "--stable-output", "helpers/passing.toml"]
+program_arguments = [
+    "test",
+    "--watch",
+    "--stable-output",
+    { path_of_file = "helpers/passing.toml" },
+]
 
 expected_stdout = """
 🚀 Running 1 test:
@@ -19,7 +24,12 @@ expected_exit_code = 0
 
 [[test]]
 id = "file-change-reruns-tests"
-program_arguments = ["test", "--watch", "--stable-output", "helpers/passing.toml"]
+program_arguments = [
+    "test",
+    "--watch",
+    "--stable-output",
+    { path_of_file = "helpers/passing.toml" },
+]
 stdin = "file-change\n"
 
 expected_stdout = """
@@ -47,7 +57,7 @@ program_arguments = [
     "--watch",
     "--verbose",
     "--stable-output",
-    "helpers/passing.toml",
+    { path_of_file = "helpers/passing.toml" },
 ]
 
 expected_stdout = """

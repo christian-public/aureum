@@ -1,5 +1,10 @@
 program = { env = "AUREUM_TEST_EXEC" }
-program_arguments = ["run", "--format", "UNKNOWN", "helpers/echo-hello.toml"]
+program_arguments = [
+    "run",
+    "--format",
+    "UNKNOWN",
+    { path_of_file = "helpers/echo-hello.toml" },
+]
 
 expected_stdout = ""
 expected_stderr = """

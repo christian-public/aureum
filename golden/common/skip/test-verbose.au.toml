@@ -7,7 +7,7 @@ program_arguments = [
     "test",
     "--verbose",
     "--stable-output",
-    "helpers/skip-root-test.toml",
+    { path_of_file = "helpers/skip-root-test.toml" },
 ]
 
 expected_stdout = """
@@ -36,7 +36,7 @@ program_arguments = [
     "test",
     "--verbose",
     "--stable-output",
-    "helpers/skip-subtest.toml",
+    { path_of_file = "helpers/skip-subtest.toml" },
 ]
 
 expected_stdout = """
@@ -70,7 +70,7 @@ program_arguments = [
     "test",
     "--verbose",
     "--stable-output",
-    "helpers/skip-invalid-config.toml",
+    { path_of_file = "helpers/skip-invalid-config.toml" },
 ]
 
 expected_stdout = """
@@ -99,7 +99,7 @@ program_arguments = [
     "test",
     "--verbose",
     "--stable-output",
-    "helpers/validation-error-with-skipped.toml",
+    { path_of_file = "helpers/validation-error-with-skipped.toml" },
 ]
 
 expected_stdout = """
@@ -130,6 +130,7 @@ expected_exit_code = 3
 
 [[test]]
 id = "all"
+input_files = ["helpers"]
 program_arguments = ["test", "--verbose", "--stable-output", "helpers/*.toml"]
 
 expected_stdout = """

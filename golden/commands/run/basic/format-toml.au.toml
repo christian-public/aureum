@@ -7,7 +7,7 @@ program_arguments = [
     "run",
     "--format",
     "toml",
-    "helpers/echo-hello.toml",
+    { path_of_file = "helpers/echo-hello.toml" },
 ]
 
 expected_stdout = """
@@ -26,7 +26,7 @@ program_arguments = [
     "run",
     "--format",
     "toml",
-    "helpers/echo-multiline.toml",
+    { path_of_file = "helpers/echo-multiline.toml" },
 ]
 
 expected_stdout = """
@@ -47,7 +47,7 @@ program_arguments = [
     "run",
     "--format",
     "toml",
-    "helpers/bash-stderr-and-exit-code.toml",
+    { path_of_file = "helpers/bash-stderr-and-exit-code.toml" },
 ]
 
 expected_stdout = """
@@ -62,7 +62,12 @@ expected_exit_code = 0
 
 [[test]]
 id = "stdin"
-program_arguments = ["run", "--format", "toml", "helpers/cat-stdin.toml"]
+program_arguments = [
+    "run",
+    "--format",
+    "toml",
+    { path_of_file = "helpers/cat-stdin.toml" },
+]
 
 expected_stdout = """
 # TEST: helpers/cat-stdin.toml

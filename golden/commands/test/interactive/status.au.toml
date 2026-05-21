@@ -8,7 +8,7 @@ program_arguments = [
     "test",
     "--record",
     "120x20",
-    "helpers/failing-stdout-only.toml",
+    { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 stdin = "q\n"
 
@@ -23,7 +23,7 @@ program_arguments = [
     "test",
     "--record",
     "120x20",
-    "helpers/failing-stdout-only.toml",
+    { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 stdin = "e\nq\n"
 
@@ -38,7 +38,7 @@ program_arguments = [
     "test",
     "--record",
     "120x20",
-    "helpers/failing-stdout-only.toml",
+    { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 stdin = "i\nq\n"
 
@@ -53,7 +53,7 @@ program_arguments = [
     "test",
     "--record",
     "120x20",
-    "helpers/failing-stdout-only.toml",
+    { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 stdin = "enter\nq\n"
 
@@ -68,7 +68,7 @@ program_arguments = [
     "test",
     "--record",
     "120x20",
-    "helpers/failing-stdout-only.toml",
+    { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 stdin = "a\nq\n"
 
@@ -83,7 +83,7 @@ program_arguments = [
     "test",
     "--record",
     "120x20",
-    "helpers/failing-stdout-and-exit-code.toml",
+    { path_of_file = "helpers/failing-stdout-and-exit-code.toml" },
 ]
 stdin = "a\nq\n"
 
@@ -98,7 +98,7 @@ program_arguments = [
     "test",
     "--record",
     "120x20",
-    "helpers/failing-stdout-only.toml",
+    { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 stdin = "a\ne\nq\n"
 

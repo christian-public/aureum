@@ -3,8 +3,8 @@ program_arguments = [
   "test",
   "--parallel",
   "--stable-output",
-  "helpers/passing-test.toml",
-  "helpers/passing-test2.toml",
+  { path_of_file = "helpers/passing-test.toml" },
+  { path_of_file = "helpers/passing-test2.toml" },
 ]
 
 expected_stdout = """

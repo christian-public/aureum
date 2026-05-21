@@ -3,7 +3,10 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 [[test]]
 id = "wrong-field-types"
-program_arguments = ["validate", "helpers/wrong-field-types.toml"]
+program_arguments = [
+    "validate",
+    { path_of_file = "helpers/wrong-field-types.toml" },
+]
 
 expected_stdout = """
 ✘ helpers/wrong-field-types.toml  Parse error
@@ -22,7 +25,10 @@ expected_exit_code = 3
 
 [[test]]
 id = "wrong-array-element"
-program_arguments = ["validate", "helpers/wrong-array-element.toml"]
+program_arguments = [
+    "validate",
+    { path_of_file = "helpers/wrong-array-element.toml" },
+]
 
 expected_stdout = """
 ✘ helpers/wrong-array-element.toml  Parse error

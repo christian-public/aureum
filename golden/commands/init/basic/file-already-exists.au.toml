@@ -1,5 +1,5 @@
 program = { env = "AUREUM_TEST_EXEC" }
-program_arguments = ["init", "helpers/empty.toml"]
+program_arguments = ["init", { path_of_file = "helpers/empty.toml" }]
 
 expected_stdout = ""
 expected_stderr = """

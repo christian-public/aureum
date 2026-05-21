@@ -3,7 +3,10 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 [[test]]
 id = "validate"
-program_arguments = ["validate", "helpers/insertion-order-tests.toml"]
+program_arguments = [
+    "validate",
+    { path_of_file = "helpers/insertion-order-tests.toml" },
+]
 
 expected_stdout = """
 ✔ helpers/insertion-order-tests.toml  3 tests
@@ -14,7 +17,10 @@ expected_exit_code = 0
 
 [[test]]
 id = "list.default"
-program_arguments = ["list", "helpers/insertion-order-tests.toml"]
+program_arguments = [
+    "list",
+    { path_of_file = "helpers/insertion-order-tests.toml" },
+]
 
 expected_stdout = """
 helpers/insertion-order-tests.toml:test-z
@@ -27,7 +33,11 @@ expected_exit_code = 0
 
 [[test]]
 id = "list.tree"
-program_arguments = ["list", "--tree", "helpers/insertion-order-tests.toml"]
+program_arguments = [
+    "list",
+    "--tree",
+    { path_of_file = "helpers/insertion-order-tests.toml" },
+]
 
 expected_stdout = """
 /
@@ -47,7 +57,7 @@ program_arguments = [
     "run",
     "--format",
     "toml",
-    "helpers/insertion-order-tests.toml",
+    { path_of_file = "helpers/insertion-order-tests.toml" },
 ]
 
 expected_stdout = """
@@ -76,7 +86,7 @@ program_arguments = [
     "test",
     "--format",
     "tap",
-    "helpers/insertion-order-tests.toml",
+    { path_of_file = "helpers/insertion-order-tests.toml" },
 ]
 
 expected_stdout = """

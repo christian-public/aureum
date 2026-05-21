@@ -1,5 +1,8 @@
 program = { env = "AUREUM_TEST_EXEC" }
-program_arguments = ["validate", "helpers/invalid-syntax.toml"]
+program_arguments = [
+    "validate",
+    { path_of_file = "helpers/invalid-syntax.toml" },
+]
 
 expected_stdout = """
 ✘ helpers/invalid-syntax.toml  Parse error

@@ -3,7 +3,10 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 [[test]]
 id = "skip-root-test"
-program_arguments = ["validate", "helpers/skip-root-test.toml"]
+program_arguments = [
+    "validate",
+    { path_of_file = "helpers/skip-root-test.toml" },
+]
 
 expected_stdout = """
 ✔ helpers/skip-root-test.toml  1 test  1 skipped  → no runnable tests
@@ -14,7 +17,7 @@ expected_exit_code = 0
 
 [[test]]
 id = "skip-subtest"
-program_arguments = ["validate", "helpers/skip-subtest.toml"]
+program_arguments = ["validate", { path_of_file = "helpers/skip-subtest.toml" }]
 
 expected_stdout = """
 ✔ helpers/skip-subtest.toml  2 tests  1 skipped
@@ -25,7 +28,10 @@ expected_exit_code = 0
 
 [[test]]
 id = "skip-invalid-config"
-program_arguments = ["validate", "helpers/skip-invalid-config.toml"]
+program_arguments = [
+    "validate",
+    { path_of_file = "helpers/skip-invalid-config.toml" },
+]
 
 expected_stdout = """
 ✔ helpers/skip-invalid-config.toml  1 test  1 skipped  → no runnable tests
@@ -36,7 +42,10 @@ expected_exit_code = 0
 
 [[test]]
 id = "validation-error-with-skipped"
-program_arguments = ["validate", "helpers/validation-error-with-skipped.toml"]
+program_arguments = [
+    "validate",
+    { path_of_file = "helpers/validation-error-with-skipped.toml" },
+]
 
 expected_stdout = """
 ✘ helpers/validation-error-with-skipped.toml  2 tests  1 skipped
@@ -56,6 +65,7 @@ expected_exit_code = 3
 
 [[test]]
 id = "all"
+input_files = ["helpers"]
 program_arguments = ["validate", "helpers/*.toml"]
 
 expected_stdout = """

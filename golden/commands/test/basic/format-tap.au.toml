@@ -3,7 +3,12 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 [[test]]
 id = "passing"
-program_arguments = ["test", "--format", "tap", "helpers/passing-test.toml"]
+program_arguments = [
+  "test",
+  "--format",
+  "tap",
+  { path_of_file = "helpers/passing-test.toml" },
+]
 
 expected_stdout = """
 TAP version 14
@@ -16,7 +21,12 @@ expected_exit_code = 0
 
 [[test]]
 id = "failing"
-program_arguments = ["test", "--format", "tap", "helpers/failing-test.toml"]
+program_arguments = [
+  "test",
+  "--format",
+  "tap",
+  { path_of_file = "helpers/failing-test.toml" },
+]
 
 expected_stdout = """
 TAP version 14
@@ -44,7 +54,7 @@ program_arguments = [
   "test",
   "--format",
   "tap",
-  "helpers/failing-test-newline.toml",
+  { path_of_file = "helpers/failing-test-newline.toml" },
 ]
 
 expected_stdout = """
@@ -65,7 +75,12 @@ expected_exit_code = 1
 
 [[test]]
 id = "passing-with-hash-in-filename"
-program_arguments = ["test", "--format", "tap", "helpers/test-with-#-sign.toml"]
+program_arguments = [
+  "test",
+  "--format",
+  "tap",
+  { path_of_file = "helpers/test-with-#-sign.toml" },
+]
 
 expected_stdout = """
 TAP version 14

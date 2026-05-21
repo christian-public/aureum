@@ -3,7 +3,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 [[test]]
 id = "config.empty"
-program_arguments = ["validate", "helpers/config-empty.toml"]
+program_arguments = ["validate", { path_of_file = "helpers/config-empty.toml" }]
 
 expected_stdout = """
 ✘ helpers/config-empty.toml  1 test
@@ -22,7 +22,10 @@ expected_exit_code = 3
 
 [[test]]
 id = "config.no-expectations"
-program_arguments = ["validate", "helpers/config-no-expectations.toml"]
+program_arguments = [
+    "validate",
+    { path_of_file = "helpers/config-no-expectations.toml" },
+]
 
 expected_stdout = """
 ✘ helpers/config-no-expectations.toml  1 test
@@ -40,7 +43,10 @@ expected_exit_code = 3
 
 [[test]]
 id = "config.missing-env-var"
-program_arguments = ["validate", "helpers/config-missing-env-var.toml"]
+program_arguments = [
+    "validate",
+    { path_of_file = "helpers/config-missing-env-var.toml" },
+]
 
 expected_stdout = """
 ✘ helpers/config-missing-env-var.toml  1 test
@@ -58,7 +64,10 @@ expected_exit_code = 3
 
 [[test]]
 id = "config.missing-external-file"
-program_arguments = ["validate", "helpers/config-missing-external-file.toml"]
+program_arguments = [
+    "validate",
+    { path_of_file = "helpers/config-missing-external-file.toml" },
+]
 
 expected_stdout = """
 ✘ helpers/config-missing-external-file.toml  1 test
@@ -76,7 +85,10 @@ expected_exit_code = 3
 
 [[test]]
 id = "program.no-program"
-program_arguments = ["validate", "helpers/program-no-program.toml"]
+program_arguments = [
+    "validate",
+    { path_of_file = "helpers/program-no-program.toml" },
+]
 
 expected_stdout = """
 ✘ helpers/program-no-program.toml  1 test
@@ -94,7 +106,10 @@ expected_exit_code = 3
 
 [[test]]
 id = "program.unknown-program"
-program_arguments = ["validate", "helpers/program-unknown-program.toml"]
+program_arguments = [
+    "validate",
+    { path_of_file = "helpers/program-unknown-program.toml" },
+]
 
 expected_stdout = """
 ✘ helpers/program-unknown-program.toml  1 test
@@ -114,7 +129,7 @@ expected_exit_code = 3
 id = "expected-exit-code.invalid-exit-code"
 program_arguments = [
     "validate",
-    "helpers/expected-exit-code-invalid-exit-code.toml",
+    { path_of_file = "helpers/expected-exit-code-invalid-exit-code.toml" },
 ]
 
 expected_stdout = """
@@ -136,7 +151,7 @@ id = "expected-exit-code.failed-to-parse"
 input_files = ["helpers"]
 program_arguments = [
     "validate",
-    "helpers/expected-exit-code-failed-to-parse.toml",
+    { path_of_file = "helpers/expected-exit-code-failed-to-parse.toml" },
 ]
 
 expected_stdout = """
@@ -157,7 +172,7 @@ expected_exit_code = 3
 id = "timeout-seconds.negative-timeout"
 program_arguments = [
     "validate",
-    "helpers/timeout-seconds-negative-timeout.toml",
+    { path_of_file = "helpers/timeout-seconds-negative-timeout.toml" },
 ]
 
 expected_stdout = """
@@ -176,7 +191,10 @@ expected_exit_code = 3
 
 [[test]]
 id = "skip.no-reason"
-program_arguments = ["validate", "helpers/skip-no-reason.toml"]
+program_arguments = [
+    "validate",
+    { path_of_file = "helpers/skip-no-reason.toml" },
+]
 
 expected_stdout = """
 ✘ helpers/skip-no-reason.toml  1 test
@@ -194,7 +212,10 @@ expected_exit_code = 3
 
 [[test]]
 id = "skip.multi-line-reason"
-program_arguments = ["validate", "helpers/skip-multi-line-reason.toml"]
+program_arguments = [
+    "validate",
+    { path_of_file = "helpers/skip-multi-line-reason.toml" },
+]
 
 expected_stdout = """
 ✘ helpers/skip-multi-line-reason.toml  1 test
@@ -212,7 +233,10 @@ expected_exit_code = 3
 
 [[test]]
 id = "embed.unknown"
-program_arguments = ["validate", "helpers/embed-unknown.toml"]
+program_arguments = [
+    "validate",
+    { path_of_file = "helpers/embed-unknown.toml" },
+]
 
 expected_stdout = """
 ✘ helpers/embed-unknown.toml  1 test

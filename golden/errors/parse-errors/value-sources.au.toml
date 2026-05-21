@@ -1,5 +1,8 @@
 program = { env = "AUREUM_TEST_EXEC" }
-program_arguments = ["validate", "helpers/invalid-value-sources.toml"]
+program_arguments = [
+    "validate",
+    { path_of_file = "helpers/invalid-value-sources.toml" },
+]
 
 expected_stdout = """
 ✘ helpers/invalid-value-sources.toml  Parse error

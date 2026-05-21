@@ -7,7 +7,7 @@ program_arguments = [
     "run",
     "--format",
     "passthrough",
-    "helpers/echo-hello.toml",
+    { path_of_file = "helpers/echo-hello.toml" },
 ]
 
 expected_stdout = "Hello world"
@@ -21,7 +21,7 @@ program_arguments = [
     "run",
     "--format",
     "passthrough",
-    "helpers/echo-multiline.toml",
+    { path_of_file = "helpers/echo-multiline.toml" },
 ]
 
 expected_stdout = """
@@ -37,7 +37,7 @@ program_arguments = [
     "run",
     "--format",
     "passthrough",
-    "helpers/bash-stderr-and-exit-code.toml",
+    { path_of_file = "helpers/bash-stderr-and-exit-code.toml" },
 ]
 
 expected_stdout = ""
@@ -51,7 +51,7 @@ program_arguments = [
     "run",
     "--format",
     "passthrough",
-    "helpers/cat-stdin.toml",
+    { path_of_file = "helpers/cat-stdin.toml" },
 ]
 
 expected_stdout = "Hello world"

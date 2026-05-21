@@ -7,7 +7,7 @@ program_arguments = [
   "test",
   "--record",
   "100x20",
-  "helpers/non-terminating-with-timeout.toml",
+  { path_of_file = "helpers/non-terminating-with-timeout.toml" },
 ]
 stdin = "l\nq\n"
 
@@ -23,7 +23,7 @@ program_arguments = [
   "0",
   "--record",
   "100x20",
-  "helpers/non-terminating.toml",
+  { path_of_file = "helpers/non-terminating.toml" },
 ]
 stdin = "l\nq\n"
 

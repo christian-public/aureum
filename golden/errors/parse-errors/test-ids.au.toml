@@ -3,7 +3,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 [[test]]
 id = "missing-id"
-program_arguments = ["validate", "helpers/missing-id.toml"]
+program_arguments = ["validate", { path_of_file = "helpers/missing-id.toml" }]
 
 expected_stdout = """
 ✘ helpers/missing-id.toml  Parse error
@@ -20,7 +20,7 @@ expected_exit_code = 3
 
 [[test]]
 id = "invalid-id"
-program_arguments = ["validate", "helpers/invalid-id.toml"]
+program_arguments = ["validate", { path_of_file = "helpers/invalid-id.toml" }]
 
 expected_stdout = """
 ✘ helpers/invalid-id.toml  Parse error
@@ -38,7 +38,7 @@ expected_exit_code = 3
 
 [[test]]
 id = "id-at-root"
-program_arguments = ["validate", "helpers/id-at-root.toml"]
+program_arguments = ["validate", { path_of_file = "helpers/id-at-root.toml" }]
 
 expected_stdout = """
 ✘ helpers/id-at-root.toml  Parse error
@@ -55,7 +55,7 @@ expected_exit_code = 3
 
 [[test]]
 id = "duplicate-id"
-program_arguments = ["validate", "helpers/duplicate-id.toml"]
+program_arguments = ["validate", { path_of_file = "helpers/duplicate-id.toml" }]
 
 expected_stdout = """
 ✘ helpers/duplicate-id.toml  Parse error

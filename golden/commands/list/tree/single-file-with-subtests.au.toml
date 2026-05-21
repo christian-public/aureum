@@ -1,5 +1,9 @@
 program = { env = "AUREUM_TEST_EXEC" }
-program_arguments = ["list", "--tree", "helpers/with-subtests.toml"]
+program_arguments = [
+    "list",
+    "--tree",
+    { path_of_file = "helpers/with-subtests.toml" },
+]
 
 expected_stdout = """
 /

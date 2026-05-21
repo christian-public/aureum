@@ -1,3 +1,4 @@
+input_files = ["helpers"]
 program = { env = "AUREUM_TEST_EXEC" }
 program_arguments = ["list", "helpers/*.toml"]
 

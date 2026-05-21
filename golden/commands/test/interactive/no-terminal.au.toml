@@ -2,7 +2,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 program_arguments = [
   "test",
   "--interactive",
-  "helpers/failing-stdout-only.toml",
+  { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 
 expected_stdout = ""

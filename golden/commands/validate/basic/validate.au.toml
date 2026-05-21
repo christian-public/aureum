@@ -3,7 +3,7 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 [[test]]
 id = "single-valid-file"
-program_arguments = ["validate", "helpers/passing-test.toml"]
+program_arguments = ["validate", { path_of_file = "helpers/passing-test.toml" }]
 
 expected_stdout = """
 ✔ helpers/passing-test.toml  1 test
@@ -16,8 +16,8 @@ expected_exit_code = 0
 id = "multiple-valid-files"
 program_arguments = [
     "validate",
-    "helpers/passing-test.toml",
-    "helpers/passing-test2.toml",
+    { path_of_file = "helpers/passing-test.toml" },
+    { path_of_file = "helpers/passing-test2.toml" },
 ]
 
 expected_stdout = """

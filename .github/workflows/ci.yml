@@ -48,5 +48,5 @@ jobs:
 
     - name: Run Aureum tests
       if: always() && steps.build.outcome == 'success'
-      run: RELEASE=1 ./check-golden test --no-scratch --verbose golden examples aureum-cli/assets
+      run: RELEASE=1 ./check-golden test --verbose golden examples aureum-cli/assets
       shell: bash

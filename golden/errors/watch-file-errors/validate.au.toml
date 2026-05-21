@@ -3,7 +3,10 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 [[test]]
 id = "missing-file"
-program_arguments = ["validate", "helpers/watch-files-missing-file.toml"]
+program_arguments = [
+    "validate",
+    { path_of_file = "helpers/watch-files-missing-file.toml" },
+]
 
 expected_stdout = """
 ✘ helpers/watch-files-missing-file.toml  1 test
@@ -20,7 +23,10 @@ expected_exit_code = 3
 
 [[test]]
 id = "missing-env-var"
-program_arguments = ["validate", "helpers/watch-files-missing-env-var.toml"]
+program_arguments = [
+    "validate",
+    { path_of_file = "helpers/watch-files-missing-env-var.toml" },
+]
 
 expected_stdout = """
 ✘ helpers/watch-files-missing-env-var.toml  1 test

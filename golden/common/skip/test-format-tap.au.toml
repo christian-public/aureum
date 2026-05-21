@@ -3,7 +3,12 @@ program = { env = "AUREUM_TEST_EXEC" }
 
 [[test]]
 id = "skip-root-test"
-program_arguments = ["test", "--format", "tap", "helpers/skip-root-test.toml"]
+program_arguments = [
+  "test",
+  "--format",
+  "tap",
+  { path_of_file = "helpers/skip-root-test.toml" },
+]
 
 expected_stdout = """
 TAP version 14
@@ -16,7 +21,12 @@ expected_exit_code = 0
 
 [[test]]
 id = "skip-subtest"
-program_arguments = ["test", "--format", "tap", "helpers/skip-subtest.toml"]
+program_arguments = [
+  "test",
+  "--format",
+  "tap",
+  { path_of_file = "helpers/skip-subtest.toml" },
+]
 
 expected_stdout = """
 TAP version 14
@@ -34,7 +44,7 @@ program_arguments = [
   "test",
   "--format",
   "tap",
-  "helpers/skip-invalid-config.toml",
+  { path_of_file = "helpers/skip-invalid-config.toml" },
 ]
 
 expected_stdout = """
@@ -52,7 +62,7 @@ program_arguments = [
   "test",
   "--format",
   "tap",
-  "helpers/validation-error-with-skipped.toml",
+  { path_of_file = "helpers/validation-error-with-skipped.toml" },
 ]
 
 expected_stdout = """
@@ -75,6 +85,7 @@ expected_exit_code = 3
 
 [[test]]
 id = "all"
+input_files = ["helpers"]
 program_arguments = ["test", "--format", "tap", "helpers/*.toml"]
 
 expected_stdout = """
