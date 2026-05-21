@@ -219,6 +219,7 @@ mod tests {
             arguments: vec![],
             stdin: None,
             timeout_seconds: u64::MAX,
+            scratch_plan: None,
         }
     }
 

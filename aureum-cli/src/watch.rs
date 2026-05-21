@@ -84,13 +84,18 @@ pub fn load_test_cases_for_watch(
     paths: &[PathBuf],
     current_dir: &Path,
     default_timeout: u64,
+    scratch_root: Option<&Path>,
 ) -> (Vec<PlannedTestCase>, ConfigStats) {
     let find_result = find_config_file::find_config_files(paths.to_vec(), current_dir);
     if find_result.found.is_empty() {
         return (vec![], ConfigStats::default());
     }
-    let load_result =
-        load_config_file::load_config_files(find_result, current_dir, default_timeout);
+    let load_result = load_config_file::load_config_files(
+        find_result,
+        current_dir,
+        default_timeout,
+        scratch_root,
+    );
     let config_stats = load_result.config_stats();
     let test_cases = load_result
         .loaded

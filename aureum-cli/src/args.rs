@@ -110,6 +110,9 @@ pub struct RunArgs {
     pub format: RunOutputFormat,
 
     #[command(flatten)]
+    pub scratch: ScratchArgs,
+
+    #[command(flatten)]
     pub common: CommonArgs,
 }
 
@@ -146,7 +149,27 @@ pub struct TestArgs {
     pub record: Option<TerminalSize>,
 
     #[command(flatten)]
+    pub scratch: ScratchArgs,
+
+    #[command(flatten)]
     pub common: CommonArgs,
+}
+
+#[derive(Args, Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub struct ScratchArgs {
+    /// Root directory for per-test scratch directories. If omitted, a system
+    /// temporary directory is used.
+    #[arg(long, value_name = "PATH", conflicts_with = "no_scratch")]
+    pub scratch_root: Option<PathBuf>,
+
+    /// Do not delete per-test scratch directories after the run.
+    #[arg(long, conflicts_with = "no_scratch", requires = "scratch_root")]
+    pub keep_scratch: bool,
+
+    /// Disable per-test isolation; run tests in the config file's directory.
+    #[arg(long)]
+    pub no_scratch: bool,
 }
 
 #[derive(Args)]

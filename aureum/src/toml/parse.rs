@@ -1,7 +1,7 @@
 use crate::SubtestPath;
 use crate::toml::config::{
-    ConfigFile, ConfigFileError, ConfigTest, ParseError, ParseErrorReason, TestSectionReference,
-    TomlType, ValueSource,
+    ConfigFile, ConfigFileError, ConfigTest, EmbedDeclaration, ParseError, ParseErrorReason,
+    TestSectionReference, TomlType, ValueSource,
 };
 use std::collections::{BTreeMap, HashSet};
 use std::convert::TryFrom;
@@ -42,6 +42,7 @@ impl TableSpans {
 static KNOWN_TEST_FIELDS: &[&str] = &[
     "id",
     "skip",
+    "input_files",
     "program",
     "program_arguments",
     "stdin",
@@ -51,7 +52,9 @@ static KNOWN_TEST_FIELDS: &[&str] = &[
     "timeout_seconds",
 ];
 
-static KNOWN_ROOT_ONLY_FIELDS: &[&str] = &["test", "watch_files"];
+static KNOWN_ROOT_ONLY_FIELDS: &[&str] = &["test", "watch_files", "embed"];
+
+static KNOWN_EMBED_FIELDS: &[&str] = &["path", "content"];
 
 fn check_unknown_fields(
     table: &Table,
@@ -109,6 +112,15 @@ pub fn parse_toml_config(file_content: &str) -> Result<ConfigFile, ConfigFileErr
         }
     };
 
+    let embed_spans = find_embed_entry_spans(file_content);
+    let embeds = match get_embeds_from_array(&table, "embed", &root_spans, &embed_spans) {
+        Ok(embeds) => Some(embeds),
+        Err(errs) => {
+            all_errors.extend(errs);
+            None
+        }
+    };
+
     for err in check_unknown_fields(
         &table,
         KNOWN_TEST_FIELDS
@@ -121,12 +133,15 @@ pub fn parse_toml_config(file_content: &str) -> Result<ConfigFile, ConfigFileErr
 
     all_errors.sort_by_key(|err| err.line);
 
-    match (root, tests, watch_files) {
-        (Some(root), Some(tests), Some(watch_files)) if all_errors.is_empty() => Ok(ConfigFile {
-            root,
-            tests,
-            watch_files,
-        }),
+    match (root, tests, watch_files, embeds) {
+        (Some(root), Some(tests), Some(watch_files), Some(embeds)) if all_errors.is_empty() => {
+            Ok(ConfigFile {
+                root,
+                tests,
+                watch_files,
+                embeds,
+            })
+        }
         _ => Err(ConfigFileError::ParseErrors(all_errors)),
     }
 }
@@ -137,6 +152,11 @@ fn parse_test_from_table(table: &Table) -> Result<ConfigTest, Vec<ParseErrorReas
     let id = collect_error(&mut errors, get_subtest_path_from_table(table, "id"));
     let skip = collect_error(&mut errors, get_plain_string_from_table(table, "skip"));
     let program = collect_error(&mut errors, get_string_from_table(table, "program"));
+
+    let input_files = collect_errors(
+        &mut errors,
+        get_array_of_strings_from_table(table, "input_files"),
+    );
 
     let program_arguments = collect_errors(
         &mut errors,
@@ -163,6 +183,7 @@ fn parse_test_from_table(table: &Table) -> Result<ConfigTest, Vec<ParseErrorReas
         Ok(ConfigTest {
             id,
             skip,
+            input_files,
             program,
             program_arguments,
             stdin,
@@ -272,6 +293,122 @@ fn reference_for_entry(item: &Value, position: usize) -> TestSectionReference {
             _ => None,
         })
         .unwrap_or(TestSectionReference::Position(position))
+}
+
+fn find_embed_entry_spans(source: &str) -> Vec<TableSpans> {
+    let Ok(doc) = Document::parse(source) else {
+        return vec![];
+    };
+    let Some(item) = doc.get("embed") else {
+        return vec![];
+    };
+    let Some(array_of_tables) = item.as_array_of_tables() else {
+        return vec![];
+    };
+    array_of_tables
+        .iter()
+        .map(|table| {
+            let header_line = table
+                .span()
+                .map(|range| byte_offset_to_line(source, range.start))
+                .unwrap_or(0);
+            TableSpans {
+                header_line,
+                field_lines: collect_field_lines(source, table),
+            }
+        })
+        .collect()
+}
+
+fn get_embeds_from_array(
+    table: &Table,
+    key: &str,
+    root_spans: &TableSpans,
+    embed_spans: &[TableSpans],
+) -> Result<Vec<EmbedDeclaration>, Vec<ParseError>> {
+    let Some(value) = table.get(key) else {
+        return Ok(vec![]);
+    };
+
+    let Some(array) = value.as_array() else {
+        return Err(vec![root_spans.locate(ParseErrorReason::InField {
+            field: key.to_owned(),
+            reason: Box::new(ParseErrorReason::InvalidType {
+                expected: TomlType::Array(vec![]),
+                got: type_from_value(value),
+            }),
+        })]);
+    };
+
+    let mut errors: Vec<ParseError> = vec![];
+    let mut parsed_embeds: Vec<EmbedDeclaration> = vec![];
+
+    for (index, item) in array.iter().enumerate() {
+        let position = index + 1;
+        let spans = embed_spans.get(index);
+        let header_line = spans.map(|s| s.header_line).unwrap_or(0);
+        let line_for_reason =
+            |err: &ParseErrorReason| spans.map(|s| s.line_for_reason(err)).unwrap_or(0);
+
+        let wrap = |line: usize, reason: ParseErrorReason| -> ParseError {
+            ParseError {
+                line,
+                reason: ParseErrorReason::InEmbed {
+                    position,
+                    reason: Box::new(reason),
+                },
+            }
+        };
+
+        let Some(inner_table) = item.as_table() else {
+            errors.push(wrap(
+                header_line,
+                ParseErrorReason::InvalidType {
+                    expected: TomlType::Table(BTreeMap::new()),
+                    got: type_from_value(item),
+                },
+            ));
+            continue;
+        };
+
+        for err in check_unknown_fields(inner_table, KNOWN_EMBED_FIELDS.iter().copied()) {
+            errors.push(wrap(line_for_reason(&err), err));
+        }
+
+        let path = match get_plain_string_from_table(inner_table, "path") {
+            Ok(Some(s)) => Some(s),
+            Ok(None) => {
+                errors.push(wrap(header_line, ParseErrorReason::MissingEmbedPath));
+                None
+            }
+            Err(err) => {
+                errors.push(wrap(line_for_reason(&err), err));
+                None
+            }
+        };
+
+        let content = match get_string_from_table(inner_table, "content") {
+            Ok(Some(v)) => Some(v),
+            Ok(None) => {
+                errors.push(wrap(header_line, ParseErrorReason::MissingEmbedContent));
+                None
+            }
+            Err(err) => {
+                errors.push(wrap(line_for_reason(&err), err));
+                None
+            }
+        };
+
+        if let (Some(path), Some(content)) = (path, content) {
+            parsed_embeds.push(EmbedDeclaration { path, content });
+        }
+    }
+
+    if errors.is_empty() {
+        Ok(parsed_embeds)
+    } else {
+        Err(errors)
+    }
 }
 
 fn get_tests_from_array(
@@ -473,7 +610,7 @@ fn parse_integer_value(value: &Value) -> Result<ValueSource<i64>, ParseErrorReas
     }
 }
 
-static ALL_EXCLUSIVE_KEYS: [&str; 2] = ["file", "env"];
+static ALL_EXCLUSIVE_KEYS: [&str; 5] = ["env", "file", "embed", "path_of_file", "path_of_embed"];
 
 fn parse_value_source<T>(table: &Table) -> Result<ValueSource<T>, ParseErrorReason> {
     let mut inner_reason = None;
@@ -493,23 +630,6 @@ fn parse_value_source<T>(table: &Table) -> Result<ValueSource<T>, ParseErrorReas
         inner_reason = Some(Box::new(ParseErrorReason::AmbiguousValueSource {
             conflicting_keys,
         }));
-    } else if let Some(value) = table.get("file") {
-        match value {
-            Value::String(s) => {
-                if unexpected_keys.is_empty() {
-                    return Ok(ValueSource::ReadFromFile { file: s.to_owned() });
-                }
-            }
-            _ => {
-                inner_reason = Some(Box::new(ParseErrorReason::InField {
-                    field: "file".to_owned(),
-                    reason: Box::new(ParseErrorReason::InvalidType {
-                        expected: TomlType::String,
-                        got: type_from_value(value),
-                    }),
-                }));
-            }
-        };
     } else if let Some(value) = table.get("env") {
         match value {
             Value::String(s) => {
@@ -518,13 +638,57 @@ fn parse_value_source<T>(table: &Table) -> Result<ValueSource<T>, ParseErrorReas
                 }
             }
             _ => {
-                inner_reason = Some(Box::new(ParseErrorReason::InField {
-                    field: "env".to_owned(),
-                    reason: Box::new(ParseErrorReason::InvalidType {
-                        expected: TomlType::String,
-                        got: type_from_value(value),
-                    }),
-                }));
+                inner_reason = Some(invalid_string_field("env", value));
+            }
+        };
+    } else if let Some(value) = table.get("file") {
+        match value {
+            Value::String(s) => {
+                if unexpected_keys.is_empty() {
+                    return Ok(ValueSource::ReadFromFile { file: s.to_owned() });
+                }
+            }
+            _ => {
+                inner_reason = Some(invalid_string_field("file", value));
+            }
+        };
+    } else if let Some(value) = table.get("embed") {
+        match value {
+            Value::String(s) => {
+                if unexpected_keys.is_empty() {
+                    return Ok(ValueSource::ReadFromEmbed {
+                        embed: s.to_owned(),
+                    });
+                }
+            }
+            _ => {
+                inner_reason = Some(invalid_string_field("embed", value));
+            }
+        };
+    } else if let Some(value) = table.get("path_of_file") {
+        match value {
+            Value::String(s) => {
+                if unexpected_keys.is_empty() {
+                    return Ok(ValueSource::CopyFromFile {
+                        path_of_file: s.to_owned(),
+                    });
+                }
+            }
+            _ => {
+                inner_reason = Some(invalid_string_field("path_of_file", value));
+            }
+        };
+    } else if let Some(value) = table.get("path_of_embed") {
+        match value {
+            Value::String(s) => {
+                if unexpected_keys.is_empty() {
+                    return Ok(ValueSource::WriteEmbed {
+                        path_of_embed: s.to_owned(),
+                    });
+                }
+            }
+            _ => {
+                inner_reason = Some(invalid_string_field("path_of_embed", value));
             }
         };
     } else {
@@ -536,6 +700,16 @@ fn parse_value_source<T>(table: &Table) -> Result<ValueSource<T>, ParseErrorReas
     Err(ParseErrorReason::InvalidValueSource {
         reason: inner_reason,
         unexpected_keys,
+    })
+}
+
+fn invalid_string_field(field: &str, value: &Value) -> Box<ParseErrorReason> {
+    Box::new(ParseErrorReason::InField {
+        field: field.to_owned(),
+        reason: Box::new(ParseErrorReason::InvalidType {
+            expected: TomlType::String,
+            got: type_from_value(value),
+        }),
     })
 }
 

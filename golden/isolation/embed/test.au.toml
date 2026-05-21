@@ -1,0 +1,69 @@
+program = { env = "AUREUM_TEST_EXEC" }
+
+
+[[test]]
+id = "basic"
+program_arguments = [
+    "test",
+    "--format",
+    "summary",
+    "--stable-output",
+    { path_of_file = "helpers/embed-basic.toml" },
+]
+
+expected_stdout = """
+🚀 Running 1 test:
+.
+
+Test result: OK (1 passed) — Finished in 0.0s
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[test]]
+id = "subdir"
+program_arguments = [
+    "test",
+    "--format",
+    "summary",
+    "--stable-output",
+    { path_of_file = "helpers/embed-subdir.toml" },
+]
+
+expected_stdout = """
+🚀 Running 1 test:
+.
+
+Test result: OK (1 passed) — Finished in 0.0s
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+[[test]]
+id = "no-scratch-rejects-path-of-embed"
+program_arguments = [
+    "test",
+    "--format",
+    "summary",
+    "--stable-output",
+    "--no-scratch",
+    { path_of_file = "helpers/embed-basic.toml" },
+]
+
+expected_stdout = """
+🚀 Running 0 tests:
+
+
+Test result: OK* (0 passed, 1 config error) — Finished in 0.0s
+"""
+expected_stderr = """
+📋 helpers/embed-basic.toml
+└── Test
+    └── Validation errors
+        └── ✘ field `program_arguments`: `path_of_embed` requires per-test isolation; cannot be used with `--no-scratch`
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3

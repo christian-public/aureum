@@ -8,6 +8,7 @@ mod utils {
     pub mod diff;
     pub mod string;
 }
+mod scratch;
 mod subtest_path;
 mod subtest_path_coverage_set;
 mod test_case;
@@ -18,6 +19,7 @@ mod test_runner;
 pub use utils::diff;
 pub use utils::string;
 
+pub use scratch::{EmbedWrite, FileCopy, ScratchPlan};
 pub use subtest_path::SubtestPath;
 pub use subtest_path_coverage_set::SubtestPathCoverageSet;
 pub use test_case::{PlannedTestCase, TestCase, TestCaseExpectations};
@@ -28,6 +30,7 @@ pub use toml::config::{ConfigFile, ConfigFileError, ConfigTest, ParseError, Pars
 pub use toml::requirement::Requirements;
 pub use toml::validate::{ProgramPath, RequirementData, TestEntry, ValidationError};
 
+pub use scratch::is_per_test_dir_name;
 pub use test_runner::{run_program, run_program_passthrough, run_test_cases};
 pub use toml::parse::parse_toml_config;
 pub use toml::requirement::{get_requirements, resolve_watch_files};

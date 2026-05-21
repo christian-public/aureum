@@ -1,0 +1,4 @@
+program = "cat"
+program_arguments = [{ path_of_file = "helpers/data.txt" }]
+
+expected_stdout = "copied from disk"

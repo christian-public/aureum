@@ -1,0 +1,9 @@
+program = "cat"
+program_arguments = [{ path_of_embed = "input.txt" }]
+
+expected_stdout = "Hello from embed!"
+
+
+[[embed]]
+path = "input.txt"
+content = "Hello from embed!"

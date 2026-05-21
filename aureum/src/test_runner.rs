@@ -1,10 +1,12 @@
+use crate::scratch::ScratchPlan;
 use crate::test_case::{PlannedTestCase, TestCase, TestCaseExpectations};
 use crate::test_id::TestId;
 use crate::test_outcome::{FieldOutcome, TestOutcome};
 use crate::utils::string;
 use rayon::prelude::*;
+use std::fs;
 use std::io::{self, Read, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::mpsc;
 use std::thread;
@@ -18,6 +20,7 @@ pub struct ProgramOutput {
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
+#[allow(clippy::large_enum_variant)]
 pub enum RunResult {
     Skipped {
         id: TestId,
@@ -69,6 +72,25 @@ pub enum RunError {
     IOError(#[from] io::Error),
     #[error("timed out")]
     TimedOut,
+    #[error("failed to create scratch directory `{path}`: {source}")]
+    ScratchCreationFailed {
+        path: PathBuf,
+        #[source]
+        source: io::Error,
+    },
+    #[error("failed to write embed `{path}`: {source}")]
+    EmbedWriteFailed {
+        path: PathBuf,
+        #[source]
+        source: io::Error,
+    },
+    #[error("failed to copy `{from}` to `{to}`: {source}")]
+    FileCopyFailed {
+        from: PathBuf,
+        to: PathBuf,
+        #[source]
+        source: io::Error,
+    },
 }
 
 // RUN TEST CASES
@@ -118,7 +140,18 @@ fn run_test_case(
     })
 }
 
+/// Runs `test_case`'s program and returns its captured stdout, stderr, and
+/// exit code.
+///
+/// **Side effect:** when `test_case.scratch_plan` is `Some`, this materialises
+/// the plan to disk (creates the scratch directory, copies declared input
+/// files, writes embed files) before launching the program. Callers that hold
+/// a `TestCase` with a scratch plan must be prepared for filesystem writes
+/// under `plan.dir`.
 pub fn run_program(test_case: &TestCase, current_dir: &Path) -> Result<ProgramOutput, RunError> {
+    if let Some(plan) = &test_case.scratch_plan {
+        materialise_scratch(plan)?;
+    }
     let mut cmd = init_command(test_case, current_dir);
 
     cmd.stdin(Stdio::piped());
@@ -227,7 +260,15 @@ pub fn run_program(test_case: &TestCase, current_dir: &Path) -> Result<ProgramOu
     })
 }
 
+/// Runs `test_case`'s program with stdout/stderr inherited from the parent
+/// process and returns its exit code.
+///
+/// **Side effect:** see [`run_program`] — when `test_case.scratch_plan` is
+/// `Some`, this materialises the plan to disk before launching the program.
 pub fn run_program_passthrough(test_case: &TestCase, current_dir: &Path) -> Result<i32, RunError> {
+    if let Some(plan) = &test_case.scratch_plan {
+        materialise_scratch(plan)?;
+    }
     let mut cmd = init_command(test_case, current_dir);
 
     cmd.stdout(Stdio::inherit());
@@ -258,7 +299,10 @@ pub fn run_program_passthrough(test_case: &TestCase, current_dir: &Path) -> Resu
 // HELPER FUNCTIONS
 
 fn init_command(test_case: &TestCase, current_dir: &Path) -> Command {
-    let run_dir = test_case.id.config_dir_path.to_path(current_dir);
+    let run_dir = match &test_case.scratch_plan {
+        Some(plan) => plan.dir.clone(),
+        None => test_case.id.config_dir_path.to_path(current_dir),
+    };
 
     let mut cmd = Command::new(&test_case.program_path);
 
@@ -278,6 +322,39 @@ fn compare_result<T: Eq>(expected: Option<T>, got: T) -> FieldOutcome<T> {
     } else {
         FieldOutcome::NotChecked(got)
     }
+}
+
+fn materialise_scratch(plan: &ScratchPlan) -> Result<(), RunError> {
+    fs::create_dir_all(&plan.dir).map_err(|source| RunError::ScratchCreationFailed {
+        path: plan.dir.clone(),
+        source,
+    })?;
+    for embed in &plan.embeds {
+        let dest = plan.dir.join(&embed.dest_relative);
+        if let Some(parent) = dest.parent() {
+            fs::create_dir_all(parent).map_err(|source| RunError::ScratchCreationFailed {
+                path: parent.to_path_buf(),
+                source,
+            })?;
+        }
+        fs::write(&dest, &embed.content)
+            .map_err(|source| RunError::EmbedWriteFailed { path: dest, source })?;
+    }
+    for copy in &plan.copies {
+        let dest = plan.dir.join(&copy.dest_relative);
+        if let Some(parent) = dest.parent() {
+            fs::create_dir_all(parent).map_err(|source| RunError::ScratchCreationFailed {
+                path: parent.to_path_buf(),
+                source,
+            })?;
+        }
+        fs::copy(&copy.source, &dest).map_err(|source| RunError::FileCopyFailed {
+            from: copy.source.clone(),
+            to: dest,
+            source,
+        })?;
+    }
+    Ok(())
 }
 
 // KILL HELPERS
@@ -301,3 +378,151 @@ fn kill_timed_out_process(child_id: u32) {
 
 #[cfg(not(any(unix, windows)))]
 fn kill_timed_out_process(_child_id: u32) {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::scratch::{EmbedWrite, FileCopy};
+
+    fn plan_in(dir: PathBuf) -> ScratchPlan {
+        ScratchPlan {
+            dir,
+            copies: vec![],
+            embeds: vec![],
+        }
+    }
+
+    #[test]
+    fn materialise_creates_scratch_dir() {
+        let parent = tempfile::TempDir::new().unwrap();
+        let scratch = parent.path().join("nested/0001-test");
+        let plan = plan_in(scratch.clone());
+        materialise_scratch(&plan).unwrap();
+        assert!(scratch.is_dir());
+    }
+
+    #[test]
+    fn materialise_writes_embed_at_root() {
+        let scratch = tempfile::TempDir::new().unwrap();
+        let plan = ScratchPlan {
+            dir: scratch.path().to_path_buf(),
+            copies: vec![],
+            embeds: vec![EmbedWrite {
+                dest_relative: "inline.txt".to_owned(),
+                content: "hello embed".to_owned(),
+            }],
+        };
+        materialise_scratch(&plan).unwrap();
+        assert_eq!(
+            fs::read_to_string(scratch.path().join("inline.txt")).unwrap(),
+            "hello embed"
+        );
+    }
+
+    #[test]
+    fn materialise_writes_embed_with_nested_parent() {
+        let scratch = tempfile::TempDir::new().unwrap();
+        let plan = ScratchPlan {
+            dir: scratch.path().to_path_buf(),
+            copies: vec![],
+            embeds: vec![EmbedWrite {
+                dest_relative: "sub/dir/inline.txt".to_owned(),
+                content: "nested embed".to_owned(),
+            }],
+        };
+        materialise_scratch(&plan).unwrap();
+        let dest = scratch.path().join("sub/dir/inline.txt");
+        assert!(dest.parent().unwrap().is_dir());
+        assert_eq!(fs::read_to_string(dest).unwrap(), "nested embed");
+    }
+
+    #[test]
+    fn materialise_copies_file_at_root() {
+        let source_dir = tempfile::TempDir::new().unwrap();
+        let source = source_dir.path().join("src.txt");
+        fs::write(&source, "src body").unwrap();
+        let scratch = tempfile::TempDir::new().unwrap();
+        let plan = ScratchPlan {
+            dir: scratch.path().to_path_buf(),
+            copies: vec![FileCopy {
+                source: source.clone(),
+                dest_relative: "src.txt".to_owned(),
+            }],
+            embeds: vec![],
+        };
+        materialise_scratch(&plan).unwrap();
+        assert_eq!(
+            fs::read_to_string(scratch.path().join("src.txt")).unwrap(),
+            "src body"
+        );
+    }
+
+    #[test]
+    fn materialise_copies_file_with_nested_parent() {
+        let source_dir = tempfile::TempDir::new().unwrap();
+        let source = source_dir.path().join("src.txt");
+        fs::write(&source, "deep").unwrap();
+        let scratch = tempfile::TempDir::new().unwrap();
+        let plan = ScratchPlan {
+            dir: scratch.path().to_path_buf(),
+            copies: vec![FileCopy {
+                source: source.clone(),
+                dest_relative: "a/b/c.txt".to_owned(),
+            }],
+            embeds: vec![],
+        };
+        materialise_scratch(&plan).unwrap();
+        assert_eq!(
+            fs::read_to_string(scratch.path().join("a/b/c.txt")).unwrap(),
+            "deep"
+        );
+    }
+
+    #[test]
+    fn materialise_is_idempotent_and_overwrites_embeds() {
+        let scratch = tempfile::TempDir::new().unwrap();
+        let plan = ScratchPlan {
+            dir: scratch.path().to_path_buf(),
+            copies: vec![],
+            embeds: vec![EmbedWrite {
+                dest_relative: "inline.txt".to_owned(),
+                content: "first".to_owned(),
+            }],
+        };
+        materialise_scratch(&plan).unwrap();
+        let plan2 = ScratchPlan {
+            embeds: vec![EmbedWrite {
+                dest_relative: "inline.txt".to_owned(),
+                content: "second".to_owned(),
+            }],
+            ..plan
+        };
+        materialise_scratch(&plan2).unwrap();
+        assert_eq!(
+            fs::read_to_string(scratch.path().join("inline.txt")).unwrap(),
+            "second",
+            "re-materialising should overwrite embeds"
+        );
+    }
+
+    #[test]
+    fn materialise_errors_when_copy_source_disappears() {
+        let source_dir = tempfile::TempDir::new().unwrap();
+        let source = source_dir.path().join("vanishing.txt");
+        // Note: never created.
+        let scratch = tempfile::TempDir::new().unwrap();
+        let plan = ScratchPlan {
+            dir: scratch.path().to_path_buf(),
+            copies: vec![FileCopy {
+                source: source.clone(),
+                dest_relative: "x.txt".to_owned(),
+            }],
+            embeds: vec![],
+        };
+        let err = materialise_scratch(&plan).unwrap_err();
+        match err {
+            RunError::FileCopyFailed { from, .. } => assert_eq!(from, source),
+            other => panic!("expected FileCopyFailed, got {other:?}"),
+        }
+    }
+}

@@ -18,3 +18,4 @@ libc = "0.2"
 
 [dev-dependencies]
 indoc = "2.0.7"
+tempfile = "3"

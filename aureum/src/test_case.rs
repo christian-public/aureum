@@ -1,3 +1,4 @@
+use crate::scratch::ScratchPlan;
 use crate::test_id::TestId;
 use std::path::PathBuf;
 
@@ -9,6 +10,11 @@ pub struct TestCase {
     pub arguments: Vec<String>,
     pub stdin: Option<String>,
     pub timeout_seconds: u64,
+    /// Per-test isolation plan. When `Some`, the runner creates this
+    /// directory and materialises copies/embeds before launching the
+    /// test program, and uses `plan.dir` as the program's `cwd`.
+    /// When `None`, the program runs in the config file's directory.
+    pub scratch_plan: Option<ScratchPlan>,
 }
 
 impl TestCase {

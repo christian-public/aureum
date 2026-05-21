@@ -1,14 +1,13 @@
 use crate::counts::ConfigStats;
 use crate::find_config_file::FindConfigFilesResult;
-use crate::utils::file;
+use crate::utils::{file, glob as glob_util};
 use aureum::{RequirementData, Requirements, SubtestPathCoverageSet, TestEntry, ValidationError};
-use itertools::{Either, Itertools};
 use relative_path::RelativePathBuf;
 use std::collections::{BTreeMap, BTreeSet};
 use std::env;
 use std::fs;
 use std::io;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct LoadConfigFilesResult {
@@ -87,21 +86,34 @@ pub fn load_config_files(
     find_config_files_result: FindConfigFilesResult,
     current_dir: &Path,
     default_timeout: u64,
+    scratch_root: Option<&Path>,
 ) -> LoadConfigFilesResult {
-    let (loaded, invalid) = find_config_files_result.found.into_iter().partition_map(
-        |(config_file_path, subtest_path_coverage_set)| {
-            let result = load_config_file(
-                config_file_path.clone(),
-                subtest_path_coverage_set,
-                current_dir,
-                default_timeout,
-            );
-            match result {
-                Ok(loaded) => Either::Left((config_file_path, loaded)),
-                Err(err) => Either::Right((config_file_path, err)),
+    // Iterate the found files in canonical (BTreeMap) order so the assigned
+    // global positions match the order tests will be discovered and run in.
+    // Sequential by design — a global counter is what makes scratch dir
+    // names cross-file-unique under truncation; assigning positions in
+    // parallel would break that property.
+    let mut loaded: BTreeMap<RelativePathBuf, LoadedConfigFile> = BTreeMap::new();
+    let mut invalid: BTreeMap<RelativePathBuf, LoadedConfigFileError> = BTreeMap::new();
+    let mut next_position: usize = 1;
+    for (config_file_path, subtest_path_coverage_set) in find_config_files_result.found {
+        match load_config_file(
+            config_file_path.clone(),
+            subtest_path_coverage_set,
+            current_dir,
+            default_timeout,
+            scratch_root,
+            next_position,
+        ) {
+            Ok(loaded_file) => {
+                next_position += loaded_file.test_entries.len();
+                loaded.insert(config_file_path, loaded_file);
             }
-        },
-    );
+            Err(err) => {
+                invalid.insert(config_file_path, err);
+            }
+        }
+    }
 
     LoadConfigFilesResult {
         find_config_error_count: find_config_files_result.errors.len(),
@@ -115,6 +127,8 @@ fn load_config_file(
     subtest_path_coverage_set: SubtestPathCoverageSet,
     current_dir: &Path,
     default_timeout: u64,
+    scratch_root: Option<&Path>,
+    starting_position: usize,
 ) -> Result<LoadedConfigFile, LoadedConfigFileError> {
     let file_name = config_file_path
         .file_name()
@@ -143,6 +157,9 @@ fn load_config_file(
         current_dir,
         default_timeout,
         &|name, dir| file::find_executable_path(name, dir).ok(),
+        &expand_input_pattern,
+        scratch_root,
+        starting_position,
     );
 
     Ok(LoadedConfigFile {
@@ -153,6 +170,73 @@ fn load_config_file(
         watch_files,
         watch_file_errors,
     })
+}
+
+/// Glue between `aureum::build_test_entries` and the CLI's file-discovery
+/// helpers. Three resolution modes:
+///
+/// 1. Pattern contains glob characters → expand via the globset walker (files
+///    only, deterministic sorted order).
+/// 2. Pattern resolves to an existing directory → recursively list every file
+///    inside, at its scratch-relative subpath.
+/// 3. Otherwise → return the pattern as a single literal element. Existence
+///    is verified later by the validator.
+///
+/// All returned paths are scratch-relative with forward-slash separators.
+fn expand_input_pattern(pattern: &str, config_dir: &Path) -> Result<Vec<String>, String> {
+    if glob_util::is_glob(Path::new(pattern)) {
+        let abs_pattern: PathBuf = config_dir.join(pattern);
+        let matches = glob_util::walk(&abs_pattern).map_err(|e| e.to_string())?;
+        return matches
+            .into_iter()
+            .map(|abs| relativise(&abs, config_dir))
+            .collect::<Result<Vec<_>, _>>()
+            .map(sorted);
+    }
+
+    let abs = config_dir.join(pattern);
+    if abs.is_dir() {
+        let mut files: Vec<PathBuf> = Vec::new();
+        list_files_recursive(&abs, &mut files).map_err(|e| e.to_string())?;
+        return files
+            .into_iter()
+            .map(|abs| relativise(&abs, config_dir))
+            .collect::<Result<Vec<_>, _>>()
+            .map(sorted);
+    }
+
+    Ok(vec![pattern.to_owned()])
+}
+
+fn list_files_recursive(dir: &Path, out: &mut Vec<PathBuf>) -> io::Result<()> {
+    for entry in fs::read_dir(dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        // `metadata()` follows symlinks, so symlinked files/dirs are included.
+        let md = fs::metadata(&path)?;
+        if md.is_dir() {
+            list_files_recursive(&path, out)?;
+        } else if md.is_file() {
+            out.push(path);
+        }
+    }
+    Ok(())
+}
+
+fn relativise(abs: &Path, base: &Path) -> Result<String, String> {
+    let rel = abs
+        .strip_prefix(base)
+        .map_err(|_| format!("path escaped the config directory: {}", abs.display()))?;
+    Ok(rel
+        .components()
+        .map(|c| c.as_os_str().to_string_lossy().into_owned())
+        .collect::<Vec<_>>()
+        .join("/"))
+}
+
+fn sorted(mut v: Vec<String>) -> Vec<String> {
+    v.sort();
+    v
 }
 
 fn retrieve_requirement_data(current_dir: &Path, requirements: &Requirements) -> RequirementData {

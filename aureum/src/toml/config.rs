@@ -8,6 +8,14 @@ pub struct ConfigFile {
     pub root: ConfigTest,
     pub tests: Vec<ConfigTest>,
     pub watch_files: Vec<ValueSource<String>>,
+    pub embeds: Vec<EmbedDeclaration>,
+}
+
+#[derive(Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub struct EmbedDeclaration {
+    pub path: String,
+    pub content: ValueSource<String>,
 }
 
 #[derive(Clone)]
@@ -15,6 +23,7 @@ pub struct ConfigFile {
 pub struct ConfigTest {
     pub id: Option<SubtestPath>,
     pub skip: Option<String>,
+    pub input_files: Option<Vec<ValueSource<String>>>,
     pub program: Option<ValueSource<String>>,
     pub program_arguments: Option<Vec<ValueSource<String>>>,
     pub stdin: Option<ValueSource<String>>,
@@ -28,8 +37,11 @@ pub struct ConfigTest {
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum ValueSource<T> {
     Literal(T),
-    ReadFromFile { file: String },
     FetchFromEnv { env: String },
+    ReadFromFile { file: String },
+    ReadFromEmbed { embed: String },
+    CopyFromFile { path_of_file: String },
+    WriteEmbed { path_of_embed: String },
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -68,6 +80,12 @@ pub enum ParseErrorReason {
         #[source]
         reason: Box<ParseErrorReason>,
     },
+    #[error("[[embed]] #{position}: {reason}")]
+    InEmbed {
+        position: usize,
+        #[source]
+        reason: Box<ParseErrorReason>,
+    },
     #[error("expected {expected}, got {got}")]
     InvalidType { expected: TomlType, got: TomlType },
     #[error(fmt = fmt_invalid_value_source)]
@@ -77,7 +95,7 @@ pub enum ParseErrorReason {
     },
     #[error(fmt = fmt_ambiguous_value_source)]
     AmbiguousValueSource { conflicting_keys: Vec<String> },
-    #[error("must specify `file` or `env` field")]
+    #[error("must specify one of: `env`, `file`, `embed`, `path_of_file`, `path_of_embed`")]
     MissingRequiredFieldInValueSource,
     #[error("field `id` is not allowed at the root level")]
     IdForbiddenAtRoot,
@@ -89,6 +107,10 @@ pub enum ParseErrorReason {
     DuplicateId { id: String, first_line: usize },
     #[error("unknown field `{field}`")]
     UnknownField { field: String },
+    #[error("missing required field `path`")]
+    MissingEmbedPath,
+    #[error("missing required field `content`")]
+    MissingEmbedContent,
 }
 
 #[derive(Debug, Clone)]

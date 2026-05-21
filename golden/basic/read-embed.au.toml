@@ -1,0 +1,9 @@
+program = "echo"
+program_arguments = ["-n", { embed = "greeting" }]
+
+expected_stdout = { embed = "greeting" }
+
+
+[[embed]]
+path = "greeting"
+content = "Hello from embed!"

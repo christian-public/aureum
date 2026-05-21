@@ -1,0 +1,5 @@
+input_files = ["helpers/data.txt"]
+program = "cat"
+program_arguments = ["helpers/data.txt"]
+
+expected_stdout = "copied from disk"

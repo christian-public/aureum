@@ -1,5 +1,5 @@
 use crate::toml::config::{ConfigFile, ConfigTest, ValueSource};
-use crate::toml::validate::{RequirementData, ValidationError};
+use crate::toml::validate::{self, RequirementData, ValidationError};
 use std::collections::BTreeSet;
 
 #[derive(Default)]
@@ -19,6 +19,9 @@ pub fn get_requirements(config: &ConfigFile) -> Requirements {
     for watch_file in &config.watch_files {
         collect_requirements_from_config_value(&mut requirements, watch_file);
     }
+    for embed in &config.embeds {
+        collect_requirements_from_config_value(&mut requirements, &embed.content);
+    }
 
     requirements
 }
@@ -30,19 +33,18 @@ pub fn resolve_watch_files(
     let mut files = BTreeSet::new();
     let mut errors = BTreeSet::new();
 
+    // Resolving `{ embed = "..." }` in watch_files requires looking up the
+    // embed's resolved content, so build a registry here. Registry build
+    // errors are also surfaced via test entries, so we use whatever
+    // succeeded and ignore the rest at this layer.
+    let embed_registry =
+        validate::build_embed_registry(&config.embeds, requirement_data).unwrap_or_default();
+
     for cv in &config.watch_files {
         match cv {
             ValueSource::Literal(s) => {
                 files.insert(s.clone());
             }
-            ValueSource::ReadFromFile { file } => match requirement_data.files.get(file) {
-                Some(value) => {
-                    files.insert(value.clone());
-                }
-                None => {
-                    errors.insert(ValidationError::MissingExternalFile(file.clone()));
-                }
-            },
             ValueSource::FetchFromEnv { env } => match requirement_data.env_vars.get(env) {
                 Some(value) => {
                     files.insert(value.clone());
@@ -51,6 +53,25 @@ pub fn resolve_watch_files(
                     errors.insert(ValidationError::MissingEnvVar(env.clone()));
                 }
             },
+            ValueSource::ReadFromFile { file } => match requirement_data.files.get(file) {
+                Some(value) => {
+                    files.insert(value.clone());
+                }
+                None => {
+                    errors.insert(ValidationError::MissingExternalFile(file.clone()));
+                }
+            },
+            ValueSource::ReadFromEmbed { embed } => match embed_registry.get(embed.as_str()) {
+                Some(value) => {
+                    files.insert(value.to_owned());
+                }
+                None => {
+                    errors.insert(ValidationError::EmbedUnknown(embed.clone()));
+                }
+            },
+            ValueSource::CopyFromFile { .. } | ValueSource::WriteEmbed { .. } => {
+                errors.insert(ValidationError::PathRefNotAllowedInWatchFiles);
+            }
         }
     }
 
@@ -63,6 +84,16 @@ fn collect_requirements_from_toml_config_test(
 ) {
     if let Some(value) = &config.program {
         collect_requirements_from_config_value(requirements, value);
+    }
+
+    if let Some(array) = &config.input_files {
+        for item in array {
+            // The pattern itself may pull in external data (`{ env = }` /
+            // `{ file = }`) to source the path/glob. Register that here so the
+            // CLI loads it. The expanded files themselves are watched via the
+            // CLI's globset walker — see `watch::collect_watch_paths`.
+            collect_requirements_from_config_value(requirements, item);
+        }
     }
 
     if let Some(array) = &config.program_arguments {
@@ -96,11 +127,19 @@ fn collect_requirements_from_config_value<T>(
         ValueSource::Literal(_) => {
             // Do nothing
         }
+        ValueSource::FetchFromEnv { env } => {
+            requirements.env_vars.insert(env.to_owned());
+        }
         ValueSource::ReadFromFile { file } => {
             requirements.files.insert(file.to_owned());
         }
-        ValueSource::FetchFromEnv { env } => {
-            requirements.env_vars.insert(env.to_owned());
+        ValueSource::CopyFromFile {
+            path_of_file: file_path,
+        } => {
+            requirements.files.insert(file_path.to_owned());
+        }
+        ValueSource::ReadFromEmbed { .. } | ValueSource::WriteEmbed { .. } => {
+            // No external requirement; embed content is declared in [[embed]].
         }
     }
 }
@@ -113,6 +152,7 @@ mod tests {
         ConfigTest {
             id: None,
             skip: None,
+            input_files: None,
             program: None,
             program_arguments: None,
             stdin: None,
@@ -128,6 +168,7 @@ mod tests {
             root: empty_test(),
             tests: vec![],
             watch_files,
+            embeds: vec![],
         }
     }
 

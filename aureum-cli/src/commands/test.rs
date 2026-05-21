@@ -6,6 +6,7 @@ use crate::interactive;
 use crate::load_config_file::LoadConfigFilesResult;
 use crate::report;
 use crate::report::test::{ReportConfig, ReportFormat};
+use crate::scratch_session::{self, ScratchSession};
 use crate::watch::{self, WatchHandle};
 use aureum::{PlannedTestCase, RunResult};
 use std::collections::BTreeSet;
@@ -15,11 +16,20 @@ use std::sync::mpsc;
 use std::time::{Duration, Instant};
 
 pub fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
+    let scratch_session = match ScratchSession::create(&args.scratch) {
+        Ok(s) => s,
+        Err(err) => {
+            report::test::print_failed_to_set_up_scratch(&err);
+            return ExitCode::TestFailure;
+        }
+    };
+    let scratch_root = scratch_session.root().map(Path::to_path_buf);
+
     if let Some(TerminalSize { width, height }) = args.record {
         if args.watch {
-            run_tests_record_watch(args, width, height, current_dir)
+            run_tests_record_watch(args, width, height, current_dir, scratch_root.as_deref())
         } else {
-            run_tests_record(args, width, height, current_dir)
+            run_tests_record(args, width, height, current_dir, scratch_root.as_deref())
         }
     } else if args.interactive {
         if !io::stdout().is_terminal() {
@@ -28,20 +38,22 @@ pub fn run_tests(args: TestArgs, current_dir: &Path) -> ExitCode {
         }
 
         if args.watch {
-            run_tests_interactive_watch(args, current_dir)
+            run_tests_interactive_watch(args, current_dir, scratch_root.as_deref())
         } else {
-            run_tests_interactive(args, current_dir)
+            run_tests_interactive(args, current_dir, scratch_root.as_deref())
         }
+    } else if args.watch {
+        run_tests_noninteractive_watch(args, current_dir, scratch_root.as_deref())
     } else {
-        if args.watch {
-            run_tests_noninteractive_watch(args, current_dir)
-        } else {
-            run_tests_noninteractive(args, current_dir)
-        }
+        run_tests_noninteractive(args, current_dir, scratch_root.as_deref())
     }
 }
 
-fn run_tests_interactive_watch(args: TestArgs, current_dir: &Path) -> ExitCode {
+fn run_tests_interactive_watch(
+    args: TestArgs,
+    current_dir: &Path,
+    scratch_root: Option<&Path>,
+) -> ExitCode {
     let reload_dir = current_dir.to_path_buf();
     let default_timeout = args.default_timeout;
 
@@ -50,6 +62,7 @@ fn run_tests_interactive_watch(args: TestArgs, current_dir: &Path) -> ExitCode {
         current_dir,
         args.default_timeout,
         args.common.verbose,
+        scratch_root,
     ) {
         Ok(result) => result,
         Err(err) => return err,
@@ -69,8 +82,16 @@ fn run_tests_interactive_watch(args: TestArgs, current_dir: &Path) -> ExitCode {
     );
 
     let reload_paths = args.paths;
-    let reload_fn =
-        move || watch::load_test_cases_for_watch(&reload_paths, &reload_dir, default_timeout);
+    let reload_scratch = scratch_root.map(Path::to_path_buf);
+    let reload_fn = move || {
+        scratch_session::clean_per_test_subdirs(reload_scratch.as_deref());
+        watch::load_test_cases_for_watch(
+            &reload_paths,
+            &reload_dir,
+            default_timeout,
+            reload_scratch.as_deref(),
+        )
+    };
 
     match interactive::run_with_progress_review_and_watch(
         &reload_fn,
@@ -89,18 +110,25 @@ fn run_tests_interactive_watch(args: TestArgs, current_dir: &Path) -> ExitCode {
     }
 }
 
-fn run_tests_interactive(args: TestArgs, current_dir: &Path) -> ExitCode {
+fn run_tests_interactive(
+    args: TestArgs,
+    current_dir: &Path,
+    scratch_root: Option<&Path>,
+) -> ExitCode {
     let config_files = match common::prepare_config_files(
         args.paths,
         current_dir,
         args.default_timeout,
         args.common.verbose,
+        scratch_root,
     ) {
         Ok(result) => result,
         Err(err) => return err,
     };
     let config_stats = config_files.config_stats();
     let all_test_cases = collect_test_cases(&config_files);
+
+    scratch_session::clean_per_test_subdirs(scratch_root);
 
     match interactive::run_with_progress_and_review(
         &all_test_cases,
@@ -119,18 +147,33 @@ fn run_tests_interactive(args: TestArgs, current_dir: &Path) -> ExitCode {
     }
 }
 
-fn run_tests_record_watch(args: TestArgs, width: u16, height: u16, current_dir: &Path) -> ExitCode {
+fn run_tests_record_watch(
+    args: TestArgs,
+    width: u16,
+    height: u16,
+    current_dir: &Path,
+    scratch_root: Option<&Path>,
+) -> ExitCode {
     let reload_paths = args.paths.clone();
     let reload_dir = current_dir.to_path_buf();
     let default_timeout = args.default_timeout;
-    let reload_fn =
-        move || watch::load_test_cases_for_watch(&reload_paths, &reload_dir, default_timeout);
+    let reload_scratch = scratch_root.map(Path::to_path_buf);
+    let reload_fn = move || {
+        scratch_session::clean_per_test_subdirs(reload_scratch.as_deref());
+        watch::load_test_cases_for_watch(
+            &reload_paths,
+            &reload_dir,
+            default_timeout,
+            reload_scratch.as_deref(),
+        )
+    };
 
     let config_files = match common::prepare_config_files(
         args.paths,
         current_dir,
         args.default_timeout,
         args.common.verbose,
+        scratch_root,
     ) {
         Ok(result) => result,
         Err(err) => return err,
@@ -157,17 +200,26 @@ fn run_tests_record_watch(args: TestArgs, width: u16, height: u16, current_dir: 
     }
 }
 
-fn run_tests_record(args: TestArgs, width: u16, height: u16, current_dir: &Path) -> ExitCode {
+fn run_tests_record(
+    args: TestArgs,
+    width: u16,
+    height: u16,
+    current_dir: &Path,
+    scratch_root: Option<&Path>,
+) -> ExitCode {
     let config_files = match common::prepare_config_files(
         args.paths,
         current_dir,
         args.default_timeout,
         args.common.verbose,
+        scratch_root,
     ) {
         Ok(result) => result,
         Err(err) => return err,
     };
     let all_test_cases = collect_test_cases(&config_files);
+
+    scratch_session::clean_per_test_subdirs(scratch_root);
 
     let run_results =
         aureum::run_test_cases(&all_test_cases, args.parallel, current_dir, &|_, _| {});
@@ -196,7 +248,11 @@ fn run_tests_record(args: TestArgs, width: u16, height: u16, current_dir: &Path)
     exit_code_from_run_results(&run_results, config_files.has_config_errors())
 }
 
-fn run_tests_noninteractive_watch(args: TestArgs, current_dir: &Path) -> ExitCode {
+fn run_tests_noninteractive_watch(
+    args: TestArgs,
+    current_dir: &Path,
+    scratch_root: Option<&Path>,
+) -> ExitCode {
     let reload_dir = current_dir.to_path_buf();
     let default_timeout = args.default_timeout;
 
@@ -205,6 +261,7 @@ fn run_tests_noninteractive_watch(args: TestArgs, current_dir: &Path) -> ExitCod
         current_dir,
         args.default_timeout,
         args.common.verbose,
+        scratch_root,
     ) {
         Ok(result) => result,
         Err(err) => return err,
@@ -224,8 +281,16 @@ fn run_tests_noninteractive_watch(args: TestArgs, current_dir: &Path) -> ExitCod
     );
 
     let reload_paths = args.paths;
-    let reload_fn =
-        move || watch::load_test_cases_for_watch(&reload_paths, &reload_dir, default_timeout);
+    let reload_scratch = scratch_root.map(Path::to_path_buf);
+    let reload_fn = move || {
+        scratch_session::clean_per_test_subdirs(reload_scratch.as_deref());
+        watch::load_test_cases_for_watch(
+            &reload_paths,
+            &reload_dir,
+            default_timeout,
+            reload_scratch.as_deref(),
+        )
+    };
 
     match run_watch_loop(
         &reload_fn,
@@ -245,12 +310,17 @@ fn run_tests_noninteractive_watch(args: TestArgs, current_dir: &Path) -> ExitCod
     }
 }
 
-fn run_tests_noninteractive(args: TestArgs, current_dir: &Path) -> ExitCode {
+fn run_tests_noninteractive(
+    args: TestArgs,
+    current_dir: &Path,
+    scratch_root: Option<&Path>,
+) -> ExitCode {
     let config_files = match common::prepare_config_files(
         args.paths,
         current_dir,
         args.default_timeout,
         args.common.verbose,
+        scratch_root,
     ) {
         Ok(result) => result,
         Err(err) => return err,
@@ -263,6 +333,8 @@ fn run_tests_noninteractive(args: TestArgs, current_dir: &Path) -> ExitCode {
     );
 
     let all_test_cases = collect_test_cases(&config_files);
+
+    scratch_session::clean_per_test_subdirs(scratch_root);
 
     let stable_duration = args.common.stable_output().map(|s| s.duration);
     let run_results = run_test_cases_noninteractive(

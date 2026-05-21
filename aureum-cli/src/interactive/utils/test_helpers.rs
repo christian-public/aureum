@@ -45,5 +45,6 @@ pub(crate) fn make_test_case_root(dir: &str, file: &str) -> aureum::TestCase {
         arguments: vec![],
         stdin: None,
         timeout_seconds: u64::MAX,
+        scratch_plan: None,
     }
 }

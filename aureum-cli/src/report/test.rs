@@ -62,6 +62,13 @@ pub fn print_record_session_failed(error: &io::Error) {
     eprintln!("{} `--record` session failed: {error}", theme::error());
 }
 
+pub fn print_failed_to_set_up_scratch(error: &io::Error) {
+    eprintln!(
+        "{} failed to set up scratch directory: {error}",
+        theme::error()
+    );
+}
+
 pub fn print_test_cases_start(report_config: &ReportConfig) {
     match report_config.format {
         ReportFormat::Summary => {

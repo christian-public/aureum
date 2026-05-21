@@ -2,6 +2,7 @@ use crate::args::{RunArgs, RunOutputFormat};
 use crate::commands::common;
 use crate::exit_code::ExitCode;
 use crate::report;
+use crate::scratch_session::ScratchSession;
 use aureum::TestCase;
 use std::path::Path;
 
@@ -13,11 +14,20 @@ pub fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
         return ExitCode::InvalidUsage;
     }
 
+    let scratch_session = match ScratchSession::create(&args.scratch) {
+        Ok(s) => s,
+        Err(err) => {
+            report::test::print_failed_to_set_up_scratch(&err);
+            return ExitCode::RunProgramFailure;
+        }
+    };
+
     let config_files = match common::prepare_config_files(
         args.paths,
         current_dir,
         u64::MAX,
         args.common.verbose,
+        scratch_session.root(),
     ) {
         Ok(result) => result,
         Err(err) => return err,
@@ -33,6 +43,8 @@ pub fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
         .iter()
         .flat_map(|test_entry| test_entry.test_case.clone().ok())
         .collect::<Vec<_>>();
+
+    scratch_session.prepare_for_run();
 
     match args.format {
         RunOutputFormat::Passthrough => {

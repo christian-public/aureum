@@ -16,6 +16,7 @@ mod format;
 mod init;
 mod interactive;
 mod load_config_file;
+mod scratch_session;
 mod stable_output;
 mod watch;
 

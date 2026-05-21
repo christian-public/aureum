@@ -1,6 +1,7 @@
+use crate::scratch::{self, EmbedRegistry, ScratchBuilder, ScratchPlanError};
 use crate::test_case::{PlannedTestCase, TestCase, TestCaseExpectations};
 use crate::test_id::TestId;
-use crate::toml::config::ValueSource;
+use crate::toml::config::{EmbedDeclaration, ValueSource};
 use crate::utils::string;
 use crate::{ConfigFile, ConfigTest, SubtestPath};
 use relative_path::RelativePath;
@@ -8,6 +9,17 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Display;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
+
+impl From<ScratchPlanError> for ValidationError {
+    fn from(err: ScratchPlanError) -> Self {
+        match err {
+            ScratchPlanError::InvalidPath(p) => ValidationError::ScratchInvalidPath(p),
+            ScratchPlanError::MissingSourceFile(p) => ValidationError::MissingExternalFile(p),
+            ScratchPlanError::PathConflict(p) => ValidationError::ScratchPathConflict(p),
+            ScratchPlanError::EmbedUnknown(p) => ValidationError::EmbedUnknown(p),
+        }
+    }
+}
 
 #[derive(Default)]
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -64,6 +76,13 @@ pub enum ValidationError {
         env_var: String,
         error: Box<ValidationError>,
     },
+    #[error("in embed `{embed}`: {error}")]
+    InEmbed {
+        embed: String,
+        error: Box<ValidationError>,
+    },
+    #[error("`embed` reference is not allowed inside another embed's content: `{0}`")]
+    EmbedRefNotAllowedInEmbedContent(String),
     #[error("missing external file `{0}`")]
     MissingExternalFile(String),
     #[error("missing environment variable `{0}`")]
@@ -86,6 +105,24 @@ pub enum ValidationError {
     SkipMustNotBeEmpty,
     #[error("must not contain newlines")]
     SkipMustBeSingleLine,
+    #[error("`path_of_file` and `path_of_embed` are not allowed inside `watch_files`")]
+    PathRefNotAllowedInWatchFiles,
+    #[error("`path_of_embed` requires per-test isolation; cannot be used with `--no-scratch`")]
+    PathRefRequiresScratch,
+    #[error("`path_of_embed` and `path_of_file` cannot be used as integer values")]
+    PathRefMustResolveToString,
+    #[error("references undeclared embed `{0}`")]
+    EmbedUnknown(String),
+    #[error("duplicate `[[embed]]` path `{0}`")]
+    EmbedDuplicatePath(String),
+    #[error("invalid path `{0}`: must be a non-empty, relative path with no `..` segments")]
+    ScratchInvalidPath(String),
+    #[error("multiple sources would write to `{0}`")]
+    ScratchPathConflict(String),
+    #[error("invalid `input_files` glob `{pattern}`: {reason}")]
+    InputGlobError { pattern: String, reason: String },
+    #[error("`input_files` glob `{0}` matched no files")]
+    InputGlobMatchedNothing(String),
 }
 
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -145,6 +182,7 @@ impl TestEntry {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn build_test_entries(
     config: ConfigFile,
     config_dir_path: &RelativePath,
@@ -153,16 +191,26 @@ pub fn build_test_entries(
     current_dir: &Path,
     default_timeout: u64,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
+    expand_input_pattern: &impl Fn(&str, &Path) -> Result<Vec<String>, String>,
+    scratch_root: Option<&Path>,
+    starting_position: usize,
 ) -> Vec<TestEntry> {
+    let config_dir = id_config_dir(config_dir_path, current_dir);
+    let embed_registry = build_embed_registry(&config.embeds, requirement_data);
+
     split_config_file(config)
         .into_iter()
-        .map(|c| {
+        .enumerate()
+        .map(|(index, c)| {
+            let position = starting_position + index;
             let subtest_path = c.id.clone().expect("must exist after parsing");
             let id = TestId::new(
                 config_dir_path.to_relative_path_buf(),
                 file_name.to_owned(),
                 subtest_path,
             );
+            let per_test_dir = scratch_root
+                .map(|root| root.join(scratch::per_test_dir_name(position, &id.display_id())));
             build_test_entry(
                 id,
                 c,
@@ -170,11 +218,20 @@ pub fn build_test_entries(
                 current_dir,
                 default_timeout,
                 find_executable_path,
+                expand_input_pattern,
+                per_test_dir,
+                config_dir.clone(),
+                embed_registry.as_ref(),
             )
         })
         .collect()
 }
 
+fn id_config_dir(config_dir_path: &RelativePath, current_dir: &Path) -> PathBuf {
+    config_dir_path.to_path(current_dir)
+}
+
+#[allow(clippy::too_many_arguments)]
 fn build_test_entry(
     id: TestId,
     config: ConfigTest,
@@ -182,6 +239,10 @@ fn build_test_entry(
     current_dir: &Path,
     default_timeout: u64,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
+    expand_input_pattern: &impl Fn(&str, &Path) -> Result<Vec<String>, String>,
+    per_test_dir: Option<PathBuf>,
+    config_dir: PathBuf,
+    embed_registry: Result<&EmbedRegistry, &BTreeSet<ValidationError>>,
 ) -> TestEntry {
     let (skip_reason, program_path, test_case) = build_test_case(
         id.clone(),
@@ -190,8 +251,14 @@ fn build_test_entry(
         current_dir,
         default_timeout,
         find_executable_path,
+        expand_input_pattern,
+        per_test_dir,
+        config_dir,
+        embed_registry,
     );
-    let expectations = build_test_case_expectations(config, requirement_data);
+    let embeds_for_expectations = embed_registry.ok();
+    let expectations =
+        build_test_case_expectations(config, requirement_data, embeds_for_expectations);
 
     TestEntry {
         id,
@@ -202,6 +269,7 @@ fn build_test_entry(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn build_test_case(
     id: TestId,
     config: ConfigTest,
@@ -209,12 +277,30 @@ fn build_test_case(
     current_dir: &Path,
     default_timeout: u64,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
+    expand_input_pattern: &impl Fn(&str, &Path) -> Result<Vec<String>, String>,
+    per_test_dir: Option<PathBuf>,
+    config_dir: PathBuf,
+    embed_registry: Result<&EmbedRegistry, &BTreeSet<ValidationError>>,
 ) -> (
     Option<String>,
     ProgramPath,
     Result<TestCase, BTreeSet<ValidationError>>,
 ) {
     let mut errors = BTreeSet::new();
+
+    // Propagate file-level embed registry errors to every test in the file —
+    // they affect the meaning of any `path_of_embed` reference.
+    let embed_registry: Option<&EmbedRegistry> = match embed_registry {
+        Ok(reg) => Some(reg),
+        Err(errs) => {
+            errors.extend(errs.iter().cloned());
+            None
+        }
+    };
+
+    let mut scratch_builder: Option<ScratchBuilder> = per_test_dir
+        .zip(embed_registry)
+        .map(|(dir, embeds)| ScratchBuilder::new(dir, config_dir.clone(), embeds));
 
     let skip_reason = config.skip.and_then(|reason| {
         if reason.trim().is_empty() {
@@ -234,8 +320,28 @@ fn build_test_case(
         }
     });
 
-    let program = collect_error(&mut errors, config.program, requirement_data, "program")
-        .map(|s| string::normalize_newlines(&s));
+    if let Some(patterns) = config.input_files {
+        process_input_files(
+            patterns,
+            requirement_data,
+            embed_registry,
+            &config_dir,
+            expand_input_pattern,
+            scratch_builder.as_mut(),
+            &mut errors,
+        );
+    }
+
+    let program = read_string_field(
+        &mut errors,
+        config.program,
+        requirement_data,
+        embed_registry,
+        &config_dir,
+        scratch_builder.as_mut(),
+        "program",
+    )
+    .map(|s| string::normalize_newlines(&s));
     let program_path = get_program_path(
         program.unwrap_or_default(),
         &id.config_dir_path.to_path(current_dir),
@@ -260,7 +366,13 @@ fn build_test_case(
 
     let mut arguments = vec![];
     for config_value in config.program_arguments.unwrap_or_default() {
-        match read_from_config_value(config_value, requirement_data) {
+        match read_string_value(
+            config_value,
+            requirement_data,
+            embed_registry,
+            &config_dir,
+            scratch_builder.as_mut(),
+        ) {
             Ok(arg) => {
                 arguments.push(string::normalize_newlines(&arg));
             }
@@ -273,13 +385,22 @@ fn build_test_case(
         }
     }
 
-    let stdin = collect_error(&mut errors, config.stdin, requirement_data, "stdin")
-        .map(|s| string::normalize_newlines(&s));
+    let stdin = read_string_field(
+        &mut errors,
+        config.stdin,
+        requirement_data,
+        embed_registry,
+        &config_dir,
+        scratch_builder.as_mut(),
+        "stdin",
+    )
+    .map(|s| string::normalize_newlines(&s));
 
     let timeout_seconds = collect_error(
         &mut errors,
         config.timeout_seconds,
         requirement_data,
+        embed_registry,
         "timeout_seconds",
     )
     .and_then(|v| {
@@ -295,6 +416,8 @@ fn build_test_case(
     })
     .unwrap_or(default_timeout);
 
+    let scratch_plan = scratch_builder.map(ScratchBuilder::finish);
+
     let test_case = match (program_path.get_resolved_path(), errors.is_empty()) {
         (Some(resolved_path), true) => Ok(TestCase {
             id,
@@ -302,6 +425,7 @@ fn build_test_case(
             arguments,
             stdin,
             timeout_seconds,
+            scratch_plan,
         }),
         _ => Err(errors),
     };
@@ -309,9 +433,106 @@ fn build_test_case(
     (skip_reason, program_path, test_case)
 }
 
+#[allow(clippy::too_many_arguments)]
+fn process_input_files(
+    patterns: Vec<ValueSource<String>>,
+    requirement_data: &RequirementData,
+    embeds: Option<&EmbedRegistry>,
+    config_dir: &Path,
+    expand_input_pattern: &impl Fn(&str, &Path) -> Result<Vec<String>, String>,
+    mut scratch_ctx: Option<&mut ScratchBuilder>,
+    errors: &mut BTreeSet<ValidationError>,
+) {
+    for pattern_cv in patterns {
+        let pattern = match read_from_config_value::<String>(pattern_cv, requirement_data, embeds) {
+            Ok(p) => p,
+            Err(err) => {
+                errors.insert(ValidationError::InField {
+                    field: "input_files".to_owned(),
+                    error: Box::new(err),
+                });
+                continue;
+            }
+        };
+
+        let is_glob = pattern.chars().any(|c| matches!(c, '*' | '?' | '[' | '{'));
+        let resolved = match expand_input_pattern(&pattern, config_dir) {
+            Ok(r) => r,
+            Err(reason) => {
+                errors.insert(ValidationError::InField {
+                    field: "input_files".to_owned(),
+                    error: Box::new(ValidationError::InputGlobError {
+                        pattern: pattern.clone(),
+                        reason,
+                    }),
+                });
+                continue;
+            }
+        };
+
+        if is_glob && resolved.is_empty() {
+            errors.insert(ValidationError::InField {
+                field: "input_files".to_owned(),
+                error: Box::new(ValidationError::InputGlobMatchedNothing(pattern)),
+            });
+            continue;
+        }
+
+        for rel in resolved {
+            if !scratch::is_valid_scratch_path(&rel) {
+                errors.insert(ValidationError::InField {
+                    field: "input_files".to_owned(),
+                    error: Box::new(ValidationError::ScratchInvalidPath(rel)),
+                });
+                continue;
+            }
+            let source = config_dir.join(&rel);
+            if !source.exists() {
+                errors.insert(ValidationError::InField {
+                    field: "input_files".to_owned(),
+                    error: Box::new(ValidationError::MissingExternalFile(rel)),
+                });
+                continue;
+            }
+            if let Some(builder) = scratch_ctx.as_deref_mut()
+                && let Err(err) = builder.add_input_file(&rel)
+            {
+                errors.insert(ValidationError::InField {
+                    field: "input_files".to_owned(),
+                    error: Box::new(err.into()),
+                });
+            }
+        }
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn read_string_field(
+    errors: &mut BTreeSet<ValidationError>,
+    config_value: Option<ValueSource<String>>,
+    requirement_data: &RequirementData,
+    embeds: Option<&EmbedRegistry>,
+    config_dir: &Path,
+    scratch_ctx: Option<&mut ScratchBuilder>,
+    field_name: &str,
+) -> Option<String> {
+    let cv = config_value?;
+    match read_string_value(cv, requirement_data, embeds, config_dir, scratch_ctx) {
+        Ok(v) => Some(v),
+        Err(err) => {
+            errors.insert(ValidationError::InField {
+                field: field_name.to_owned(),
+                error: Box::new(err),
+            });
+            None
+        }
+    }
+}
+
 fn build_test_case_expectations(
     config: ConfigTest,
     requirement_data: &RequirementData,
+    embeds: Option<&EmbedRegistry>,
 ) -> Result<TestCaseExpectations, BTreeSet<ValidationError>> {
     let mut errors = BTreeSet::new();
 
@@ -326,6 +547,7 @@ fn build_test_case_expectations(
         &mut errors,
         config.expected_stdout,
         requirement_data,
+        embeds,
         "expected_stdout",
     )
     .map(|s| string::normalize_newlines(&s));
@@ -333,6 +555,7 @@ fn build_test_case_expectations(
         &mut errors,
         config.expected_stderr,
         requirement_data,
+        embeds,
         "expected_stderr",
     )
     .map(|s| string::normalize_newlines(&s));
@@ -340,6 +563,7 @@ fn build_test_case_expectations(
         &mut errors,
         config.expected_exit_code,
         requirement_data,
+        embeds,
         "expected_exit_code",
     );
 
@@ -388,6 +612,7 @@ fn collect_error<T>(
     errors: &mut BTreeSet<ValidationError>,
     config_value: Option<ValueSource<T>>,
     requirement_data: &RequirementData,
+    embeds: Option<&EmbedRegistry>,
     field_name: &str,
 ) -> Option<T>
 where
@@ -395,16 +620,18 @@ where
     T::Err: Display,
 {
     match config_value {
-        Some(config_value) => match read_from_config_value(config_value, requirement_data) {
-            Ok(value) => Some(value),
-            Err(err) => {
-                errors.insert(ValidationError::InField {
-                    field: field_name.to_owned(),
-                    error: Box::new(err),
-                });
-                None
+        Some(config_value) => {
+            match read_from_config_value(config_value, requirement_data, embeds) {
+                Ok(value) => Some(value),
+                Err(err) => {
+                    errors.insert(ValidationError::InField {
+                        field: field_name.to_owned(),
+                        error: Box::new(err),
+                    });
+                    None
+                }
             }
-        },
+        }
         _ => None,
     }
 }
@@ -412,6 +639,7 @@ where
 fn read_from_config_value<T>(
     config_value: ValueSource<T>,
     requirement_data: &RequirementData,
+    embeds: Option<&EmbedRegistry>,
 ) -> Result<T, ValidationError>
 where
     T: FromStr,
@@ -419,6 +647,16 @@ where
 {
     match config_value {
         ValueSource::Literal(value) => Ok(value),
+        ValueSource::FetchFromEnv { env: var_name } => {
+            if let Some(str) = requirement_data.get_env_var(&var_name) {
+                str.parse::<T>().map_err(|err| ValidationError::InEnvVar {
+                    env_var: var_name,
+                    error: Box::new(ValidationError::ParseError(err.to_string())),
+                })
+            } else {
+                Err(ValidationError::MissingEnvVar(var_name))
+            }
+        }
         ValueSource::ReadFromFile { file: file_path } => {
             if let Some(str) = requirement_data.get_file(&file_path) {
                 str.parse::<T>()
@@ -430,16 +668,110 @@ where
                 Err(ValidationError::MissingExternalFile(file_path))
             }
         }
-        ValueSource::FetchFromEnv { env: var_name } => {
-            if let Some(str) = requirement_data.get_env_var(&var_name) {
-                str.parse::<T>().map_err(|err| ValidationError::InEnvVar {
-                    env_var: var_name,
+        ValueSource::ReadFromEmbed { embed: embed_path } => {
+            let Some(registry) = embeds else {
+                return Err(ValidationError::EmbedRefNotAllowedInEmbedContent(
+                    embed_path,
+                ));
+            };
+            let Some(content) = registry.get(&embed_path) else {
+                return Err(ValidationError::EmbedUnknown(embed_path));
+            };
+            content
+                .parse::<T>()
+                .map_err(|err| ValidationError::InEmbed {
+                    embed: embed_path,
                     error: Box::new(ValidationError::ParseError(err.to_string())),
                 })
-            } else {
-                Err(ValidationError::MissingEnvVar(var_name))
+        }
+        // String fields go through `read_string_value` which handles these
+        // variants directly. For non-string fields (i64), they are invalid.
+        ValueSource::CopyFromFile { .. } | ValueSource::WriteEmbed { .. } => {
+            Err(ValidationError::PathRefMustResolveToString)
+        }
+    }
+}
+
+fn read_string_value(
+    config_value: ValueSource<String>,
+    requirement_data: &RequirementData,
+    embeds: Option<&EmbedRegistry>,
+    config_dir: &Path,
+    scratch_ctx: Option<&mut ScratchBuilder>,
+) -> Result<String, ValidationError> {
+    match config_value {
+        ValueSource::CopyFromFile {
+            path_of_file: file_path,
+        } => match scratch_ctx {
+            Some(ctx) => ctx.plan_copy(&file_path).map_err(Into::into),
+            None => resolve_path_without_scratch(&file_path, config_dir),
+        },
+        ValueSource::WriteEmbed {
+            path_of_embed: embed_path,
+        } => {
+            let Some(ctx) = scratch_ctx else {
+                return Err(ValidationError::PathRefRequiresScratch);
+            };
+            ctx.resolve_embed(&embed_path).map_err(Into::into)
+        }
+        other => read_from_config_value(other, requirement_data, embeds),
+    }
+}
+
+/// Resolve a `path_of_file` reference when isolation is disabled (`--no-scratch`):
+/// validate the path shape, confirm the source exists, and return the
+/// (unchanged) scratch-relative path for substitution. No copy happens — the
+/// test runs with `cwd = config_dir`, where the source already lives, so the
+/// substituted relative path resolves to the source in place. Matches the
+/// scratch-mode substitution shape so test output is identical across modes.
+fn resolve_path_without_scratch(
+    file_path: &str,
+    config_dir: &Path,
+) -> Result<String, ValidationError> {
+    if !scratch::is_valid_scratch_path(file_path) {
+        return Err(ValidationError::ScratchInvalidPath(file_path.to_owned()));
+    }
+    if !config_dir.join(file_path).exists() {
+        return Err(ValidationError::MissingExternalFile(file_path.to_owned()));
+    }
+    Ok(file_path.to_owned())
+}
+
+// EMBED REGISTRY
+
+pub fn build_embed_registry(
+    embeds: &[EmbedDeclaration],
+    requirement_data: &RequirementData,
+) -> Result<EmbedRegistry, BTreeSet<ValidationError>> {
+    let mut registry = EmbedRegistry::default();
+    let mut errors: BTreeSet<ValidationError> = BTreeSet::new();
+
+    for embed in embeds {
+        if !scratch::is_valid_scratch_path(&embed.path) {
+            errors.insert(ValidationError::ScratchInvalidPath(embed.path.clone()));
+            continue;
+        }
+        if registry.contains(&embed.path) {
+            errors.insert(ValidationError::EmbedDuplicatePath(embed.path.clone()));
+            continue;
+        }
+        match read_from_config_value(embed.content.clone(), requirement_data, None) {
+            Ok(content) => {
+                registry.insert(embed.path.clone(), content);
+            }
+            Err(err) => {
+                errors.insert(ValidationError::InField {
+                    field: format!("embed `{}`", embed.path),
+                    error: Box::new(err),
+                });
             }
         }
+    }
+
+    if errors.is_empty() {
+        Ok(registry)
+    } else {
+        Err(errors)
     }
 }
 
@@ -464,6 +796,7 @@ fn merge_config_tests(base_config: ConfigTest, override_config: ConfigTest) -> C
     ConfigTest {
         id: override_config.id.or(base_config.id),
         skip: override_config.skip.or(base_config.skip),
+        input_files: override_config.input_files.or(base_config.input_files),
         program: override_config.program.or(base_config.program),
         program_arguments: override_config
             .program_arguments

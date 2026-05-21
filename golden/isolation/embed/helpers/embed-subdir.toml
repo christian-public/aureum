@@ -1,0 +1,9 @@
+program = "cat"
+program_arguments = [{ path_of_embed = "subdir/file.txt" }]
+
+expected_stdout = "in a subdir"
+
+
+[[embed]]
+path = "subdir/file.txt"
+content = "in a subdir"

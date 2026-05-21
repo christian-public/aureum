@@ -1,0 +1,5 @@
+input_files = ["helpers"]
+program = "bash"
+program_arguments = ["-c", "cat helpers/data.txt helpers/extra.txt"]
+
+expected_stdout = "copied from disktop-level + nested"

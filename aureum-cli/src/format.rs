@@ -6,18 +6,21 @@ use toml_edit::DocumentMut;
 const ROOT_FIELD_ORDER: &[&str] = &[
     "watch_files",
     "skip",
+    "input_files",
     "program",
     "program_arguments",
     "stdin",
     "expected_stdout",
     "expected_stderr",
     "expected_exit_code",
+    "embed",
     "test",
 ];
 
 const TEST_FIELD_ORDER: &[&str] = &[
     "id",
     "skip",
+    "input_files",
     "program",
     "program_arguments",
     "stdin",
@@ -25,6 +28,8 @@ const TEST_FIELD_ORDER: &[&str] = &[
     "expected_stderr",
     "expected_exit_code",
 ];
+
+const EMBED_FIELD_ORDER: &[&str] = &["path", "content"];
 
 /// Formats a file in-place. Returns `true` if the file was modified.
 pub fn format_file(path: &Path) -> io::Result<bool> {
@@ -114,6 +119,14 @@ pub fn format_content(content: &str) -> Result<String, toml_edit::TomlError> {
     {
         for table in tests.iter_mut() {
             reorder_table(table, TEST_FIELD_ORDER);
+        }
+    }
+
+    if let Some(embeds_item) = doc.get_mut("embed")
+        && let Some(embeds) = embeds_item.as_array_of_tables_mut()
+    {
+        for table in embeds.iter_mut() {
+            reorder_table(table, EMBED_FIELD_ORDER);
         }
     }
 
@@ -708,6 +721,31 @@ mod tests {
         let once = format_content(input).unwrap();
         let twice = format_content(&once).unwrap();
         assert_eq!(once, twice);
+    }
+
+    #[test]
+    fn reorders_embed_fields_to_put_path_before_content() {
+        let input = indoc! {r#"
+            program = "echo"
+
+            expected_stdout = "hi"
+
+
+            [[embed]]
+            content = "Hello from embed!"
+            path = "greeting"
+        "#};
+        let expected = indoc! {r#"
+            program = "echo"
+
+            expected_stdout = "hi"
+
+
+            [[embed]]
+            path = "greeting"
+            content = "Hello from embed!"
+        "#};
+        assert_eq!(format_content(input).unwrap(), expected);
     }
 
     #[test]
