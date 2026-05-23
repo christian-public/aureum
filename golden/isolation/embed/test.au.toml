@@ -44,8 +44,8 @@ id = "no-scratch-rejects-path-of-embed"
 program_arguments = [
     "test",
     "--format=summary",
+    "--no-scratch",                                # Extra argument
     "--stable-output",
-    "--no-scratch",
     { path_of_file = "helpers/embed-basic.toml" },
 ]
 
