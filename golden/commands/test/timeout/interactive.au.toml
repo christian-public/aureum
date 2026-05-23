@@ -5,8 +5,7 @@ program = { from_env = "AUREUM_TEST_EXEC" }
 id = "timeout-seconds-field"
 program_arguments = [
   "test",
-  "--record",
-  "100x20",
+  "--record=100x20",
   { path_of_file = "helpers/non-terminating-with-timeout.toml" },
 ]
 stdin = "l\nq\n"
@@ -19,10 +18,8 @@ expected_exit_code = 1
 id = "default-timeout-option"
 program_arguments = [
   "test",
-  "--default-timeout",
-  "0",
-  "--record",
-  "100x20",
+  "--default-timeout=0",
+  "--record=100x20",
   { path_of_file = "helpers/non-terminating.toml" },
 ]
 stdin = "l\nq\n"

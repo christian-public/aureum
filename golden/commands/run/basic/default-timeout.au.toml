@@ -7,10 +7,8 @@ program = { from_env = "AUREUM_TEST_EXEC" }
 id = "toml-accepts-default-timeout"
 program_arguments = [
     "run",
-    "--format",
-    "toml",
-    "--default-timeout",
-    "10",
+    "--format=toml",
+    "--default-timeout=10",
     { path_of_file = "helpers/echo-hello.toml" },
 ]
 
@@ -30,10 +28,8 @@ expected_exit_code = 0
 id = "passthrough-rejects-default-timeout"
 program_arguments = [
     "run",
-    "--format",
-    "passthrough",
-    "--default-timeout",
-    "10",
+    "--format=passthrough",
+    "--default-timeout=10",
     { path_of_file = "helpers/echo-hello.toml" },
 ]
 

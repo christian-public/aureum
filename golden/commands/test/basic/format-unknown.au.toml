@@ -1,8 +1,7 @@
 program = { from_env = "AUREUM_TEST_EXEC" }
 program_arguments = [
     "test",
-    "--format",
-    "UNKNOWN",
+    "--format=UNKNOWN",
     { path_of_file = "helpers/passing-test.toml" },
 ]
 

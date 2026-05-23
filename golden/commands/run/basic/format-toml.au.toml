@@ -5,8 +5,7 @@ program = { from_env = "AUREUM_TEST_EXEC" }
 id = "singleline"
 program_arguments = [
     "run",
-    "--format",
-    "toml",
+    "--format=toml",
     { path_of_file = "helpers/echo-hello.toml" },
 ]
 
@@ -24,8 +23,7 @@ expected_exit_code = 0
 id = "multiline"
 program_arguments = [
     "run",
-    "--format",
-    "toml",
+    "--format=toml",
     { path_of_file = "helpers/echo-multiline.toml" },
 ]
 
@@ -45,8 +43,7 @@ expected_exit_code = 0
 id = "stderr-and-exit-code"
 program_arguments = [
     "run",
-    "--format",
-    "toml",
+    "--format=toml",
     { path_of_file = "helpers/bash-stderr-and-exit-code.toml" },
 ]
 
@@ -64,8 +61,7 @@ expected_exit_code = 0
 id = "stdin"
 program_arguments = [
     "run",
-    "--format",
-    "toml",
+    "--format=toml",
     { path_of_file = "helpers/cat-stdin.toml" },
 ]
 

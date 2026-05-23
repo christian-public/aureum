@@ -7,8 +7,7 @@ id = "initial-frame"
 program_arguments = [
   "test",
   "--watch",
-  "--record",
-  "100x20",
+  "--record=100x20",
   { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 stdin = "q\n"
@@ -24,8 +23,7 @@ id = "file-change-reruns-tests"
 program_arguments = [
   "test",
   "--watch",
-  "--record",
-  "100x20",
+  "--record=100x20",
   { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 stdin = "file-change\nq\n"
@@ -40,8 +38,7 @@ id = "review-and-back-to-idle"
 program_arguments = [
   "test",
   "--watch",
-  "--record",
-  "100x20",
+  "--record=100x20",
   { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 stdin = "r\nesc\nq\n"
@@ -56,8 +53,7 @@ id = "t-reruns-tests"
 program_arguments = [
   "test",
   "--watch",
-  "--record",
-  "100x20",
+  "--record=100x20",
   { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 stdin = "t\nq\n"
@@ -72,8 +68,7 @@ id = "list-esc-returns-to-diff"
 program_arguments = [
   "test",
   "--watch",
-  "--record",
-  "100x20",
+  "--record=100x20",
   { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 stdin = "r\nl\nesc\nq\n"

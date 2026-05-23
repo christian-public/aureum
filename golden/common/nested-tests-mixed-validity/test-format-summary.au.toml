@@ -6,8 +6,7 @@ program = { from_env = "AUREUM_TEST_EXEC" }
 id = "all-valid.all"
 program_arguments = [
     "test",
-    "--format",
-    "summary",
+    "--format=summary",
     "--stable-output",
     "helpers/all-valid.toml",
 ]
@@ -26,8 +25,7 @@ expected_exit_code = 0
 id = "all-valid.specific-test-id"
 program_arguments = [
     "test",
-    "--format",
-    "summary",
+    "--format=summary",
     "--stable-output",
     "helpers/all-valid.toml:test1",
 ]
@@ -46,8 +44,7 @@ expected_exit_code = 0
 id = "missing-program-on-test2.all"
 program_arguments = [
     "test",
-    "--format",
-    "summary",
+    "--format=summary",
     "--stable-output",
     "helpers/missing-program-on-test2.toml",
 ]
@@ -74,8 +71,7 @@ expected_exit_code = 3
 id = "missing-program-on-test2.specific-test-id"
 program_arguments = [
     "test",
-    "--format",
-    "summary",
+    "--format=summary",
     "--stable-output",
     "helpers/missing-program-on-test2.toml:test1",
 ]
@@ -102,8 +98,7 @@ expected_exit_code = 3
 id = "missing-program-on-all-tests"
 program_arguments = [
     "test",
-    "--format",
-    "summary",
+    "--format=summary",
     "--stable-output",
     "helpers/missing-program-on-all-tests.toml",
 ]
@@ -132,8 +127,7 @@ expected_exit_code = 3
 id = "missing-program-on-all-tests.specific-test-id"
 program_arguments = [
     "test",
-    "--format",
-    "summary",
+    "--format=summary",
     "--stable-output",
     "helpers/missing-program-on-all-tests.toml:test1",
 ]
@@ -162,8 +156,7 @@ expected_exit_code = 3
 id = "all-files"
 program_arguments = [
     "test",
-    "--format",
-    "summary",
+    "--format=summary",
     "--stable-output",
     "helpers/*.toml",
 ]

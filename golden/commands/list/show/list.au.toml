@@ -4,7 +4,7 @@ program = { from_env = "AUREUM_TEST_EXEC" }
 
 [[test]]
 id = "all"
-program_arguments = ["list", "--show", "all", "helpers/*.toml"]
+program_arguments = ["list", "--show=all", "helpers/*.toml"]
 
 expected_stdout = """
 helpers/mixed.toml:runs
@@ -18,7 +18,7 @@ expected_exit_code = 0
 
 [[test]]
 id = "runnable"
-program_arguments = ["list", "--show", "runnable", "helpers/*.toml"]
+program_arguments = ["list", "--show=runnable", "helpers/*.toml"]
 
 expected_stdout = """
 helpers/mixed.toml:runs
@@ -30,7 +30,7 @@ expected_exit_code = 0
 
 [[test]]
 id = "skipped"
-program_arguments = ["list", "--show", "skipped", "helpers/*.toml"]
+program_arguments = ["list", "--show=skipped", "helpers/*.toml"]
 
 expected_stdout = """
 helpers/mixed.toml:nope
@@ -42,7 +42,7 @@ expected_exit_code = 0
 
 [[test]]
 id = "unknown"
-program_arguments = ["list", "--show", "UNKNOWN", "helpers/*.toml"]
+program_arguments = ["list", "--show=UNKNOWN", "helpers/*.toml"]
 
 expected_stdout = ""
 expected_stderr = """

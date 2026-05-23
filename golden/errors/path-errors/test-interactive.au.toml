@@ -5,8 +5,7 @@ program = { from_env = "AUREUM_TEST_EXEC" }
 id = "missing-config"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     "aureum_test_this_file_does_not_exist",
 ]
 
@@ -24,8 +23,7 @@ expected_exit_code = 3
 id = "missing-config-with-test-id"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     "aureum_test_this_file_does_not_exist:sub1",
 ]
 

@@ -5,8 +5,7 @@ program = { from_env = "AUREUM_TEST_EXEC" }
 id = "format-summary.timeout-seconds-field"
 program_arguments = [
   "test",
-  "--format",
-  "summary",
+  "--format=summary",
   "--stable-output",
   { path_of_file = "helpers/non-terminating-with-timeout.toml" },
 ]
@@ -27,10 +26,8 @@ expected_exit_code = 1
 id = "format-summary.default-timeout-option"
 program_arguments = [
   "test",
-  "--format",
-  "summary",
-  "--default-timeout",
-  "0",
+  "--format=summary",
+  "--default-timeout=0",
   "--stable-output",
   { path_of_file = "helpers/non-terminating.toml" },
 ]
@@ -51,8 +48,7 @@ expected_exit_code = 1
 id = "format-tap.timeout-seconds-field"
 program_arguments = [
   "test",
-  "--format",
-  "tap",
+  "--format=tap",
   { path_of_file = "helpers/non-terminating-with-timeout.toml" },
 ]
 
@@ -71,10 +67,8 @@ expected_exit_code = 1
 id = "format-tap.default-timeout-option"
 program_arguments = [
   "test",
-  "--format",
-  "tap",
-  "--default-timeout",
-  "0",
+  "--format=tap",
+  "--default-timeout=0",
   { path_of_file = "helpers/non-terminating.toml" },
 ]
 

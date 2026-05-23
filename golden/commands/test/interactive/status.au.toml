@@ -6,8 +6,7 @@ program = { from_env = "AUREUM_TEST_EXEC" }
 id = "empty-when-on-failing-undecided-field"
 program_arguments = [
     "test",
-    "--record",
-    "120x20",
+    "--record=120x20",
     { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 stdin = "q\n"
@@ -21,8 +20,7 @@ expected_exit_code = 1
 id = "non-failing-output-field"
 program_arguments = [
     "test",
-    "--record",
-    "120x20",
+    "--record=120x20",
     { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 stdin = "e\nq\n"
@@ -36,8 +34,7 @@ expected_exit_code = 1
 id = "stdin-field"
 program_arguments = [
     "test",
-    "--record",
-    "120x20",
+    "--record=120x20",
     { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 stdin = "i\nq\n"
@@ -51,8 +48,7 @@ expected_exit_code = 1
 id = "enter-on-undecided-failing-field"
 program_arguments = [
     "test",
-    "--record",
-    "120x20",
+    "--record=120x20",
     { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 stdin = "enter\nq\n"
@@ -66,8 +62,7 @@ expected_exit_code = 1
 id = "pending-decision-last-field"
 program_arguments = [
     "test",
-    "--record",
-    "120x20",
+    "--record=120x20",
     { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 stdin = "a\nq\n"
@@ -81,8 +76,7 @@ expected_exit_code = 1
 id = "pending-decision-more-fields-remain"
 program_arguments = [
     "test",
-    "--record",
-    "120x20",
+    "--record=120x20",
     { path_of_file = "helpers/failing-stdout-and-exit-code.toml" },
 ]
 stdin = "a\nq\n"
@@ -96,8 +90,7 @@ expected_exit_code = 1
 id = "pending-decision-reverts-on-navigate"
 program_arguments = [
     "test",
-    "--record",
-    "120x20",
+    "--record=120x20",
     { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 stdin = "a\ne\nq\n"

@@ -6,8 +6,7 @@ program = { from_env = "AUREUM_TEST_EXEC" }
 id = "all-passed"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     { path_of_file = "helpers/passing-test.toml" },
 ]
 

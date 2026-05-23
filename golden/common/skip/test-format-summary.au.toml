@@ -5,8 +5,7 @@ program = { from_env = "AUREUM_TEST_EXEC" }
 id = "skip-root-test"
 program_arguments = [
     "test",
-    "--format",
-    "summary",
+    "--format=summary",
     "--stable-output",
     { path_of_file = "helpers/skip-root-test.toml" },
 ]
@@ -25,8 +24,7 @@ expected_exit_code = 0
 id = "skip-subtest"
 program_arguments = [
     "test",
-    "--format",
-    "summary",
+    "--format=summary",
     "--stable-output",
     { path_of_file = "helpers/skip-subtest.toml" },
 ]
@@ -45,8 +43,7 @@ expected_exit_code = 0
 id = "skip-invalid-config"
 program_arguments = [
     "test",
-    "--format",
-    "summary",
+    "--format=summary",
     "--stable-output",
     { path_of_file = "helpers/skip-invalid-config.toml" },
 ]
@@ -65,8 +62,7 @@ expected_exit_code = 0
 id = "validation-error-with-skipped"
 program_arguments = [
     "test",
-    "--format",
-    "summary",
+    "--format=summary",
     { path_of_file = "helpers/validation-error-with-skipped.toml" },
 ]
 
@@ -94,8 +90,7 @@ id = "all"
 input_files = ["helpers"]
 program_arguments = [
     "test",
-    "--format",
-    "summary",
+    "--format=summary",
     "--stable-output",
     "helpers/*.toml",
 ]

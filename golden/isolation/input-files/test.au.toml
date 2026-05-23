@@ -2,8 +2,7 @@ input_files = ["helpers"]
 program = { from_env = "AUREUM_TEST_EXEC" }
 program_arguments = [
     "test",
-    "--format",
-    "summary",
+    "--format=summary",
     "--stable-output",
     "helpers/input-files-specific-files.toml",
     "helpers/input-files-dir.toml",

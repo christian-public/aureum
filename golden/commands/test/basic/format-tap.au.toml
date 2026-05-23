@@ -5,8 +5,7 @@ program = { from_env = "AUREUM_TEST_EXEC" }
 id = "passing"
 program_arguments = [
   "test",
-  "--format",
-  "tap",
+  "--format=tap",
   { path_of_file = "helpers/passing-test.toml" },
 ]
 
@@ -23,8 +22,7 @@ expected_exit_code = 0
 id = "failing"
 program_arguments = [
   "test",
-  "--format",
-  "tap",
+  "--format=tap",
   { path_of_file = "helpers/failing-test.toml" },
 ]
 
@@ -52,8 +50,7 @@ expected_exit_code = 1
 id = "failing-with-newline"
 program_arguments = [
   "test",
-  "--format",
-  "tap",
+  "--format=tap",
   { path_of_file = "helpers/failing-test-newline.toml" },
 ]
 
@@ -77,8 +74,7 @@ expected_exit_code = 1
 id = "passing-with-hash-in-filename"
 program_arguments = [
   "test",
-  "--format",
-  "tap",
+  "--format=tap",
   { path_of_file = "helpers/test-with-#-sign.toml" },
 ]
 

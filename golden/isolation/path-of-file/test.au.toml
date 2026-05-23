@@ -6,8 +6,7 @@ program = { from_env = "AUREUM_TEST_EXEC" }
 id = "default"
 program_arguments = [
     "test",
-    "--format",
-    "summary",
+    "--format=summary",
     "--stable-output",
     "helpers/path-of-file.toml",
 ]
@@ -26,8 +25,7 @@ expected_exit_code = 0
 id = "no-scratch-allows-path-of-file"
 program_arguments = [
     "test",
-    "--format",
-    "summary",
+    "--format=summary",
     "--stable-output",
     "--no-scratch",              # Extra argument
     "helpers/path-of-file.toml",

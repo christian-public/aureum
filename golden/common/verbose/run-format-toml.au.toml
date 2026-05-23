@@ -4,7 +4,7 @@ program = { from_env = "AUREUM_TEST_EXEC" }
 
 [[test]]
 id = "without-verbose"
-program_arguments = ["run", "--format", "toml", "helpers/*.toml"]
+program_arguments = ["run", "--format=toml", "helpers/*.toml"]
 
 expected_stdout = """
 # TEST: helpers/many-requirements.toml:env-var-exists
@@ -55,8 +55,7 @@ expected_exit_code = 3
 id = "with-verbose"
 program_arguments = [
     "run",
-    "--format",
-    "toml",
+    "--format=toml",
     "--verbose",
     "--stable-output",
     "helpers/*.toml",

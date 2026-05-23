@@ -4,7 +4,7 @@ program = { from_env = "AUREUM_TEST_EXEC" }
 
 [[test]]
 id = "without-verbose"
-program_arguments = ["test", "--format", "tap", "helpers/*.toml"]
+program_arguments = ["test", "--format=tap", "helpers/*.toml"]
 
 expected_stdout = """
 TAP version 14
@@ -36,8 +36,7 @@ expected_exit_code = 3
 id = "with-verbose"
 program_arguments = [
     "test",
-    "--format",
-    "tap",
+    "--format=tap",
     "--verbose",
     "--stable-output",
     "helpers/*.toml",

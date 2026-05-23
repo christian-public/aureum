@@ -55,8 +55,7 @@ expected_exit_code = 0
 id = "run.format-toml"
 program_arguments = [
     "run",
-    "--format",
-    "toml",
+    "--format=toml",
     { path_of_file = "helpers/insertion-order-tests.toml" },
 ]
 
@@ -84,8 +83,7 @@ expected_exit_code = 0
 id = "test.format-tap"
 program_arguments = [
     "test",
-    "--format",
-    "tap",
+    "--format=tap",
     { path_of_file = "helpers/insertion-order-tests.toml" },
 ]
 

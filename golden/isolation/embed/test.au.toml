@@ -5,8 +5,7 @@ program = { from_env = "AUREUM_TEST_EXEC" }
 id = "basic"
 program_arguments = [
     "test",
-    "--format",
-    "summary",
+    "--format=summary",
     "--stable-output",
     { path_of_file = "helpers/embed-basic.toml" },
 ]
@@ -25,8 +24,7 @@ expected_exit_code = 0
 id = "subdir"
 program_arguments = [
     "test",
-    "--format",
-    "summary",
+    "--format=summary",
     "--stable-output",
     { path_of_file = "helpers/embed-subdir.toml" },
 ]
@@ -45,8 +43,7 @@ expected_exit_code = 0
 id = "no-scratch-rejects-path-of-embed"
 program_arguments = [
     "test",
-    "--format",
-    "summary",
+    "--format=summary",
     "--stable-output",
     "--no-scratch",
     { path_of_file = "helpers/embed-basic.toml" },

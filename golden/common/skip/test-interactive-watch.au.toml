@@ -5,8 +5,7 @@ program = { from_env = "AUREUM_TEST_EXEC" }
 id = "skip-root-test"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     "--watch",
     { path_of_file = "helpers/skip-root-test.toml" },
 ]
@@ -20,8 +19,7 @@ expected_exit_code = 0
 id = "skip-subtest"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     "--watch",
     { path_of_file = "helpers/skip-subtest.toml" },
 ]
@@ -35,8 +33,7 @@ expected_exit_code = 0
 id = "skip-invalid-config"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     "--watch",
     { path_of_file = "helpers/skip-invalid-config.toml" },
 ]
@@ -50,8 +47,7 @@ expected_exit_code = 0
 id = "validation-error-with-skipped"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     "--watch",
     { path_of_file = "helpers/validation-error-with-skipped.toml" },
 ]
@@ -64,7 +60,7 @@ expected_exit_code = 3
 [[test]]
 id = "all"
 input_files = ["helpers"]
-program_arguments = ["test", "--record", "100x20", "--watch", "helpers/*.toml"]
+program_arguments = ["test", "--record=100x20", "--watch", "helpers/*.toml"]
 stdin = "r\nl\nq\n"
 
 expected_stdout = { from_file = "snapshots/all.txt" }

@@ -4,7 +4,7 @@ program = { from_env = "AUREUM_TEST_EXEC" }
 
 [[test]]
 id = "all"
-program_arguments = ["list", "--tree", "--show", "all", "helpers/*.toml"]
+program_arguments = ["list", "--tree", "--show=all", "helpers/*.toml"]
 
 expected_stdout = """
 /
@@ -21,7 +21,7 @@ expected_exit_code = 0
 
 [[test]]
 id = "runnable"
-program_arguments = ["list", "--tree", "--show", "runnable", "helpers/*.toml"]
+program_arguments = ["list", "--tree", "--show=runnable", "helpers/*.toml"]
 
 expected_stdout = """
 /
@@ -36,7 +36,7 @@ expected_exit_code = 0
 
 [[test]]
 id = "skipped"
-program_arguments = ["list", "--tree", "--show", "skipped", "helpers/*.toml"]
+program_arguments = ["list", "--tree", "--show=skipped", "helpers/*.toml"]
 
 expected_stdout = """
 /

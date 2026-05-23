@@ -6,8 +6,7 @@ program = { from_env = "AUREUM_TEST_EXEC" }
 id = "initial-frame"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 stdin = "q\n"
@@ -21,8 +20,7 @@ expected_exit_code = 1
 id = "spaced-arg-is-quoted"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     { path_of_file = "helpers/failing-stdout-spaced-arg.toml" },
 ]
 stdin = "q\n"
@@ -36,8 +34,7 @@ expected_exit_code = 1
 id = "key-press-emits-separator"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 stdin = "1\nq\n"
@@ -51,8 +48,7 @@ expected_exit_code = 1
 id = "not-checked-field-view-switch-disabled"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 stdin = "e\n1\n3\nq\n"
@@ -66,8 +62,7 @@ expected_exit_code = 1
 id = "stdin-view"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     { path_of_file = "helpers/failing-cat-with-stdin.toml" },
 ]
 stdin = "i\nq\n"
@@ -81,8 +76,7 @@ expected_exit_code = 1
 id = "multi-field-navigation"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     { path_of_file = "helpers/failing-stdout-and-exit-code.toml" },
 ]
 stdin = "s\nenter\ns\nenter\nq\n"
@@ -96,8 +90,7 @@ expected_exit_code = 1
 id = "list-initial-frame"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     { path_of_file = "helpers/two-failing-stdout-tests.toml" },
 ]
 stdin = "l\nq\n"
@@ -111,8 +104,7 @@ expected_exit_code = 1
 id = "list-navigate"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     { path_of_file = "helpers/two-failing-stdout-tests.toml" },
 ]
 stdin = "l\ndown\nq\n"
@@ -126,8 +118,7 @@ expected_exit_code = 1
 id = "list-jump-to-test"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     { path_of_file = "helpers/two-failing-stdout-tests.toml" },
 ]
 stdin = "l\ndown\nenter\nq\n"
@@ -141,8 +132,7 @@ expected_exit_code = 1
 id = "list-decision-indicator"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     { path_of_file = "helpers/two-failing-stdout-tests.toml" },
 ]
 stdin = "s\nenter\nl\nq\n"
@@ -156,8 +146,7 @@ expected_exit_code = 1
 id = "list-partial-decision"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     { path_of_file = "helpers/failing-stdout-and-exit-code.toml" },
 ]
 stdin = "s\nl\nq\n"
@@ -171,8 +160,7 @@ expected_exit_code = 1
 id = "scroll-clamped-to-last-line"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 stdin = "down\ndown\ndown\ndown\ndown\nq\n"
@@ -186,8 +174,7 @@ expected_exit_code = 1
 id = "scroll-up-after-excess-down"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 stdin = "down\ndown\ndown\nup\nq\n"
@@ -201,8 +188,7 @@ expected_exit_code = 1
 id = "list-esc-goes-back"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     { path_of_file = "helpers/two-failing-stdout-tests.toml" },
 ]
 stdin = "l\ndown\nesc\nq\n"
@@ -216,8 +202,7 @@ expected_exit_code = 1
 id = "go-back-preserves-partial-decisions"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     { path_of_file = "helpers/failing-stdout-and-exit-code.toml" },
 ]
 stdin = "s\nenter\np\nq\n"
@@ -231,8 +216,7 @@ expected_exit_code = 1
 id = "unbound-key-does-not-clear-staged-skip"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
 stdin = "s\nd\nq\n"
@@ -246,8 +230,7 @@ expected_exit_code = 1
 id = "go-back-restores-decision"
 program_arguments = [
     "test",
-    "--record",
-    "100x20",
+    "--record=100x20",
     { path_of_file = "helpers/two-failing-stdout-tests.toml" },
 ]
 stdin = "s\nenter\np\nq\n"
