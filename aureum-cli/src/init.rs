@@ -122,7 +122,7 @@ fn as_relative_input_path(token: &str, base_dir: &Path) -> Option<String> {
 // HELPERS
 
 fn format_template(title: &str, contents: &str) -> String {
-    format!("# ---[ EXAMPLE: {title} ]---\n{contents}") // Expect `content` to end with newline
+    format!("# --- EXAMPLE: {title} ---\n{contents}") // Expect `content` to end with newline
 }
 
 fn comment_lines(contents: &str) -> String {

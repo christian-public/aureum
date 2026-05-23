@@ -2,14 +2,14 @@ program = { from_env = "AUREUM_TEST_EXEC" }
 program_arguments = ["init", "--print"]
 
 expected_stdout = """
-# ---[ EXAMPLE: Minimal test ]---
+# --- EXAMPLE: Minimal test ---
 program = "echo"
 program_arguments = ["-n", "Hello world"]
 
 expected_stdout = "Hello world"
 
 
-# # ---[ EXAMPLE: Nested tests ]---
+# # --- EXAMPLE: Nested tests ---
 # program = "echo"
 
 
@@ -27,7 +27,7 @@ expected_stdout = "Hello world"
 # expected_stdout = "Test 2"
 
 
-# # ---[ EXAMPLE: All supported fields ]---
+# # --- EXAMPLE: All supported fields ---
 # program = "cat"
 # program_arguments = []
 # stdin = \"\"\"
