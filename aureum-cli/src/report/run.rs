@@ -13,6 +13,17 @@ pub fn print_verbose_is_not_supported_in_passthrough() {
     );
 }
 
+pub fn print_default_timeout_is_not_supported_in_passthrough() {
+    eprintln!(
+        "{} `--default-timeout` is not supported in passthrough mode",
+        theme::error()
+    );
+    eprintln!(
+        "{} use `--format toml`, or set `timeout_seconds` in the config",
+        theme::hint()
+    );
+}
+
 pub fn print_failed_to_run_program() {
     eprintln!("{} failed to run program", theme::error());
 }

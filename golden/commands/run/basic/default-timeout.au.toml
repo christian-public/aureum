@@ -1,0 +1,45 @@
+program = { from_env = "AUREUM_TEST_EXEC" }
+
+
+# `--default-timeout` is accepted with `--format toml`. echo finishes well
+# within the timeout, so the program runs and its output is captured.
+[[test]]
+id = "toml-accepts-default-timeout"
+program_arguments = [
+    "run",
+    "--format",
+    "toml",
+    "--default-timeout",
+    "10",
+    { path_of_file = "helpers/echo-hello.toml" },
+]
+
+expected_stdout = """
+# TEST: helpers/echo-hello.toml
+expected_stdout = "Hello world"
+expected_stderr = ""
+expected_exit_code = 0
+"""
+expected_stderr = ""
+expected_exit_code = 0
+
+
+# Passthrough has no timeout logic, so `--default-timeout` would silently do
+# nothing there; it is rejected rather than misleading the user.
+[[test]]
+id = "passthrough-rejects-default-timeout"
+program_arguments = [
+    "run",
+    "--format",
+    "passthrough",
+    "--default-timeout",
+    "10",
+    { path_of_file = "helpers/echo-hello.toml" },
+]
+
+expected_stdout = ""
+expected_stderr = """
+error: `--default-timeout` is not supported in passthrough mode
+hint: use `--format toml`, or set `timeout_seconds` in the config
+"""
+expected_exit_code = 2

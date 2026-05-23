@@ -10,6 +10,10 @@ pub fn parse() -> Cli {
 
 pub static CLI_BINARY_NAME: &str = "aureum";
 
+/// Fallback timeout (seconds) applied to a test/program that doesn't set its
+/// own `timeout_seconds`. Used by `test` (always) and `run --format toml`.
+pub const DEFAULT_TIMEOUT_SECONDS: u64 = 5;
+
 /// Golden test runner for executables
 #[derive(Parser)]
 #[cfg_attr(debug_assertions, derive(Debug))]
@@ -109,6 +113,10 @@ pub struct RunArgs {
     #[arg(long, default_value = "passthrough")]
     pub format: RunOutputFormat,
 
+    /// Fallback timeout for programs without a timeout; only used with `--format toml`
+    #[arg(long, value_name = "SECONDS")]
+    pub default_timeout: Option<u64>,
+
     #[command(flatten)]
     pub scratch: ScratchArgs,
 
@@ -128,7 +136,7 @@ pub struct TestArgs {
     pub format: TestOutputFormat,
 
     /// Fallback timeout for tests without a timeout
-    #[arg(long, value_name = "SECONDS", default_value = "5")]
+    #[arg(long, value_name = "SECONDS", default_value_t = DEFAULT_TIMEOUT_SECONDS)]
     pub default_timeout: u64,
 
     /// Run tests in parallel

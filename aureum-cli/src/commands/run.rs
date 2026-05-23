@@ -1,4 +1,4 @@
-use crate::args::{RunArgs, RunOutputFormat};
+use crate::args::{DEFAULT_TIMEOUT_SECONDS, RunArgs, RunOutputFormat};
 use crate::commands::common;
 use crate::exit_code::ExitCode;
 use crate::report;
@@ -14,6 +14,20 @@ pub fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
         return ExitCode::InvalidUsage;
     }
 
+    // Passthrough inherits stdio and has no timeout logic, so `--default-timeout`
+    // would silently do nothing there; reject it rather than mislead the user.
+    let default_timeout = match args.format {
+        RunOutputFormat::Toml => args.default_timeout.unwrap_or(DEFAULT_TIMEOUT_SECONDS),
+        RunOutputFormat::Passthrough => {
+            if args.default_timeout.is_some() {
+                report::run::print_default_timeout_is_not_supported_in_passthrough();
+
+                return ExitCode::InvalidUsage;
+            }
+            u64::MAX
+        }
+    };
+
     let scratch_session = match ScratchSession::create(&args.scratch) {
         Ok(s) => s,
         Err(err) => {
@@ -25,7 +39,7 @@ pub fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
     let config_files = match common::prepare_config_files(
         args.paths,
         current_dir,
-        u64::MAX,
+        default_timeout,
         args.common.verbose,
         scratch_session.root(),
     ) {
