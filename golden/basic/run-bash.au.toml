@@ -1,4 +1,4 @@
-program = { env = "AUREUM_TEST_BASH" }
+program = { from_env = "AUREUM_TEST_BASH" }
 program_arguments = [{ path_of_file = "helpers/hello-world.sh" }]
 
 expected_stdout = "Hello world"

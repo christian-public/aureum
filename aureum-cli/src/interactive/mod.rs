@@ -413,7 +413,7 @@ mod tests {
         tmp.write("expected_stdout.txt", "wrong\n");
         tmp.write(
             "test.toml",
-            "program = \"echo\"\nexpected_stdout = { file = \"expected_stdout.txt\" }\n",
+            "program = \"echo\"\nexpected_stdout = { from_file = \"expected_stdout.txt\" }\n",
         );
 
         let tc = make_test_case_root("", "test.toml");

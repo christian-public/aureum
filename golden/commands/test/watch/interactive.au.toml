@@ -1,4 +1,4 @@
-program = { env = "AUREUM_TEST_EXEC" }
+program = { from_env = "AUREUM_TEST_EXEC" }
 
 
 # The initial idle screen is shown after the first test run completes.
@@ -13,7 +13,7 @@ program_arguments = [
 ]
 stdin = "q\n"
 
-expected_stdout = { file = "snapshots/initial-frame.txt" }
+expected_stdout = { from_file = "snapshots/initial-frame.txt" }
 expected_exit_code = 1
 
 
@@ -30,7 +30,7 @@ program_arguments = [
 ]
 stdin = "file-change\nq\n"
 
-expected_stdout = { file = "snapshots/file-change-reruns-tests.txt" }
+expected_stdout = { from_file = "snapshots/file-change-reruns-tests.txt" }
 expected_exit_code = 1
 
 
@@ -46,7 +46,7 @@ program_arguments = [
 ]
 stdin = "r\nesc\nq\n"
 
-expected_stdout = { file = "snapshots/review-and-back-to-idle.txt" }
+expected_stdout = { from_file = "snapshots/review-and-back-to-idle.txt" }
 expected_exit_code = 1
 
 
@@ -62,7 +62,7 @@ program_arguments = [
 ]
 stdin = "t\nq\n"
 
-expected_stdout = { file = "snapshots/t-rerun-tests.txt" }
+expected_stdout = { from_file = "snapshots/t-rerun-tests.txt" }
 expected_exit_code = 1
 
 
@@ -78,5 +78,5 @@ program_arguments = [
 ]
 stdin = "r\nl\nesc\nq\n"
 
-expected_stdout = { file = "snapshots/list-esc-to-diff.txt" }
+expected_stdout = { from_file = "snapshots/list-esc-to-diff.txt" }
 expected_exit_code = 1

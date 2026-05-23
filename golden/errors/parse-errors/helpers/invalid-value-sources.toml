@@ -4,8 +4,8 @@ program = "echo"
 [[test]]
 id = "ambiguous"
 
-expected_stdout = { file = "out.txt", env = "MY_VAR" }                       # Ambiguous fields
-expected_stderr = { file = "out.txt", env = "MY_VAR", unknown_key = "oops" } # Ambiguous fields + unexpected field
+expected_stdout = { from_file = "out.txt", from_env = "MY_VAR" }                       # Ambiguous fields
+expected_stderr = { from_file = "out.txt", from_env = "MY_VAR", unknown_key = "oops" } # Ambiguous fields + unexpected field
 
 
 [[test]]
@@ -15,16 +15,16 @@ expected_stdout = { unknown_key = "value" } # Unexpected field
 
 
 [[test]]
-id = "file"
+id = "from_file"
 
-expected_stdout = { file = "x", unknown_key = "oops" } # Valid field + unexpected field
-expected_stderr = { file = 99 }                        # Valid field, but wrong type
-expected_exit_code = { file = 99, other_key = false }  # Valid field, but wrong type + unexpected field
+expected_stdout = { from_file = "x", unknown_key = "oops" } # Valid field + unexpected field
+expected_stderr = { from_file = 99 }                        # Valid field, but wrong type
+expected_exit_code = { from_file = 99, other_key = false }  # Valid field, but wrong type + unexpected field
 
 
 [[test]]
-id = "env"
+id = "from_env"
 
-expected_stdout = { env = "MY_VAR", unknown_key = "oops" } # Valid field + unexpected field
-expected_stderr = { env = 99 }                             # Valid field, but wrong type
-expected_exit_code = { env = 99, other_key = false }       # Valid field, but wrong type + unexpected field
+expected_stdout = { from_env = "MY_VAR", unknown_key = "oops" } # Valid field + unexpected field
+expected_stderr = { from_env = 99 }                             # Valid field, but wrong type
+expected_exit_code = { from_env = 99, other_key = false }       # Valid field, but wrong type + unexpected field

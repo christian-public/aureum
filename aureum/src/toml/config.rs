@@ -37,9 +37,9 @@ pub struct ConfigTest {
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum ValueSource<T> {
     Literal(T),
-    FetchFromEnv { env: String },
-    ReadFromFile { file: String },
-    ReadFromEmbed { embed: String },
+    FetchFromEnv { from_env: String },
+    ReadFromFile { from_file: String },
+    ReadFromEmbed { from_embed: String },
     CopyFromFile { path_of_file: String },
     WriteEmbed { path_of_embed: String },
 }
@@ -95,7 +95,9 @@ pub enum ParseErrorReason {
     },
     #[error(fmt = fmt_ambiguous_value_source)]
     AmbiguousValueSource { conflicting_keys: Vec<String> },
-    #[error("must specify one of: `env`, `file`, `embed`, `path_of_file`, `path_of_embed`")]
+    #[error(
+        "must specify one of: `from_env`, `from_file`, `from_embed`, `path_of_file`, `path_of_embed`"
+    )]
     MissingRequiredFieldInValueSource,
     #[error("field `id` is not allowed at the root level")]
     IdForbiddenAtRoot,

@@ -1,4 +1,4 @@
-program = { env = "AUREUM_TEST_EXEC" }
+program = { from_env = "AUREUM_TEST_EXEC" }
 
 
 [[test]]
@@ -11,7 +11,7 @@ program_arguments = [
 ]
 stdin = "l\nq\n"
 
-expected_stdout = { file = "snapshots/timeout-seconds-field.txt" }
+expected_stdout = { from_file = "snapshots/timeout-seconds-field.txt" }
 expected_exit_code = 1
 
 
@@ -27,5 +27,5 @@ program_arguments = [
 ]
 stdin = "l\nq\n"
 
-expected_stdout = { file = "snapshots/default-timeout-option.txt" }
+expected_stdout = { from_file = "snapshots/default-timeout-option.txt" }
 expected_exit_code = 1

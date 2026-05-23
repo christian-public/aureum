@@ -1,5 +1,5 @@
 input_files = ["helpers/input-files-passing*.toml"]
-program = { env = "AUREUM_TEST_EXEC" }
+program = { from_env = "AUREUM_TEST_EXEC" }
 program_arguments = [
     "test",
     "--stable-output",

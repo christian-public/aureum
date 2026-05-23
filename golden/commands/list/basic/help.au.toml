@@ -1,4 +1,4 @@
-program = { env = "AUREUM_TEST_EXEC" }
+program = { from_env = "AUREUM_TEST_EXEC" }
 program_arguments = ["list", "--help"]
 
 expected_stdout = """

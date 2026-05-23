@@ -81,7 +81,7 @@ pub enum ValidationError {
         embed: String,
         error: Box<ValidationError>,
     },
-    #[error("`embed` reference is not allowed inside another embed's content: `{0}`")]
+    #[error("`from_embed` reference is not allowed inside another embed's content: `{0}`")]
     EmbedRefNotAllowedInEmbedContent(String),
     #[error("missing external file `{0}`")]
     MissingExternalFile(String),
@@ -647,7 +647,7 @@ where
 {
     match config_value {
         ValueSource::Literal(value) => Ok(value),
-        ValueSource::FetchFromEnv { env: var_name } => {
+        ValueSource::FetchFromEnv { from_env: var_name } => {
             if let Some(str) = requirement_data.get_env_var(&var_name) {
                 str.parse::<T>().map_err(|err| ValidationError::InEnvVar {
                     env_var: var_name,
@@ -657,7 +657,9 @@ where
                 Err(ValidationError::MissingEnvVar(var_name))
             }
         }
-        ValueSource::ReadFromFile { file: file_path } => {
+        ValueSource::ReadFromFile {
+            from_file: file_path,
+        } => {
             if let Some(str) = requirement_data.get_file(&file_path) {
                 str.parse::<T>()
                     .map_err(|err| ValidationError::InExternalFile {
@@ -668,7 +670,9 @@ where
                 Err(ValidationError::MissingExternalFile(file_path))
             }
         }
-        ValueSource::ReadFromEmbed { embed: embed_path } => {
+        ValueSource::ReadFromEmbed {
+            from_embed: embed_path,
+        } => {
             let Some(registry) = embeds else {
                 return Err(ValidationError::EmbedRefNotAllowedInEmbedContent(
                     embed_path,

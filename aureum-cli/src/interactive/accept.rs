@@ -135,9 +135,9 @@ fn apply_field_update(
 
 /// Applies the update to a single TOML table section.
 ///
-/// - If the current value is `{ file = "..." }`, writes `new_value` to that file and
+/// - If the current value is `{ from_file = "..." }`, writes `new_value` to that file and
 ///   returns `false` (no doc change).
-/// - If the current value is `{ env = "..." }`, skips silently and returns `false`.
+/// - If the current value is `{ from_env = "..." }`, skips silently and returns `false`.
 /// - Otherwise, replaces the value in-place and returns `true`.
 fn apply_to_section(
     section: &mut toml_edit::Table,
@@ -145,11 +145,11 @@ fn apply_to_section(
     new_value: &FieldValue<'_>,
     config_dir_path: &Path,
 ) -> io::Result<bool> {
-    // Check for value sources ({ file = "..." } or { env = "..." }).
+    // Check for value sources ({ from_file = "..." } or { from_env = "..." }).
     if let Some(item) = section.get(field)
         && let Some(table) = item.as_inline_table()
     {
-        if let Some(file_val) = table.get("file")
+        if let Some(file_val) = table.get("from_file")
             && let Some(file_path) = file_val.as_str()
         {
             let external_path = config_dir_path.join(file_path);
@@ -157,7 +157,7 @@ fn apply_to_section(
             return Ok(false);
         }
 
-        if table.contains_key("env") {
+        if table.contains_key("from_env") {
             return Ok(false); // Can't update env vars
         }
     }
@@ -263,7 +263,7 @@ mod tests {
     fn test_apply_to_section_writes_file_reference_and_does_not_modify_doc() {
         let tmp = TempDir::new("file_ref");
         tmp.write("out.txt", "old content");
-        let mut doc: DocumentMut = "expected_stdout = { file = \"out.txt\" }\n"
+        let mut doc: DocumentMut = "expected_stdout = { from_file = \"out.txt\" }\n"
             .parse()
             .unwrap();
         let original_doc = doc.to_string();
@@ -284,7 +284,9 @@ mod tests {
     #[test]
     fn test_apply_to_section_skips_env_reference() {
         let tmp = TempDir::new("env_ref");
-        let mut doc: DocumentMut = "expected_stdout = { env = \"MY_VAR\" }\n".parse().unwrap();
+        let mut doc: DocumentMut = "expected_stdout = { from_env = \"MY_VAR\" }\n"
+            .parse()
+            .unwrap();
         let original_doc = doc.to_string();
 
         let changed = apply_to_section(
@@ -414,7 +416,7 @@ mod tests {
         tmp.write("expected_out.txt", "old content");
         tmp.write(
             "test.toml",
-            "program = \"echo\"\nexpected_stdout = { file = \"expected_out.txt\" }\n",
+            "program = \"echo\"\nexpected_stdout = { from_file = \"expected_out.txt\" }\n",
         );
 
         let tc = make_test_case_root("", "test.toml");
@@ -432,7 +434,7 @@ mod tests {
         assert_eq!(tmp.read("expected_out.txt"), "new content");
         assert!(
             tmp.read("test.toml")
-                .contains("expected_stdout = { file = \"expected_out.txt\" }")
+                .contains("expected_stdout = { from_file = \"expected_out.txt\" }")
         );
     }
 

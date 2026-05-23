@@ -1,4 +1,4 @@
-program = { env = "AUREUM_TEST_EXEC" }
+program = { from_env = "AUREUM_TEST_EXEC" }
 
 
 [[test]]
@@ -11,7 +11,7 @@ program_arguments = [
     { path_of_file = "helpers/skip-root-test.toml" },
 ]
 
-expected_stdout = { file = "snapshots/skip-root-test.txt" }
+expected_stdout = { from_file = "snapshots/skip-root-test.txt" }
 expected_stderr = ""
 expected_exit_code = 0
 
@@ -26,7 +26,7 @@ program_arguments = [
     { path_of_file = "helpers/skip-subtest.toml" },
 ]
 
-expected_stdout = { file = "snapshots/skip-subtest.txt" }
+expected_stdout = { from_file = "snapshots/skip-subtest.txt" }
 expected_stderr = ""
 expected_exit_code = 0
 
@@ -41,7 +41,7 @@ program_arguments = [
     { path_of_file = "helpers/skip-invalid-config.toml" },
 ]
 
-expected_stdout = { file = "snapshots/skip-invalid-config.txt" }
+expected_stdout = { from_file = "snapshots/skip-invalid-config.txt" }
 expected_stderr = ""
 expected_exit_code = 0
 
@@ -56,7 +56,7 @@ program_arguments = [
     { path_of_file = "helpers/validation-error-with-skipped.toml" },
 ]
 
-expected_stdout = { file = "snapshots/validation-error-with-skipped.txt" }
+expected_stdout = { from_file = "snapshots/validation-error-with-skipped.txt" }
 expected_stderr = ""
 expected_exit_code = 3
 
@@ -67,6 +67,6 @@ input_files = ["helpers"]
 program_arguments = ["test", "--record", "100x20", "--watch", "helpers/*.toml"]
 stdin = "r\nl\nq\n"
 
-expected_stdout = { file = "snapshots/all.txt" }
+expected_stdout = { from_file = "snapshots/all.txt" }
 expected_stderr = ""
 expected_exit_code = 1

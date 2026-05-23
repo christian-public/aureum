@@ -1,7 +1,7 @@
 program = "echo"
-program_arguments = ["-n", { embed = "greeting" }]
+program_arguments = ["-n", { from_embed = "greeting" }]
 
-expected_stdout = { embed = "greeting" }
+expected_stdout = { from_embed = "greeting" }
 
 
 [[embed]]

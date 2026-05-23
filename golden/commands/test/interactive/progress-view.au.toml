@@ -1,4 +1,4 @@
-program = { env = "AUREUM_TEST_EXEC" }
+program = { from_env = "AUREUM_TEST_EXEC" }
 
 
 # The final progress frame is the first recorded frame when using `--record`.
@@ -11,5 +11,5 @@ program_arguments = [
     { path_of_file = "helpers/passing-test.toml" },
 ]
 
-expected_stdout = { file = "snapshots/progress-view-all-passed.txt" }
+expected_stdout = { from_file = "snapshots/progress-view-all-passed.txt" }
 expected_exit_code = 0

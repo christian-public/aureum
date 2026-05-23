@@ -33,7 +33,7 @@ pub fn resolve_watch_files(
     let mut files = BTreeSet::new();
     let mut errors = BTreeSet::new();
 
-    // Resolving `{ embed = "..." }` in watch_files requires looking up the
+    // Resolving `{ from_embed = "..." }` in watch_files requires looking up the
     // embed's resolved content, so build a registry here. Registry build
     // errors are also surfaced via test entries, so we use whatever
     // succeeded and ignore the rest at this layer.
@@ -45,28 +45,34 @@ pub fn resolve_watch_files(
             ValueSource::Literal(s) => {
                 files.insert(s.clone());
             }
-            ValueSource::FetchFromEnv { env } => match requirement_data.env_vars.get(env) {
+            ValueSource::FetchFromEnv { from_env: env_var } => {
+                match requirement_data.env_vars.get(env_var) {
+                    Some(value) => {
+                        files.insert(value.clone());
+                    }
+                    None => {
+                        errors.insert(ValidationError::MissingEnvVar(env_var.clone()));
+                    }
+                }
+            }
+            ValueSource::ReadFromFile {
+                from_file: file_path,
+            } => match requirement_data.files.get(file_path) {
                 Some(value) => {
                     files.insert(value.clone());
                 }
                 None => {
-                    errors.insert(ValidationError::MissingEnvVar(env.clone()));
+                    errors.insert(ValidationError::MissingExternalFile(file_path.clone()));
                 }
             },
-            ValueSource::ReadFromFile { file } => match requirement_data.files.get(file) {
-                Some(value) => {
-                    files.insert(value.clone());
-                }
-                None => {
-                    errors.insert(ValidationError::MissingExternalFile(file.clone()));
-                }
-            },
-            ValueSource::ReadFromEmbed { embed } => match embed_registry.get(embed.as_str()) {
+            ValueSource::ReadFromEmbed {
+                from_embed: embed_path,
+            } => match embed_registry.get(embed_path.as_str()) {
                 Some(value) => {
                     files.insert(value.to_owned());
                 }
                 None => {
-                    errors.insert(ValidationError::EmbedUnknown(embed.clone()));
+                    errors.insert(ValidationError::EmbedUnknown(embed_path.clone()));
                 }
             },
             ValueSource::CopyFromFile { .. } | ValueSource::WriteEmbed { .. } => {
@@ -88,8 +94,8 @@ fn collect_requirements_from_toml_config_test(
 
     if let Some(array) = &config.input_files {
         for item in array {
-            // The pattern itself may pull in external data (`{ env = }` /
-            // `{ file = }`) to source the path/glob. Register that here so the
+            // The pattern itself may pull in external data (`{ from_env = }` /
+            // `{ from_file = }`) to source the path/glob. Register that here so the
             // CLI loads it. The expanded files themselves are watched via the
             // CLI's globset walker — see `watch::collect_watch_paths`.
             collect_requirements_from_config_value(requirements, item);
@@ -127,11 +133,13 @@ fn collect_requirements_from_config_value<T>(
         ValueSource::Literal(_) => {
             // Do nothing
         }
-        ValueSource::FetchFromEnv { env } => {
-            requirements.env_vars.insert(env.to_owned());
+        ValueSource::FetchFromEnv { from_env: env_var } => {
+            requirements.env_vars.insert(env_var.to_owned());
         }
-        ValueSource::ReadFromFile { file } => {
-            requirements.files.insert(file.to_owned());
+        ValueSource::ReadFromFile {
+            from_file: file_path,
+        } => {
+            requirements.files.insert(file_path.to_owned());
         }
         ValueSource::CopyFromFile {
             path_of_file: file_path,
@@ -185,7 +193,7 @@ mod tests {
     #[test]
     fn test_resolve_watch_files_fetch_from_env() {
         let config = make_config(vec![ValueSource::FetchFromEnv {
-            env: "MY_SCRIPT".to_owned(),
+            from_env: "MY_SCRIPT".to_owned(),
         }]);
         let mut requirement_data = RequirementData::default();
         requirement_data.env_vars.insert(
@@ -203,7 +211,7 @@ mod tests {
     #[test]
     fn test_resolve_watch_files_read_from_file() {
         let config = make_config(vec![ValueSource::ReadFromFile {
-            file: "path_file".to_owned(),
+            from_file: "path_file".to_owned(),
         }]);
         let mut requirement_data = RequirementData::default();
         requirement_data.files.insert(
@@ -221,7 +229,7 @@ mod tests {
     #[test]
     fn test_resolve_watch_files_missing_env_var_returns_error() {
         let config = make_config(vec![ValueSource::FetchFromEnv {
-            env: "MISSING_VAR".to_owned(),
+            from_env: "MISSING_VAR".to_owned(),
         }]);
         let (files, errors) = resolve_watch_files(&config, &RequirementData::default());
         assert!(files.is_empty());
@@ -234,7 +242,7 @@ mod tests {
     #[test]
     fn test_resolve_watch_files_missing_file_returns_error() {
         let config = make_config(vec![ValueSource::ReadFromFile {
-            file: "missing_file".to_owned(),
+            from_file: "missing_file".to_owned(),
         }]);
         let (files, errors) = resolve_watch_files(&config, &RequirementData::default());
         assert!(files.is_empty());
@@ -262,7 +270,7 @@ mod tests {
     #[test]
     fn test_get_requirements_includes_watch_files_env() {
         let config = make_config(vec![ValueSource::FetchFromEnv {
-            env: "MY_SCRIPT".to_owned(),
+            from_env: "MY_SCRIPT".to_owned(),
         }]);
         let requirements = get_requirements(&config);
         assert!(requirements.env_vars.contains("MY_SCRIPT"));
@@ -271,7 +279,7 @@ mod tests {
     #[test]
     fn test_get_requirements_includes_watch_files_file() {
         let config = make_config(vec![ValueSource::ReadFromFile {
-            file: "path_file".to_owned(),
+            from_file: "path_file".to_owned(),
         }]);
         let requirements = get_requirements(&config);
         assert!(requirements.files.contains("path_file"));

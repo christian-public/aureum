@@ -1,5 +1,5 @@
 input_files = ["helpers"]
-program = { env = "AUREUM_TEST_BASH" }
+program = { from_env = "AUREUM_TEST_BASH" }
 program_arguments = ["helpers/absolute-path.sh"]
 
 expected_stdout = """

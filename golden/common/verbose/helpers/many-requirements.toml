@@ -1,7 +1,7 @@
 watch_files = [
     "hello-world.txt",
-    { file = "AUREUM_TEST_FILE_WITH_PATH_TO_WATCH_DOES_NOT_EXIST" },
-    { env = "AUREUM_TEST_ENV_VAR_WITH_PATH_TO_WATCH_DOES_NOT_EXIST" },
+    { from_file = "AUREUM_TEST_FILE_WITH_PATH_TO_WATCH_DOES_NOT_EXIST" },
+    { from_env = "AUREUM_TEST_ENV_VAR_WITH_PATH_TO_WATCH_DOES_NOT_EXIST" },
 ]
 
 program = "echo"
@@ -11,22 +11,22 @@ program_arguments = ["-n", "Hello world"]
 [[test]]
 id = "env-var-exists"
 
-expected_stdout = { env = "AUREUM_TEST_HELLO_WORLD" }
+expected_stdout = { from_env = "AUREUM_TEST_HELLO_WORLD" }
 
 
 [[test]]
 id = "env-var-missing"
 
-expected_stdout = { env = "AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST" }
+expected_stdout = { from_env = "AUREUM_TEST_ENV_VAR_DOES_NOT_EXIST" }
 
 
 [[test]]
 id = "external-file-exists"
 
-expected_stdout = { file = "hello-world.txt" }
+expected_stdout = { from_file = "hello-world.txt" }
 
 
 [[test]]
 id = "external-file-missing"
 
-expected_stdout = { file = "aureum_test_this_file_does_not_exist" }
+expected_stdout = { from_file = "aureum_test_this_file_does_not_exist" }

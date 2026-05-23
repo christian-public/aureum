@@ -610,7 +610,13 @@ fn parse_integer_value(value: &Value) -> Result<ValueSource<i64>, ParseErrorReas
     }
 }
 
-static ALL_EXCLUSIVE_KEYS: [&str; 5] = ["env", "file", "embed", "path_of_file", "path_of_embed"];
+static ALL_EXCLUSIVE_KEYS: [&str; 5] = [
+    "from_env",
+    "from_file",
+    "from_embed",
+    "path_of_file",
+    "path_of_embed",
+];
 
 fn parse_value_source<T>(table: &Table) -> Result<ValueSource<T>, ParseErrorReason> {
     let mut inner_reason = None;
@@ -630,39 +636,43 @@ fn parse_value_source<T>(table: &Table) -> Result<ValueSource<T>, ParseErrorReas
         inner_reason = Some(Box::new(ParseErrorReason::AmbiguousValueSource {
             conflicting_keys,
         }));
-    } else if let Some(value) = table.get("env") {
+    } else if let Some(value) = table.get("from_env") {
         match value {
             Value::String(s) => {
                 if unexpected_keys.is_empty() {
-                    return Ok(ValueSource::FetchFromEnv { env: s.to_owned() });
-                }
-            }
-            _ => {
-                inner_reason = Some(invalid_string_field("env", value));
-            }
-        };
-    } else if let Some(value) = table.get("file") {
-        match value {
-            Value::String(s) => {
-                if unexpected_keys.is_empty() {
-                    return Ok(ValueSource::ReadFromFile { file: s.to_owned() });
-                }
-            }
-            _ => {
-                inner_reason = Some(invalid_string_field("file", value));
-            }
-        };
-    } else if let Some(value) = table.get("embed") {
-        match value {
-            Value::String(s) => {
-                if unexpected_keys.is_empty() {
-                    return Ok(ValueSource::ReadFromEmbed {
-                        embed: s.to_owned(),
+                    return Ok(ValueSource::FetchFromEnv {
+                        from_env: s.to_owned(),
                     });
                 }
             }
             _ => {
-                inner_reason = Some(invalid_string_field("embed", value));
+                inner_reason = Some(invalid_string_field("from_env", value));
+            }
+        };
+    } else if let Some(value) = table.get("from_file") {
+        match value {
+            Value::String(s) => {
+                if unexpected_keys.is_empty() {
+                    return Ok(ValueSource::ReadFromFile {
+                        from_file: s.to_owned(),
+                    });
+                }
+            }
+            _ => {
+                inner_reason = Some(invalid_string_field("from_file", value));
+            }
+        };
+    } else if let Some(value) = table.get("from_embed") {
+        match value {
+            Value::String(s) => {
+                if unexpected_keys.is_empty() {
+                    return Ok(ValueSource::ReadFromEmbed {
+                        from_embed: s.to_owned(),
+                    });
+                }
+            }
+            _ => {
+                inner_reason = Some(invalid_string_field("from_embed", value));
             }
         };
     } else if let Some(value) = table.get("path_of_file") {

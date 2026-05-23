@@ -1,4 +1,4 @@
-program = { env = "AUREUM_TEST_EXEC" }
+program = { from_env = "AUREUM_TEST_EXEC" }
 
 
 # Status area starts empty: no message shown when on a failing field that is undecided.
@@ -12,7 +12,7 @@ program_arguments = [
 ]
 stdin = "q\n"
 
-expected_stdout = { file = "snapshots/status-empty.txt" }
+expected_stdout = { from_file = "snapshots/status-empty.txt" }
 expected_exit_code = 1
 
 
@@ -27,7 +27,7 @@ program_arguments = [
 ]
 stdin = "e\nq\n"
 
-expected_stdout = { file = "snapshots/status-non-failing-field.txt" }
+expected_stdout = { from_file = "snapshots/status-non-failing-field.txt" }
 expected_exit_code = 1
 
 
@@ -42,7 +42,7 @@ program_arguments = [
 ]
 stdin = "i\nq\n"
 
-expected_stdout = { file = "snapshots/status-stdin-field.txt" }
+expected_stdout = { from_file = "snapshots/status-stdin-field.txt" }
 expected_exit_code = 1
 
 
@@ -57,7 +57,7 @@ program_arguments = [
 ]
 stdin = "enter\nq\n"
 
-expected_stdout = { file = "snapshots/status-enter-undecided.txt" }
+expected_stdout = { from_file = "snapshots/status-enter-undecided.txt" }
 expected_exit_code = 1
 
 
@@ -72,7 +72,7 @@ program_arguments = [
 ]
 stdin = "a\nq\n"
 
-expected_stdout = { file = "snapshots/status-all-decided.txt" }
+expected_stdout = { from_file = "snapshots/status-all-decided.txt" }
 expected_exit_code = 1
 
 
@@ -87,7 +87,7 @@ program_arguments = [
 ]
 stdin = "a\nq\n"
 
-expected_stdout = { file = "snapshots/status-pending-next-field.txt" }
+expected_stdout = { from_file = "snapshots/status-pending-next-field.txt" }
 expected_exit_code = 1
 
 
@@ -102,5 +102,5 @@ program_arguments = [
 ]
 stdin = "a\ne\nq\n"
 
-expected_stdout = { file = "snapshots/status-pending-reverts.txt" }
+expected_stdout = { from_file = "snapshots/status-pending-reverts.txt" }
 expected_exit_code = 1

@@ -1,4 +1,4 @@
-program = { env = "AUREUM_TEST_EXEC" }
+program = { from_env = "AUREUM_TEST_EXEC" }
 
 
 # The initial TUI frame is emitted when using --record (no leading --- separator).
@@ -12,7 +12,7 @@ program_arguments = [
 ]
 stdin = "q\n"
 
-expected_stdout = { file = "snapshots/record-initial-frame.txt" }
+expected_stdout = { from_file = "snapshots/record-initial-frame.txt" }
 expected_exit_code = 1
 
 
@@ -27,7 +27,7 @@ program_arguments = [
 ]
 stdin = "q\n"
 
-expected_stdout = { file = "snapshots/record-spaced-arg.txt" }
+expected_stdout = { from_file = "snapshots/record-spaced-arg.txt" }
 expected_exit_code = 1
 
 
@@ -42,7 +42,7 @@ program_arguments = [
 ]
 stdin = "1\nq\n"
 
-expected_stdout = { file = "snapshots/record-tab-switch-to-expected.txt" }
+expected_stdout = { from_file = "snapshots/record-tab-switch-to-expected.txt" }
 expected_exit_code = 1
 
 
@@ -57,7 +57,7 @@ program_arguments = [
 ]
 stdin = "e\n1\n3\nq\n"
 
-expected_stdout = { file = "snapshots/record-stderr-not-checked-view-switch-disabled.txt" }
+expected_stdout = { from_file = "snapshots/record-stderr-not-checked-view-switch-disabled.txt" }
 expected_exit_code = 1
 
 
@@ -72,7 +72,7 @@ program_arguments = [
 ]
 stdin = "i\nq\n"
 
-expected_stdout = { file = "snapshots/record-stdin-view.txt" }
+expected_stdout = { from_file = "snapshots/record-stdin-view.txt" }
 expected_exit_code = 1
 
 
@@ -87,7 +87,7 @@ program_arguments = [
 ]
 stdin = "s\nenter\ns\nenter\nq\n"
 
-expected_stdout = { file = "snapshots/record-multi-field-navigation.txt" }
+expected_stdout = { from_file = "snapshots/record-multi-field-navigation.txt" }
 expected_exit_code = 1
 
 
@@ -102,7 +102,7 @@ program_arguments = [
 ]
 stdin = "l\nq\n"
 
-expected_stdout = { file = "snapshots/record-list-initial-frame.txt" }
+expected_stdout = { from_file = "snapshots/record-list-initial-frame.txt" }
 expected_exit_code = 1
 
 
@@ -117,7 +117,7 @@ program_arguments = [
 ]
 stdin = "l\ndown\nq\n"
 
-expected_stdout = { file = "snapshots/record-list-navigate.txt" }
+expected_stdout = { from_file = "snapshots/record-list-navigate.txt" }
 expected_exit_code = 1
 
 
@@ -132,7 +132,7 @@ program_arguments = [
 ]
 stdin = "l\ndown\nenter\nq\n"
 
-expected_stdout = { file = "snapshots/record-list-jump.txt" }
+expected_stdout = { from_file = "snapshots/record-list-jump.txt" }
 expected_exit_code = 1
 
 
@@ -147,7 +147,7 @@ program_arguments = [
 ]
 stdin = "s\nenter\nl\nq\n"
 
-expected_stdout = { file = "snapshots/record-list-decision-indicator.txt" }
+expected_stdout = { from_file = "snapshots/record-list-decision-indicator.txt" }
 expected_exit_code = 1
 
 
@@ -162,7 +162,7 @@ program_arguments = [
 ]
 stdin = "s\nl\nq\n"
 
-expected_stdout = { file = "snapshots/record-list-partial-decision.txt" }
+expected_stdout = { from_file = "snapshots/record-list-partial-decision.txt" }
 expected_exit_code = 1
 
 
@@ -177,7 +177,7 @@ program_arguments = [
 ]
 stdin = "down\ndown\ndown\ndown\ndown\nq\n"
 
-expected_stdout = { file = "snapshots/record-scroll-clamped.txt" }
+expected_stdout = { from_file = "snapshots/record-scroll-clamped.txt" }
 expected_exit_code = 1
 
 
@@ -192,7 +192,7 @@ program_arguments = [
 ]
 stdin = "down\ndown\ndown\nup\nq\n"
 
-expected_stdout = { file = "snapshots/record-scroll-up-after-excess-down.txt" }
+expected_stdout = { from_file = "snapshots/record-scroll-up-after-excess-down.txt" }
 expected_exit_code = 1
 
 
@@ -207,7 +207,7 @@ program_arguments = [
 ]
 stdin = "l\ndown\nesc\nq\n"
 
-expected_stdout = { file = "snapshots/record-list-esc-goes-back.txt" }
+expected_stdout = { from_file = "snapshots/record-list-esc-goes-back.txt" }
 expected_exit_code = 1
 
 
@@ -222,7 +222,7 @@ program_arguments = [
 ]
 stdin = "s\nenter\np\nq\n"
 
-expected_stdout = { file = "snapshots/record-go-back-preserves-partial-decisions.txt" }
+expected_stdout = { from_file = "snapshots/record-go-back-preserves-partial-decisions.txt" }
 expected_exit_code = 1
 
 
@@ -237,7 +237,7 @@ program_arguments = [
 ]
 stdin = "s\nd\nq\n"
 
-expected_stdout = { file = "snapshots/record-skip-then-unbound.txt" }
+expected_stdout = { from_file = "snapshots/record-skip-then-unbound.txt" }
 expected_exit_code = 1
 
 
@@ -252,5 +252,5 @@ program_arguments = [
 ]
 stdin = "s\nenter\np\nq\n"
 
-expected_stdout = { file = "snapshots/record-go-back-restores-decision.txt" }
+expected_stdout = { from_file = "snapshots/record-go-back-restores-decision.txt" }
 expected_exit_code = 1
