@@ -154,6 +154,83 @@ fn keep_scratch_still_sweeps_prior_run_orphans() {
 }
 
 #[test]
+fn keep_scratch_leaves_a_runnable_rerun_script() {
+    let scratch_root = tempfile::TempDir::new().unwrap();
+    let config_dir = tempfile::TempDir::new().unwrap();
+    let config_path = config_dir.path().join("echo.au.toml");
+    // stdin exercises the sidecar path; `cat` echoes it straight back.
+    fs::write(
+        &config_path,
+        "program = \"cat\"\nstdin = \"ping\"\nexpected_stdout = \"ping\"\n",
+    )
+    .unwrap();
+
+    let output = Command::new(BIN)
+        .args(["test", "--scratch-root"])
+        .arg(scratch_root.path())
+        .arg("--keep-scratch")
+        .arg(&config_path)
+        .output()
+        .expect("failed to spawn aureum binary");
+    assert_success(&output);
+
+    let dirs = per_test_subdirs(scratch_root.path());
+    assert_eq!(
+        dirs.len(),
+        1,
+        "expected one preserved per-test dir, got {dirs:?}"
+    );
+    let dir = scratch_root.path().join(&dirs[0]);
+    let script = dir.join(aureum::RERUN_SCRIPT_NAME);
+    assert!(
+        script.exists(),
+        "--keep-scratch should leave a rerun script"
+    );
+
+    // Re-running the left-behind script must reproduce the original output,
+    // stdin sidecar and all — the whole point of the artifact.
+    let rerun = Command::new("sh")
+        .arg(&script)
+        .output()
+        .expect("failed to execute rerun script");
+    assert!(
+        rerun.status.success(),
+        "rerun script exited non-zero: {status:?}\nstderr:\n{stderr}",
+        status = rerun.status,
+        stderr = String::from_utf8_lossy(&rerun.stderr),
+    );
+    assert_eq!(String::from_utf8_lossy(&rerun.stdout), "ping");
+}
+
+#[test]
+fn no_rerun_script_without_keep_scratch() {
+    // Without `--keep-scratch` the script must not be written at all. The
+    // per-test dir is swept after the run, so we can't inspect it afterwards;
+    // instead the program probes its own cwd (the scratch dir) for the script
+    // while it runs. The script, if written, is created before the program is
+    // spawned, so "absent" proves the flag never reached the plan.
+    let scratch_root = tempfile::TempDir::new().unwrap();
+    let config_dir = tempfile::TempDir::new().unwrap();
+    let config_path = config_dir.path().join("probe.au.toml");
+    fs::write(
+        &config_path,
+        "program = \"sh\"\n\
+         program_arguments = [\"-c\", \"test -e aureum-rerun.sh && printf present || printf absent\"]\n\
+         expected_stdout = \"absent\"\n",
+    )
+    .unwrap();
+
+    // `--scratch-root` (so a scratch dir exists) but no `--keep-scratch`.
+    let output = Command::new(BIN)
+        .args(["test", "--scratch-root"])
+        .arg(scratch_root.path())
+        .arg(&config_path)
+        .output()
+        .expect("failed to spawn aureum binary");
+    assert_success(&output);
+}
+
+#[test]
 fn keep_scratch_requires_scratch_root() {
     // Sanity check the clap `requires` constraint: `--keep-scratch` without
     // `--scratch-root` must be rejected by argument parsing (exit code 2),

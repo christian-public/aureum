@@ -1,7 +1,10 @@
 use crate::counts::ConfigStats;
 use crate::find_config_file::FindConfigFilesResult;
 use crate::utils::{file, glob as glob_util};
-use aureum::{RequirementData, Requirements, SubtestPathCoverageSet, TestEntry, ValidationError};
+use aureum::{
+    RequirementData, Requirements, ScratchConfig, SubtestPathCoverageSet, TestEntry,
+    ValidationError,
+};
 use relative_path::RelativePathBuf;
 use std::collections::{BTreeMap, BTreeSet};
 use std::env;
@@ -86,7 +89,7 @@ pub fn load_config_files(
     find_config_files_result: FindConfigFilesResult,
     current_dir: &Path,
     default_timeout: u64,
-    scratch_root: Option<&Path>,
+    scratch_config: Option<&ScratchConfig>,
 ) -> LoadConfigFilesResult {
     // Iterate the found files in canonical (BTreeMap) order so the assigned
     // global positions match the order tests will be discovered and run in.
@@ -102,7 +105,7 @@ pub fn load_config_files(
             subtest_path_coverage_set,
             current_dir,
             default_timeout,
-            scratch_root,
+            scratch_config,
             next_position,
         ) {
             Ok(loaded_file) => {
@@ -127,7 +130,7 @@ fn load_config_file(
     subtest_path_coverage_set: SubtestPathCoverageSet,
     current_dir: &Path,
     default_timeout: u64,
-    scratch_root: Option<&Path>,
+    scratch_config: Option<&ScratchConfig>,
     starting_position: usize,
 ) -> Result<LoadedConfigFile, LoadedConfigFileError> {
     let file_name = config_file_path
@@ -158,7 +161,7 @@ fn load_config_file(
         default_timeout,
         &|name, dir| file::find_executable_path(name, dir).ok(),
         &expand_input_pattern,
-        scratch_root,
+        scratch_config,
         starting_position,
     );
 

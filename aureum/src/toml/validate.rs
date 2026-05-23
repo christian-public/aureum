@@ -1,4 +1,6 @@
-use crate::scratch::{self, EmbedRegistry, ScratchBuilder, ScratchPlanError};
+use crate::scratch::{
+    self, EmbedRegistry, ScratchBuilder, ScratchConfig, ScratchPlanError, ScratchTarget,
+};
 use crate::test_case::{PlannedTestCase, TestCase, TestCaseExpectations};
 use crate::test_id::TestId;
 use crate::toml::config::{EmbedDeclaration, ValueSource};
@@ -192,7 +194,7 @@ pub fn build_test_entries(
     default_timeout: u64,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
     expand_input_pattern: &impl Fn(&str, &Path) -> Result<Vec<String>, String>,
-    scratch_root: Option<&Path>,
+    scratch_config: Option<&ScratchConfig>,
     starting_position: usize,
 ) -> Vec<TestEntry> {
     let config_dir = id_config_dir(config_dir_path, current_dir);
@@ -209,8 +211,12 @@ pub fn build_test_entries(
                 file_name.to_owned(),
                 subtest_path,
             );
-            let per_test_dir = scratch_root
-                .map(|root| root.join(scratch::per_test_dir_name(position, &id.display_id())));
+            let scratch_target = scratch_config.map(|cfg| ScratchTarget {
+                dir: cfg
+                    .root
+                    .join(scratch::per_test_dir_name(position, &id.display_id())),
+                write_rerun_script: cfg.write_rerun_script,
+            });
             build_test_entry(
                 id,
                 c,
@@ -219,7 +225,7 @@ pub fn build_test_entries(
                 default_timeout,
                 find_executable_path,
                 expand_input_pattern,
-                per_test_dir,
+                scratch_target,
                 config_dir.clone(),
                 embed_registry.as_ref(),
             )
@@ -240,7 +246,7 @@ fn build_test_entry(
     default_timeout: u64,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
     expand_input_pattern: &impl Fn(&str, &Path) -> Result<Vec<String>, String>,
-    per_test_dir: Option<PathBuf>,
+    scratch_target: Option<ScratchTarget>,
     config_dir: PathBuf,
     embed_registry: Result<&EmbedRegistry, &BTreeSet<ValidationError>>,
 ) -> TestEntry {
@@ -252,7 +258,7 @@ fn build_test_entry(
         default_timeout,
         find_executable_path,
         expand_input_pattern,
-        per_test_dir,
+        scratch_target,
         config_dir,
         embed_registry,
     );
@@ -278,7 +284,7 @@ fn build_test_case(
     default_timeout: u64,
     find_executable_path: &impl Fn(&str, &Path) -> Option<PathBuf>,
     expand_input_pattern: &impl Fn(&str, &Path) -> Result<Vec<String>, String>,
-    per_test_dir: Option<PathBuf>,
+    scratch_target: Option<ScratchTarget>,
     config_dir: PathBuf,
     embed_registry: Result<&EmbedRegistry, &BTreeSet<ValidationError>>,
 ) -> (
@@ -298,9 +304,15 @@ fn build_test_case(
         }
     };
 
-    let mut scratch_builder: Option<ScratchBuilder> = per_test_dir
-        .zip(embed_registry)
-        .map(|(dir, embeds)| ScratchBuilder::new(dir, config_dir.clone(), embeds));
+    let mut scratch_builder: Option<ScratchBuilder> =
+        scratch_target.zip(embed_registry).map(|(target, embeds)| {
+            ScratchBuilder::new(
+                target.dir,
+                config_dir.clone(),
+                embeds,
+                target.write_rerun_script,
+            )
+        });
 
     let skip_reason = config.skip.and_then(|reason| {
         if reason.trim().is_empty() {

@@ -3,7 +3,7 @@ use crate::commands::common;
 use crate::exit_code::ExitCode;
 use crate::report;
 use crate::scratch_session::ScratchSession;
-use aureum::TestCase;
+use aureum::{ScratchConfig, TestCase};
 use std::path::Path;
 
 pub fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
@@ -35,13 +35,17 @@ pub fn run_programs(args: RunArgs, current_dir: &Path) -> ExitCode {
             return ExitCode::RunProgramFailure;
         }
     };
+    let scratch_config = scratch_session.root().map(|root| ScratchConfig {
+        root: root.to_path_buf(),
+        write_rerun_script: args.scratch.keep_scratch,
+    });
 
     let config_files = match common::prepare_config_files(
         args.paths,
         current_dir,
         default_timeout,
         args.common.verbose,
-        scratch_session.root(),
+        scratch_config.as_ref(),
     ) {
         Ok(result) => result,
         Err(err) => return err,

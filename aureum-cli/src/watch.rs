@@ -3,7 +3,7 @@ use crate::find_config_file;
 use crate::load_config_file;
 use crate::load_config_file::LoadConfigFilesResult;
 use crate::utils;
-use aureum::PlannedTestCase;
+use aureum::{PlannedTestCase, ScratchConfig};
 use notify_debouncer_mini::notify::{RecommendedWatcher, RecursiveMode};
 use notify_debouncer_mini::{DebounceEventResult, Debouncer, new_debouncer};
 use std::collections::{BTreeSet, HashSet};
@@ -84,7 +84,7 @@ pub fn load_test_cases_for_watch(
     paths: &[PathBuf],
     current_dir: &Path,
     default_timeout: u64,
-    scratch_root: Option<&Path>,
+    scratch_config: Option<&ScratchConfig>,
 ) -> (Vec<PlannedTestCase>, ConfigStats) {
     let find_result = find_config_file::find_config_files(paths.to_vec(), current_dir);
     if find_result.found.is_empty() {
@@ -94,7 +94,7 @@ pub fn load_test_cases_for_watch(
         find_result,
         current_dir,
         default_timeout,
-        scratch_root,
+        scratch_config,
     );
     let config_stats = load_result.config_stats();
     let test_cases = load_result

@@ -12,7 +12,7 @@ pub fn validate_config_files(args: ValidateArgs, current_dir: &Path) -> ExitCode
         current_dir,
         u64::MAX,
         args.common.verbose,
-        Some(current_dir),
+        None,
     ) {
         Ok(result) => result,
         Err(err) => return err,

@@ -3,6 +3,7 @@ use crate::find_config_file;
 use crate::load_config_file;
 use crate::load_config_file::LoadConfigFilesResult;
 use crate::report;
+use aureum::ScratchConfig;
 use std::path::{Path, PathBuf};
 
 pub fn prepare_config_files(
@@ -10,7 +11,7 @@ pub fn prepare_config_files(
     current_dir: &Path,
     default_timeout: u64,
     verbose: bool,
-    scratch_root: Option<&Path>,
+    scratch_config: Option<&ScratchConfig>,
 ) -> Result<LoadConfigFilesResult, ExitCode> {
     let find_config_files_result = find_config_file::find_config_files(paths, current_dir);
 
@@ -41,7 +42,7 @@ pub fn prepare_config_files(
         find_config_files_result,
         current_dir,
         default_timeout,
-        scratch_root,
+        scratch_config,
     );
 
     for (config_file_path, config_file_error) in &load_config_files_result.invalid {

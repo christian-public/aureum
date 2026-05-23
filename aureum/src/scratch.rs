@@ -12,6 +12,34 @@ pub struct ScratchPlan {
     pub copies: Vec<FileCopy>,
     /// Inline embed files to write into the scratch dir before running the test.
     pub embeds: Vec<EmbedWrite>,
+    /// When `true`, the runner also leaves an `aureum-rerun.sh` (and stdin
+    /// sidecar) in the scratch dir. Only worth doing when the dir survives the
+    /// run, so it tracks `--keep-scratch`. Defaults to `false`.
+    pub write_rerun_script: bool,
+}
+
+/// Scratch settings supplied by the CLI for a whole run. Bundles the scratch
+/// root with the `--keep-scratch` flag.
+#[derive(Clone)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub struct ScratchConfig {
+    /// Root directory under which per-test scratch dirs are created.
+    pub root: PathBuf,
+    /// When `true`, the runner leaves an `aureum-rerun.sh` in each per-test
+    /// dir. Paired with `--keep-scratch`, which preserves those dirs.
+    pub write_rerun_script: bool,
+}
+
+/// Per-test scratch destination, derived from a [`ScratchConfig`] once the
+/// test's discovery position and id are known. Carries the resolved per-test
+/// dir alongside the rerun-script flag through the validation layer, so the
+/// flag rides as a typed field rather than a separate threaded argument.
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub struct ScratchTarget {
+    /// Absolute path of this test's per-test scratch dir.
+    pub dir: PathBuf,
+    /// Propagated to [`ScratchPlan::write_rerun_script`].
+    pub write_rerun_script: bool,
 }
 
 #[derive(Clone)]
@@ -269,6 +297,7 @@ pub struct ScratchBuilder<'a> {
     per_test_dir: PathBuf,
     config_dir: PathBuf,
     embeds: &'a EmbedRegistry,
+    write_rerun_script: bool,
     /// Scratch-relative destination paths claimed so far, mapped to the source
     /// description that claimed them (used to detect conflicts).
     claimed: BTreeMap<String, ClaimSource>,
@@ -283,11 +312,17 @@ enum ClaimSource {
 }
 
 impl<'a> ScratchBuilder<'a> {
-    pub fn new(per_test_dir: PathBuf, config_dir: PathBuf, embeds: &'a EmbedRegistry) -> Self {
+    pub fn new(
+        per_test_dir: PathBuf,
+        config_dir: PathBuf,
+        embeds: &'a EmbedRegistry,
+        write_rerun_script: bool,
+    ) -> Self {
         Self {
             per_test_dir,
             config_dir,
             embeds,
+            write_rerun_script,
             claimed: BTreeMap::new(),
             copies: Vec::new(),
             embed_writes: Vec::new(),
@@ -374,6 +409,7 @@ impl<'a> ScratchBuilder<'a> {
             dir: self.per_test_dir,
             copies: self.copies,
             embeds: self.embed_writes,
+            write_rerun_script: self.write_rerun_script,
         }
     }
 }
@@ -577,6 +613,7 @@ mod tests {
             PathBuf::from("/tmp/scratch"),
             config_dir.to_path_buf(),
             embeds,
+            false,
         )
     }
 

@@ -1,3 +1,4 @@
+use crate::rerun_script;
 use crate::scratch::ScratchPlan;
 use crate::test_case::{PlannedTestCase, TestCase, TestCaseExpectations};
 use crate::test_id::TestId;
@@ -152,6 +153,10 @@ fn run_test_case(
 pub fn run_program(test_case: &TestCase, current_dir: &Path) -> Result<ProgramOutput, RunError> {
     if let Some(plan) = &test_case.scratch_plan {
         materialise_scratch(plan)?;
+        if plan.write_rerun_script {
+            // Best-effort debugging aid; never fail a test over it.
+            let _ = rerun_script::write(test_case, &plan.dir);
+        }
     }
     let mut cmd = init_command(test_case, current_dir);
 
@@ -269,6 +274,10 @@ pub fn run_program(test_case: &TestCase, current_dir: &Path) -> Result<ProgramOu
 pub fn run_program_passthrough(test_case: &TestCase, current_dir: &Path) -> Result<i32, RunError> {
     if let Some(plan) = &test_case.scratch_plan {
         materialise_scratch(plan)?;
+        if plan.write_rerun_script {
+            // Best-effort debugging aid; never fail a test over it.
+            let _ = rerun_script::write(test_case, &plan.dir);
+        }
     }
     let mut cmd = init_command(test_case, current_dir);
 
@@ -390,6 +399,7 @@ mod tests {
             dir,
             copies: vec![],
             embeds: vec![],
+            write_rerun_script: false,
         }
     }
 
@@ -407,6 +417,7 @@ mod tests {
         let scratch = tempfile::TempDir::new().unwrap();
         let plan = ScratchPlan {
             dir: scratch.path().to_path_buf(),
+            write_rerun_script: false,
             copies: vec![],
             embeds: vec![EmbedWrite {
                 dest_relative: "inline.txt".to_owned(),
@@ -425,6 +436,7 @@ mod tests {
         let scratch = tempfile::TempDir::new().unwrap();
         let plan = ScratchPlan {
             dir: scratch.path().to_path_buf(),
+            write_rerun_script: false,
             copies: vec![],
             embeds: vec![EmbedWrite {
                 dest_relative: "sub/dir/inline.txt".to_owned(),
@@ -445,6 +457,7 @@ mod tests {
         let scratch = tempfile::TempDir::new().unwrap();
         let plan = ScratchPlan {
             dir: scratch.path().to_path_buf(),
+            write_rerun_script: false,
             copies: vec![FileCopy {
                 source: source.clone(),
                 dest_relative: "src.txt".to_owned(),
@@ -466,6 +479,7 @@ mod tests {
         let scratch = tempfile::TempDir::new().unwrap();
         let plan = ScratchPlan {
             dir: scratch.path().to_path_buf(),
+            write_rerun_script: false,
             copies: vec![FileCopy {
                 source: source.clone(),
                 dest_relative: "a/b/c.txt".to_owned(),
@@ -484,6 +498,7 @@ mod tests {
         let scratch = tempfile::TempDir::new().unwrap();
         let plan = ScratchPlan {
             dir: scratch.path().to_path_buf(),
+            write_rerun_script: false,
             copies: vec![],
             embeds: vec![EmbedWrite {
                 dest_relative: "inline.txt".to_owned(),
@@ -514,6 +529,7 @@ mod tests {
         let scratch = tempfile::TempDir::new().unwrap();
         let plan = ScratchPlan {
             dir: scratch.path().to_path_buf(),
+            write_rerun_script: false,
             copies: vec![FileCopy {
                 source: source.clone(),
                 dest_relative: "x.txt".to_owned(),
