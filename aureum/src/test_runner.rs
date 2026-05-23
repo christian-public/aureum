@@ -19,8 +19,9 @@ pub struct ProgramOutput {
     pub exit_code: i32,
 }
 
-#[cfg_attr(debug_assertions, derive(Debug))]
+// `Ran` is much larger than `Skipped` (it carries a `TestCase` by value).
 #[allow(clippy::large_enum_variant)]
+#[cfg_attr(debug_assertions, derive(Debug))]
 pub enum RunResult {
     Skipped {
         id: TestId,

@@ -31,6 +31,8 @@ pub struct TestCaseExpectations {
     pub exit_code: Option<i32>,
 }
 
+// `Run` is much larger than `Skip` (it carries a `TestCase` by value).
+#[allow(clippy::large_enum_variant)]
 #[derive(Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum PlannedTestCase {
