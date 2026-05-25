@@ -12,6 +12,7 @@ use crate::counts::{ConfigStats, PlannedCounts, TestCounts};
 use crate::interactive::tty::{LiveTty, RecordTty};
 use crate::interactive::views::progress_view;
 use crate::interactive::views::watch_view::{self, IdleOutcome, WatchIdleContext};
+use crate::stable_output::StableOutput;
 use crate::utils::time;
 use crate::watch;
 use accept::update_test_expectations;
@@ -97,6 +98,7 @@ where
 /// headlessly, and loops on file-change commands from `reader`. The special key name
 /// `"file-change"` simulates a watcher event; all other key names are forwarded to the
 /// idle or review views. Frames are written to `writer` separated by `---`.
+#[allow(clippy::too_many_arguments)]
 pub fn run_interactive_updates_with_watch<R, W>(
     load_test_cases: &dyn Fn() -> (Vec<PlannedTestCase>, ConfigStats),
     parallel: bool,
@@ -105,12 +107,15 @@ pub fn run_interactive_updates_with_watch<R, W>(
     writer: &mut W,
     width: u16,
     height: u16,
+    stable_output: StableOutput,
 ) -> io::Result<Vec<RunResult>>
 where
     R: BufRead,
     W: Write,
 {
     let mut emit_separator = false;
+    let finished_at = stable_output.finished_at.format("%H:%M:%S").to_string();
+    let run_time = time::format_duration(stable_output.run_time);
 
     'rerun: loop {
         let (test_cases, config_stats) = load_test_cases();
@@ -123,7 +128,7 @@ where
             config_stats,
             width,
             height,
-            Duration::ZERO,
+            stable_output.elapsed,
             writer,
             emit_separator,
         )?;
@@ -137,8 +142,8 @@ where
                 reader,
                 writer,
                 emit_separator,
-                "12:00:00",
-                "0.5s",
+                &finished_at,
+                &run_time,
                 config_stats,
             )?;
             emit_separator = true;
@@ -181,7 +186,7 @@ pub fn run_with_progress_review_and_watch<'a>(
     parallel: bool,
     current_dir: &Path,
     watch_paths: impl IntoIterator<Item = &'a PathBuf>,
-    stable_duration: Option<Duration>,
+    stable_output: Option<StableOutput>,
 ) -> io::Result<Vec<RunResult>> {
     let watch_handle = watch::start_watcher_for_paths(watch_paths)?;
     let mut terminal = enter_alternate_screen()?;
@@ -192,7 +197,7 @@ pub fn run_with_progress_review_and_watch<'a>(
         parallel,
         current_dir,
         &watch_handle.receiver,
-        stable_duration,
+        stable_output,
     );
 
     leave_alternate_screen(&mut terminal);
@@ -269,7 +274,7 @@ fn run_watch_interactive_loop(
     parallel: bool,
     current_dir: &Path,
     change_rx: &Receiver<usize>,
-    stable_duration: Option<Duration>,
+    stable_output: Option<StableOutput>,
 ) -> io::Result<Option<Vec<RunResult>>> {
     'rerun: loop {
         let (test_cases, config_stats) = load_test_cases();
@@ -280,13 +285,21 @@ fn run_watch_interactive_loop(
             parallel,
             current_dir,
             config_stats,
-            stable_duration,
+            stable_output.map(|s| s.elapsed),
         )?
         else {
             return Ok(None); // user pressed q during progress
         };
-        let finished_at = Local::now().format("%H:%M:%S").to_string();
-        let duration = time::format_duration(run_start.elapsed());
+        let finished_at = stable_output
+            .map(|s| s.finished_at)
+            .unwrap_or_else(|| Local::now().time())
+            .format("%H:%M:%S")
+            .to_string();
+        let duration = time::format_duration(
+            stable_output
+                .map(|s| s.run_time)
+                .unwrap_or_else(|| run_start.elapsed()),
+        );
 
         loop {
             let idle_ctx = WatchIdleContext {

@@ -101,7 +101,7 @@ fn run_tests_interactive_watch(
         args.parallel,
         current_dir,
         &watch_paths,
-        args.common.stable_output().map(|s| s.duration),
+        args.common.stable_output(),
     ) {
         Ok(run_results) => {
             exit_code_from_run_results(&run_results, config_files.has_config_errors())
@@ -138,7 +138,7 @@ fn run_tests_interactive(
         args.parallel,
         current_dir,
         config_stats,
-        args.common.stable_output().map(|s| s.duration),
+        args.common.stable_output().map(|s| s.elapsed),
     ) {
         Ok(run_results) => {
             exit_code_from_run_results(&run_results, config_files.has_config_errors())
@@ -192,6 +192,7 @@ fn run_tests_record_watch(
         &mut stdout.lock(),
         width,
         height,
+        args.common.stable_output().unwrap_or_default(),
     ) {
         Ok(run_results) => {
             exit_code_from_run_results(&run_results, config_files.has_config_errors())
@@ -242,7 +243,7 @@ fn run_tests_record(
         config_stats,
         args.common
             .stable_output()
-            .map(|s| s.duration)
+            .map(|s| s.elapsed)
             .unwrap_or_default(),
     ) {
         report::test::print_record_session_failed(&e);
@@ -301,7 +302,7 @@ fn run_tests_noninteractive_watch(
         current_dir,
         &watch_paths,
         args.common.verbose,
-        args.common.stable_output().map(|s| s.duration),
+        args.common.stable_output().map(|s| s.finished_in),
     ) {
         Ok(run_results) => {
             exit_code_from_run_results(&run_results, config_files.has_config_errors())
@@ -339,7 +340,7 @@ fn run_tests_noninteractive(
 
     scratch_session::clean_per_test_subdirs(scratch_config.map(|c| c.root.as_path()));
 
-    let stable_duration = args.common.stable_output().map(|s| s.duration);
+    let stable_duration = args.common.stable_output().map(|s| s.finished_in);
     let run_results = run_test_cases_noninteractive(
         &all_test_cases,
         args.parallel,
