@@ -7,9 +7,9 @@ pub struct StableOutput {
     pub finished_in: Duration,
     /// Substituted into the progress view's elapsed counter.
     pub elapsed: Duration,
-    /// Substituted into the watch idle "Run time" row.
+    /// Substituted into the watch idle "Duration" row.
     pub run_time: Duration,
-    /// Substituted into the watch idle "Last run" wall-clock value.
+    /// Substituted into the watch idle "Finished at" wall-clock value.
     pub finished_at: NaiveTime,
 }
 

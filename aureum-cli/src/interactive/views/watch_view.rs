@@ -132,8 +132,8 @@ fn render_idle(frame: &mut Frame, counts: TestCounts, finished_at: &str, duratio
     );
 
     // Table data
-    let table_rows: [(&str, &str); 2] = [("Last run", finished_at), ("Run time", duration)];
-    let label_w = 8usize;
+    let table_rows: [(&str, &str); 2] = [("Finished at", finished_at), ("Duration", duration)];
+    let label_w = table_rows.iter().map(|(l, _)| l.len()).max().unwrap_or(0);
     let value_w = table_rows.iter().map(|(_, v)| v.len()).max().unwrap_or(0);
 
     // Status title + border style
