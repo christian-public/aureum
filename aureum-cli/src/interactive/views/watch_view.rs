@@ -179,7 +179,7 @@ fn render_idle(frame: &mut Frame, counts: TestCounts, finished_at: &str, duratio
 
     // Box sizing: fixed padding on each side, wide enough for title and minimum width
     const BOX_PADDING: usize = 2;
-    const MIN_BOX_TOTAL_W: usize = 31;
+    const MIN_BOX_TOTAL_W: usize = 34;
     let content_block_w = label_w + 2 + value_w;
     let box_inner_w = (content_block_w + BOX_PADDING * 2)
         .max(title_text_len + 2)
