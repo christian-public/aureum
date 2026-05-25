@@ -14,7 +14,7 @@ expected_stdout = """
 🚀 Running 1 test:
 .
 
-Test result: OK (1 passed) — Finished in 0.0s
+Test result: OK (1 passed) — Finished in 0.1s
 """
 expected_stderr = ""
 expected_exit_code = 0
@@ -67,7 +67,7 @@ F
     └── Got
         └── 0
 
-Test result: FAIL (1 failed, 0 passed) — Finished in 0.0s
+Test result: FAIL (1 failed, 0 passed) — Finished in 0.1s
 """
 expected_stderr = ""
 expected_exit_code = 1
@@ -105,7 +105,7 @@ F
         │ 2 2 │
         ╰
 
-Test result: FAIL (1 failed, 0 passed) — Finished in 0.0s
+Test result: FAIL (1 failed, 0 passed) — Finished in 0.1s
 """
 expected_stderr = ""
 expected_exit_code = 1
@@ -178,7 +178,7 @@ FF
     └── Got
         └── 0
 
-Test result: FAIL (2 failed, 0 passed) — Finished in 0.0s
+Test result: FAIL (2 failed, 0 passed) — Finished in 0.1s
 """
 expected_stderr = ""
 expected_exit_code = 1

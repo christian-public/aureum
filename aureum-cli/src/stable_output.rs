@@ -16,9 +16,9 @@ pub struct StableOutput {
 impl Default for StableOutput {
     fn default() -> Self {
         Self {
-            finished_in: Duration::ZERO,
-            elapsed: Duration::ZERO,
-            run_time: Duration::from_millis(500),
+            finished_in: Duration::from_millis(100),
+            elapsed: Duration::from_millis(200),
+            run_time: Duration::from_millis(300),
             finished_at: NaiveTime::from_hms_opt(12, 0, 0).expect("12:00:00 is a valid time"),
         }
     }

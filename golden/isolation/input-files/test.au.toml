@@ -13,7 +13,7 @@ expected_stdout = """
 🚀 Running 3 tests:
 ...
 
-Test result: OK (3 passed) — Finished in 0.0s
+Test result: OK (3 passed) — Finished in 0.1s
 """
 expected_stderr = ""
 expected_exit_code = 0

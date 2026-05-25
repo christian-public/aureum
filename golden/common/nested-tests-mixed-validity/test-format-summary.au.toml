@@ -15,7 +15,7 @@ expected_stdout = """
 🚀 Running 2 tests:
 ..
 
-Test result: OK (2 passed) — Finished in 0.0s
+Test result: OK (2 passed) — Finished in 0.1s
 """
 expected_stderr = ""
 expected_exit_code = 0
@@ -34,7 +34,7 @@ expected_stdout = """
 🚀 Running 1 test:
 .
 
-Test result: OK (1 passed) — Finished in 0.0s
+Test result: OK (1 passed) — Finished in 0.1s
 """
 expected_stderr = ""
 expected_exit_code = 0
@@ -53,7 +53,7 @@ expected_stdout = """
 🚀 Running 1 test:
 .
 
-Test result: OK* (1 passed, 1 config error) — Finished in 0.0s
+Test result: OK* (1 passed, 1 config error) — Finished in 0.1s
 """
 expected_stderr = """
 📋 helpers/missing-program-on-test2.toml
@@ -80,7 +80,7 @@ expected_stdout = """
 🚀 Running 1 test:
 .
 
-Test result: OK* (1 passed, 1 config error) — Finished in 0.0s
+Test result: OK* (1 passed, 1 config error) — Finished in 0.1s
 """
 expected_stderr = """
 📋 helpers/missing-program-on-test2.toml
@@ -107,7 +107,7 @@ expected_stdout = """
 🚀 Running 0 tests:
 
 
-Test result: OK* (0 passed, 2 config errors) — Finished in 0.0s
+Test result: OK* (0 passed, 2 config errors) — Finished in 0.1s
 """
 expected_stderr = """
 📋 helpers/missing-program-on-all-tests.toml
@@ -136,7 +136,7 @@ expected_stdout = """
 🚀 Running 0 tests:
 
 
-Test result: OK* (0 passed, 2 config errors) — Finished in 0.0s
+Test result: OK* (0 passed, 2 config errors) — Finished in 0.1s
 """
 expected_stderr = """
 📋 helpers/missing-program-on-all-tests.toml
@@ -165,7 +165,7 @@ expected_stdout = """
 🚀 Running 3 tests:
 ...
 
-Test result: OK* (3 passed, 3 config errors) — Finished in 0.0s
+Test result: OK* (3 passed, 3 config errors) — Finished in 0.1s
 """
 expected_stderr = """
 📋 helpers/missing-program-on-all-tests.toml

@@ -14,7 +14,7 @@ expected_stdout = """
 🚀 Running 1 test:
 .
 
-Test result: OK (1 passed) — Finished in 0.0s
+Test result: OK (1 passed) — Finished in 0.1s
 """
 expected_stderr = """
 watch: watching 2 paths for changes...
@@ -36,11 +36,11 @@ expected_stdout = """
 🚀 Running 1 test:
 .
 
-Test result: OK (1 passed) — Finished in 0.0s
+Test result: OK (1 passed) — Finished in 0.1s
 🚀 Running 1 test:
 .
 
-Test result: OK (1 passed) — Finished in 0.0s
+Test result: OK (1 passed) — Finished in 0.1s
 """
 expected_stderr = """
 watch: watching 2 paths for changes...
@@ -66,7 +66,7 @@ expected_stdout = """
 
 ✔ helpers/passing.toml
 
-Test result: OK (1 passed) — Finished in 0.0s
+Test result: OK (1 passed) — Finished in 0.1s
 """
 expected_stderr = """
 🔍 Found 1 config files

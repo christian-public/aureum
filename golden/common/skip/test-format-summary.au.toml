@@ -14,7 +14,7 @@ expected_stdout = """
 🚀 Running 0 of 1 test:
 s
 
-Test result: OK (0 passed, 1 skipped) — Finished in 0.0s
+Test result: OK (0 passed, 1 skipped) — Finished in 0.1s
 """
 expected_stderr = ""
 expected_exit_code = 0
@@ -33,7 +33,7 @@ expected_stdout = """
 🚀 Running 1 of 2 tests:
 .s
 
-Test result: OK (1 passed, 1 skipped) — Finished in 0.0s
+Test result: OK (1 passed, 1 skipped) — Finished in 0.1s
 """
 expected_stderr = ""
 expected_exit_code = 0
@@ -52,7 +52,7 @@ expected_stdout = """
 🚀 Running 0 of 1 test:
 s
 
-Test result: OK (0 passed, 1 skipped) — Finished in 0.0s
+Test result: OK (0 passed, 1 skipped) — Finished in 0.1s
 """
 expected_stderr = ""
 expected_exit_code = 0
@@ -115,7 +115,7 @@ Fss.ss
         │   1 │ +actual
         ╰
 
-Test result: FAIL (1 failed, 1 passed, 4 skipped, 1 config error) — Finished in 0.0s
+Test result: FAIL (1 failed, 1 passed, 4 skipped, 1 config error) — Finished in 0.1s
 """
 expected_stderr = """
 📋 helpers/validation-error-with-skipped.toml

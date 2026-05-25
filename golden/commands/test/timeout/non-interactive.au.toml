@@ -17,7 +17,7 @@ F
 ✘ helpers/non-terminating-with-timeout.toml
 └── Run error: timed out
 
-Test result: FAIL (1 failed, 0 passed) — Finished in 0.0s
+Test result: FAIL (1 failed, 0 passed) — Finished in 0.1s
 """
 expected_exit_code = 1
 
@@ -39,7 +39,7 @@ F
 ✘ helpers/non-terminating.toml
 └── Run error: timed out
 
-Test result: FAIL (1 failed, 0 passed) — Finished in 0.0s
+Test result: FAIL (1 failed, 0 passed) — Finished in 0.1s
 """
 expected_exit_code = 1
 
