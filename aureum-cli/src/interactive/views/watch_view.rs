@@ -136,70 +136,17 @@ fn render_idle(frame: &mut Frame, counts: TestCounts, finished_at: &str, duratio
     let label_w = table_rows.iter().map(|(l, _)| l.len()).max().unwrap_or(0);
     let value_w = table_rows.iter().map(|(_, v)| v.len()).max().unwrap_or(0);
 
-    // Status title + border style.
-    //
-    // "All" signals that one outcome bucket holds the entire suite (nothing in
-    // the other buckets). It is used symmetrically for passed / skipped / failed.
-    // When the whole suite is a single test, "All 1 test" reads wrong, so we drop
-    // the count entirely and say "Test passed/skipped/failed".
-    let total = passed + skipped + failed;
-    let (border_style, title, title_text_len) = if total == 0 {
-        let text = " No tests found ".to_string();
-        let width = text.len();
-        (Style::default(), Line::from(Span::raw(text)), width)
-    } else if failed > 0 {
-        let whole_suite = passed == 0 && skipped == 0;
-        let label = if whole_suite && failed == 1 {
-            " ✗ Test failed ".to_string()
-        } else if whole_suite {
-            format!(" ✗ All {failed} tests failed ")
-        } else {
-            let word = if failed == 1 { "test" } else { "tests" };
-            format!(" ✗ {failed} {word} failed ")
-        };
-        let style = Style::default().fg(Color::Red).add_modifier(Modifier::BOLD);
-        let width = label.len();
-        (
-            Style::default().fg(Color::Red),
-            Line::from(Span::styled(label, style)),
-            width,
-        )
-    } else if passed == 0 && skipped > 0 {
-        // Whole suite skipped (failed == 0 here).
-        let text = if skipped == 1 {
-            " Test skipped ".to_string()
-        } else {
-            format!(" All {skipped} tests skipped ")
-        };
-        let width = " ⊘".len() + text.len();
-        (
-            Style::default(),
-            Line::from(vec![Span::raw(" "), theme::skip_span(), Span::raw(text)]),
-            width,
-        )
-    } else {
-        // Some passed, none failed.
-        let label = if skipped == 0 {
-            // Whole suite passed.
-            if passed == 1 {
-                " ✓ Test passed ".to_string()
-            } else {
-                format!(" ✓ All {passed} tests passed ")
-            }
-        } else {
-            let word = if passed == 1 { "test" } else { "tests" };
-            format!(" ✓ {passed} {word} passed ")
-        };
-        let style = Style::default()
-            .fg(Color::Green)
-            .add_modifier(Modifier::BOLD);
-        let width = label.len();
-        (
-            Style::default().fg(Color::Green),
-            Line::from(Span::styled(label, style)),
-            width,
-        )
-    };
+    // Status title + border color. `Line::width()` measures display width, so
+    //  the multi-byte status glyphs are counted correctly for box sizing.
+    let (status_text, status_color) = status_title(passed, failed, skipped);
+    let border_style = Style::default().fg(status_color);
+    let title = Line::from(Span::styled(
+        format!(" {status_text} "),
+        Style::default()
+            .fg(status_color)
+            .add_modifier(Modifier::BOLD),
+    ));
+    let title_text_len = title.width();
 
     // Box sizing: fixed padding on each side, wide enough for title and minimum width
     const BOX_PADDING: usize = 2;
@@ -308,6 +255,60 @@ fn render_idle(frame: &mut Frame, counts: TestCounts, finished_at: &str, duratio
     );
 }
 
+/// Builds the status-box title for the given outcome counts: the message text and the
+/// color that conveys the overall result.
+///
+/// "All" signals that one outcome bucket holds the entire suite (nothing in the other
+/// buckets) and is used symmetrically for passed / skipped / failed. A single-test suite
+/// drops the count ("Test passed/skipped/failed"), since "All 1 test" reads wrong; an
+/// empty suite reads "No tests found".
+///
+/// Failures are red, all-green is green, and skipped / empty are neutral
+/// (`Color::Reset`, the terminal default).
+fn status_title(passed: usize, failed: usize, skipped: usize) -> (String, Color) {
+    let total = passed + skipped + failed;
+    if total == 0 {
+        ("No tests found".to_string(), Color::Reset)
+    } else if failed > 0 {
+        let whole_suite = passed == 0 && skipped == 0;
+        let text = if whole_suite && failed == 1 {
+            "✗ Test failed".to_string()
+        } else if whole_suite {
+            format!("✗ All {failed} tests failed")
+        } else {
+            format!(
+                "✗ {failed} {} failed",
+                if failed == 1 { "test" } else { "tests" }
+            )
+        };
+        (text, Color::Red)
+    } else if passed == 0 && skipped > 0 {
+        // Whole suite skipped (failed == 0 here). ⊘ = U+2298 Circled Division Slash.
+        let text = if skipped == 1 {
+            "⊘ Test skipped".to_string()
+        } else {
+            format!("⊘ All {skipped} tests skipped")
+        };
+        (text, Color::Reset)
+    } else {
+        // Some passed, none failed.
+        let text = if skipped == 0 {
+            // Whole suite passed.
+            if passed == 1 {
+                "✓ Test passed".to_string()
+            } else {
+                format!("✓ All {passed} tests passed")
+            }
+        } else {
+            format!(
+                "✓ {passed} {} passed",
+                if passed == 1 { "test" } else { "tests" }
+            )
+        };
+        (text, Color::Green)
+    }
+}
+
 /// Headless idle view for `--record` mode. Renders into a `TestBackend` and writes frames
 /// to `writer`. Reads key names from `reader` (one per line); the special command
 /// `"file-change"` simulates a watcher event and returns `IdleOutcome::FileChange`.
@@ -358,6 +359,48 @@ pub(crate) fn record_watch_idle<R: BufRead, W: Write>(
                 .draw(|frame| render_idle(frame, counts, finished_at, duration))
                 .map_err(io::Error::other)?;
             frame::write_frame(terminal.backend(), width, height, writer, true)?;
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The verdict text and color together, across the distinct states.
+    ///
+    /// "All" appears only when one bucket is the whole suite, and is dropped for a single
+    /// test. Any failure wins the headline (red); an all-green suite is green; skipped-only
+    /// and empty are neutral.
+    #[test]
+    fn title_for_each_state() {
+        // (passed, failed, skipped) -> (text, color)
+        let cases: &[(usize, usize, usize, &str, Color)] = &[
+            // No tests at all.
+            (0, 0, 0, "No tests found", Color::Reset),
+            // Whole suite in one bucket: "All" for >1, dropped for a single test.
+            (1, 0, 0, "✓ Test passed", Color::Green),
+            (2, 0, 0, "✓ All 2 tests passed", Color::Green),
+            (0, 1, 0, "✗ Test failed", Color::Red),
+            (0, 2, 0, "✗ All 2 tests failed", Color::Red),
+            (0, 0, 1, "⊘ Test skipped", Color::Reset),
+            (0, 0, 2, "⊘ All 2 tests skipped", Color::Reset),
+            // Mixed without failures: green, plain count (never "All", even for one).
+            (1, 0, 2, "✓ 1 test passed", Color::Green),
+            (3, 0, 2, "✓ 3 tests passed", Color::Green),
+            // Mixed with failures: any failure wins, red, never "All".
+            (2, 1, 0, "✗ 1 test failed", Color::Red),
+            (0, 2, 3, "✗ 2 tests failed", Color::Red),
+            (2, 1, 3, "✗ 1 test failed", Color::Red),
+            (4, 3, 2, "✗ 3 tests failed", Color::Red),
+        ];
+
+        for &(passed, failed, skipped, text, color) in cases {
+            assert_eq!(
+                status_title(passed, failed, skipped),
+                (text.to_string(), color),
+                "passed={passed} failed={failed} skipped={skipped}"
+            );
         }
     }
 }
