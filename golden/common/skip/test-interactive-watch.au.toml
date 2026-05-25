@@ -61,7 +61,7 @@ expected_exit_code = 3
 id = "all"
 input_files = ["helpers"]
 program_arguments = ["test", "--record=100x20", "--watch", "helpers/*.toml"]
-stdin = "r\nl\nq\n"
+stdin = "f\nl\nq\n"
 
 expected_stdout = { from_file = "snapshots/all.txt" }
 expected_stderr = ""

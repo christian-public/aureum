@@ -32,7 +32,7 @@ expected_stdout = { from_file = "snapshots/file-change-reruns-tests.txt" }
 expected_exit_code = 1
 
 
-# Pressing r opens the diff review; Esc returns to the idle screen.
+# Pressing f opens the diff review; Esc returns to the idle screen.
 [[test]]
 id = "review-and-back-to-idle"
 program_arguments = [
@@ -41,7 +41,7 @@ program_arguments = [
   "--record=100x20",
   { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
-stdin = "r\nesc\nq\n"
+stdin = "f\nesc\nq\n"
 
 expected_stdout = { from_file = "snapshots/review-and-back-to-idle.txt" }
 expected_exit_code = 1
@@ -71,7 +71,7 @@ program_arguments = [
   "--record=100x20",
   { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
-stdin = "r\nl\nesc\nq\n"
+stdin = "f\nl\nesc\nq\n"
 
 expected_stdout = { from_file = "snapshots/list-esc-to-diff.txt" }
 expected_exit_code = 1

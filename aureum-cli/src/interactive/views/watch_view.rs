@@ -54,7 +54,7 @@ pub(crate) fn run_watch_idle(
                     && key.kind == KeyEventKind::Press
                 {
                     match key.code {
-                        KeyCode::Char('r') if failed > 0 => return Ok(IdleOutcome::Review),
+                        KeyCode::Char('f') if failed > 0 => return Ok(IdleOutcome::Review),
                         KeyCode::Char('t') => return Ok(IdleOutcome::Rerun),
                         _ if keys::is_quit_key(&key) => {
                             return Ok(IdleOutcome::Quit);
@@ -245,7 +245,7 @@ fn render_idle(frame: &mut Frame, counts: TestCounts, finished_at: &str, duratio
     if failed > 0 {
         frame.render_widget(
             Paragraph::new(Line::from(Span::styled(
-                "Press r to review",
+                "Press f to review failures",
                 Style::default().fg(Color::Red),
             )))
             .alignment(Alignment::Center),
@@ -263,7 +263,7 @@ fn render_idle(frame: &mut Frame, counts: TestCounts, finished_at: &str, duratio
         Paragraph::new(vec![
             Line::from(vec![
                 Span::raw("  t: run tests   "),
-                Span::styled("r: review failures", r_style),
+                Span::styled("f: review failures", r_style),
             ]),
             Line::raw("  q: quit"),
         ]),
@@ -312,7 +312,7 @@ pub(crate) fn record_watch_idle<R: BufRead, W: Write>(
         }
         if let Some(key) = frame::parse_key_name(key_name) {
             match key {
-                KeyCode::Char('r') if failed > 0 => return Ok(IdleOutcome::Review),
+                KeyCode::Char('f') if failed > 0 => return Ok(IdleOutcome::Review),
                 KeyCode::Char('t') => return Ok(IdleOutcome::Rerun),
                 KeyCode::Char('q') => return Ok(IdleOutcome::Quit),
                 _ => {}
