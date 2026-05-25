@@ -97,22 +97,22 @@ Notable `test` flags:
 
 ### Key Types
 
-| Type              | File                              | Purpose                                                                      |
-| ----------------- | --------------------------------- | ---------------------------------------------------------------------------- |
-| `TestCase`        | `aureum/src/test_case.rs`         | Program + args + stdin + expected outputs                                    |
-| `SubtestPath`     | `aureum/src/subtest_path.rs`      | Within-file dot-notation path identifying a subtest                          |
-| `TestId`          | `aureum/src/test_id.rs`           | Globally unique test id (config dir + file name + `SubtestPath`)             |
-| `TestOutcome`     | `aureum/src/test_outcome.rs`      | Per-test result: stdout / stderr / exit_code as `FieldOutcome<T>`            |
-| `FieldOutcome<T>` | `aureum/src/test_outcome.rs`      | `NotChecked(T)` / `Matches(T)` / `Diff { expected, got }`                    |
-| `TestRunner`      | `aureum/src/test_runner.rs`       | Spawns subprocesses, captures I/O, compares results                          |
-| `TomlConfigFile`  | `aureum/src/toml/config.rs`       | Parsed `.au.toml` — supports literals, `{ file = "..." }`, `{ env = "..." }` |
+| Type              | File                              | Purpose                                                                                |
+| ----------------- | --------------------------------- | -------------------------------------------------------------------------------------- |
+| `TestCase`        | `aureum/src/test_case.rs`         | Program + args + stdin + expected outputs                                              |
+| `SubtestPath`     | `aureum/src/subtest_path.rs`      | Within-file dot-notation path identifying a subtest                                    |
+| `TestId`          | `aureum/src/test_id.rs`           | Globally unique test id (config dir + file name + `SubtestPath`)                       |
+| `TestOutcome`     | `aureum/src/test_outcome.rs`      | Per-test result: stdout / stderr / exit_code as `FieldOutcome<T>`                      |
+| `FieldOutcome<T>` | `aureum/src/test_outcome.rs`      | `NotChecked(T)` / `Matches(T)` / `Diff { expected, got }`                              |
+| `TestRunner`      | `aureum/src/test_runner.rs`       | Spawns subprocesses, captures I/O, compares results                                    |
+| `TomlConfigFile`  | `aureum/src/toml/config.rs`       | Parsed `.au.toml` — supports literals, `{ from_env = "..." }`, `{ from_file = "..." }` |
 
 ### Test Configuration Format
 
 ```toml
 program = "echo"
 program_arguments = ["-n", "Hello"]
-expected_stdout = "Hello"       # literal, or { file = "path" }, or { env = "VAR" }
+expected_stdout = "Hello"       # literal, or { from_env = "VAR" }, or { from_file = "path" }
 expected_exit_code = 0
 
 [[test]] # Multiple tests in one file

@@ -95,8 +95,8 @@ timeout_seconds = 30    # Integer (Must be 0 or greater)
 
 Instead of a literal, you can also source the value from a file or environment variable:
 
-- `{ env = "MY_ENV_VAR" }` — Read the value from the environment variable named `MY_ENV_VAR`.
-- `{ file = "my_test.stdout" }` — Read the external file `my_test.stdout`, releative to the config file's directory.
+- `{ from_env = "MY_ENV_VAR" }` — Read the value from the environment variable named `MY_ENV_VAR`.
+- `{ from_file = "my_test.stdout" }` — Read the external file `my_test.stdout`, releative to the config file's directory.
 
 Recommended file extension: `.au.toml`
 
