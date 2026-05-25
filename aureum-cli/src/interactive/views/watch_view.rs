@@ -186,12 +186,15 @@ fn render_idle(frame: &mut Frame, counts: TestCounts, finished_at: &str, duratio
         .max(MIN_BOX_TOTAL_W - 2);
     let box_total_w = (box_inner_w + 2) as u16;
 
-    // Body: vertically centre the box + optional hint below
+    // Body: vertically centre the box + optional hint below.
+    // The spacer and hint rows are reserved unconditionally so the box keeps
+    // the same vertical position whether or not tests are failing.
     let body_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Fill(1),
             Constraint::Length(6), // box: top border + spacer + 2 rows + spacer + bottom border
+            Constraint::Length(1), // spacer between box and hint
             Constraint::Length(1), // hint below box (failures only)
             Constraint::Fill(1),
         ])
@@ -241,15 +244,25 @@ fn render_idle(frame: &mut Frame, counts: TestCounts, finished_at: &str, duratio
         );
     }
 
-    // Hint below the box when tests are failing
+    // Hint below the box when tests are failing. Centre it within the same
+    // width as the box so the two share one centre axis instead of each being
+    // centred independently (which can drift by a column).
     if failed > 0 {
+        let hint_chunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Fill(1),
+                Constraint::Length(box_total_w),
+                Constraint::Fill(1),
+            ])
+            .split(body_chunks[3]);
         frame.render_widget(
             Paragraph::new(Line::from(Span::styled(
                 "Press f to review failures",
                 Style::default().fg(Color::Red),
             )))
             .alignment(Alignment::Center),
-            body_chunks[2],
+            hint_chunks[1],
         );
     }
 
