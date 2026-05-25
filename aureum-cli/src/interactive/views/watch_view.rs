@@ -136,13 +136,27 @@ fn render_idle(frame: &mut Frame, counts: TestCounts, finished_at: &str, duratio
     let label_w = table_rows.iter().map(|(l, _)| l.len()).max().unwrap_or(0);
     let value_w = table_rows.iter().map(|(_, v)| v.len()).max().unwrap_or(0);
 
-    // Status title + border style
-    let (border_style, title, title_text_len) = if failed > 0 {
-        let label = format!(
-            " ✗ {} {} failed ",
-            failed,
-            if failed == 1 { "test" } else { "tests" }
-        );
+    // Status title + border style.
+    //
+    // "All" signals that one outcome bucket holds the entire suite (nothing in
+    // the other buckets). It is used symmetrically for passed / skipped / failed.
+    // When the whole suite is a single test, "All 1 test" reads wrong, so we drop
+    // the count entirely and say "Test passed/skipped/failed".
+    let total = passed + skipped + failed;
+    let (border_style, title, title_text_len) = if total == 0 {
+        let text = " No tests found ".to_string();
+        let width = text.len();
+        (Style::default(), Line::from(Span::raw(text)), width)
+    } else if failed > 0 {
+        let whole_suite = passed == 0 && skipped == 0;
+        let label = if whole_suite && failed == 1 {
+            " ✗ Test failed ".to_string()
+        } else if whole_suite {
+            format!(" ✗ All {failed} tests failed ")
+        } else {
+            let word = if failed == 1 { "test" } else { "tests" };
+            format!(" ✗ {failed} {word} failed ")
+        };
         let style = Style::default().fg(Color::Red).add_modifier(Modifier::BOLD);
         let width = label.len();
         (
@@ -151,8 +165,12 @@ fn render_idle(frame: &mut Frame, counts: TestCounts, finished_at: &str, duratio
             width,
         )
     } else if passed == 0 && skipped > 0 {
-        let word = if skipped == 1 { "test" } else { "tests" };
-        let text = format!(" All {skipped} {word} skipped ");
+        // Whole suite skipped (failed == 0 here).
+        let text = if skipped == 1 {
+            " Test skipped ".to_string()
+        } else {
+            format!(" All {skipped} tests skipped ")
+        };
         let width = " ⊘".len() + text.len();
         (
             Style::default(),
@@ -160,10 +178,16 @@ fn render_idle(frame: &mut Frame, counts: TestCounts, finished_at: &str, duratio
             width,
         )
     } else {
-        let word = if passed == 1 { "test" } else { "tests" };
+        // Some passed, none failed.
         let label = if skipped == 0 {
-            format!(" ✓ All {passed} {word} passed ")
+            // Whole suite passed.
+            if passed == 1 {
+                " ✓ Test passed ".to_string()
+            } else {
+                format!(" ✓ All {passed} tests passed ")
+            }
         } else {
+            let word = if passed == 1 { "test" } else { "tests" };
             format!(" ✓ {passed} {word} passed ")
         };
         let style = Style::default()
