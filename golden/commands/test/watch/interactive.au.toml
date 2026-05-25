@@ -47,16 +47,16 @@ expected_stdout = { from_file = "snapshots/review-and-back-to-idle.txt" }
 expected_exit_code = 1
 
 
-# Pressing t manually triggers a re-run without waiting for a file change.
+# Pressing r manually triggers a re-run without waiting for a file change.
 [[test]]
-id = "t-reruns-tests"
+id = "r-reruns-tests"
 program_arguments = [
   "test",
   "--watch",
   "--record=100x20",
   { path_of_file = "helpers/failing-stdout-only.toml" },
 ]
-stdin = "t\nq\n"
+stdin = "r\nq\n"
 
 expected_stdout = { from_file = "snapshots/t-rerun-tests.txt" }
 expected_exit_code = 1
