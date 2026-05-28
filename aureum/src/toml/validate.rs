@@ -109,7 +109,9 @@ pub enum ValidationError {
     SkipMustBeSingleLine,
     #[error("`path_of_file` and `path_of_embed` are not allowed inside `watch_files`")]
     PathRefNotAllowedInWatchFiles,
-    #[error("`path_of_embed` requires per-test isolation; cannot be used with `--no-scratch`")]
+    #[error(
+        "`path_of_embed` requires per-test isolation; cannot be used with `--scratch in-place`"
+    )]
     PathRefRequiresScratch,
     #[error("`path_of_embed` and `path_of_file` cannot be used as integer values")]
     PathRefMustResolveToString,
@@ -734,7 +736,7 @@ fn read_string_value(
     }
 }
 
-/// Resolve a `path_of_file` reference when isolation is disabled (`--no-scratch`):
+/// Resolve a `path_of_file` reference when isolation is disabled (`--scratch in-place`):
 /// validate the path shape, confirm the source exists, and return the
 /// (unchanged) scratch-relative path for substitution. No copy happens — the
 /// test runs with `cwd = config_dir`, where the source already lives, so the

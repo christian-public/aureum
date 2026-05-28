@@ -1,0 +1,17 @@
+program = { from_env = "AUREUM_TEST_EXEC" }
+program_arguments = [
+  "test",
+  "--keep-scratch",
+  { path_of_file = "helpers/passing-test.toml" },
+]
+
+expected_stdout = ""
+expected_stderr = """
+error: the following required arguments were not provided:
+  --scratch-root <PATH>
+
+Usage: aureum test --scratch-root <PATH> --keep-scratch <PATHS>...
+
+For more information, try '--help'.
+"""
+expected_exit_code = 2

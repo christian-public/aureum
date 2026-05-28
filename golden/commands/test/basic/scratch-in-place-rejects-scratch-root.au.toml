@@ -1,0 +1,17 @@
+program = { from_env = "AUREUM_TEST_EXEC" }
+program_arguments = [
+    "test",
+    "--scratch=in-place",
+    "--scratch-root=scratch",
+    { path_of_file = "helpers/passing-test.toml" },
+]
+
+expected_stdout = ""
+expected_stderr = """
+error: the argument '--scratch-root <PATH>' cannot be used with '--scratch in-place'
+
+Usage: aureum test [OPTIONS] <PATHS>...
+
+For more information, try '--help'.
+"""
+expected_exit_code = 2

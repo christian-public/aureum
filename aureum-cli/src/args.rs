@@ -1,11 +1,31 @@
 use crate::stable_output::StableOutput;
 use clap::builder::ArgPredicate;
-use clap::{Args, Parser, Subcommand};
+use clap::error::ErrorKind;
+use clap::{Args, CommandFactory, Parser, Subcommand};
 use std::path::PathBuf;
 use std::str;
 
 pub fn parse() -> Cli {
-    Cli::parse()
+    let cli = Cli::parse();
+    let scratch = match &cli.command {
+        Command::Run(args) => Some(("run", &args.scratch)),
+        Command::Test(args) => Some(("test", &args.scratch)),
+        _ => None,
+    };
+    if let Some((subcommand, scratch)) = scratch
+        && let Err(message) = scratch.validate()
+    {
+        // Attach the error to the subcommand so its usage line stays specific
+        // (`aureum test ...`), matching clap's native conflict errors. `build`
+        // propagates the `aureum` bin name down to subcommands first.
+        let mut cli_command = Cli::command();
+        cli_command.build();
+        let command = cli_command
+            .find_subcommand_mut(subcommand)
+            .expect("subcommand must exist");
+        command.error(ErrorKind::ArgumentConflict, message).exit();
+    }
+    cli
 }
 
 pub static CLI_BINARY_NAME: &str = "aureum";
@@ -166,18 +186,42 @@ pub struct TestArgs {
 #[derive(Args, Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct ScratchArgs {
+    /// Options: per-test, in-place
+    #[arg(long, value_name = "MODE", default_value = "per-test")]
+    pub scratch: ScratchMode,
+
     /// Root directory for per-test scratch directories. If omitted, a system
     /// temporary directory is used.
-    #[arg(long, value_name = "PATH", conflicts_with = "no_scratch")]
+    #[arg(long, value_name = "PATH")]
     pub scratch_root: Option<PathBuf>,
 
     /// Do not delete per-test scratch directories after the run.
-    #[arg(long, conflicts_with = "no_scratch", requires = "scratch_root")]
+    #[arg(long, requires = "scratch_root")]
     pub keep_scratch: bool,
+}
 
-    /// Disable per-test isolation; run tests in the config file's directory.
-    #[arg(long)]
-    pub no_scratch: bool,
+impl ScratchArgs {
+    /// Reject flag combinations that contradict `--scratch in-place`: with no
+    /// scratch directory in play, a root or keep request is meaningless.
+    /// `clap`'s `conflicts_with` can't express this because the conflict
+    /// depends on the *value* of `--scratch`, not merely its presence.
+    fn validate(&self) -> Result<(), String> {
+        if self.scratch != ScratchMode::InPlace {
+            return Ok(());
+        }
+        if self.scratch_root.is_some() {
+            return Err(
+                "the argument '--scratch-root <PATH>' cannot be used with '--scratch in-place'"
+                    .to_owned(),
+            );
+        }
+        if self.keep_scratch {
+            return Err(
+                "the argument '--keep-scratch' cannot be used with '--scratch in-place'".to_owned(),
+            );
+        }
+        Ok(())
+    }
 }
 
 #[derive(Args)]
@@ -259,6 +303,25 @@ impl str::FromStr for TestOutputFormat {
             "summary" => Ok(Self::Summary),
             "tap" => Ok(Self::Tap),
             _ => Err("valid options: summary, tap"),
+        }
+    }
+}
+
+#[derive(Clone, PartialEq, Eq)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub enum ScratchMode {
+    PerTest,
+    InPlace,
+}
+
+impl str::FromStr for ScratchMode {
+    type Err = &'static str;
+
+    fn from_str(mode: &str) -> Result<Self, Self::Err> {
+        match mode {
+            "per-test" => Ok(Self::PerTest),
+            "in-place" => Ok(Self::InPlace),
+            _ => Err("valid options: per-test, in-place"),
         }
     }
 }

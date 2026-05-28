@@ -22,11 +22,11 @@ expected_exit_code = 0
 
 
 [[test]]
-id = "no-scratch-allows-path-of-file"
+id = "scratch-in-place-allows-path-of-file"
 program_arguments = [
     "test",
     "--format=summary",
-    "--no-scratch",              # Extra argument
+    "--scratch=in-place",        # Extra argument
     "--stable-output",
     "helpers/path-of-file.toml",
 ]

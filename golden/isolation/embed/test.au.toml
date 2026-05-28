@@ -40,11 +40,11 @@ expected_exit_code = 0
 
 
 [[test]]
-id = "no-scratch-rejects-path-of-embed"
+id = "scratch-in-place-rejects-path-of-embed"
 program_arguments = [
     "test",
     "--format=summary",
-    "--no-scratch",                                # Extra argument
+    "--scratch=in-place",                          # Extra argument
     "--stable-output",
     { path_of_file = "helpers/embed-basic.toml" },
 ]
@@ -59,7 +59,7 @@ expected_stderr = """
 📋 helpers/embed-basic.toml
 └── Test
     └── Validation errors
-        └── ✘ field `program_arguments`: `path_of_embed` requires per-test isolation; cannot be used with `--no-scratch`
+        └── ✘ field `program_arguments`: `path_of_embed` requires per-test isolation; cannot be used with `--scratch in-place`
 
 warning: some config files contain errors (see above)
 """

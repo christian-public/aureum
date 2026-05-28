@@ -15,9 +15,9 @@ Options:
       --parallel                   Run tests in parallel
       --watch                      Re-run tests when config or watched files change
       --interactive                Interactively review and accept new test expectations
+      --scratch <MODE>             Options: per-test, in-place [default: per-test]
       --scratch-root <PATH>        Root directory for per-test scratch directories. If omitted, a system temporary directory is used
       --keep-scratch               Do not delete per-test scratch directories after the run
-      --no-scratch                 Disable per-test isolation; run tests in the config file's directory
       --verbose                    Print extra information about config files
   -h, --help                       Print help
 """

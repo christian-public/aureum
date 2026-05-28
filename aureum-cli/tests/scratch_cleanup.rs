@@ -229,24 +229,3 @@ fn no_rerun_script_without_keep_scratch() {
         .expect("failed to spawn aureum binary");
     assert_success(&output);
 }
-
-#[test]
-fn keep_scratch_requires_scratch_root() {
-    // Sanity check the clap `requires` constraint: `--keep-scratch` without
-    // `--scratch-root` must be rejected by argument parsing (exit code 2),
-    // not silently accepted.
-    let config_dir = tempfile::TempDir::new().unwrap();
-    let config_path = config_dir.path().join("test.au.toml");
-    fs::write(&config_path, MINIMAL_CONFIG).unwrap();
-
-    let output = Command::new(BIN)
-        .arg("test")
-        .arg("--keep-scratch")
-        .arg(&config_path)
-        .output()
-        .expect("failed to spawn aureum binary");
-    assert!(
-        !output.status.success(),
-        "aureum should refuse `--keep-scratch` without `--scratch-root`"
-    );
-}

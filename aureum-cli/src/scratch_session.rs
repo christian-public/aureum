@@ -1,4 +1,4 @@
-use crate::args::ScratchArgs;
+use crate::args::{ScratchArgs, ScratchMode};
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
@@ -18,7 +18,7 @@ use tempfile::TempDir;
 /// - `Temp`: the whole system-temp directory is removed by `TempDir`'s own
 ///   `Drop`.
 pub enum ScratchSession {
-    /// Isolation disabled (`--no-scratch`).
+    /// Isolation disabled (`--scratch in-place`).
     Disabled,
     /// User-supplied directory.
     User {
@@ -28,13 +28,13 @@ pub enum ScratchSession {
     },
     /// System-temp directory we created; cleaned up on drop. `--keep-scratch`
     /// can't apply here: clap requires it to be paired with `--scratch-root`,
-    /// so a temp root is never kept (see `keep_scratch_requires_scratch_root`).
+    /// so a temp root is never kept.
     Temp(TempDir),
 }
 
 impl ScratchSession {
     pub fn create(args: &ScratchArgs) -> io::Result<Self> {
-        if args.no_scratch {
+        if args.scratch == ScratchMode::InPlace {
             return Ok(Self::Disabled);
         }
         if let Some(path) = &args.scratch_root {
@@ -154,9 +154,9 @@ mod tests {
         let parent = tempfile::TempDir::new().unwrap();
         let missing = parent.path().join("not-yet-there");
         let args = ScratchArgs {
+            scratch: ScratchMode::PerTest,
             scratch_root: Some(missing.clone()),
             keep_scratch: true, // preserve so the assertion below makes sense
-            no_scratch: false,
         };
         let _session = ScratchSession::create(&args).unwrap();
         assert!(missing.exists());
