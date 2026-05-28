@@ -18,7 +18,6 @@ use crate::watch;
 use accept::update_test_expectations;
 use aureum::{self, PlannedTestCase, RunResult};
 use chrono::Local;
-use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
 use field::{FieldDecision, FieldDecisions, OUTPUT_FIELDS};
 use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
@@ -189,7 +188,7 @@ pub fn run_with_progress_review_and_watch<'a>(
     stable_output: Option<StableOutput>,
 ) -> io::Result<Vec<RunResult>> {
     let watch_handle = watch::start_watcher_for_paths(watch_paths)?;
-    let mut terminal = enter_alternate_screen()?;
+    let mut terminal = ratatui::try_init()?;
 
     let result = run_watch_interactive_loop(
         &mut terminal,
@@ -200,7 +199,7 @@ pub fn run_with_progress_review_and_watch<'a>(
         stable_output,
     );
 
-    leave_alternate_screen(&mut terminal);
+    ratatui::try_restore()?;
     Ok(result?.unwrap_or_default())
 }
 
@@ -213,7 +212,7 @@ pub fn run_with_progress_and_review(
     config_stats: ConfigStats,
     stable_duration: Option<Duration>,
 ) -> io::Result<Vec<RunResult>> {
-    let mut terminal = enter_alternate_screen()?;
+    let mut terminal = ratatui::try_init()?;
 
     let result = run_tui_session(
         &mut terminal,
@@ -224,7 +223,7 @@ pub fn run_with_progress_and_review(
         stable_duration,
     );
 
-    leave_alternate_screen(&mut terminal);
+    ratatui::try_restore()?;
 
     let Some(run_results) = result? else {
         // User quit during progress; background test thread detached.
@@ -338,19 +337,6 @@ fn run_watch_interactive_loop(
             }
         }
     }
-}
-
-fn enter_alternate_screen() -> io::Result<Terminal<CrosstermBackend<io::Stdout>>> {
-    crossterm::terminal::enable_raw_mode()?;
-    let mut stdout = io::stdout();
-    crossterm::execute!(stdout, EnterAlternateScreen)?;
-    let backend = CrosstermBackend::new(stdout);
-    Terminal::new(backend).map_err(io::Error::other)
-}
-
-fn leave_alternate_screen(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) {
-    let _ = crossterm::terminal::disable_raw_mode();
-    let _ = crossterm::execute!(terminal.backend_mut(), LeaveAlternateScreen);
 }
 
 fn build_failed_tests(run_results: &[RunResult]) -> Vec<FailedTest<'_>> {
