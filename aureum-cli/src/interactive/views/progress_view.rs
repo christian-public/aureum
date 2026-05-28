@@ -98,43 +98,34 @@ pub(crate) fn run_tests_with_progress(
             passed,
             failed,
         };
-        terminal
-            .draw(|frame| {
+        terminal.draw(|frame| {
+            render_progress(
+                frame,
+                planned_counts,
+                counts,
+                stable_duration.unwrap_or_else(|| start.elapsed()),
+                false,
+            )
+        })?;
+        if all_done || skipped + passed + failed >= total {
+            break;
+        }
+        if crossterm::event::poll(Duration::from_millis(50))?
+            && let Ok(Event::Key(key)) = crossterm::event::read()
+            && key.kind == KeyEventKind::Press
+            && keys::is_quit_key(&key)
+        {
+            // Show "Stopping..." and return immediately; _handle is detached on drop.
+            terminal.draw(|frame| {
                 render_progress(
                     frame,
                     planned_counts,
                     counts,
                     stable_duration.unwrap_or_else(|| start.elapsed()),
-                    false,
+                    true,
                 )
-            })
-            .map_err(io::Error::other)?;
-        if all_done || skipped + passed + failed >= total {
-            break;
-        }
-        match crossterm::event::poll(Duration::from_millis(50)) {
-            Ok(true) => {
-                if let Ok(Event::Key(key)) = crossterm::event::read()
-                    && key.kind == KeyEventKind::Press
-                    && keys::is_quit_key(&key)
-                {
-                    // Show "Stopping..." and return immediately; _handle is detached on drop.
-                    terminal
-                        .draw(|frame| {
-                            render_progress(
-                                frame,
-                                planned_counts,
-                                counts,
-                                stable_duration.unwrap_or_else(|| start.elapsed()),
-                                true,
-                            )
-                        })
-                        .map_err(io::Error::other)?;
-                    return Ok(None);
-                }
-            }
-            Ok(false) => {}
-            Err(e) => return Err(io::Error::other(e)),
+            })?;
+            return Ok(None);
         }
     }
 

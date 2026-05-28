@@ -23,12 +23,12 @@ pub(crate) struct LiveTty<'a> {
 
 impl Tty for LiveTty<'_> {
     fn area(&self) -> io::Result<Rect> {
-        let size = self.terminal.size().map_err(io::Error::other)?;
+        let size = self.terminal.size()?;
         Ok(Rect::new(0, 0, size.width, size.height))
     }
 
     fn draw(&mut self, draw_fn: &mut dyn FnMut(&mut Frame)) -> io::Result<()> {
-        self.terminal.draw(draw_fn).map_err(io::Error::other)?;
+        self.terminal.draw(draw_fn)?;
         Ok(())
     }
 

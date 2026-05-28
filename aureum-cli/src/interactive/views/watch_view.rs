@@ -43,28 +43,21 @@ pub(crate) fn run_watch_idle(
     let failed = counts.failed;
 
     loop {
-        terminal
-            .draw(|frame| render_idle(frame, counts, ctx.finished_at, ctx.duration))
-            .map_err(io::Error::other)?;
+        terminal.draw(|frame| render_idle(frame, counts, ctx.finished_at, ctx.duration))?;
 
         // Poll for key events with a short timeout so we can also check the channel.
-        match crossterm::event::poll(Duration::from_millis(50)) {
-            Ok(true) => {
-                if let Ok(Event::Key(key)) = crossterm::event::read()
-                    && key.kind == KeyEventKind::Press
-                {
-                    match key.code {
-                        KeyCode::Char('f') if failed > 0 => return Ok(IdleOutcome::Review),
-                        KeyCode::Char('r') => return Ok(IdleOutcome::Rerun),
-                        _ if keys::is_quit_key(&key) => {
-                            return Ok(IdleOutcome::Quit);
-                        }
-                        _ => {}
-                    }
+        if crossterm::event::poll(Duration::from_millis(50))?
+            && let Ok(Event::Key(key)) = crossterm::event::read()
+            && key.kind == KeyEventKind::Press
+        {
+            match key.code {
+                KeyCode::Char('f') if failed > 0 => return Ok(IdleOutcome::Review),
+                KeyCode::Char('r') => return Ok(IdleOutcome::Rerun),
+                _ if keys::is_quit_key(&key) => {
+                    return Ok(IdleOutcome::Quit);
                 }
+                _ => {}
             }
-            Ok(false) => {}
-            Err(e) => return Err(io::Error::other(e)),
         }
 
         // Drain all pending change events.
