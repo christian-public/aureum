@@ -1,0 +1,75 @@
+program = { from_env = "AUREUM_TEST_EXEC" }
+
+
+[[test]]
+id = "format-unknown"
+program_arguments = [
+    "test",
+    "--format=UNKNOWN",
+    { path_of_file = "helpers/passing-test.toml" },
+]
+
+expected_stdout = ""
+expected_stderr = """
+error: invalid value 'UNKNOWN' for '--format <FORMAT>': valid options: summary, tap
+
+For more information, try '--help'.
+"""
+expected_exit_code = 2
+
+
+[[test]]
+id = "scratch-unknown"
+program_arguments = [
+    "test",
+    "--scratch=UNKNOWN",
+    { path_of_file = "helpers/passing-test.toml" },
+]
+
+expected_stdout = ""
+expected_stderr = """
+error: invalid value 'UNKNOWN' for '--scratch <MODE>': valid options: per-test, in-place
+
+For more information, try '--help'.
+"""
+expected_exit_code = 2
+
+
+[[test]]
+id = "scratch-in-place-rejects-scratch-root"
+program_arguments = [
+    "test",
+    "--scratch=in-place",
+    "--scratch-root=scratch",
+    { path_of_file = "helpers/passing-test.toml" },
+]
+
+expected_stdout = ""
+expected_stderr = """
+error: the argument '--scratch-root <PATH>' cannot be used with '--scratch in-place'
+
+Usage: aureum test [OPTIONS] <PATHS>...
+
+For more information, try '--help'.
+"""
+expected_exit_code = 2
+
+
+[[test]]
+id = "keep-scratch-requires-scratch-root"
+program_arguments = [
+    "test",
+    "--keep-scratch",
+    { path_of_file = "helpers/passing-test.toml" },
+]
+
+expected_stdout = ""
+expected_stderr = """
+error: the following required arguments were not provided:
+  --scratch-root <PATH>
+
+Usage: aureum test --scratch-root <PATH> --keep-scratch <PATHS>...
+
+For more information, try '--help'.
+"""
+expected_exit_code = 2

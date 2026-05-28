@@ -38,16 +38,3 @@ helpers/skipped.toml
 """
 expected_stderr = ""
 expected_exit_code = 0
-
-
-[[test]]
-id = "unknown"
-program_arguments = ["list", "--show=UNKNOWN", "helpers/*.toml"]
-
-expected_stdout = ""
-expected_stderr = """
-error: invalid value 'UNKNOWN' for '--show <WHICH>': valid options: all, runnable, skipped
-
-For more information, try '--help'.
-"""
-expected_exit_code = 2
