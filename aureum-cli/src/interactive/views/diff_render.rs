@@ -23,7 +23,7 @@ const FIELD_ROW_PREFIX: usize = 2; // leading "  "
 const FIELD_GAP: usize = 3; // "   " between fields
 const FIELD_ROW_PADDING: usize = 2; // "  " before |
 
-// Arrow ("❯ "/"  ") and indicator ("●"/"○"/"✓"/"✗") each occupy one display column.
+// Arrow ("❯") and indicator ("●"/"○"/"✔"/"✘") each occupy one display column.
 // Label strings are all ASCII, so .len() equals the display column width.
 const ARROW_WIDTH: usize = 2;
 const INDICATOR_WIDTH: usize = 1;
@@ -136,7 +136,7 @@ pub(super) fn render_tui(
             Constraint::Length(1), // [E]xpected / [G]ot / [D]iff tabs
             Constraint::Length(1), // divider
             Constraint::Length(1), // field selector: Stdin / Stdout / Stderr / Exit code
-            Constraint::Length(1), // field decisions: [ ] [✓] [⊘]
+            Constraint::Length(1), // field decisions: [ ] [✔] [⊘]
         ])
         .split(inner_area);
 
@@ -473,7 +473,7 @@ fn build_field_line(
             let indicator_style = if status.is_none() {
                 active_style // circle: cyan+bold
             } else {
-                indicator.style.add_modifier(Modifier::BOLD) // ✓/✗: keep color+bold
+                indicator.style.add_modifier(Modifier::BOLD) // ✔/✘: keep color+bold
             };
             Span::styled(indicator.content, indicator_style)
         } else {

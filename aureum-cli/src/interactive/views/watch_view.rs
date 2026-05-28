@@ -272,22 +272,23 @@ fn status_title(passed: usize, failed: usize, skipped: usize) -> (String, Color)
     } else if failed > 0 {
         let whole_suite = passed == 0 && skipped == 0;
         let text = if whole_suite && failed == 1 {
-            "✗ Test failed".to_string()
+            format!("{} Test failed", theme::CROSS)
         } else if whole_suite {
-            format!("✗ All {failed} tests failed")
+            format!("{} All {failed} tests failed", theme::CROSS)
         } else {
             format!(
-                "✗ {failed} {} failed",
+                "{} {failed} {} failed",
+                theme::CROSS,
                 if failed == 1 { "test" } else { "tests" }
             )
         };
         (text, Color::Red)
     } else if passed == 0 && skipped > 0 {
-        // Whole suite skipped (failed == 0 here). ⊘ = U+2298 Circled Division Slash.
+        // Whole suite skipped (failed == 0 here).
         let text = if skipped == 1 {
-            "⊘ Test skipped".to_string()
+            format!("{} Test skipped", theme::CIRCLE_SLASH)
         } else {
-            format!("⊘ All {skipped} tests skipped")
+            format!("{} All {skipped} tests skipped", theme::CIRCLE_SLASH)
         };
         (text, Color::Reset)
     } else {
@@ -295,13 +296,14 @@ fn status_title(passed: usize, failed: usize, skipped: usize) -> (String, Color)
         let text = if skipped == 0 {
             // Whole suite passed.
             if passed == 1 {
-                "✓ Test passed".to_string()
+                format!("{} Test passed", theme::CHECKMARK)
             } else {
-                format!("✓ All {passed} tests passed")
+                format!("{} All {passed} tests passed", theme::CHECKMARK)
             }
         } else {
             format!(
-                "✓ {passed} {} passed",
+                "{} {passed} {} passed",
+                theme::CHECKMARK,
                 if passed == 1 { "test" } else { "tests" }
             )
         };
@@ -379,20 +381,20 @@ mod tests {
             // No tests at all.
             (0, 0, 0, "No tests found", Color::Reset),
             // Whole suite in one bucket: "All" for >1, dropped for a single test.
-            (1, 0, 0, "✓ Test passed", Color::Green),
-            (2, 0, 0, "✓ All 2 tests passed", Color::Green),
-            (0, 1, 0, "✗ Test failed", Color::Red),
-            (0, 2, 0, "✗ All 2 tests failed", Color::Red),
+            (1, 0, 0, "✔ Test passed", Color::Green),
+            (2, 0, 0, "✔ All 2 tests passed", Color::Green),
+            (0, 1, 0, "✘ Test failed", Color::Red),
+            (0, 2, 0, "✘ All 2 tests failed", Color::Red),
             (0, 0, 1, "⊘ Test skipped", Color::Reset),
             (0, 0, 2, "⊘ All 2 tests skipped", Color::Reset),
             // Mixed without failures: green, plain count (never "All", even for one).
-            (1, 0, 2, "✓ 1 test passed", Color::Green),
-            (3, 0, 2, "✓ 3 tests passed", Color::Green),
+            (1, 0, 2, "✔ 1 test passed", Color::Green),
+            (3, 0, 2, "✔ 3 tests passed", Color::Green),
             // Mixed with failures: any failure wins, red, never "All".
-            (2, 1, 0, "✗ 1 test failed", Color::Red),
-            (0, 2, 3, "✗ 2 tests failed", Color::Red),
-            (2, 1, 3, "✗ 1 test failed", Color::Red),
-            (4, 3, 2, "✗ 3 tests failed", Color::Red),
+            (2, 1, 0, "✘ 1 test failed", Color::Red),
+            (0, 2, 3, "✘ 2 tests failed", Color::Red),
+            (2, 1, 3, "✘ 1 test failed", Color::Red),
+            (4, 3, 2, "✘ 3 tests failed", Color::Red),
         ];
 
         for &(passed, failed, skipped, text, color) in cases {
