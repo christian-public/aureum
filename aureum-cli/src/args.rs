@@ -1,7 +1,7 @@
 use crate::stable_output::StableOutput;
 use clap::builder::ArgPredicate;
 use clap::error::ErrorKind;
-use clap::{Args, CommandFactory, Parser, Subcommand};
+use clap::{Args, CommandFactory, Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 use std::str;
 
@@ -114,7 +114,7 @@ pub struct ListArgs {
     #[arg(long)]
     pub tree: bool,
 
-    /// Options: all, runnable, or skipped
+    /// Which tests to show
     #[arg(long, value_name = "WHICH", default_value = "all")]
     pub show: ListShowFilter,
 
@@ -129,7 +129,7 @@ pub struct RunArgs {
     #[arg(required = true)]
     pub paths: Vec<PathBuf>,
 
-    /// Options: passthrough, toml
+    /// Output format
     #[arg(long, default_value = "passthrough")]
     pub format: RunOutputFormat,
 
@@ -151,7 +151,7 @@ pub struct TestArgs {
     #[arg(required = true)]
     pub paths: Vec<PathBuf>,
 
-    /// Options: summary, tap
+    /// Output format
     #[arg(long, default_value = "summary")]
     pub format: TestOutputFormat,
 
@@ -186,7 +186,7 @@ pub struct TestArgs {
 #[derive(Args, Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct ScratchArgs {
-    /// Options: per-test, in-place
+    /// Scratch strategy
     #[arg(long, value_name = "MODE", default_value = "per-test")]
     pub scratch: ScratchMode,
 
@@ -248,7 +248,7 @@ impl CommonArgs {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, ValueEnum)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum ListShowFilter {
     All,
@@ -256,74 +256,25 @@ pub enum ListShowFilter {
     Skipped,
 }
 
-impl str::FromStr for ListShowFilter {
-    type Err = &'static str;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "all" => Ok(Self::All),
-            "runnable" => Ok(Self::Runnable),
-            "skipped" => Ok(Self::Skipped),
-            _ => Err("valid options: all, runnable, skipped"),
-        }
-    }
-}
-
-#[derive(Clone)]
+#[derive(Clone, ValueEnum)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum RunOutputFormat {
     Passthrough,
     Toml,
 }
 
-impl str::FromStr for RunOutputFormat {
-    type Err = &'static str;
-
-    fn from_str(format: &str) -> Result<Self, Self::Err> {
-        match format {
-            "passthrough" => Ok(Self::Passthrough),
-            "toml" => Ok(Self::Toml),
-            _ => Err("valid options: passthrough, toml"),
-        }
-    }
-}
-
-#[derive(Clone)]
+#[derive(Clone, ValueEnum)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum TestOutputFormat {
     Summary,
     Tap,
 }
 
-impl str::FromStr for TestOutputFormat {
-    type Err = &'static str;
-
-    fn from_str(format: &str) -> Result<Self, Self::Err> {
-        match format {
-            "summary" => Ok(Self::Summary),
-            "tap" => Ok(Self::Tap),
-            _ => Err("valid options: summary, tap"),
-        }
-    }
-}
-
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, ValueEnum)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub enum ScratchMode {
     PerTest,
     InPlace,
-}
-
-impl str::FromStr for ScratchMode {
-    type Err = &'static str;
-
-    fn from_str(mode: &str) -> Result<Self, Self::Err> {
-        match mode {
-            "per-test" => Ok(Self::PerTest),
-            "in-place" => Ok(Self::InPlace),
-            _ => Err("valid options: per-test, in-place"),
-        }
-    }
 }
 
 #[derive(Clone)]

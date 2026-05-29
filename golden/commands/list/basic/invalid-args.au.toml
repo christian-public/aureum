@@ -11,7 +11,8 @@ program_arguments = [
 
 expected_stdout = ""
 expected_stderr = """
-error: invalid value 'UNKNOWN' for '--show <WHICH>': valid options: all, runnable, skipped
+error: invalid value 'UNKNOWN' for '--show <WHICH>'
+  [possible values: all, runnable, skipped]
 
 For more information, try '--help'.
 """

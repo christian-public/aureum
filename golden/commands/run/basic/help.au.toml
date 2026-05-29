@@ -10,9 +10,9 @@ Arguments:
   <PATHS>...  Paths to config files
 
 Options:
-      --format <FORMAT>            Options: passthrough, toml [default: passthrough]
+      --format <FORMAT>            Output format [default: passthrough] [possible values: passthrough, toml]
       --default-timeout <SECONDS>  Fallback timeout for programs without a timeout; only used with `--format toml`
-      --scratch <MODE>             Options: per-test, in-place [default: per-test]
+      --scratch <MODE>             Scratch strategy [default: per-test] [possible values: per-test, in-place]
       --scratch-root <PATH>        Root directory for per-test scratch directories. If omitted, a system temporary directory is used
       --keep-scratch               Do not delete per-test scratch directories after the run
       --verbose                    Print extra information about config files

@@ -10,12 +10,12 @@ Arguments:
   <PATHS>...  Paths to config files
 
 Options:
-      --format <FORMAT>            Options: summary, tap [default: summary]
+      --format <FORMAT>            Output format [default: summary] [possible values: summary, tap]
       --default-timeout <SECONDS>  Fallback timeout for tests without a timeout [default: 5]
       --parallel                   Run tests in parallel
       --watch                      Re-run tests when config or watched files change
       --interactive                Interactively review and accept new test expectations
-      --scratch <MODE>             Options: per-test, in-place [default: per-test]
+      --scratch <MODE>             Scratch strategy [default: per-test] [possible values: per-test, in-place]
       --scratch-root <PATH>        Root directory for per-test scratch directories. If omitted, a system temporary directory is used
       --keep-scratch               Do not delete per-test scratch directories after the run
       --verbose                    Print extra information about config files

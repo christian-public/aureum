@@ -11,7 +11,7 @@ Arguments:
 
 Options:
       --tree          Display tests as a tree
-      --show <WHICH>  Options: all, runnable, or skipped [default: all]
+      --show <WHICH>  Which tests to show [default: all] [possible values: all, runnable, skipped]
       --verbose       Print extra information about config files
   -h, --help          Print help
 """
