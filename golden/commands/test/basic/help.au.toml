@@ -2,7 +2,7 @@ program = { from_env = "AUREUM_TEST_EXEC" }
 program_arguments = ["test", "--help"]
 
 expected_stdout = """
-Run tests
+Run tests and compare output against expectations
 
 Usage: aureum test [OPTIONS] <PATHS>...
 
@@ -13,11 +13,11 @@ Options:
       --format <FORMAT>            Output format [default: summary] [possible values: summary, tap]
       --default-timeout <SECONDS>  Fallback timeout for tests without a timeout [default: 5]
       --parallel                   Run tests in parallel
-      --watch                      Re-run tests when config or watched files change
+      --watch                      Re-run tests when config files or referenced files change
       --interactive                Interactively review and accept new test expectations
-      --scratch <MODE>             Scratch strategy [default: per-test] [possible values: per-test, in-place]
-      --scratch-root <PATH>        Root directory for per-test scratch directories. If omitted, a system temporary directory is used
-      --keep-scratch               Do not delete per-test scratch directories after the run
+      --scratch <MODE>             Where each test runs [default: per-test] [possible values: per-test, in-place]
+      --scratch-root <PATH>        Root for per-test scratch directories [default: system temporary directory]
+      --keep-scratch               Preserve scratch directories after the run
       --verbose                    Print extra information about config files
   -h, --help                       Print help
 """

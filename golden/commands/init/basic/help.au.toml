@@ -7,7 +7,7 @@ Initialize a new config file
 Usage: aureum init [OPTIONS] [PATH] [-- <COMMAND>...]
 
 Arguments:
-  [PATH]        Where to save the config file (Recommended file extension: .au.toml)
+  [PATH]        Where to write the config file (recommended extension: .au.toml)
   [COMMAND]...  Program and arguments to record output from
 
 Options:

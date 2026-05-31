@@ -10,7 +10,7 @@ Arguments:
   <PATHS>...  Paths to config files
 
 Options:
-      --check  Check formatting without modifying files
+      --check  Report unformatted files without modifying them
   -h, --help   Print help
 """
 expected_stderr = ""

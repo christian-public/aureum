@@ -54,9 +54,9 @@ pub enum Command {
     Validate(ValidateArgs),
     /// List tests
     List(ListArgs),
-    /// Run programs from test specification
+    /// Run programs and print their output
     Run(RunArgs),
-    /// Run tests
+    /// Run tests and compare output against expectations
     Test(TestArgs),
     /// Format config files
     Format(FormatArgs),
@@ -68,7 +68,7 @@ pub enum Command {
 #[cfg_attr(debug_assertions, derive(Debug))]
 #[command(arg_required_else_help = true)]
 pub struct InitArgs {
-    /// Where to save the config file (Recommended file extension: .au.toml)
+    /// Where to write the config file (recommended extension: .au.toml)
     pub path: Option<PathBuf>,
 
     /// Print to stdout instead of writing to a file
@@ -151,7 +151,7 @@ pub struct TestArgs {
     #[arg(long)]
     pub parallel: bool,
 
-    /// Re-run tests when config or watched files change
+    /// Re-run tests when config files or referenced files change
     #[arg(long)]
     pub watch: bool,
 
@@ -178,7 +178,7 @@ pub struct FormatArgs {
     #[arg(required = true)]
     pub paths: Vec<PathBuf>,
 
-    /// Check formatting without modifying files
+    /// Report unformatted files without modifying them
     #[arg(long)]
     pub check: bool,
 }
@@ -186,16 +186,15 @@ pub struct FormatArgs {
 #[derive(Args, Clone)]
 #[cfg_attr(debug_assertions, derive(Debug))]
 pub struct ScratchArgs {
-    /// Scratch strategy
+    /// Where each test runs
     #[arg(long, value_name = "MODE", default_value = "per-test")]
     pub scratch: ScratchMode,
 
-    /// Root directory for per-test scratch directories. If omitted, a system
-    /// temporary directory is used.
+    /// Root for per-test scratch directories [default: system temporary directory]
     #[arg(long, value_name = "PATH")]
     pub scratch_root: Option<PathBuf>,
 
-    /// Do not delete per-test scratch directories after the run.
+    /// Preserve scratch directories after the run
     #[arg(long, requires = "scratch_root")]
     pub keep_scratch: bool,
 }
