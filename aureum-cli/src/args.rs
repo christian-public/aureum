@@ -66,18 +66,6 @@ pub enum Command {
 
 #[derive(Args)]
 #[cfg_attr(debug_assertions, derive(Debug))]
-pub struct FormatArgs {
-    /// Paths to config files
-    #[arg(required = true)]
-    pub paths: Vec<PathBuf>,
-
-    /// Check formatting without modifying files
-    #[arg(long)]
-    pub check: bool,
-}
-
-#[derive(Args)]
-#[cfg_attr(debug_assertions, derive(Debug))]
 #[command(arg_required_else_help = true)]
 pub struct InitArgs {
     /// Where to save the config file (Recommended file extension: .au.toml)
@@ -181,6 +169,18 @@ pub struct TestArgs {
 
     #[command(flatten)]
     pub common: CommonArgs,
+}
+
+#[derive(Args)]
+#[cfg_attr(debug_assertions, derive(Debug))]
+pub struct FormatArgs {
+    /// Paths to config files
+    #[arg(required = true)]
+    pub paths: Vec<PathBuf>,
+
+    /// Check formatting without modifying files
+    #[arg(long)]
+    pub check: bool,
 }
 
 #[derive(Args, Clone)]
