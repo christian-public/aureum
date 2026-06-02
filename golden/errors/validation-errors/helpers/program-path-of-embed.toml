@@ -1,0 +1,10 @@
+program = { path_of_embed = "script" }
+
+expected_exit_code = 0
+
+[[embed]]
+path = "script"
+content = """
+#!/usr/bin/env bash
+echo hi
+"""

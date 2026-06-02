@@ -1,0 +1,3 @@
+program = { path_of_file = "program-no-program.toml" }
+
+expected_exit_code = 0

@@ -96,6 +96,10 @@ pub enum ValidationError {
     #[error("program not found: `{0}`")]
     ProgramNotFound(String),
     #[error(
+        "`{0}` is not allowed in the `program` field, which must name an executable. Move the `{0}` reference into `program_arguments` and set `program` to an interpreter such as `\"bash\"`."
+    )]
+    ProgramRefNotAllowed(String),
+    #[error(
         "no expectations defined; specify at least one `expected_*` field: `expected_stdout`, `expected_stderr`, or `expected_exit_code`"
     )]
     ExpectationRequired,
@@ -346,37 +350,54 @@ fn build_test_case(
         );
     }
 
-    let program = read_string_field(
-        &mut errors,
-        config.program,
-        requirement_data,
-        embed_registry,
-        &config_dir,
-        scratch_builder.as_mut(),
-        "program",
-    )
-    .map(|s| string::normalize_newlines(&s));
-    let program_path = get_program_path(
-        program.unwrap_or_default(),
-        &id.config_dir_path.to_path(current_dir),
-        find_executable_path,
-    );
-    match &program_path {
-        ProgramPath::NotSpecified => {
-            errors.insert(ValidationError::ProgramRequired);
+    // A program is *named* (and looked up on disk / in `PATH`), not
+    // *materialised*: `path_of_file`/`path_of_embed` copy or write a file into
+    // the scratch dir, which doesn't fit `program`. Reject them with a clear
+    // pointer to the portable pattern (run the file/embed via an interpreter
+    // passed as an argument) rather than letting the path fall through to a
+    // confusing "program not found" lookup.
+    let program_ref_key = match config.program.as_ref() {
+        Some(ValueSource::WriteEmbed { .. }) => Some("path_of_embed"),
+        Some(ValueSource::CopyFromFile { .. }) => Some("path_of_file"),
+        _ => None,
+    };
+    let program_path = if let Some(key) = program_ref_key {
+        errors.insert(ValidationError::ProgramRefNotAllowed(key.to_owned()));
+        ProgramPath::NotSpecified
+    } else {
+        let program = read_string_field(
+            &mut errors,
+            config.program,
+            requirement_data,
+            embed_registry,
+            &config_dir,
+            scratch_builder.as_mut(),
+            "program",
+        )
+        .map(|s| string::normalize_newlines(&s));
+        let program_path = get_program_path(
+            program.unwrap_or_default(),
+            &id.config_dir_path.to_path(current_dir),
+            find_executable_path,
+        );
+        match &program_path {
+            ProgramPath::NotSpecified => {
+                errors.insert(ValidationError::ProgramRequired);
+            }
+            ProgramPath::MissingProgram {
+                requested_program: requested_path,
+            } => {
+                errors.insert(ValidationError::ProgramNotFound(requested_path.clone()));
+            }
+            ProgramPath::ResolvedPath {
+                requested_program: _,
+                resolved_path: _,
+            } => {
+                // Do nothing
+            }
         }
-        ProgramPath::MissingProgram {
-            requested_program: requested_path,
-        } => {
-            errors.insert(ValidationError::ProgramNotFound(requested_path.clone()));
-        }
-        ProgramPath::ResolvedPath {
-            requested_program: _,
-            resolved_path: _,
-        } => {
-            // Do nothing
-        }
-    }
+        program_path
+    };
 
     let mut arguments = vec![];
     for config_value in config.program_arguments.unwrap_or_default() {

@@ -126,6 +126,48 @@ expected_exit_code = 3
 
 
 [[test]]
+id = "program.path-of-embed"
+program_arguments = [
+    "validate",
+    { path_of_file = "helpers/program-path-of-embed.toml" },
+]
+
+expected_stdout = """
+✘ helpers/program-path-of-embed.toml  1 test
+"""
+expected_stderr = """
+📋 helpers/program-path-of-embed.toml
+└── Test
+    └── Validation errors
+        └── ✘ `path_of_embed` is not allowed in the `program` field, which must name an executable. Move the `path_of_embed` reference into `program_arguments` and set `program` to an interpreter such as `"bash"`.
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[test]]
+id = "program.path-of-file"
+program_arguments = [
+    "validate",
+    { path_of_file = "helpers/program-path-of-file.toml" },
+]
+
+expected_stdout = """
+✘ helpers/program-path-of-file.toml  1 test
+"""
+expected_stderr = """
+📋 helpers/program-path-of-file.toml
+└── Test
+    └── Validation errors
+        └── ✘ `path_of_file` is not allowed in the `program` field, which must name an executable. Move the `path_of_file` reference into `program_arguments` and set `program` to an interpreter such as `"bash"`.
+
+warning: some config files contain errors (see above)
+"""
+expected_exit_code = 3
+
+
+[[test]]
 id = "expected-exit-code.invalid-exit-code"
 program_arguments = [
     "validate",
