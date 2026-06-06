@@ -97,6 +97,13 @@ pub enum RunError {
 
 // RUN TEST CASES
 
+/// Runs every planned test case and returns their results.
+///
+/// **Side effect:** the per-test scratch dirs are both *created* (per test, via
+/// [`run_program`]) and *freed* (after the batch, via [`cleanup_scratch_dirs`])
+/// within this call. Keeping both halves here means a caller that times this
+/// function measures the full cost of scratch isolation symmetrically, rather
+/// than paying for creation but not removal.
 pub fn run_test_cases(
     test_cases: &[PlannedTestCase],
     run_in_parallel: bool,
@@ -121,10 +128,38 @@ pub fn run_test_cases(
         run_result
     };
 
-    if run_in_parallel {
+    let results: Vec<RunResult> = if run_in_parallel {
         test_cases.par_iter().enumerate().map(run).collect()
     } else {
         test_cases.iter().enumerate().map(run).collect()
+    };
+
+    cleanup_scratch_dirs(test_cases);
+
+    results
+}
+
+/// Remove the per-test scratch directories created during this batch, mirroring
+/// the creation done by [`materialise_scratch`] so the runner owns the full
+/// lifecycle of the dirs it makes.
+///
+/// Dirs whose plan has `write_rerun_script` set are left in place: that flag
+/// tracks `--keep-scratch`, so those dirs (and their rerun scripts) are meant
+/// to survive for inspection. The CLI's pre-pass sweep clears them before the
+/// next run.
+///
+/// Runs over every planned case regardless of outcome — a dir may have been
+/// materialised even for a test that timed out or otherwise errored. Best
+/// effort: a failed removal can't undo the run that already happened, so errors
+/// are ignored, and the CLI's scratch-session cleanup remains a backstop.
+fn cleanup_scratch_dirs(test_cases: &[PlannedTestCase]) {
+    for planned in test_cases {
+        if let PlannedTestCase::Run { test_case, .. } = planned
+            && let Some(plan) = &test_case.scratch_plan
+            && !plan.write_rerun_script
+        {
+            let _ = fs::remove_dir_all(&plan.dir);
+        }
     }
 }
 
@@ -541,5 +576,74 @@ mod tests {
             RunError::FileCopyFailed { from, .. } => assert_eq!(from, source),
             other => panic!("expected FileCopyFailed, got {other:?}"),
         }
+    }
+
+    // CLEANUP
+
+    fn run_case_with_plan(dir: PathBuf, write_rerun_script: bool) -> PlannedTestCase {
+        use crate::subtest_path::SubtestPath;
+        let id = TestId::new(
+            relative_path::RelativePathBuf::from("cfg"),
+            "t.au.toml".to_owned(),
+            SubtestPath::root(),
+        );
+        PlannedTestCase::Run {
+            test_case: TestCase {
+                id,
+                program_path: PathBuf::from("/bin/true"),
+                arguments: vec![],
+                stdin: None,
+                timeout_seconds: 5,
+                scratch_plan: Some(ScratchPlan {
+                    dir,
+                    copies: vec![],
+                    embeds: vec![],
+                    write_rerun_script,
+                }),
+            },
+            expectations: TestCaseExpectations {
+                stdout: None,
+                stderr: None,
+                exit_code: None,
+            },
+        }
+    }
+
+    #[test]
+    fn cleanup_removes_scratch_dirs_that_are_not_kept() {
+        let parent = tempfile::TempDir::new().unwrap();
+        let dir = parent.path().join("aureum-0001--t");
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(dir.join("marker"), "x").unwrap();
+
+        cleanup_scratch_dirs(&[run_case_with_plan(dir.clone(), false)]);
+
+        assert!(!dir.exists(), "an unkept scratch dir should be removed");
+    }
+
+    #[test]
+    fn cleanup_preserves_kept_scratch_dirs() {
+        let parent = tempfile::TempDir::new().unwrap();
+        let dir = parent.path().join("aureum-0001--t");
+        fs::create_dir_all(&dir).unwrap();
+
+        // `write_rerun_script` tracks `--keep-scratch`: those dirs survive.
+        cleanup_scratch_dirs(&[run_case_with_plan(dir.clone(), true)]);
+
+        assert!(dir.exists(), "a kept scratch dir must not be removed");
+    }
+
+    #[test]
+    fn cleanup_ignores_skips_and_planless_runs() {
+        // No scratch plan and Skip variants must be silently ignored.
+        let skip = PlannedTestCase::Skip {
+            id: TestId::new(
+                relative_path::RelativePathBuf::from("cfg"),
+                "t.au.toml".to_owned(),
+                crate::subtest_path::SubtestPath::root(),
+            ),
+            reason: "skipped".to_owned(),
+        };
+        cleanup_scratch_dirs(&[skip]);
     }
 }

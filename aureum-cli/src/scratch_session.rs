@@ -6,6 +6,13 @@ use tempfile::TempDir;
 
 /// Owns the scratch root for the duration of a CLI run.
 ///
+/// Note on per-test dirs: the test runner frees the per-test scratch dirs it
+/// creates at the end of each run (so the cost is counted in the measured run
+/// time), except those preserved by `--keep-scratch`. The cleanup below is
+/// therefore mostly a backstop — it still matters for kept dirs left between
+/// watch passes, leftovers from a crashed run, and the `run` subcommand (which
+/// doesn't go through the batch runner).
+///
 /// Cleanup on drop depends on the variant:
 ///
 /// - `Disabled`: nothing to clean.
