@@ -290,7 +290,7 @@ impl str::FromStr for TerminalSize {
         let (w_str, h_str) = s
             .split_once('x')
             .or_else(|| s.split_once('X'))
-            .ok_or_else(|| format!("expected WxH format (e.g. 120x24), got {s:?}"))?;
+            .ok_or_else(|| format!("expected WxH format such as 120x24, got {s:?}"))?;
 
         let width = w_str
             .parse::<u16>()

@@ -111,7 +111,7 @@ pub enum ValidationError {
     SkipMustNotBeEmpty,
     #[error("must not contain newlines")]
     SkipMustBeSingleLine,
-    #[error("`path_of_file` and `path_of_embed` are not allowed inside `watch_files`")]
+    #[error("`path_of_file` and `path_of_embed` are not allowed in the `watch_files` field")]
     PathRefNotAllowedInWatchFiles,
     #[error(
         "`path_of_embed` requires per-test isolation; cannot be used with `--scratch in-place`"
@@ -127,9 +127,9 @@ pub enum ValidationError {
     ScratchInvalidPath(String),
     #[error("multiple sources would write to `{0}`")]
     ScratchPathConflict(String),
-    #[error("invalid `input_files` glob `{pattern}`: {reason}")]
+    #[error("invalid glob `{pattern}`: {reason}")]
     InputGlobError { pattern: String, reason: String },
-    #[error("`input_files` glob `{0}` matched no files")]
+    #[error("glob `{0}` matched no files")]
     InputGlobMatchedNothing(String),
 }
 
