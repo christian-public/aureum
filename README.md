@@ -45,11 +45,14 @@ Arguments:
   <PATHS>...  Paths to config files
 
 Options:
-      --format <FORMAT>            Options: summary, tap [default: summary]
+      --format <FORMAT>            Output format [default: summary] [possible values: summary, tap]
       --default-timeout <SECONDS>  Fallback timeout for tests without a timeout [default: 5]
       --parallel                   Run tests in parallel
-      --watch                      Re-run tests when config or watched files change
+      --watch                      Re-run tests when config files or referenced files change
       --interactive                Interactively review and accept new test expectations
+      --scratch <MODE>             Where each test runs [default: per-test] [possible values: per-test, in-place]
+      --scratch-root <PATH>        Root for per-test scratch directories [default: system temporary directory]
+      --keep-scratch               Preserve scratch directories after the run
       --verbose                    Print extra information about config files
   -h, --help                       Print help
 ```
