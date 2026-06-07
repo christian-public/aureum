@@ -69,8 +69,7 @@ fn check_unknown_fields(
 }
 
 pub fn parse_toml_config(file_content: &str) -> Result<ConfigFile, ConfigFileError> {
-    let table =
-        toml::from_str::<Table>(file_content).map_err(ConfigFileError::InvalidTomlSyntax)?;
+    let table = toml::from_str::<Table>(file_content)?;
 
     let root_spans = find_root_spans(file_content);
     let test_spans = find_test_entry_spans(file_content);

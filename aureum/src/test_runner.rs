@@ -207,7 +207,7 @@ pub fn run_program(test_case: &TestCase, current_dir: &Path) -> Result<ProgramOu
         cmd.process_group(0);
     }
 
-    let mut child = cmd.spawn().map_err(RunError::IOError)?;
+    let mut child = cmd.spawn()?;
     let child_id = child.id();
 
     // Write stdin from a separate thread so a child that produces output before
@@ -263,7 +263,7 @@ pub fn run_program(test_case: &TestCase, current_dir: &Path) -> Result<ProgramOu
         timed_out
     });
 
-    let status = child.wait().map_err(RunError::IOError)?;
+    let status = child.wait()?;
 
     let _ = done_tx.send(()); // signal the killer thread to exit
     let timed_out = killer_handle.join().expect("killer thread panicked");
@@ -283,15 +283,13 @@ pub fn run_program(test_case: &TestCase, current_dir: &Path) -> Result<ProgramOu
 
     let stdout_bytes = stdout_thread
         .join()
-        .expect("stdout reader thread panicked")
-        .map_err(RunError::IOError)?;
+        .expect("stdout reader thread panicked")?;
     let stderr_bytes = stderr_thread
         .join()
-        .expect("stderr reader thread panicked")
-        .map_err(RunError::IOError)?;
+        .expect("stderr reader thread panicked")?;
 
-    let stdout = String::from_utf8(stdout_bytes).map_err(RunError::FailedToDecodeUtf8)?;
-    let stderr = String::from_utf8(stderr_bytes).map_err(RunError::FailedToDecodeUtf8)?;
+    let stdout = String::from_utf8(stdout_bytes)?;
+    let stderr = String::from_utf8(stderr_bytes)?;
     let exit_code = status.code().ok_or(RunError::ProgramTerminated)?;
 
     Ok(ProgramOutput {
@@ -325,19 +323,17 @@ pub fn run_program_passthrough(test_case: &TestCase, current_dir: &Path) -> Resu
         cmd.stdin(Stdio::inherit());
     }
 
-    let mut child = cmd.spawn().map_err(RunError::IOError)?;
+    let mut child = cmd.spawn()?;
 
     if let Some(stdin_string) = &test_case.stdin {
         let mut stdin = child
             .stdin
             .take()
             .expect("Stdin should be configured to pipe");
-        stdin
-            .write_all(stdin_string.as_bytes())
-            .map_err(RunError::IOError)?;
+        stdin.write_all(stdin_string.as_bytes())?;
     }
 
-    let exit_status = child.wait().map_err(RunError::IOError)?;
+    let exit_status = child.wait()?;
     exit_status.code().ok_or(RunError::ProgramTerminated)
 }
 

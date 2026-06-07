@@ -141,10 +141,9 @@ fn load_config_file(
         .parent()
         .ok_or(LoadedConfigFileError::NoParentDirectory)?;
 
-    let source = fs::read_to_string(config_file_path.to_path(current_dir))
-        .map_err(LoadedConfigFileError::ReadFailed)?;
+    let source = fs::read_to_string(config_file_path.to_path(current_dir))?;
 
-    let config = aureum::parse_toml_config(&source).map_err(LoadedConfigFileError::ParseFailed)?;
+    let config = aureum::parse_toml_config(&source)?;
 
     let requirements = aureum::get_requirements(&config);
     let requirement_data =
